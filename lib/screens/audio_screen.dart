@@ -400,60 +400,60 @@ class _AudioScreenState extends State<AudioScreen> {
       create: (_) => AudioBloc(box)..add(LoadAudios()),
       child: widget.isComeHomeScreen
           ? Scaffold(
-              appBar: AppBar(
-                title: const Text("Audios"),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () =>
-                        context.read<AudioBloc>().add(LoadAudios()),
-                  ),
-                ],
-              ),
-              body: const _AudioBody(),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
-                child: const Icon(Icons.refresh),
-              ),
-            )
+        appBar: AppBar(
+          title: const Text("Audios"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () =>
+                  context.read<AudioBloc>().add(LoadAudios()),
+            ),
+          ],
+        ),
+        body: const _AudioBody(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
+          child: const Icon(Icons.refresh),
+        ),
+      )
           : Column(
-              children: [
-                CommonAppBar(
-                  title: "Video & Music Player",
-                  subTitle: "MEDIA PLAYER",
-                  actionWidget: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: colors.textFieldFill,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: AppImage(src: AppSvg.searchIcon),
-                      ),
-                    ),
-                  ),
+        children: [
+          CommonAppBar(
+            title: "Video & Music Player",
+            subTitle: "MEDIA PLAYER",
+            actionWidget: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: colors.textFieldFill,
                 ),
-                Divider(color: colors.dividerColor),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      _AudioBody(),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: const MiniPlayer(),
-                      ),
-                    ],
-                  ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: AppImage(src: AppSvg.searchIcon),
+                ),
+              ),
+            ),
+          ),
+          Divider(color: colors.dividerColor),
+          Expanded(
+            child: Stack(
+              children: [
+                _AudioBody(),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: const MiniPlayer(),
                 ),
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -513,6 +513,7 @@ class _AudioBodyState extends State<_AudioBody> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => PlayerScreen(
+                              entityList: state.entities,
                               entity: audio,
                               item: MediaItem(
                                 id: audio.id,

@@ -1,22 +1,19 @@
-
 import 'dart:async';
 import 'dart:io';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
-import 'package:chewie/chewie.dart';
+import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
-import '../blocs/favourite/favourite_bloc.dart';
+import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../services/playlist_service.dart';
-import 'player_screen.dart';
+import '../widgets/image_widget.dart';
 
-import 'dart:io';
-import 'package:video_player/video_player.dart';
-import 'package:chewie/chewie.dart';
-
-class GlobalPlayer {
+class GlobalPlayer extends ChangeNotifier {
+  MaterialControlsState materialControlsState = MaterialControlsState();
   static final GlobalPlayer _instance = GlobalPlayer._internal();
 
   factory GlobalPlayer() => _instance;
@@ -31,19 +28,32 @@ class GlobalPlayer {
   bool isLooping = false;
 
   List<MediaItem> queue = [];
+  List<MediaItem> originalQueue = [];
   int currentIndex = -1;
   bool isShuffle = false;
 
   void toggleShuffle() {
+    print("call ssss========$isShuffle");
     isShuffle = !isShuffle;
+    print("call ssss========$isShuffle");
+
+
+    final currentItem = queue[currentIndex];
+
     if (isShuffle) {
       queue.shuffle();
-      currentIndex = 0;
+    } else {
+      queue = List.from(originalQueue);
     }
+
+    currentIndex = queue.indexOf(currentItem);
+
+    notifyListeners();
   }
 
   void setQueue(List<MediaItem> items, int startIndex) {
-    queue = items;
+    originalQueue = List.from(items);
+    queue = List.from(items);
     currentIndex = startIndex;
   }
 
@@ -106,7 +116,30 @@ class GlobalPlayer {
 
     chewie = type == "video"
         ? ChewieController(
+      additionalOptions: (context) {
+        return [
+          OptionItem(onTap: (context){
+            toggleShuffle();
+          } , iconData: Icons.shuffle, title: "Shuffle"),
+          OptionItem(onTap: (context) async
+          {
+            final newPos = (controller!.value.position) - Duration(seconds: 10);
+            controller!.seekTo(
+              newPos > Duration.zero ? newPos : Duration.zero,
+            );
+          }, iconData: Icons.replay_10, title: "kk")];
+      },
+      materialProgressColors: ChewieProgressColors(
+        playedColor: Color(0XFF3D57F9),
+        backgroundColor: Color(0XFFF6F6F6),
+      ),
+
+      looping: true,
+      onSufflePressed: () {
+        toggleShuffle();
+      },
       videoPlayerController: controller!,
+      // onPressedLooping: (){},
       autoPlay: true,
       allowFullScreen: true,
     )
@@ -501,7 +534,11 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentItem?.path.split('/').last ?? ''),
+        title: AppText(currentItem?.path.split('/').last ?? ''),
+        leading: Padding(
+          padding: const EdgeInsets.all(16),
+          child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+        ),
         actions: [
           IconButton(
             icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
@@ -517,20 +554,37 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
         ],
       ),
+
+
+      // AppBar(
+      //   title: Text(currentItem?.path.split('/').last ?? ''),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
+      //       onPressed: () => setState(() => isLocked = true),
+      //     ),
+      //     IconButton(
+      //       icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
+      //       onPressed: _toggleFavourite,
+      //     ),
+      //     IconButton(
+      //       icon: const Icon(Icons.playlist_add),
+      //       onPressed: _addToPlaylist,
+      //     ),
+      //   ],
+      // ),
       body: Stack(
         children: [
           // Fill the background with video or audio
           Positioned.fill(
-              child: isAudio ? _buildAudioPlayer() : Stack(
-                children: [
-                  Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
-                  Positioned(child: _buildVideoPlayer())
-                ],
-              )
-
-
-
-
+            child: isAudio
+                ? _buildAudioPlayer()
+                : Stack(
+              children: [
+                // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
+                Positioned(child: _buildVideoPlayer()),
+              ],
+            ),
           ),
           // Add overlay widgets here, e.g., lock button
           if (isLocked)
@@ -545,263 +599,280 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildAudioPlayer() {
-    if (player.controller == null || !player.controller!.value.isInitialized) {
-      // show a loader or placeholder until controller is ready
+    if (player.controller == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final controller = player.controller!;
     final duration = controller.value.duration;
     final position = controller.value.position;
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xff6dd5fa), Color(0xfffbc2eb)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Icon
-          Container(
-            height: 220,
-            width: 220,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: Colors.white24,
-            ),
-            child: const Icon(
-              Icons.music_note_rounded,
-              size: 120,
-              color: Colors.white,
+    return ValueListenableBuilder(
+      valueListenable: player.controller!,
+      builder: (context, VideoPlayerValue value, child) {
+        if (!value.isInitialized) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xff6dd5fa), Color(0xfffbc2eb)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          const SizedBox(height: 24),
-          // Title
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              currentItem?.path.split('/').last ?? '',
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Slider
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Slider(
-                  min: 0,
-                  max: duration.inMilliseconds.toDouble().clamp(
-                    1,
-                    double.infinity,
-                  ),
-                  value: position.inMilliseconds.toDouble().clamp(
-                    0,
-                    duration.inMilliseconds.toDouble(),
-                  ),
-                  onChanged: (v) {
-                    controller.seekTo(Duration(milliseconds: v.toInt()));
-                    setState(() {});
-                  },
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text(_fmt(position)), Text(_fmt(duration))],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Controls
-          Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                icon: Icon(
-                  Icons.shuffle,
-                  color: player.isShuffle ? Colors.blue : Colors.black54,
+              // Icon
+              Container(
+                height: 220,
+                width: 220,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  color: Colors.white24,
                 ),
-                onPressed: () => setState(() => player.toggleShuffle()),
-              ),
-              IconButton(
-                icon: const Icon(Icons.replay_10),
-                onPressed: () =>
-                    controller.seekTo(position - const Duration(seconds: 10)),
-              ),
-              IconButton(
-                icon: const Icon(Icons.skip_previous),
-                onPressed: () async {
-                  await player.playPrevious();
-                  setState(() {
-                    currentItem = player.queue[player.currentIndex];
-                    isFav = favBox.containsKey(currentItem!.path);
-                  });
-                },
-              ),
-              IconButton(
-                iconSize: 64,
-                icon: Icon(
-                  player.isPlaying
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_filled,
+                child: const Icon(
+                  Icons.music_note_rounded,
+                  size: 120,
+                  color: Colors.white,
                 ),
-                onPressed: () => setState(() {
-                  player.isPlaying ? player.pause() : player.resume();
-                }),
               ),
-              IconButton(
-                icon: const Icon(Icons.skip_next),
-                onPressed: () async {
-                  await player.playNext();
-                  setState(() {
-                    currentItem = player.queue[player.currentIndex];
-                    isFav = favBox.containsKey(currentItem!.path);
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.forward_10),
-                onPressed: () =>
-                    controller.seekTo(position + const Duration(seconds: 10)),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.repeat,
-                  color: player.isLooping ? Colors.blue : Colors.black54,
+              const SizedBox(height: 24),
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  currentItem?.path.split('/').last ?? '',
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                onPressed: () => setState(() => player.toggleLoop()),
+              ),
+              const SizedBox(height: 20),
+              // Slider
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    Slider(
+                      min: 0,
+                      max: duration.inMilliseconds.toDouble().clamp(
+                        1,
+                        double.infinity,
+                      ),
+                      value: position.inMilliseconds.toDouble().clamp(
+                        0,
+                        duration.inMilliseconds.toDouble(),
+                      ),
+                      onChanged: (v) {
+                        controller.seekTo(Duration(milliseconds: v.toInt()));
+                        setState(() {});
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [Text(_fmt(position)), Text(_fmt(duration))],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.shuffle,
+                      color: player.isShuffle ? Colors.blue : Colors.black54,
+                    ),
+                    onPressed: () => setState(() => player.toggleShuffle()),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.replay_10),
+                    onPressed: () => controller.seekTo(
+                      position - const Duration(seconds: 10),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: () async {
+                      await player.playPrevious();
+                      setState(() {
+                        currentItem = player.queue[player.currentIndex];
+                        isFav = favBox.containsKey(currentItem!.path);
+                      });
+                    },
+                  ),
+                  IconButton(
+                    iconSize: 64,
+                    icon: Icon(
+                      player.isPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
+                    ),
+                    onPressed: () => setState(() {
+                      player.isPlaying ? player.pause() : player.resume();
+                    }),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: () async {
+                      await player.playNext();
+                      setState(() {
+                        currentItem = player.queue[player.currentIndex];
+                        isFav = favBox.containsKey(currentItem!.path);
+                      });
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.forward_10),
+                    onPressed: () => controller.seekTo(
+                      position + const Duration(seconds: 10),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.repeat,
+                      color: player.isLooping ? Colors.blue : Colors.black54,
+                    ),
+                    onPressed: () => setState(() => player.toggleLoop()),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildVideoPlayer() {
-    if (player.chewie == null || !player.controller!.value.isInitialized) {
-      // show a loader or placeholder until controller is ready
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+    if (player.controller == null) {
+      return const Center(child: CircularProgressIndicator());
     }
 
     final controller = player.controller!;
     final position = controller.value.position;
     final duration = controller.value.duration;
 
-    return Stack(
-      children: [
-        Chewie(controller: player.chewie!), // Video display
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            color: Colors.black45,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Slider
-                Slider(
-                  min: 0,
-                  max: duration.inMilliseconds.toDouble().clamp(
-                    1,
-                    double.infinity,
-                  ),
-                  value: position.inMilliseconds.toDouble().clamp(
-                    0,
-                    duration.inMilliseconds.toDouble(),
-                  ),
-                  onChanged: (v) =>
-                      controller.seekTo(Duration(milliseconds: v.toInt())),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text(_fmt(position)), Text(_fmt(duration))],
-                ),
-                const SizedBox(height: 8),
-                // Controls (same as audio)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.shuffle,
-                        color: player.isShuffle ? Colors.blue : Colors.white,
-                      ),
-                      onPressed: () => setState(() => player.toggleShuffle()),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.replay_10),
-                      onPressed: () => controller.seekTo(
-                        position - const Duration(seconds: 10),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous),
-                      onPressed: () async {
-                        await player.playPrevious();
-                        setState(() {
-                          currentItem = player.queue[player.currentIndex];
-                          isFav = favBox.containsKey(currentItem!.path);
-                        });
-                      },
-                    ),
-                    IconButton(
-                      iconSize: 64,
-                      icon: Icon(
-                        player.isPlaying
-                            ? Icons.pause_circle_filled
-                            : Icons.play_circle_filled,
-                      ),
-                      onPressed: () => setState(() {
-                        player.isPlaying ? player.pause() : player.resume();
-                      }),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.skip_next),
-                      onPressed: () async {
-                        await player.playNext();
-                        setState(() {
-                          currentItem = player.queue[player.currentIndex];
-                          isFav = favBox.containsKey(currentItem!.path);
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.forward_10),
-                      onPressed: () => controller.seekTo(
-                        position + const Duration(seconds: 10),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.repeat,
-                        color: player.isLooping ? Colors.blue : Colors.white,
-                      ),
-                      onPressed: () => setState(() => player.toggleLoop()),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    return ValueListenableBuilder(
+      valueListenable: player.controller!,
+      builder: (context, VideoPlayerValue value, child) {
+        if (!value.isInitialized || player.chewie == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        return Stack(
+          children: [
+            Chewie(controller: player.chewie!),
+            // Video display
+            // Positioned(
+            //   bottom: 0,
+            //   left: 0,
+            //   right: 0,
+            //   child: Container(
+            //     color: Colors.black45,
+            //     padding: const EdgeInsets.all(12),
+            //     child: Column(
+            //       mainAxisSize: MainAxisSize.min,
+            //       children: [
+            //         // Slider
+            //         Slider(
+            //           min: 0,
+            //           max: duration.inMilliseconds.toDouble().clamp(
+            //             1,
+            //             double.infinity,
+            //           ),
+            //           value: position.inMilliseconds.toDouble().clamp(
+            //             0,
+            //             duration.inMilliseconds.toDouble(),
+            //           ),
+            //           onChanged: (v) =>
+            //               controller.seekTo(Duration(milliseconds: v.toInt())),
+            //         ),
+            //         Row(
+            //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //           children: [Text(_fmt(position)), Text(_fmt(duration))],
+            //         ),
+            //         const SizedBox(height: 8),
+            //         // Controls (same as audio)
+            //         Row(
+            //           mainAxisAlignment: MainAxisAlignment.center,
+            //           children: [
+            //             IconButton(
+            //               icon: Icon(
+            //                 Icons.shuffle,
+            //                 color: player.isShuffle ? Colors.blue : Colors.white,
+            //               ),
+            //               onPressed: () => setState(() => player.toggleShuffle()),
+            //             ),
+            //             IconButton(
+            //               icon: const Icon(Icons.replay_10),
+            //               onPressed: () => controller.seekTo(
+            //                 position - const Duration(seconds: 10),
+            //               ),
+            //             ),
+            //             IconButton(
+            //               icon: const Icon(Icons.skip_previous),
+            //               onPressed: () async {
+            //                 await player.playPrevious();
+            //                 setState(() {
+            //                   currentItem = player.queue[player.currentIndex];
+            //                   isFav = favBox.containsKey(currentItem!.path);
+            //                 });
+            //               },
+            //             ),
+            //             IconButton(
+            //               iconSize: 64,
+            //               icon: Icon(
+            //                 player.isPlaying
+            //                     ? Icons.pause_circle_filled
+            //                     : Icons.play_circle_filled,
+            //               ),
+            //               onPressed: () => setState(() {
+            //                 player.isPlaying ? player.pause() : player.resume();
+            //               }),
+            //             ),
+            //             IconButton(
+            //               icon: const Icon(Icons.skip_next),
+            //               onPressed: () async {
+            //                 await player.playNext();
+            //                 setState(() {
+            //                   currentItem = player.queue[player.currentIndex];
+            //                   isFav = favBox.containsKey(currentItem!.path);
+            //                 });
+            //               },
+            //             ),
+            //             IconButton(
+            //               icon: const Icon(Icons.forward_10),
+            //               onPressed: () => controller.seekTo(
+            //                 position + const Duration(seconds: 10),
+            //               ),
+            //             ),
+            //             IconButton(
+            //               icon: Icon(
+            //                 Icons.repeat,
+            //                 color: player.isLooping ? Colors.blue : Colors.white,
+            //               ),
+            //               onPressed: () => setState(() => player.toggleLoop()),
+            //             ),
+            //           ],
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+          ],
+        );
+      },
     );
   }
 

@@ -53,11 +53,11 @@ class _HomePageState extends State<HomePage> with RouteAware{
   int favouriteCount = 0;
   int playlistCount = 0;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    routeObserver.subscribe(this, ModalRoute.of(context)!);
-  }
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   routeObserver.subscribe(this, ModalRoute.of(context)!);
+  // }
 
   @override
   void dispose() {
@@ -310,62 +310,62 @@ class _HomePageState extends State<HomePage> with RouteAware{
               final entity = entities[index];
               return
                 ImageItemWidget(
-                onMenuSelected: (action) async {
-                  switch (action) {
-                    case MediaMenuAction.detail:
-                      routeToDetailPage(entity);
-                      break;
+                  onMenuSelected: (action) async {
+                    switch (action) {
+                      case MediaMenuAction.detail:
+                        routeToDetailPage(entity);
+                        break;
 
-                    case MediaMenuAction.info:
-                      showInfoDialog(context, entity);
-                      break;
+                      case MediaMenuAction.info:
+                        showInfoDialog(context, entity);
+                        break;
 
-                    case MediaMenuAction.thumb:
-                      showThumb(entity, 500);
-                      break;
+                      case MediaMenuAction.thumb:
+                        showThumb(entity, 500);
+                        break;
 
-                    case MediaMenuAction.share:
-                      _shareItem(context, entity);
-                      break;
+                      case MediaMenuAction.share:
+                        _shareItem(context, entity);
+                        break;
 
-                    case MediaMenuAction.delete:
-                      deleteCurrentItem(context, entity);
-                      break;
+                      case MediaMenuAction.delete:
+                        deleteCurrentItem(context, entity);
+                        break;
 
-                    case MediaMenuAction.addToFavourite:
-                      await _toggleFavourite(context, entity, index);
-                      break;
-                  }
-                },
-                onTap: () async {
-                  print("vudio====${entity.typeInt}");
-                  final file = await entity.file;
-                  if (file == null || !file.existsSync()) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerScreen(
-                        entity: entity,
-                        item: MediaItem(
-                          id: entity.id,
-                          path: file.path,
-                          isNetwork: false,
-                          type: entity.type == AssetType.video
-                              ? 'video'
-                              : 'audio',
+                      case MediaMenuAction.addToFavourite:
+                        await _toggleFavourite(context, entity, index);
+                        break;
+                    }
+                  },
+                  onTap: () async {
+                    print("vudio====${entity.typeInt}");
+                    final file = await entity.file;
+                    if (file == null || !file.existsSync()) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PlayerScreen(
+                          entity: entity,
+                          item: MediaItem(
+                            id: entity.id,
+                            path: file.path,
+                            isNetwork: false,
+                            type: entity.type == AssetType.video
+                                ? 'video'
+                                : 'audio',
+                          ),
                         ),
                       ),
-                    ),
-                  ).then((value) {
-                    context.read<VideoBloc>().add(
-                      LoadVideosFromGallery(showLoading: false),
-                    );
-                  });
-                },
-                isGrid: false,
-                entity: entity,
-                option: const ThumbnailOption(size: ThumbnailSize.square(300)),
-              );
+                    ).then((value) {
+                      context.read<VideoBloc>().add(
+                        LoadVideosFromGallery(showLoading: false),
+                      );
+                    });
+                  },
+                  isGrid: false,
+                  entity: entity,
+                  option: const ThumbnailOption(size: ThumbnailSize.square(300)),
+                );
             },
           );
 
@@ -484,10 +484,10 @@ class _HomePageState extends State<HomePage> with RouteAware{
 
 
   Future<void> _toggleFavourite(
-    BuildContext context,
-    AssetEntity entity,
-    int index,
-  ) async {
+      BuildContext context,
+      AssetEntity entity,
+      int index,
+      ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -551,17 +551,17 @@ class _HomePageState extends State<HomePage> with RouteAware{
       physics: const NeverScrollableScrollPhysics(),
       itemCount: folderList.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 15,
-      childAspectRatio: 1.05,
-    ),itemBuilder: (context, index) {
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 15,
+        childAspectRatio: 1.05,
+      ),itemBuilder: (context, index) {
       final item = folderList[index];
       return GalleryItemWidget(path: item, setState: setState);
 
     },);
 
-      ListView.builder(
+    ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: folderList.length,
@@ -582,24 +582,27 @@ class _HomePageState extends State<HomePage> with RouteAware{
         ),
       ),
     );
+
     if (!permission.hasAccess) return;
 
     final List<AssetPathEntity> galleryList =
-        await PhotoManager.getAssetPathList(
-          type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-          filterOption: FilterOptionGroup(),
-          pathFilterOption: PMPathFilter(
-            darwin: PMDarwinPathFilter(
-              type: [PMDarwinAssetCollectionType.album],
-            ),
-          ),
-        );
+    await PhotoManager.getAssetPathList(
+      type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
+      filterOption: FilterOptionGroup(),
+      pathFilterOption: PMPathFilter(
+        darwin: PMDarwinPathFilter(
+          type: [PMDarwinAssetCollectionType.album],
+        ),
+      ),
+    );
+
+    if (!mounted) return;   // ✅ VERY IMPORTANT
 
     setState(() {
-      folderList.clear();
-      folderList.addAll(galleryList);
+      folderList = galleryList;
     });
   }
+
 
   Future<void> routeToDetailPage(AssetEntity entity) async {
     Navigator.of(context).push<void>(

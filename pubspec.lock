@@ -138,12 +138,11 @@ packages:
     source: hosted
     version: "2.0.4"
   chewie:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
-      name: chewie
-      sha256: "44bcfc5f0dfd1de290c87c9d86a61308b3282a70b63435d5557cfd60f54a69ca"
-      url: "https://pub.dev"
-    source: hosted
+      path: chewie
+      relative: true
+    source: path
     version: "1.13.0"
   clock:
     dependency: transitive
