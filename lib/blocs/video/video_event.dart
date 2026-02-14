@@ -19,9 +19,15 @@
 abstract class VideoEvent{}
 
 class LoadVideosFromGallery extends VideoEvent {
-  bool? showLoading;
-  LoadVideosFromGallery({this.showLoading = true});
+  final bool showLoading;
+  final bool isRefresh;
+
+  LoadVideosFromGallery({
+    this.showLoading = true,
+    this.isRefresh = false,
+  });
 }
+
 
 class PickVideos extends VideoEvent {
   final Future<List<String>?> Function() filePicker;

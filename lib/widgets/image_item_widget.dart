@@ -565,16 +565,8 @@ _dropDownButton(),
                           color: colors.textFieldFill
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: AssetEntityImage(
-                    
-                        width: double.infinity,
-                        entity,
-                        isOriginal: false,
-                        thumbnailSize: widget.option.size,
-                        thumbnailFormat: widget.option.format,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, e, s) => Text(e.toString()),
-                      ),
+                      child: _assetAntityImage(entity)
+
                     ),
                   ),
                   if (entity.isFavorite)
@@ -689,6 +681,18 @@ _dropDownButton(),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+  Widget _videoPlaceholder() {
+    return Container(
+      color: Colors.black12,
+      child: const Center(
+        child: Icon(
+          Icons.videocam,
+          size: 40,
+          color: Colors.grey,
         ),
       ),
     );
@@ -930,6 +934,35 @@ _dropDownButton(),
       behavior: HitTestBehavior.opaque,
       onTap: widget.onTap,
       child: buildContent(context),
+    );
+  }
+
+  Widget? _assetAntityImage(AssetEntity entity) {
+    return FutureBuilder<File?>(
+      future: entity.file,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data == null) {
+          return _videoPlaceholder();
+        }
+
+        final file = snapshot.data!;
+
+        if (!file.existsSync() || file.lengthSync() == 0) {
+          return _videoPlaceholder();
+        }
+
+        return AssetEntityImage(
+          entity,
+          width: double.infinity,
+          isOriginal: false,
+          thumbnailSize: const ThumbnailSize.square(300),
+          thumbnailFormat: ThumbnailFormat.jpeg,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) {
+            return _videoPlaceholder();
+          },
+        );
+      },
     );
   }
 }

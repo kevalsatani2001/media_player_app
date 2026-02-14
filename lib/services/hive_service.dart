@@ -1,19 +1,26 @@
 import 'dart:ui';
 
 import 'package:hive/hive.dart';
+import '../main.dart';
 import '../models/media_item.dart';
+import '../models/playlist_model.dart';
 
 class HiveService {
   static late Box settingsBox;
 
   static Future<void> init() async {
-    await _openSettingsBox();
+    // Close any boxes opened previously (during hot reload)
+    // for (var name in ['videos', 'audios', 'favourites', 'playlists']) {
+    //   if (Hive.isBoxOpen(name)) await Hive.box(name).close();
+    // }
 
+    await _openSettingsBox();
     await _openOrResetBox('videos');
     await _openOrResetBox('audios');
     await _openOrResetBox('favourites');
     await _openOrResetBox('recents');
     await _openOrResetBox('playlists');
+    // await Hive.openBox<PlaylistModel>('playlists');
   }
 
   static Future<void> _openSettingsBox() async {
@@ -23,16 +30,16 @@ class HiveService {
   static Future<void> _openOrResetBox(String name) async {
     try {
       await Hive.openBox(name);
-    } on HiveError catch (e) {
-      if (e.toString().contains('unknown typeId')) {
-        // 🔥 corrupted binary data → reset safely
-        await Hive.deleteBoxFromDisk(name);
-        await Hive.openBox(name);
-      } else {
-        rethrow;
+    } catch (e) {
+      if (Hive.isBoxOpen(name)) {
+        await Hive.box(name).close();
       }
+
+      await Hive.deleteBoxFromDisk(name);
+      await Hive.openBox(name);
     }
   }
+
 
   // ---------------- DATA HELPERS ----------------
 
@@ -53,11 +60,9 @@ class HiveService {
 
   // ---------------- SETTINGS ----------------
 
-  static bool get isDark =>
-      settingsBox.get('isDark', defaultValue: true);
+  static bool get isDark => settingsBox.get('isDark', defaultValue: true);
 
-  static set isDark(bool value) =>
-      settingsBox.put('isDark', value);
+  static set isDark(bool value) => settingsBox.put('isDark', value);
 
   static String get languageCode =>
       settingsBox.get('languageCode', defaultValue: 'en');
@@ -79,5 +84,4 @@ class HiveService {
   static Future<void> saveLanguage(String code) async {
     await settingsBox.put('language', code);
   }
-
 }

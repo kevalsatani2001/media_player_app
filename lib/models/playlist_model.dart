@@ -1,10 +1,18 @@
+import 'package:hive/hive.dart';
 import 'media_item.dart';
 
-class PlaylistModel {
-  final String name;
-  final List<MediaItem> items;
+part 'playlist_model.g.dart';
 
-  PlaylistModel({required this.name, required this.items});
+@HiveType(typeId: 2)
+class PlaylistModel extends HiveObject {
+  @HiveField(0)
+  String name;
 
-  Map<String, dynamic> toMap() => {'name': name, 'items': items};
+  @HiveField(1)
+  List<MediaItem> items;
+
+  PlaylistModel({
+    required this.name,
+    required this.items,
+  });
 }

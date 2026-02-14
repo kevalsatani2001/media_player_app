@@ -53,6 +53,8 @@ import 'package:media_player/utils/app_string.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'blocs/audio/audio_bloc.dart';
+import 'blocs/count/count_bloc.dart';
+import 'blocs/count/count_event.dart';
 import 'blocs/favourite/favourite_bloc.dart';
 import 'blocs/local/local_bloc.dart';
 import 'blocs/local/local_state.dart';
@@ -60,6 +62,7 @@ import 'blocs/theme/theme_bloc.dart';
 import 'blocs/theme/theme_state.dart';
 import 'blocs/video/video_event.dart';
 import 'models/media_item.dart';
+import 'models/playlist_model.dart';
 import 'services/hive_service.dart';
 
 import 'blocs/media/media_bloc.dart';
@@ -71,26 +74,34 @@ import 'screens/audio_screen.dart';
 import 'screens/playlist_screen.dart';
 import 'screens/recent_screen.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  Hive.registerAdapter(MediaItemAdapter());
+
+  // Register adapters only once
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MediaItemAdapter());
+  if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(PlaylistModelAdapter());
   await HiveService.init();
-
-
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => ThemeBloc()),
         BlocProvider(create: (_) => LocaleBloc()),
-        BlocProvider(create: (_) => FavouriteChangeBloc()),
+        BlocProvider(
+          create: (_) => HomeCountBloc()..add(LoadCounts()),
+        ),
+        // BlocProvider(create: (_) => FavouriteChangeBloc()),
+        BlocProvider<FavouriteChangeBloc>(
+          create: (_) => FavouriteChangeBloc(),
+        ),
         BlocProvider<VideoBloc>(
           create: (_) =>
-              VideoBloc(Hive.box('video'))..add(LoadVideosFromGallery()),
+          VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery(showLoading: true)),
         ),
         BlocProvider<FavouriteBloc>(
           create: (_) =>
-              FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
+          FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
         ),
         BlocProvider<AudioBloc>(
           create: (_) => AudioBloc(Hive.box('audios'))..add(LoadAudios()),

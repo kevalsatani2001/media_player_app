@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
         BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
         BlocProvider(
           create: (_) =>
-              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
+          VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
         ), // Bottom nav bloc
       ],
       child: BlocBuilder<BottomNavBloc, BottomNavState>(
@@ -216,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildBottomNavItem(
-                              () {
+                                  () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(0),
                                 );
@@ -227,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.homeUnselected,
                             ),
                             _buildBottomNavItem(
-                              () {
+                                  () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(1),
                                 );
@@ -238,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.videoUnselected,
                             ),
                             _buildBottomNavItem(
-                              () {
+                                  () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(2),
                                 );
@@ -249,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.musicUnselected,
                             ),
                             _buildBottomNavItem(
-                              () {
+                                  () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(3),
                                 );
@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
         BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
         BlocProvider(
           create: (_) =>
-              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
+          VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
         ), // Bottom nav bloc
       ],
       child: BlocBuilder<BottomNavBloc, BottomNavState>(
@@ -350,12 +350,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _buildBottomNavItem(
-    void Function()? onTap,
-    BottomNavState bottomState,
-    int index,
-    String selectedIcon,
-    String unSelectedIcon,
-  ) {
+      void Function()? onTap,
+      BottomNavState bottomState,
+      int index,
+      String selectedIcon,
+      String unSelectedIcon,
+      ) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return GestureDetector(
       onTap: onTap,
@@ -385,15 +385,20 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         return HomePage();
-      // return _buildHomeTab();
+    // return _buildHomeTab();
       case 1:
-        return VideoScreen(isComeHomeScreen: false);
-      // return _buildVideoSection();
+        return BlocProvider(
+          create: (_) => VideoBloc(Hive.box('videos'))
+            ..add(LoadVideosFromGallery(showLoading: false)),
+          child: VideoScreen(isComeHomeScreen: false,)
+        );
+    // return VideoScreen(isComeHomeScreen: false);
+    // return _buildVideoSection();
       case 2:
         return AudioScreen(isComeHomeScreen: false);
       case 3:
         return SettingScreen();
-      // return _buildSettingsTab();
+    // return _buildSettingsTab();
       default:
         return const SizedBox();
     }
@@ -433,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // get the display name of the language from translations
                       final langName =
                           AppStrings.translations[langCode]?['language'] ??
-                          langCode;
+                              langCode;
                       return DropdownMenuItem<Locale>(
                         value: Locale(langCode),
                         child: Text(langName),
@@ -659,15 +664,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!permission.hasAccess) return;
 
     final List<AssetPathEntity> galleryList =
-        await PhotoManager.getAssetPathList(
-          type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-          filterOption: FilterOptionGroup(),
-          pathFilterOption: PMPathFilter(
-            darwin: PMDarwinPathFilter(
-              type: [PMDarwinAssetCollectionType.album],
-            ),
-          ),
-        );
+    await PhotoManager.getAssetPathList(
+      type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
+      filterOption: FilterOptionGroup(),
+      pathFilterOption: PMPathFilter(
+        darwin: PMDarwinPathFilter(
+          type: [PMDarwinAssetCollectionType.album],
+        ),
+      ),
+    );
 
     setState(() {
       folderList.clear();

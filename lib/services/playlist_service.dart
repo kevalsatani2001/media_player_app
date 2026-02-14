@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:hive/hive.dart';
+import 'package:media_player/main.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager/platform_utils.dart';
 import '../models/media_item.dart';
 
 import 'package:bloc/bloc.dart';
+
+import '../models/playlist_model.dart';
 
 class FavouriteChangeBloc
     extends Bloc<FavouriteChangeEvent, FavouriteChangeState> {
@@ -36,304 +39,146 @@ class FavouriteChanged extends FavouriteChangeState {
 }
 
 class PlaylistService {
-  static final Box _box = Hive.box('playlists');
-  final FavouriteChangeBloc favouriteChangeBloc;
+  PlaylistService();
 
-  PlaylistService({required this.favouriteChangeBloc});
-
-  /// Create playlist with name
-  static void createPlaylist(String name, MediaItem? firstItem) {
-    if (name.trim().isEmpty) return;
-
-    _box.add({
-      'name': name.trim(),
-      'items': firstItem == null ? [] : [firstItem],
-    });
-  }
-
-  /// Add media to existing playlist (NO duplicates)
-  static void addToPlaylist(dynamic key, MediaItem item) {
-    final playlist = _box.get(key);
-    final List items = List<Map>.from(playlist['items']);
-
-    final exists = items.any((e) => e['path'] == item.path);
-    if (exists) return;
-
-    items.add(item);
-
-    _box.put(key, {'name': playlist['name'], 'items': items});
-  }
+  static Box get _box => Hive.box('playlists');
 
   static List getPlaylists() => _box.values.toList();
+  static final Box favBox = Hive.box('favourites');
 
-  /*
-    Future<void> _toggleFavourite(
-      BuildContext context,
-      AssetEntity entity,
-      int index,
-      ) async {
-    final favBox = Hive.box('favourites');
-    final bool isFavorite = entity.isFavorite;
+
+
+  /// Toggle favourite in playlist & sync with device
+  /// Returns new favourite state
+  Future<bool> toggleFavourite(AssetEntity entity) async {
+    // Use the global FavouriteChangeBloc instead of creating a new one each time
+    FavouriteChangeBloc favouriteChangeBloc = FavouriteChangeBloc();
 
     final file = await entity.file;
-    if (file == null) return;
+    if (file == null) return false;
 
     final key = file.path;
+    final bool isCurrentlyFav = favBox.containsKey(key);
 
-    // 🔹 Update Hive
-    if (isFavorite) {
-      favBox.delete(key);
+    // 1️⃣ Update Hive favourites
+    if (isCurrentlyFav) {
+      await favBox.delete(key);
     } else {
-      favBox.put(key, {
+      await favBox.put(key, {
+        "id": entity.id,
         "path": file.path,
         "isNetwork": false,
         "type": entity.type == AssetType.audio ? "audio" : "video",
       });
     }
 
-    // 🔹 Update system favourite
+    // 2️⃣ Update system gallery favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
-        favorite: !isFavorite,
+        favorite: !isCurrentlyFav,
       );
     } else if (Platform.isAndroid) {
       await PhotoManager.editor.android.favoriteAsset(
         entity: entity,
-        favorite: !isFavorite,
+        favorite: !isCurrentlyFav,
       );
     } else {
       await PhotoManager.editor.darwin.favoriteAsset(
         entity: entity,
-        favorite: !isFavorite,
+        favorite: !isCurrentlyFav,
       );
     }
 
-    // 🔹 Reload entity
-    final AssetEntity? newEntity = await entity.obtainForNewProperties();
-    if (!mounted || newEntity == null) return;
+    // 3️⃣ Update playlists: mark matching MediaItems as favourite or not
+    for (int i = 0; i < _box.length; i++) {
+      final playlist = _box.getAt(i);
+      if (playlist == null) continue;
 
-    // 🔹 Update UI list
-    // readPathProvider(context).list[index] = newEntity;
-    context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+      bool updated = false;
+      for (var item in playlist.items) {
+        if (item.path == file.path) {
+          item.isFavourite = !isCurrentlyFav;
+          updated = true;
+        }
+      }
 
-    setState(() {});
-  }
-   */
-
-  /// Toggle favourite in playlist & sync with device
-  Future<void> toggleFavourite(AssetEntity entity) async {
-    final favBox = Hive.box('favourites');
-    final bool isFavorite = entity.isFavorite;
-
-    final file = await entity.file;
-    if (file == null) return;
-    final key = file.path;
-
-    // Update Hive favourites
-    // if (isFavorite) {
-    //   favBox.delete(key);
-    // } else {
-    //   favBox.put(key, {
-    //     "path": file.path,
-    //     "isNetwork": false,
-    //     "type": entity.type == AssetType.audio ? "audio" : "video",
-    //   });
-    // }
-
-    // Update system favourite
-    if (PlatformUtils.isOhos) {
-      await PhotoManager.editor.ohos.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    } else if (Platform.isAndroid) {
-      print("In side updation =========${isFavorite}");
-      await PhotoManager.editor.android.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    } else {
-      await PhotoManager.editor.darwin.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    }
-
-    // Notify other blocs / screens
-    favouriteChangeBloc.add(FavouriteUpdated(entity));
-
-    // Update playlists
-    final playlists = _box.values.toList();
-    for (var i = 0; i < playlists.length; i++) {
-      final playlist = playlists[i];
-      final items = List<Map>.from(playlist['items']);
-      final index = items.indexWhere((e) => e['path'] == entity.relativePath);
-      if (index != -1) {
-        items[index]['isFavourite'] = !isFavorite;
-        _box.putAt(i, {'name': playlist['name'], 'items': items});
+      if (updated) {
+        // Save playlist back to Hive
+        playlist.save();
       }
     }
+
+    // 4️⃣ Notify listeners
+    favouriteChangeBloc.add(FavouriteUpdated(entity));
+
+    return !isCurrentlyFav;
   }
-}
+
+  static void addPlaylist(PlaylistModel playlist) {
+    _box.add(playlist);
+  }
+
+  static void deletePlaylist(int index) {
+    _box.deleteAt(index);
+  }
+
+  static void renamePlaylist(int index, String newName) {
+    final playlist = _box.getAt(index);
+    if (playlist != null) {
+      playlist.name = newName;
+      playlist.save();
+    }
+  }
+
+  void addToPlaylist(String playlistName, MediaItem item) {
+    final box = Hive.box<PlaylistModel>('playlists');
+
+    // Check if playlist exists
+    final playlistKey = box.keys.firstWhere(
+            (k) => box.get(k)?.name == playlistName,
+        orElse: () => null);
+
+    if (playlistKey != null) {
+      final playlist = box.get(playlistKey)!;
+      if (!playlist.items.any((e) => e.path == item.path)) {
+        playlist.items.add(item);
+        box.put(playlistKey, playlist); // update
+      }
+    } else {
+      // Create new playlist
+      final newPlaylist = PlaylistModel(name: playlistName, items: [item]);
+      box.add(newPlaylist);
+    }
+  }
 
 
 
-
-// import 'dart:io';
 //
-// import 'package:flutter/cupertino.dart';
-// import 'package:hive/hive.dart';
-// import 'package:photo_manager/photo_manager.dart';
-// import 'package:photo_manager/platform_utils.dart';
-// import '../blocs/favourite_change/favourite_change_bloc.dart';
-// import '../blocs/favourite_change/favourite_change_state.dart';
-// import '../models/media_item.dart';
+// static void createPlaylist(String name, MediaItem? firstItem) {
+//   final box = Hive.box('playlists');
 //
-//
-//
-//
-//
-//
-// class PlaylistService {
-//   static final Box _box = Hive.box('playlists');
-//   final FavouriteChangeBloc favouriteChangeBloc;
-//
-//   PlaylistService({required this.favouriteChangeBloc});
-//
-//   /// Create playlist with name
-//   static void createPlaylist(String name, MediaItem? firstItem) {
-//     if (name.trim().isEmpty) return;
-//
-//     _box.add({
-//       'name': name.trim(),
-//       'items': firstItem == null ? [] : [firstItem.toMap()],
-//     });
-//   }
-//
-//   /// Add media to existing playlist (NO duplicates)
-//   static void addToPlaylist(dynamic key, MediaItem item) {
-//     final playlist = _box.get(key);
-//     final List items = List<Map>.from(playlist['items']);
-//
-//     final exists = items.any((e) => e['path'] == item.path);
-//     if (exists) return;
-//
-//     items.add(item.toMap());
-//
-//     _box.put(key, {'name': playlist['name'], 'items': items});
-//   }
-//
-//   static List getPlaylists() => _box.values.toList();
-//
-//   /*
-//     Future<void> _toggleFavourite(
-//       BuildContext context,
-//       AssetEntity entity,
-//       int index,
-//       ) async {
-//     final favBox = Hive.box('favourites');
-//     final bool isFavorite = entity.isFavorite;
-//
-//     final file = await entity.file;
-//     if (file == null) return;
-//
-//     final key = file.path;
-//
-//     // 🔹 Update Hive
-//     if (isFavorite) {
-//       favBox.delete(key);
-//     } else {
-//       favBox.put(key, {
-//         "path": file.path,
-//         "isNetwork": false,
-//         "type": entity.type == AssetType.audio ? "audio" : "video",
-//       });
-//     }
-//
-//     // 🔹 Update system favourite
-//     if (PlatformUtils.isOhos) {
-//       await PhotoManager.editor.ohos.favoriteAsset(
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     } else if (Platform.isAndroid) {
-//       await PhotoManager.editor.android.favoriteAsset(
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     } else {
-//       await PhotoManager.editor.darwin.favoriteAsset(
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     }
-//
-//     // 🔹 Reload entity
-//     final AssetEntity? newEntity = await entity.obtainForNewProperties();
-//     if (!mounted || newEntity == null) return;
-//
-//     // 🔹 Update UI list
-//     // readPathProvider(context).list[index] = newEntity;
-//     context.read<AudioBloc>().add(LoadAudios(showLoading: false));
-//
-//     setState(() {});
-//   }
-//    */
-//
-//   /// Toggle favourite in playlist & sync with device
-//   Future<void> toggleFavourite(AssetEntity entity) async {
-//     final favBox = Hive.box('favourites');
-//     final bool isFavorite = entity.isFavorite;
-//
-//     final file = await entity.file;
-//     if (file == null) return;
-//     final key = file.path;
-//
-//     // Update Hive favourites
-//     // if (isFavorite) {
-//     //   favBox.delete(key);
-//     // } else {
-//     //   favBox.put(key, {
-//     //     "path": file.path,
-//     //     "isNetwork": false,
-//     //     "type": entity.type == AssetType.audio ? "audio" : "video",
-//     //   });
-//     // }
-//
-//     // Update system favourite
-//     if (PlatformUtils.isOhos) {
-//       await PhotoManager.editor.ohos.favoriteAsset(
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     } else if (Platform.isAndroid) {
-//       print("In side updation =========${isFavorite}");
-//       await PhotoManager.editor.android.favoriteAsset(
-//
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     } else {
-//       await PhotoManager.editor.darwin.favoriteAsset(
-//         entity: entity,
-//         favorite: !isFavorite,
-//       );
-//     }
-//
-//     // Notify other blocs / screens
-//     favouriteChangeBloc.add(FavouriteUpdated(entity));
-//
-//     // Update playlists
-//     final playlists = _box.values.toList();
-//     for (var i = 0; i < playlists.length; i++) {
-//       final playlist = playlists[i];
-//       final items = List<Map>.from(playlist['items']);
-//       final index = items.indexWhere((e) => e['path'] == entity.relativePath);
-//       if (index != -1) {
-//         items[index]['isFavourite'] = !isFavorite;
-//         _box.putAt(i, {'name': playlist['name'], 'items': items});
-//       }
-//     }
-//   }
+//   box.add({
+//     'name': name,
+//     'items': firstItem != null ? [firstItem.toMap()] : [],
+//   });
 // }
+//
+//
+// static void addToPlaylist(dynamic key, MediaItem item) {
+//   final playlistBox = Hive.box<List<MediaItem>>('playlists');
+//   final playlist = playlistBox.get(key, defaultValue: <MediaItem>[])!;
+//
+//   final exists = playlist.any((e) => e.path == item.path);
+//   if (exists) return;
+//
+//   playlist.add(item);
+//   playlistBox.put(key, playlist);
+// }
+
+
+
+
+//
+// static List getPlaylists() => _box.values.toList();
+}

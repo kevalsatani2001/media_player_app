@@ -49,6 +49,6 @@ class MediaItem extends HiveObject {
       id: map['id'],
       isFavourite: map['isFavourite'],
     );
-}}
+  }}
 
 

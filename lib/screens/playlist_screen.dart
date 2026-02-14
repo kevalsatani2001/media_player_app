@@ -6,6 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/media_item.dart';
+import '../models/playlist_model.dart';
+import '../services/playlist_service.dart';
 import 'player_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
@@ -20,31 +22,28 @@ class PlaylistScreen extends StatelessWidget {
       body: ValueListenableBuilder(
         valueListenable: box.listenable(),
         builder: (_, Box box, __) {
-          if (box.isEmpty) {
-            return const Center(child: Text("No playlists created"));
+          final playlists = box.values.toList();
+
+          if (playlists.isEmpty) {
+            return const Center(child: Text("No playlists found."));
           }
 
           return ListView.builder(
-            itemCount: box.length,
-            itemBuilder: (_, i) {
-              final key = box.keyAt(i);
-              final playlist = box.get(key);
-
+            itemCount: playlists.length,
+            itemBuilder: (_, index) {
+              final playlist = playlists[index];
               return ListTile(
-                leading: const Icon(Icons.queue_music),
-                title: Text(playlist['name']),
-                subtitle: Text("${playlist['items'].length} items"),
+                title: Text(playlist.name),
+                subtitle: Text('${playlist.items.length} items'),
                 trailing: PopupMenuButton<PlaylistMenuAction>(
                   onSelected: (action) {
                     switch (action) {
                       case PlaylistMenuAction.rename:
-                        _showRenameDialog(context, key, playlist['name']);
+                        _showRenameDialog(context, box, index, playlist.name);
                         break;
-
                       case PlaylistMenuAction.delete:
-                        _confirmDelete(context, key, playlist['name']);
+                        _confirmDelete(context, box, index, playlist.name);
                         break;
-
                       case PlaylistMenuAction.share:
                         _sharePlaylist(playlist);
                         break;
@@ -83,8 +82,8 @@ class PlaylistScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => PlaylistItemsScreen(
-                        name: playlist['name'],
-                        items: List<Map>.from(playlist['items']),
+                        name: playlist.name,
+                        items: playlist.items,
                       ),
                     ),
                   );
@@ -97,9 +96,13 @@ class PlaylistScreen extends StatelessWidget {
     );
   }
 
-  void _showRenameDialog(BuildContext context, dynamic key, String oldName) {
+  void _showRenameDialog(
+      BuildContext context,
+      Box box,
+      int index,
+      String oldName,
+      ) {
     final controller = TextEditingController(text: oldName);
-    final box = Hive.box('playlists');
 
     showDialog(
       context: context,
@@ -124,9 +127,11 @@ class PlaylistScreen extends StatelessWidget {
               final newName = controller.text.trim();
               if (newName.isEmpty) return;
 
-              final playlist = box.get(key);
-              playlist['name'] = newName;
-              box.put(key, playlist);
+              final playlist = box.getAt(index);
+              if (playlist != null) {
+                playlist.name = newName;
+                playlist.save();
+              }
 
               Navigator.pop(context);
             },
@@ -137,9 +142,7 @@ class PlaylistScreen extends StatelessWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, dynamic key, String name) {
-    final box = Hive.box('playlists');
-
+  void _confirmDelete(BuildContext context, Box box, int index, String name) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -152,7 +155,7 @@ class PlaylistScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              box.delete(key);
+              box.deleteAt(index);
               Navigator.pop(context);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
@@ -162,18 +165,12 @@ class PlaylistScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _sharePlaylist(Map playlist) async {
-    final List<Map> items = List<Map>.from(playlist['items']);
-
-    if (items.isEmpty) return;
-
+  Future<void> _sharePlaylist(PlaylistModel playlist) async {
     final List<XFile> files = [];
 
-    for (final item in items) {
-      final path = item['path'];
-
-      if (path != null && File(path).existsSync()) {
-        files.add(XFile(path));
+    for (final item in playlist.items) {
+      if (item.path.isNotEmpty && File(item.path).existsSync()) {
+        files.add(XFile(item.path));
       }
     }
 
@@ -185,15 +182,15 @@ class PlaylistScreen extends StatelessWidget {
     await Share.shareXFiles(
       files,
       text: files.length == 1
-          ? "Sharing 1 file from ${playlist['name']}"
-          : "Sharing ${files.length} files from ${playlist['name']}",
+          ? "Sharing 1 file from ${playlist.name}"
+          : "Sharing ${files.length} files from ${playlist.name}",
     );
   }
 }
 
 class PlaylistItemsScreen extends StatelessWidget {
   final String name;
-  final List<Map> items;
+  final List<MediaItem> items;
 
   const PlaylistItemsScreen({
     super.key,
@@ -203,18 +200,18 @@ class PlaylistItemsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mediaItems = items
-        .map((e) => MediaItem.fromMap(Map<String, dynamic>.from(e)))
-        .toList();
+    // final mediaItems = items
+    //     .map((e) => MediaItem.fromMap(Map<String, dynamic>.from(e)))
+    //     .toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(name)),
-      body: mediaItems.isEmpty
+      body: items.isEmpty
           ? const Center(child: Text("Playlist empty"))
           : ListView.builder(
-        itemCount: mediaItems.length,
+        itemCount: items.length,
         itemBuilder: (_, i) {
-          final item = mediaItems[i];
+          final item = items[i];
           return ListTile(
             leading: Icon(
               item.type == 'video' ? Icons.video_file : Icons.music_note,
@@ -255,117 +252,3 @@ class PlaylistItemsScreen extends StatelessWidget {
 }
 
 enum PlaylistMenuAction { rename, delete, share }
-
-
-
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:hive/hive.dart';
-// import 'package:hive_flutter/hive_flutter.dart';
-// import 'package:photo_manager/photo_manager.dart';
-// import '../models/media_item.dart';
-// import 'player_screen.dart';
-//
-// class PlaylistScreen extends StatelessWidget {
-//   const PlaylistScreen({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final box = Hive.box('playlists');
-//
-//     return Scaffold(
-//       appBar: AppBar(title: const Text("Playlists")),
-//       body: ValueListenableBuilder(
-//         valueListenable: box.listenable(),
-//         builder: (_, Box box, __) {
-//           if (box.isEmpty) {
-//             return const Center(child: Text("No playlists created"));
-//           }
-//
-//           return ListView.builder(
-//             itemCount: box.length,
-//             itemBuilder: (_, i) {
-//               final key = box.keyAt(i);
-//               final playlist = box.get(key);
-//
-//               return ListTile(
-//                 leading: const Icon(Icons.queue_music),
-//                 title: Text(playlist['name']),
-//                 subtitle: Text("${playlist['items'].length} items"),
-//                 onTap: () {
-//                   Navigator.push(
-//                     context,
-//                     MaterialPageRoute(
-//                       builder: (_) => PlaylistItemsScreen(
-//                         name: playlist['name'],
-//                         items: List<Map>.from(playlist['items']),
-//                       ),
-//                     ),
-//                   );
-//                 },
-//               );
-//             },
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-//
-// class PlaylistItemsScreen extends StatelessWidget {
-//   final String name;
-//   final List<Map> items;
-//
-//   const PlaylistItemsScreen({
-//     super.key,
-//     required this.name,
-//     required this.items,
-//   });
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     final mediaItems = items
-//         .map((e) => MediaItem.fromMap(Map<String, dynamic>.from(e)))
-//         .toList();
-//
-//     return Scaffold(
-//       appBar: AppBar(title: Text(name)),
-//       body: mediaItems.isEmpty
-//           ? const Center(child: Text("Playlist empty"))
-//           : ListView.builder(
-//               itemCount: mediaItems.length,
-//               itemBuilder: (_, i) {
-//                 final item = mediaItems[i];
-//                 return ListTile(
-//                   leading: Icon(
-//                     item.type == 'video' ? Icons.video_file : Icons.music_note,
-//                   ),
-//                   title: Text(item.path.split('/').last),
-//                   onTap: () {
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                         builder: (_) => PlayerScreen(
-//                           item: MediaItem(
-//                             id: item.id, // optional
-//                             path: item.path,
-//                             isNetwork: false,
-//                             type: item.type,
-//                             isFavourite: item.isFavourite ?? false,
-//                           ),
-//                           entity: null,     // ✅ VERY IMPORTANT
-//                           index: null,      // ✅ VERY IMPORTANT
-//                         ),
-//                       ),
-//                     );
-//                   },
-//
-//                 );
-//               },
-//             ),
-//     );
-//   }
-// }

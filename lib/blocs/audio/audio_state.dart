@@ -14,6 +14,7 @@ class AudioLoaded extends AudioState {
   final int page;
   final int totalCount;
   final bool hasMore;
+  final bool isLoadingMore;
 
   AudioLoaded({
     required this.entities,
@@ -21,21 +22,22 @@ class AudioLoaded extends AudioState {
     required this.page,
     required this.totalCount,
     required this.hasMore,
+    this.isLoadingMore = false,
   });
 
   AudioLoaded copyWith({
     List<AssetEntity>? entities,
-    AssetPathEntity? path,
     int? page,
-    int? totalCount,
     bool? hasMore,
+    bool? isLoadingMore,
   }) {
     return AudioLoaded(
       entities: entities ?? this.entities,
-      path: path ?? this.path,
+      path: path,
       page: page ?? this.page,
-      totalCount: totalCount ?? this.totalCount,
+      totalCount: totalCount,
       hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
 }
@@ -45,3 +47,5 @@ class AudioError extends AudioState {
   final String message;
   const AudioError(this.message);
 }
+
+class LoadMoreAudios extends AudioEvent {}
