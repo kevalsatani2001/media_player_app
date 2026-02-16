@@ -178,6 +178,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
           _onSpeedButtonTap();
         },
         iconData: Icons.speed,
+        iconImage: "assets/svg_icon/ic_on.svg",
         title:
             chewieController.optionsTranslation?.playbackSpeedButtonText ??
             'Playback speed',

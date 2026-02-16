@@ -53,7 +53,9 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(16),
-          child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+          child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20)),
         ),
       ),
       body: Column(

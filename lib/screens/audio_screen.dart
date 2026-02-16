@@ -72,7 +72,15 @@ class _AudioScreenState extends State<AudioScreen> {
             ),
           ],
         ),
-        body: const _AudioBody(),
+        body:  Column(
+          children: [
+            Expanded(child: _AudioBody()),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: const MiniPlayer(),
+            ),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
           child: const Icon(Icons.refresh),
@@ -103,17 +111,8 @@ class _AudioScreenState extends State<AudioScreen> {
             ),
           ),
           Divider(color: colors.dividerColor),
-          Expanded(
-            child: Stack(
-              children: [
-                _AudioBody(),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: const MiniPlayer(),
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: _AudioBody()),
+          const MiniPlayer(),
         ],
       ),
     );

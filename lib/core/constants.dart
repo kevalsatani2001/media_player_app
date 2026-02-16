@@ -57,6 +57,23 @@ class AppSvg {
 
   static const String rightArrow = '$_base/right_arrow_icon.svg';
 
+  ////////////////////// controls////////////////////////////
+  static const String ic2x = '$_base/ic_2x.svg';
+  static const String ic3x = '$_base/ic_3x.svg';
+  static const String icBigScreen = '$_base/ic_bigscreen.svg';
+  static const String icDarkMode = '$_base/ic_darkmode.svg';
+  static const String icInfo = '$_base/ic_info.svg';
+  static const String icLoop = '$_base/ic_loop.svg';
+  static const String icMiniScreen = '$_base/ic_miniscreen.svg';
+  static const String icOff = '$_base/ic_off.svg';
+  static const String icOn = '$_base/ic_on.svg';
+  static const String icShuffle = '$_base/ic_shuffle.svg';
+  static const String icVolumeOff = '$_base/ic_volumeoff.svg';
+  static const String icVolumeOn = '$_base/ic_volumeon.svg';
+  static const String icRotation = '$_base/rotation_icon.svg';
+  static const String ic10Prev = '$_base/ic_10_sec_prev.svg';
+  static const String ic10Next = '$_base/ic_10_sec_next.svg';
+
   ////////////////////////////////////////////// png /////////////////////////////
   static const String introBackground = '$_basePng/intro_background.png';
 }

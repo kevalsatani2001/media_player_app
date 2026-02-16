@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -27,6 +28,7 @@ class GlobalPlayer extends ChangeNotifier {
   VideoPlayerController? controller;
   ChewieController? chewie;
   String? currentPath;
+  bool isLandscape = false;
   bool isNetwork = false;
   String? currentType; // "audio" or "video"
   bool isLooping = false;
@@ -60,6 +62,27 @@ class GlobalPlayer extends ChangeNotifier {
     currentIndex = startIndex;
   }
 
+  Future<void> toggleRotation() async {
+    isLandscape = !isLandscape;
+
+    if (isLandscape) {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+
+    notifyListeners();
+  }
+
   Future<void> playNext() async {
     print("queue length is ===> ${queue.length}");
     print("queue length is ===> ${queue}");
@@ -86,10 +109,10 @@ class GlobalPlayer extends ChangeNotifier {
   }
 
   Future<void> play(
-      String path, {
-        bool network = false,
-        required String type,
-      }) async {
+    String path, {
+    bool network = false,
+    required String type,
+  }) async {
     if (currentPath == path && controller != null) {
       controller!.play();
       return;
@@ -119,42 +142,152 @@ class GlobalPlayer extends ChangeNotifier {
 
     chewie = type == "video"
         ? ChewieController(
-      additionalOptions: (context) {
-        return [
-          OptionItem(
-            onTap: (context) {
+            zoomAndPan: true,
+            deviceOrientationsOnEnterFullScreen: [
+              DeviceOrientation.landscapeLeft,
+              DeviceOrientation.landscapeRight,
+            ],
+
+            deviceOrientationsAfterFullScreen: [
+              DeviceOrientation.portraitUp,
+              DeviceOrientation.portraitDown,
+            ],
+            additionalOptions: (context) {
+              return [
+                // OptionItem(
+                //   onTap: (context) {
+                //     toggleRotation();
+                //     Navigator.pop(context);
+                //   },
+                //   iconData: Icons.screen_rotation,
+                //   title: isLandscape ? "Portrait Mode" : "Landscape Mode",
+                // ),
+                OptionItem(
+                  controlType: ControlType.miniVideo,
+                  onTap: (context) {
+                    Navigator.pop(context);
+                  },
+                  iconData: Icons.screen_rotation,
+                  title: "Mini Screen",
+                  iconImage: AppSvg.icMiniScreen,
+                ),
+                OptionItem(
+                  controlType: ControlType.volume,
+                  onTap: (context) {
+                    // toggleRotation();
+                    // Navigator.pop(context);
+                  },
+                  iconData: Icons.screen_rotation,
+                  title: "Volume",
+                  iconImage: AppSvg.icVolumeOff,
+                ),
+
+                OptionItem(
+                  controlType: ControlType.shuffle,
+                  onTap: (context) => toggleShuffle,
+                  iconData: Icons.shuffle,
+                  title: "Shuffle",
+                  iconImage: AppSvg.icShuffle,
+                ),
+                OptionItem(
+                  controlType: ControlType.playbackSpeed,
+                  onTap: (context) {
+                    // toggleShuffle();
+                  },
+                  iconData: Icons.shuffle,
+                  title: "video speed",
+                  iconImage: AppSvg.ic2x,
+                ),
+                OptionItem(
+                  controlType: ControlType.theme,
+                  onTap: (context) {
+                    toggleShuffle();
+                  },
+                  iconData: Icons.shuffle,
+                  title: "dark",
+                  iconImage: AppSvg.icDarkMode,
+                ),
+                OptionItem(
+                  controlType: ControlType.info,
+                  onTap: (context) {
+                    toggleShuffle();
+                  },
+                  iconData: Icons.shuffle,
+                  title: "info",
+                  iconImage: AppSvg.icInfo,
+                ),
+                OptionItem(
+                  controlType: ControlType.prev10,
+                  onTap: (context) {
+                    toggleShuffle();
+                  },
+                  iconData: Icons.shuffle,
+                  title: "prev10",
+                  iconImage: AppSvg.ic10Prev,
+                ),
+                OptionItem(
+                  controlType: ControlType.next10,
+                  onTap: (context) {
+                    toggleShuffle();
+                  },
+                  iconData: Icons.shuffle,
+                  title: "next10",
+                  iconImage: AppSvg.ic10Next,
+                ),
+
+                OptionItem(
+                  onTap: (context) {
+                    // chewie!.videoPlayerController.value.cancelAndRestartTimer();
+                    //
+                    // if (videoPlayerLatestValue.volume == 0) {
+                    //   chewie!.videoPlayerController.setVolume(chewie.videoPlayerController.videoPlayerOptions.);
+                    //   // controller.setVolume(_latestVolume ?? 0.5);
+                    // } else {
+                    //   _latestVolume = controller.value.volume;
+                    //   controller.setVolume(0.0);
+                    // }
+                  },
+                  controlType: ControlType.loop,
+                  iconData: Icons.shuffle,
+                  title: "Loop",
+                  iconImage: AppSvg.icLoop,
+                ),
+                OptionItem(
+                  controlType: ControlType.playbackSpeed,
+                  onTap: (context) async {
+                    final newPos =
+                        (controller!.value.position) - Duration(seconds: 10);
+                    controller!.seekTo(
+                      newPos > Duration.zero ? newPos : Duration.zero,
+                    );
+                  },
+                  iconData: Icons.replay_10,
+                  title: "kk",
+                  iconImage: AppSvg.ic10Prev,
+                ),
+                OptionItem(
+                  onTap: (context) async {},
+                  controlType: ControlType.miniVideo,
+                  iconData: Icons.replay_10,
+                  title: "miniScreen",
+                  iconImage: AppSvg.icMiniScreen,
+                ),
+              ];
+            },
+            materialProgressColors: ChewieProgressColors(
+              playedColor: Color(0XFF3D57F9),
+              backgroundColor: Color(0XFFF6F6F6),
+            ),
+
+            looping: true,
+            onSufflePressed: () {
               toggleShuffle();
             },
-            iconData: Icons.shuffle,
-            title: "Shuffle",
-          ),
-          OptionItem(
-            onTap: (context) async {
-              final newPos =
-                  (controller!.value.position) - Duration(seconds: 10);
-              controller!.seekTo(
-                newPos > Duration.zero ? newPos : Duration.zero,
-              );
-            },
-            iconData: Icons.replay_10,
-            title: "kk",
-          ),
-        ];
-      },
-      materialProgressColors: ChewieProgressColors(
-        playedColor: Color(0XFF3D57F9),
-        backgroundColor: Color(0XFFF6F6F6),
-      ),
-
-      looping: true,
-      onSufflePressed: () {
-        toggleShuffle();
-      },
-      videoPlayerController: controller!,
-      // onPressedLooping: (){},
-      autoPlay: true,
-      allowFullScreen: true,
-    )
+            videoPlayerController: controller!,
+            // onPressedLooping: (){},
+            autoPlay: true,
+            allowFullScreen: true,
+          )
         : null;
   }
 
@@ -225,7 +358,6 @@ class _MiniPlayerState extends State<MiniPlayer> {
           ),
         );
 
-
         // Navigator.push(
         //   context,
         //   MaterialPageRoute(
@@ -249,9 +381,17 @@ class _MiniPlayerState extends State<MiniPlayer> {
             SizedBox(
               width: 120,
               height: 70,
-              child: player.currentType == "audio"
-                  ? const Icon(Icons.music_note, color: Colors.white, size: 40)
-                  : VideoPlayer(player.controller!),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: player.controller!.value.size.width,
+                    height: player.controller!.value.size.height,
+                    child: VideoPlayer(player.controller!),
+                  ),
+                ),
+              ),
             ),
 
             SizedBox(width: 8),
@@ -408,8 +548,8 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Future<List<MediaItem>> convertEntitiesToMediaItems(
-      List<AssetEntity> entities,
-      ) async {
+    List<AssetEntity> entities,
+  ) async {
     List<MediaItem> items = [];
     for (var entity in entities) {
       final file = await entity.file;
@@ -431,6 +571,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
   }
 
@@ -493,9 +634,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                         title: Text(playlist.name),
                         onTap: () {
                           // Add currentItem to the existing playlist
-                          if (!playlist.items.any((e) => e.path == currentItem.path)) {
+                          if (!playlist.items.any(
+                            (e) => e.path == currentItem.path,
+                          )) {
                             playlist.items.add(currentItem);
-                            playlistBox.putAt(index, playlist); // ✅ put updated PlaylistModel
+                            playlistBox.putAt(
+                              index,
+                              playlist,
+                            ); // ✅ put updated PlaylistModel
                           }
 
                           Navigator.pop(context);
@@ -542,7 +688,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Navigator.pop(context);
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Playlist \"$newPlaylistName\" created")),
+                  SnackBar(
+                    content: Text("Playlist \"$newPlaylistName\" created"),
+                  ),
                 );
               },
               child: const Text("Create"),
@@ -553,34 +701,39 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-
-
   bool get isAudio => currentItem?.type == "audio";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: AppText(currentItem?.path.split('/').last ?? ''),
+        title: AppText(
+          currentItem?.path.split('/').last ?? '',
+          fontSize: 20,
+          fontWeight: FontWeight.w500,
+        ),
         leading: Padding(
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
-              onTap: (){
-                Navigator.pop(context);
-              },
-              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20)),
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+          ),
         ),
+        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
             onPressed: () => setState(() => isLocked = true),
           ),
-          widget.entity!=null?FavouriteButton(entity: widget.entity!,):SizedBox(),
-
+          widget.entity != null
+              ? FavouriteButton(entity: widget.entity!)
+              : SizedBox(),
 
           IconButton(
             icon: const Icon(Icons.playlist_add),
-            onPressed: (){
+            onPressed: () {
               _addToPlaylist(currentItem!);
             },
           ),
@@ -611,11 +764,11 @@ class _PlayerScreenState extends State<PlayerScreen>
             child: isAudio
                 ? _buildAudioPlayer()
                 : Stack(
-              children: [
-                // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
-                Positioned(child: _buildVideoPlayer()),
-              ],
-            ),
+                    children: [
+                      // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
+                      Positioned(child: _buildVideoPlayer()),
+                    ],
+                  ),
           ),
           // Add overlay widgets here, e.g., lock button
           if (isLocked)
@@ -700,7 +853,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                       children: [
                         Slider(
                           min: 0,
-                          max: duration.inMilliseconds.toDouble().clamp(1, double.infinity),
+                          max: duration.inMilliseconds.toDouble().clamp(
+                            1,
+                            double.infinity,
+                          ),
                           value: position.inMilliseconds.toDouble().clamp(
                             0,
                             duration.inMilliseconds.toDouble(),
@@ -714,7 +870,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                             if (!controller.value.isPlaying) controller.play();
                           },
                           onChanged: (v) {
-                            controller.seekTo(Duration(milliseconds: v.toInt()));
+                            controller.seekTo(
+                              Duration(milliseconds: v.toInt()),
+                            );
                           },
                         ),
                         Row(
@@ -728,7 +886,6 @@ class _PlayerScreenState extends State<PlayerScreen>
                     );
                   },
                 ),
-
               ),
               const SizedBox(height: 24),
               // Controls
@@ -746,8 +903,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                     icon: const Icon(Icons.replay_10),
                     onPressed: () {
                       if (!controller.value.isInitialized) return;
-                      final newPos = controller.value.position - Duration(seconds: 10);
-                      controller.seekTo(newPos > Duration.zero ? newPos : Duration.zero);
+                      final newPos =
+                          controller.value.position - Duration(seconds: 10);
+                      controller.seekTo(
+                        newPos > Duration.zero ? newPos : Duration.zero,
+                      );
                     },
                   ),
                   IconButton(
@@ -785,9 +945,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                     icon: const Icon(Icons.forward_10),
                     onPressed: () {
                       if (!controller.value.isInitialized) return;
-                      final newPos = controller.value.position + Duration(seconds: 10);
+                      final newPos =
+                          controller.value.position + Duration(seconds: 10);
                       controller.seekTo(
-                          newPos < controller.value.duration ? newPos : controller.value.duration
+                        newPos < controller.value.duration
+                            ? newPos
+                            : controller.value.duration,
                       );
                     },
                   ),
@@ -983,7 +1146,12 @@ class _FavouriteButtonState extends State<FavouriteButton> {
     return ValueListenableBuilder(
       valueListenable: favBox.listenable(),
       builder: (context, Box box, _) {
-        return IconButton(
+        return GestureDetector(
+          onTap: _toggleFavourite,
+          child: AppImage(src: favState ? AppSvg.likeIcon : AppSvg.unlikeIcon),
+        );
+
+        IconButton(
           icon: Icon(favState ? Icons.favorite : Icons.favorite_border),
           onPressed: _toggleFavourite,
           color: favState ? Colors.red : null,

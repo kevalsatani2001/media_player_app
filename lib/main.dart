@@ -41,6 +41,7 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:media_player/blocs/favourite_change/favourite_change_bloc.dart';
@@ -83,6 +84,12 @@ void main() async {
   if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MediaItemAdapter());
   if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(PlaylistModelAdapter());
   await HiveService.init();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
   runApp(
     MultiBlocProvider(
       providers: [

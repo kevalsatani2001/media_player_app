@@ -125,7 +125,17 @@ class _VideoScreenState extends State<VideoScreen> {
       //     child: const Icon(Icons.developer_board),
       //   );
       // }),
-      body:_buildVideoPage(),
+      body:Column(
+        children: [
+          Expanded(child:  _buildVideoPage()),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: const MiniPlayer(),
+          ),
+        ],
+      ),
+
+
     ):Column(
       children: [
         CommonAppBar(
@@ -147,7 +157,8 @@ class _VideoScreenState extends State<VideoScreen> {
                   child: AppImage(src: _isGridView ?AppSvg.listIcon:AppSvg.gridIcon)),
             ),
           ),),
-        Expanded(child: _buildVideoPage())
+        Expanded(child: _buildVideoPage()),
+        const MiniPlayer(),
         /*
                   actions: [
           !_isSearching
@@ -242,20 +253,49 @@ class _VideoScreenState extends State<VideoScreen> {
                   if (entity is AssetEntity) {
                     final file = await entity.file;
                     if (file == null || !file.existsSync()) return;
-
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => PlayerScreen(
-                          item: MediaItem(
-                            id: entity.id,
-                            path: file.path,
-                            isNetwork: false,
-                            type: 'video',
-                          ),
-                        ),
+                      PageRouteBuilder(
+                        transitionDuration: const Duration(milliseconds: 300),
+                        reverseTransitionDuration: const Duration(milliseconds: 300),
+                        pageBuilder: (context, animation, secondaryAnimation) {
+                          return PlayerScreen(
+                            item: MediaItem(
+                              id: entity.id,
+                              path: file.path,
+                              isNetwork: false,
+                              type: 'video',
+                            ),
+                          );
+                        },
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          final tween = Tween<Offset>(
+                            begin: const Offset(0, -1), // 👈 from TOP
+                            end: Offset.zero,
+                          ).chain(CurveTween(curve: Curves.easeOut));
+
+                          return SlideTransition(
+                            position: animation.drive(tween),
+                            child: child,
+                          );
+                        },
                       ),
                     );
+
+
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) => PlayerScreen(
+                    //       item: MediaItem(
+                    //         id: entity.id,
+                    //         path: file.path,
+                    //         isNetwork: false,
+                    //         type: 'video',
+                    //       ),
+                    //     ),
+                    //   ),
+                    // );
                   } else if (entity is MediaItem) {
                     Navigator.push(
                       context,
