@@ -44,6 +44,9 @@ dependencies:
   flutter_bloc:
   equatable:
   just_audio:
+  audio_session:
+  wakelock_plus:
+  just_audio_background:
   photo_manager:
   photo_manager_image_provider:
   fluttertoast:

@@ -44,6 +44,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/blocs/favourite_change/favourite_change_bloc.dart';
 import 'package:media_player/blocs/video/video_bloc.dart';
 import 'package:media_player/screens/favourite_screen.dart';
@@ -63,6 +64,7 @@ import 'blocs/theme/theme_bloc.dart';
 import 'blocs/theme/theme_state.dart';
 import 'blocs/video/video_event.dart';
 import 'models/media_item.dart';
+import 'models/player_data.dart';
 import 'models/playlist_model.dart';
 import 'services/hive_service.dart';
 
@@ -78,12 +80,20 @@ import 'screens/recent_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
+
   await Hive.initFlutter();
 
   // Register adapters only once
   if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MediaItemAdapter());
   if (!Hive.isAdapterRegistered(2)) Hive.registerAdapter(PlaylistModelAdapter());
+  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(PlayerStateAdapter());
   await HiveService.init();
+  await Hive.openBox('player_state');
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

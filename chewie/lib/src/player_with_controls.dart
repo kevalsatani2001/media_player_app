@@ -11,7 +11,9 @@ class PlayerWithControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ChewieController chewieController = ChewieController.of(context);
-
+    if (chewieController.videoPlayerController.value.isInitialized == false) {
+      return const Center(child: CircularProgressIndicator());
+    }
     double calculateAspectRatio(BuildContext context) {
       final size = MediaQuery.of(context).size;
       final width = size.width;
@@ -40,10 +42,13 @@ class PlayerWithControls extends StatelessWidget {
             chewieController.placeholder!,
           Center(
             child: AspectRatio(
-              aspectRatio:
-              chewieController.aspectRatio ??
+              aspectRatio: chewieController.aspectRatio ??
                   chewieController.videoPlayerController.value.aspectRatio,
-              child: VideoPlayer(chewieController.videoPlayerController),
+              child: VideoPlayer(
+                chewieController.videoPlayerController,
+                // આ કી ઉમેરવાથી જૂના કંટ્રોલરની સ્ટેટ નવા વિજેટમાં નહીં જાય
+                key: ValueKey(chewieController.videoPlayerController.hashCode),
+              ),
             ),
           ),
           if (chewieController.overlay != null) chewieController.overlay!,

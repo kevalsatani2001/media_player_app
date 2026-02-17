@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
@@ -20,9 +21,6 @@ import '../widgets/app_button.dart';
 import '../widgets/customa_shape.dart';
 import '../widgets/favourite_button.dart';
 import '../widgets/image_widget.dart';
-
-
-
 
 class PlayerScreen extends StatefulWidget {
   final MediaItem item;
@@ -56,36 +54,50 @@ class _PlayerScreenState extends State<PlayerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<FavouriteChangeBloc>();
-    // });
-    currentItem = widget.item;
-    isFav = favBox.containsKey(currentItem!.path);
 
-    // Convert AssetEntity to MediaItem and set queue
-    _setupQueue();
+    // ૧. પહેલા વેલ્યુ અસાઈન કરો
+    currentItem = widget.item;
+    isFav = Hive.box('favourites').containsKey(widget.item.path);
+
+    // ૨. જો પાથ અલગ હોય તો જ ક્યૂ સેટઅપ કરો
+    if (player.currentPath != widget.item.path) {
+      _setupQueue();
+    }
   }
 
   Future<void> _setupQueue() async {
+    // અહીં currentItem! ને બદલે widget.item વાપરો
+    if (player.currentPath == widget.item.path && player.isPlaying) {
+      print("Song already playing, skipping setup...");
+      return;
+    }
+
+    // લિસ્ટ કન્વર્ટ કરો
     final mediaItems = await convertEntitiesToMediaItems(
       widget.entityList ?? [],
     );
+
     if (!mounted) return;
 
     // Add to recents
     recentBox.addAll(mediaItems.map((e) => e.toMap()).toList());
 
-    // Set queue in player
+    // Player માં ક્યૂ સેટ કરો
     player.setQueue(mediaItems, widget.index ?? 0);
 
-    // Play current item
-    player.play(
-      currentItem!.path,
-      network: currentItem!.isNetwork,
-      type: currentItem!.type,
+    // પ્લે કરો - અહીં પણ widget.item વાપરવું સેફ છે
+    await player.play(
+      widget.item.path,
+      network: widget.item.isNetwork,
+      type: widget.item.type,
     );
 
-    setState(() {}); // refresh UI
+    // હવે currentItem સેટ કરો અને UI રિફ્રેશ કરો
+    if (mounted) {
+      setState(() {
+        currentItem = widget.item;
+      });
+    }
   }
 
   Future<List<MediaItem>> convertEntitiesToMediaItems(
@@ -118,330 +130,261 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // જો કંટ્રોલર ઇનિશિયલાઇઝ ન હોય તો કશું ના કરો
     if (!_controllerInitialized) return;
 
-    if (state == AppLifecycleState.detached) {
-      player.pause();
+    if (state == AppLifecycleState.paused) {
+      // જ્યારે એપ બેકગ્રાઉન્ડમાં જાય:
+      // માત્ર વીડિયો હોય તો જ પોઝ કરો.
+      // ઓડિયો માટે 'just_audio' કે 'video_player' નું 'allowBackgroundPlayback' કામ કરશે.
+      if (currentItem?.type == "video") {
+        player.pause();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      // જ્યારે યુઝર એપમાં પાછો આવે:
+      // જો વીડિયો હતો, તો યુઝર તેને મેન્યુઅલી પ્લે કરી શકે અથવા ઓટો-રિઝ્યુમ કરી શકાય.
+      if (currentItem?.type == "video") {
+        // player.resume(); // જો ઓટો-પ્લે જોઈતું હોય તો
+      }
     }
   }
 
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   // જ્યારે સ્ક્રીન બંધ થાય ત્યારે Wakelock બંધ કરવો જરૂરી છે
+  //   // WakelockPlus.disable();
+  //   super.dispose();
+  // }
+
+
+
   bool get _controllerInitialized =>
       player.controller != null && player.controller!.value.isInitialized;
-
-  void _toggleFavourite() async {
-    if (widget.entity == null || currentItem == null) return;
-
-    final playlistService = PlaylistService();
-
-    // Toggle favourite
-    final newFavState = await playlistService.toggleFavourite(widget.entity!);
-
-    setState(() {
-      isFav = newFavState;
-    });
-
-    // Notify the Bloc AFTER toggling
-    context.read<FavouriteChangeBloc>().add(FavouriteUpdated(widget.entity!));
+  String getTitle() {
+    if (player.currentIndex != -1 && player.queue.isNotEmpty && player.currentIndex >= 0 && player.currentIndex < player.queue.length) {
+      return player.queue[player.currentIndex].path.split('/').last;
+    }
+    // જો ક્યૂ હજુ લોડ ન થઈ હોય, તો widget માંથી આવેલું નામ બતાવો
+    return widget.item.path.split('/').last;
   }
-
 
 
   bool get isAudio => currentItem?.type == "audio";
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppText(
-          isAudio ? "Music" : currentItem?.path.split('/').last ?? '',
-          fontSize: 20,
-          fontWeight: FontWeight.w500,
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.all(16),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          // IconButton(
-          //   icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
-          //   onPressed: () => setState(() => isLocked = true),
-          // ),
-          widget.entity != null && widget.entity!.type == AssetType.video
-              ? FavouriteButton(entity: widget.entity!)
-              : SizedBox(),
+    return AnimatedBuilder(
+        animation: player,
+        builder: (context,_) {
+          return Scaffold(
+            appBar: AppBar(
+              title: AppText(
+                isAudio ? "Music" : currentItem?.path.split('/').last ?? '',
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
+              leading: Padding(
+                padding: const EdgeInsets.all(16),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                // IconButton(
+                //   icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
+                //   onPressed: () => setState(() => isLocked = true),
+                // ),
+                widget.entity != null && widget.entity!.type == AssetType.video
+                    ? FavouriteButton(entity: widget.entity!)
+                    : SizedBox(),
 
-          IconButton(
-            icon: const Icon(Icons.playlist_add),
-            onPressed: () {
-              addToPlaylist(currentItem!,context);
-            },
-          ),
-        ],
-      ),
-
-      // AppBar(
-      //   title: Text(currentItem?.path.split('/').last ?? ''),
-      //   actions: [
-      //     IconButton(
-      //       icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
-      //       onPressed: () => setState(() => isLocked = true),
-      //     ),
-      //     IconButton(
-      //       icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-      //       onPressed: _toggleFavourite,
-      //     ),
-      //     IconButton(
-      //       icon: const Icon(Icons.playlist_add),
-      //       onPressed: _addToPlaylist,
-      //     ),
-      //   ],
-      // ),
-      body: Stack(
-        children: [
-          // Fill the background with video or audio
-          Positioned.fill(
-            child: isAudio
-                ? _buildAudioPlayer()
-                : Stack(
-              children: [
-                // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
-                Positioned(child: _buildVideoPlayer()),
+                IconButton(
+                  icon: const Icon(Icons.playlist_add),
+                  onPressed: () {
+                    addToPlaylist(currentItem!, context);
+                  },
+                ),
               ],
             ),
-          ),
-          // Add overlay widgets here, e.g., lock button
-          if (isLocked)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Icon(Icons.lock, color: Colors.white),
+
+            // AppBar(
+            //   title: Text(currentItem?.path.split('/').last ?? ''),
+            //   actions: [
+            //     IconButton(
+            //       icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
+            //       onPressed: () => setState(() => isLocked = true),
+            //     ),
+            //     IconButton(
+            //       icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
+            //       onPressed: _toggleFavourite,
+            //     ),
+            //     IconButton(
+            //       icon: const Icon(Icons.playlist_add),
+            //       onPressed: _addToPlaylist,
+            //     ),
+            //   ],
+            // ),
+            body: Stack(
+              children: [
+                // Fill the background with video or audio
+                Positioned.fill(
+                  child: isAudio
+                      ? (player.queue.isEmpty && player.currentPath == null)
+                      ? const Center(child: CircularProgressIndicator()) // ડેટા લોડ થાય ત્યાં સુધી
+                      : _buildAudioPlayer()
+                      : (player.controller != null && player.controller!.value.isInitialized)
+                      ? _buildVideoPlayer()
+                      : _buildVideoLoadingPlaceholder(),
+                ),
+                // Add overlay widgets here, e.g., lock button
+                if (isLocked)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Icon(Icons.lock, color: Colors.white),
+                  ),
+              ],
             ),
-        ],
-      ),
+          );
+        }
     );
   }
 
   Widget _buildAudioPlayer() {
-    if (player.controller == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
 
-    final controller = player.controller!;
-    final duration = controller.value.duration;
-    final position = controller.value.position;
-    return ValueListenableBuilder(
-      valueListenable: player.controller!,
-      builder: (context, VideoPlayerValue value, child) {
-        if (!value.isInitialized) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        return Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xff6dd5fa), Color(0xfffbc2eb)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    // અહીં ચેક કરો: જો વિડિયો નથી, તો just_audio વાપરો
+    // જો ઓડિયો હોય તો CircularProgress કાઢી નાખો
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colors.primary, colors.primary.withOpacity(0.30), colors.primary.withOpacity(0.20)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 1. Image/Icon UI (તમારું જે છે તે જ)
+          Container(
+            width: 220,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 220,
+                  decoration: ShapeDecoration(shape: CustomShape(), color: Colors.purple),
+                ),
+                widget.entity != null
+                    ? Positioned(
+                  bottom: -10,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: FavouriteButton(entity: widget.entity!)),
+                )
+                    : SizedBox(),
+              ],
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Icon
-              // Container(
-              //   height: 220,
-              //   width: 220,
-              //   decoration: BoxDecoration(
-              //     borderRadius: BorderRadius.circular(24),
-              //     color: Colors.white24,
-              //   ),
-              //   child: const Icon(
-              //     Icons.music_note_rounded,
-              //     size: 120,
-              //     color: Colors.white,
-              //   ),
-              // ),
-              // Source - https://stackoverflow.com/a/74490292
-              // Posted by Md. Yeasin Sheikh, modified by community. See post 'Timeline' for change history
-              // Retrieved 2026-02-16, License - CC BY-SA 4.0
-              Container(
-                width: 220,
-                // color: Colors.red,
-                child: Stack(
-                  clipBehavior: Clip.none,
+          const SizedBox(height: 24),
+
+          // 2. Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              getTitle()?? '',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 3. Slider (just_audio ના Stream સાથે - આનાથી ચોંટશે નહીં)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: StreamBuilder<Duration>(
+              stream: player.audioPlayer.positionStream, // just_audio ની પોઝિશન
+              builder: (context, snapshot) {
+                final position = snapshot.data ?? Duration.zero;
+                final duration = player.audioPlayer.duration ?? Duration.zero;
+
+                return Column(
                   children: [
-                    Container(
-                      height: 220,
-                      decoration: ShapeDecoration(
-                        shape: CustomShape(),
-                        color: Colors.purple,
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        thumbShape: SliderComponentShape.noThumb,
+                        trackHeight: 2,
+                        activeTrackColor: colors.primary,
+                        inactiveTrackColor: colors.textFieldBorder,
+                      ),
+                      child: Slider(
+                        min: 0,
+                        max: duration.inMilliseconds.toDouble().clamp(1, double.infinity),
+                        value: position.inMilliseconds.toDouble().clamp(0, duration.inMilliseconds.toDouble()),
+                        onChanged: (v) {
+                          player.audioPlayer.seek(Duration(milliseconds: v.toInt()));
+                        },
                       ),
                     ),
-
-                    // Positioned widget to place FavoriteButton near curve top bump
-                    widget.entity!=null? Positioned(
-                      bottom: -10, // તમારા curve ની ઊંચાઈ અનુસાર adjust કરો
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: FavouriteButton(entity: widget.entity!),
-                      ),
-                    ):SizedBox(),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              // Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  currentItem?.path.split('/').last ?? '',
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Slider
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ValueListenableBuilder<VideoPlayerValue>(
-                  valueListenable: controller,
-                  builder: (context, value, child) {
-                    final duration = value.duration;
-                    final position = value.position;
-
-                    return Column(
+                    const SizedBox(height: 10),
+                    // 4. Controls & Time
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Slider(
-                          min: 0,
-                          max: duration.inMilliseconds.toDouble().clamp(
-                            1,
-                            double.infinity,
-                          ),
-                          value: position.inMilliseconds.toDouble().clamp(
-                            0,
-                            duration.inMilliseconds.toDouble(),
-                          ),
-                          onChangeEnd: (v) {
-                            final seekToPos = Duration(milliseconds: v.toInt());
-                            if (seekToPos < Duration.zero) return;
-                            if (seekToPos > duration) return;
-
-                            controller.seekTo(seekToPos);
-                            if (!controller.value.isPlaying) controller.play();
+                        AppText(_fmt(position), color: colors.primary),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.skip_previous),
+                          onPressed: () async {
+                            await player.playPrevious();
+                            setState(() {
+                              currentItem = player.queue[player.currentIndex];
+                            });
                           },
-                          onChanged: (v) {
-                            controller.seekTo(
-                              Duration(milliseconds: v.toInt()),
+                        ),
+                        const SizedBox(width: 8),
+                        // Play/Pause Button
+                        StreamBuilder<bool>(
+                          stream: player.audioPlayer.playingStream,
+                          builder: (context, snapshot) {
+                            final isPlaying = snapshot.data ?? false;
+                            return IconButton(
+                              iconSize: 64,
+                              icon: Icon(isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
+                              onPressed: () => isPlaying ? player.pause() : player.resume(),
                             );
                           },
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(_fmt(position)),
-                            Text(_fmt(duration)),
-                          ],
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.skip_next),
+                          onPressed: () async {
+                            await player.playNext();
+                            setState(() {
+                              currentItem = player.queue[player.currentIndex];
+                            });
+                          },
                         ),
+                        const SizedBox(width: 8),
+                        AppText(_fmt(duration), color: colors.primary),
                       ],
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.shuffle,
-                      color: player.isShuffle ? Colors.blue : Colors.black54,
                     ),
-                    onPressed: () => setState(() => player.toggleShuffle()),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.replay_10),
-                    onPressed: () {
-                      if (!controller.value.isInitialized) return;
-                      final newPos =
-                          controller.value.position - Duration(seconds: 10);
-                      controller.seekTo(
-                        newPos > Duration.zero ? newPos : Duration.zero,
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous),
-                    onPressed: () async {
-                      await player.playPrevious();
-                      setState(() {
-                        currentItem = player.queue[player.currentIndex];
-                        isFav = favBox.containsKey(currentItem!.path);
-                      });
-                    },
-                  ),
-                  IconButton(
-                    iconSize: 64,
-                    icon: Icon(
-                      player.isPlaying
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
-                    ),
-                    onPressed: () => setState(() {
-                      player.isPlaying ? player.pause() : player.resume();
-                    }),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_next),
-                    onPressed: () async {
-                      await player.playNext();
-                      setState(() {
-                        currentItem = player.queue[player.currentIndex];
-                        isFav = favBox.containsKey(currentItem!.path);
-                      });
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.forward_10),
-                    onPressed: () {
-                      if (!controller.value.isInitialized) return;
-                      final newPos =
-                          controller.value.position + Duration(seconds: 10);
-                      controller.seekTo(
-                        newPos < controller.value.duration
-                            ? newPos
-                            : controller.value.duration,
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.repeat,
-                      color: player.isLooping ? Colors.blue : Colors.black54,
-                    ),
-                    onPressed: () => setState(() => player.toggleLoop()),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -464,103 +407,6 @@ class _PlayerScreenState extends State<PlayerScreen>
         return Stack(
           children: [
             Chewie(controller: player.chewie!),
-            // Video display
-            // Positioned(
-            //   bottom: 0,
-            //   left: 0,
-            //   right: 0,
-            //   child: Container(
-            //     color: Colors.black45,
-            //     padding: const EdgeInsets.all(12),
-            //     child: Column(
-            //       mainAxisSize: MainAxisSize.min,
-            //       children: [
-            //         // Slider
-            //         Slider(
-            //           min: 0,
-            //           max: duration.inMilliseconds.toDouble().clamp(
-            //             1,
-            //             double.infinity,
-            //           ),
-            //           value: position.inMilliseconds.toDouble().clamp(
-            //             0,
-            //             duration.inMilliseconds.toDouble(),
-            //           ),
-            //           onChanged: (v) =>
-            //               controller.seekTo(Duration(milliseconds: v.toInt())),
-            //         ),
-            //         Row(
-            //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //           children: [Text(_fmt(position)), Text(_fmt(duration))],
-            //         ),
-            //         const SizedBox(height: 8),
-            //         // Controls (same as audio)
-            //         Row(
-            //           mainAxisAlignment: MainAxisAlignment.center,
-            //           children: [
-            //             IconButton(
-            //               icon: Icon(
-            //                 Icons.shuffle,
-            //                 color: player.isShuffle ? Colors.blue : Colors.white,
-            //               ),
-            //               onPressed: () => setState(() => player.toggleShuffle()),
-            //             ),
-            //             IconButton(
-            //               icon: const Icon(Icons.replay_10),
-            //               onPressed: () => controller.seekTo(
-            //                 position - const Duration(seconds: 10),
-            //               ),
-            //             ),
-            //             IconButton(
-            //               icon: const Icon(Icons.skip_previous),
-            //               onPressed: () async {
-            //                 await player.playPrevious();
-            //                 setState(() {
-            //                   currentItem = player.queue[player.currentIndex];
-            //                   isFav = favBox.containsKey(currentItem!.path);
-            //                 });
-            //               },
-            //             ),
-            //             IconButton(
-            //               iconSize: 64,
-            //               icon: Icon(
-            //                 player.isPlaying
-            //                     ? Icons.pause_circle_filled
-            //                     : Icons.play_circle_filled,
-            //               ),
-            //               onPressed: () => setState(() {
-            //                 player.isPlaying ? player.pause() : player.resume();
-            //               }),
-            //             ),
-            //             IconButton(
-            //               icon: const Icon(Icons.skip_next),
-            //               onPressed: () async {
-            //                 await player.playNext();
-            //                 setState(() {
-            //                   currentItem = player.queue[player.currentIndex];
-            //                   isFav = favBox.containsKey(currentItem!.path);
-            //                 });
-            //               },
-            //             ),
-            //             IconButton(
-            //               icon: const Icon(Icons.forward_10),
-            //               onPressed: () => controller.seekTo(
-            //                 position + const Duration(seconds: 10),
-            //               ),
-            //             ),
-            //             IconButton(
-            //               icon: Icon(
-            //                 Icons.repeat,
-            //                 color: player.isLooping ? Colors.blue : Colors.white,
-            //               ),
-            //               onPressed: () => setState(() => player.toggleLoop()),
-            //             ),
-            //           ],
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
           ],
         );
       },
@@ -571,8 +417,139 @@ class _PlayerScreenState extends State<PlayerScreen>
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     return "${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";
   }
+
+  Widget _buildVideoLoadingPlaceholder() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colors.primary,
+            colors.primary.withOpacity(0.30),
+            colors.primary.withOpacity(0.20)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // ઓડિયો પ્લેયર જેવો જ લુક આપવા માટે સેન્ટર આઈકોન
+          Container(
+            width: 220,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 220,
+                  decoration: ShapeDecoration(
+                    shape: CustomShape(),
+                    color: Colors.black26, // વીડિયો માટે થોડો ડાર્ક લુક
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  bottom: 20,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Icon(Icons.videocam, color: Colors.white, size: 40),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 40),
+
+          // વીડિયોનું નામ
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              widget.item.path.split('/').last,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const AppText(
+            "Initializing Video Player...",
+            fontSize: 14,
+            color: Colors.black54,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 
+Widget buildMiniPlayer(BuildContext context) {
+  final player = GlobalPlayer();
 
+  return StreamBuilder<PlayerState>(
+    stream: player.audioPlayer.playerStateStream,
+    builder: (context, snapshot) {
+      if (player.currentPath == null || player.currentType != "audio") {
+        return const SizedBox.shrink();
+      }
 
+      return GestureDetector(
+        onTap: () {
+          // ક્લિક કરવા પર પ્લેયર સ્ક્રીન પર જવા માટેનું લોજિક
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PlayerScreen(
+                item: player.queue[player.currentIndex], // અત્યારે જે પ્લે થાય છે તે આઈટમ
+                entity: player.currentEntity, // અત્યારનો એન્ટિટી ડેટા
+                index: player.currentIndex,
+                entityList: [], // જો જરૂર હોય તો આખું લિસ્ટ મોકલી શકાય
+              ),
+            ),
+          );
+        },
+        child: Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: Row(
+            children: [
+              // ગીતની વિગતો અને કંટ્રોલ્સ
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(Icons.music_note, color: Colors.blue),
+              ),
+              Expanded(
+                child: Text(
+                  player.currentPath!.split('/').last,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                icon: Icon(player.audioPlayer.playing ? Icons.pause : Icons.play_arrow),
+                onPressed: () => player.audioPlayer.playing ? player.pause() : player.resume(),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}

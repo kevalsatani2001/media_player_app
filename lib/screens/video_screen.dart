@@ -25,6 +25,7 @@ import '../widgets/image_widget.dart';
 import '../widgets/text_widget.dart';
 import 'bottom_bar_screen.dart';
 import 'home_screen.dart';
+// import 'mini_player.dart';
 import 'mini_player.dart';
 import 'player_screen.dart';
 
@@ -132,7 +133,7 @@ class _VideoScreenState extends State<VideoScreen> {
           Expanded(child:  _buildVideoPage()),
           Align(
             alignment: Alignment.bottomCenter,
-            child: const MiniPlayer(),
+            child:  MiniPlayer(),
           ),
         ],
       ),
@@ -160,7 +161,7 @@ class _VideoScreenState extends State<VideoScreen> {
             ),
           ),),
         Expanded(child: _buildVideoPage()),
-        const MiniPlayer(),
+        MiniPlayer(),
         /*
                   actions: [
           !_isSearching
