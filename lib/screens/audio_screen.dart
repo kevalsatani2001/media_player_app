@@ -14,12 +14,15 @@ import 'package:share_plus/share_plus.dart';
 import '../blocs/audio/audio_bloc.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
+import '../services/global_player.dart';
 import '../utils/app_colors.dart';
+import '../widgets/add_to_playlist.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import 'bottom_bar_screen.dart';
 import 'home_screen.dart';
+import 'mini_player.dart';
 import 'player_screen.dart';
 
 class AudioScreen extends StatefulWidget {
@@ -52,7 +55,6 @@ class _AudioScreenState extends State<AudioScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -62,59 +64,59 @@ class _AudioScreenState extends State<AudioScreen> {
       create: (_) => AudioBloc(box)..add(LoadAudios()),
       child: widget.isComeHomeScreen
           ? Scaffold(
-        appBar: AppBar(
-          title: const Text("Audios"),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () =>
-                  context.read<AudioBloc>().add(LoadAudios()),
-            ),
-          ],
-        ),
-        body:  Column(
-          children: [
-            Expanded(child: _AudioBody()),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: const MiniPlayer(),
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
-          child: const Icon(Icons.refresh),
-        ),
-      )
-          : Column(
-        children: [
-          CommonAppBar(
-            title: "Video & Music Player",
-            subTitle: "MEDIA PLAYER",
-            actionWidget: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: colors.textFieldFill,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: AppImage(src: AppSvg.searchIcon),
-                ),
+              appBar: AppBar(
+                title: const Text("Audios"),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () =>
+                        context.read<AudioBloc>().add(LoadAudios()),
+                  ),
+                ],
               ),
+              body: Column(
+                children: [
+                  Expanded(child: _AudioBody()),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: const MiniPlayer(),
+                  ),
+                ],
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
+                child: const Icon(Icons.refresh),
+              ),
+            )
+          : Column(
+              children: [
+                CommonAppBar(
+                  title: "Video & Music Player",
+                  subTitle: "MEDIA PLAYER",
+                  actionWidget: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: colors.textFieldFill,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: AppImage(src: AppSvg.searchIcon),
+                      ),
+                    ),
+                  ),
+                ),
+                Divider(color: colors.dividerColor),
+                Expanded(child: _AudioBody()),
+                const MiniPlayer(),
+              ],
             ),
-          ),
-          Divider(color: colors.dividerColor),
-          Expanded(child: _AudioBody()),
-          const MiniPlayer(),
-        ],
-      ),
     );
   }
 }
@@ -127,7 +129,6 @@ class _AudioBody extends StatefulWidget {
 }
 
 class _AudioBodyState extends State<_AudioBody> {
-
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -148,15 +149,12 @@ class _AudioBodyState extends State<_AudioBody> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         if (state is AudioLoading) {
-          return const Center(
-            child: CircularProgressIndicator.adaptive(),
-          );
+          return const Center(child: CircularProgressIndicator.adaptive());
         }
 
         if (state is AudioError) {
@@ -165,9 +163,7 @@ class _AudioBodyState extends State<_AudioBody> {
 
         if (state is AudioLoaded) {
           if (state.entities.isEmpty) {
-            return const Center(
-              child: Text("No audio files found"),
-            );
+            return const Center(child: Text("No audio files found"));
           }
 
           return ListView.builder(
@@ -305,6 +301,19 @@ class _AudioBodyState extends State<_AudioBody> {
                                       index,
                                     );
                                     break;
+                                  case MediaMenuAction.addToPlaylist:
+                                    final file = await audio.file;
+                                    addToPlaylist(
+                                      MediaItem(
+                                        path: file!.path,
+                                        isNetwork: false,
+                                        type: audio.type==AssetType.audio?"audio":"video",
+                                        id: audio.id,
+                                        isFavourite: audio.isFavorite,
+                                      ),
+                                      context,
+                                    );
+                                    break;
                                 }
                               },
                               itemBuilder: (context) => [
@@ -336,6 +345,10 @@ class _AudioBodyState extends State<_AudioBody> {
                                 const PopupMenuItem(
                                   value: MediaMenuAction.delete,
                                   child: Text('Delete'),
+                                ),
+                                const PopupMenuItem(
+                                  value: MediaMenuAction.addToPlaylist,
+                                  child: Text('Add to playlist'),
                                 ),
                               ],
                             ),
@@ -386,33 +399,33 @@ class _AudioBodyState extends State<_AudioBody> {
                           size: 18,
                         ),
                       ),
-                      onSelected: (action) async {
-                        switch (action) {
-                          case MediaMenuAction.detail:
-                            routeToDetailPage(context, audio);
-                            break;
-
-                          case MediaMenuAction.info:
-                            showInfoDialog(context, audio);
-                            break;
-
-                          case MediaMenuAction.thumb:
-                            showThumb(context, audio, 500);
-                            break;
-
-                          case MediaMenuAction.share:
-                            _shareItem(context, audio);
-                            break;
-
-                          case MediaMenuAction.delete:
-                            _deleteCurrent(context, audio);
-                            break;
-
-                          case MediaMenuAction.addToFavourite:
-                            await _toggleFavourite(context, audio, index);
-                            break;
-                        }
-                      },
+                      // onSelected: (action) async {
+                      //   switch (action) {
+                      //     case MediaMenuAction.detail:
+                      //       routeToDetailPage(context, audio);
+                      //       break;
+                      //
+                      //     case MediaMenuAction.info:
+                      //       showInfoDialog(context, audio);
+                      //       break;
+                      //
+                      //     case MediaMenuAction.thumb:
+                      //       showThumb(context, audio, 500);
+                      //       break;
+                      //
+                      //     case MediaMenuAction.share:
+                      //       _shareItem(context, audio);
+                      //       break;
+                      //
+                      //     case MediaMenuAction.delete:
+                      //       _deleteCurrent(context, audio);
+                      //       break;
+                      //
+                      //     case MediaMenuAction.addToFavourite:
+                      //       await _toggleFavourite(context, audio, index);
+                      //       break;
+                      //   }
+                      // },
                       itemBuilder: (context) => [
                         const PopupMenuItem(
                           value: MediaMenuAction.detail,
@@ -450,7 +463,6 @@ class _AudioBodyState extends State<_AudioBody> {
               );
             },
           );
-
         }
 
         return const SizedBox();
@@ -458,13 +470,20 @@ class _AudioBodyState extends State<_AudioBody> {
     );
   }
 
-  Future<void> routeToDetailPage(BuildContext context,AssetEntity entity) async {
+  Future<void> routeToDetailPage(
+    BuildContext context,
+    AssetEntity entity,
+  ) async {
     Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
     );
   }
 
-  Future<void> showThumb(BuildContext context, AssetEntity entity, int size) async {
+  Future<void> showThumb(
+    BuildContext context,
+    AssetEntity entity,
+    int size,
+  ) async {
     final String title;
     if (entity.title?.isEmpty != false) {
       title = await entity.titleAsync;
@@ -518,10 +537,10 @@ class _AudioBodyState extends State<_AudioBody> {
   }
 
   Future<void> _toggleFavourite(
-      BuildContext context,
-      AssetEntity entity,
-      int index,
-      ) async {
+    BuildContext context,
+    AssetEntity entity,
+    int index,
+  ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -570,10 +589,7 @@ class _AudioBodyState extends State<_AudioBody> {
     setState(() {});
   }
 
-  Future<void> _deleteCurrent(
-      BuildContext context,
-      AssetEntity entity,
-      ) async {
+  Future<void> _deleteCurrent(BuildContext context, AssetEntity entity) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
     final bool? confirm = await showDialog<bool>(
@@ -588,10 +604,7 @@ class _AudioBodyState extends State<_AudioBody> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -603,15 +616,10 @@ class _AudioBodyState extends State<_AudioBody> {
     final result = await PhotoManager.editor.deleteWithIds([entity.id]);
 
     if (result.isNotEmpty) {
-      context
-          .read<AudioBloc>()
-          .add(LoadAudios(showLoading: false));
+      context.read<AudioBloc>().add(LoadAudios(showLoading: false));
     }
   }
 }
-
-
-
 
 // /*import 'dart:io';
 // import 'dart:typed_data';

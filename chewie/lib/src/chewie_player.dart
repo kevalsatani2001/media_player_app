@@ -294,6 +294,8 @@ class ChewieState extends State<Chewie> {
 class ChewieController extends ChangeNotifier {
   ChewieController({
     required this.videoPlayerController,
+    required this.onNextVideo,
+    required this.onPreviousVideo,
     this.optionsTranslation,
     this.aspectRatio,
     this.autoInitialize = false,
@@ -356,6 +358,8 @@ class ChewieController extends ChangeNotifier {
     Duration? startAt,
     bool? looping,
     required void Function()? onPressed,
+    final VoidCallback? onNextVideo,
+    final VoidCallback? onPreviousVideo,
     bool? fullScreenByDefault,
     ChewieProgressColors? cupertinoProgressColors,
     ChewieProgressColors? materialProgressColors,
@@ -464,6 +468,8 @@ class ChewieController extends ChangeNotifier {
       progressIndicatorDelay:
       progressIndicatorDelay ?? this.progressIndicatorDelay,
       pauseOnBackgroundTap: pauseOnBackgroundTap ?? this.pauseOnBackgroundTap,
+      onNextVideo: onNextVideo ?? this.onNextVideo,
+      onPreviousVideo: onPreviousVideo ?? this.onPreviousVideo,
     );
   }
 
@@ -526,6 +532,8 @@ class ChewieController extends ChangeNotifier {
   /// Whether or not the video should loop
   final bool looping;
   Function() onSufflePressed;
+  final VoidCallback? onNextVideo;
+  final VoidCallback? onPreviousVideo;
 
   /// Wether or not to show the controls when initializing the widget.
   final bool showControlsOnInitialize;

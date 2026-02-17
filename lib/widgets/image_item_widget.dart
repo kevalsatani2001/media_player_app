@@ -18,7 +18,8 @@ enum MediaMenuAction {
   thumb,
   delete,
   share,
-  addToFavourite
+  addToFavourite,
+  addToPlaylist
 }
 
 
@@ -871,6 +872,17 @@ _dropDownButton(),
           child: Center(
             child: AppText(
               'Show detail page',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: colors.appBarTitleColor,
+            ),
+          ),
+        ),const PopupMenuDivider(height: 0.5,),
+        PopupMenuItem(
+          value: MediaMenuAction.addToPlaylist,
+          child: Center(
+            child: AppText(
+              'Add to playlist',
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: colors.appBarTitleColor,

@@ -26,6 +26,7 @@ import '../core/constants.dart';
 import '../main.dart';
 import '../models/media_item.dart';
 import '../utils/app_colors.dart';
+import '../widgets/add_to_playlist.dart';
 import '../widgets/home_card.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
@@ -335,6 +336,19 @@ class _HomePageState extends State<HomePage> with RouteAware{
                       case MediaMenuAction.addToFavourite:
                         await _toggleFavourite(context, entity, index);
                         break;
+                      case MediaMenuAction.addToPlaylist:
+                        final file = await entity.file;
+                        addToPlaylist(
+                          MediaItem(
+                            path: file!.path,
+                            isNetwork: false,
+                            type: entity.type==AssetType.audio?"audio":"video",
+                            id: entity.id,
+                            isFavourite: entity.isFavorite,
+                          ),
+                          context,
+                        );
+                        break;
                     }
                   },
                   onTap: () async {
@@ -416,33 +430,33 @@ class _HomePageState extends State<HomePage> with RouteAware{
               ImageItemWidget(
                 entity: entity,
                 option: ThumbnailOption(size: ThumbnailSize.square(200)),
-                onMenuSelected: (action) async {
-                  switch (action) {
-                    case MediaMenuAction.detail:
-                      routeToDetailPage(entity);
-                      break;
-
-                    case MediaMenuAction.info:
-                      showInfoDialog(context, entity);
-                      break;
-
-                    case MediaMenuAction.thumb:
-                      showThumb(entity, 500);
-                      break;
-
-                    case MediaMenuAction.share:
-                      _shareItem(context, entity);
-                      break;
-
-                    case MediaMenuAction.delete:
-                      deleteCurrentItem(context, entity);
-                      break;
-
-                    case MediaMenuAction.addToFavourite:
-                      await _toggleFavourite(context, entity, index);
-                      break;
-                  }
-                },
+                // onMenuSelected: (action) async {
+                //   switch (action) {
+                //     case MediaMenuAction.detail:
+                //       routeToDetailPage(entity);
+                //       break;
+                //
+                //     case MediaMenuAction.info:
+                //       showInfoDialog(context, entity);
+                //       break;
+                //
+                //     case MediaMenuAction.thumb:
+                //       showThumb(entity, 500);
+                //       break;
+                //
+                //     case MediaMenuAction.share:
+                //       _shareItem(context, entity);
+                //       break;
+                //
+                //     case MediaMenuAction.delete:
+                //       deleteCurrentItem(context, entity);
+                //       break;
+                //
+                //     case MediaMenuAction.addToFavourite:
+                //       await _toggleFavourite(context, entity, index);
+                //       break;
+                //   }
+                // },
                 onTap: () async {
                   final file = await entity.file;
                   if (file == null || !file.existsSync()) return;

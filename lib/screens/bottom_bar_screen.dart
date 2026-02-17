@@ -36,6 +36,7 @@ import '../blocs/video/video_event.dart';
 import '../blocs/video/video_state.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_string.dart';
+import '../widgets/add_to_playlist.dart';
 import '../widgets/app_button.dart';
 import '../widgets/home_card.dart';
 import '../blocs/video/video_bloc.dart';
@@ -1066,6 +1067,19 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
 
           case MediaMenuAction.addToFavourite:
             await _toggleFavourite(context, entity, index);
+            break;
+          case MediaMenuAction.addToPlaylist:
+            final file = await entity.file;
+            addToPlaylist(
+              MediaItem(
+                path: file!.path,
+                isNetwork: false,
+                type: entity.type==AssetType.audio?"audio":"video",
+                id: entity.id,
+                isFavourite: entity.isFavorite,
+              ),
+              context,
+            );
             break;
         }
       },

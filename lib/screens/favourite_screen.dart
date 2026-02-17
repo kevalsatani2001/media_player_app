@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../blocs/favourite/favourite_bloc.dart';
 import '../blocs/favourite/favourite_state.dart';
 import '../models/media_item.dart';
+import '../widgets/add_to_playlist.dart';
 import '../widgets/image_item_widget.dart';
 import 'bottom_bar_screen.dart';
 import 'player_screen.dart';
@@ -101,7 +102,7 @@ class _FavouriteItem extends StatelessWidget {
       key: ValueKey(entity.id),
       entity: entity,
       option: _thumbOption,
-      onMenuSelected: (action) {
+      onMenuSelected: (action) async{
         switch (action) {
           case MediaMenuAction.detail:
             Navigator.push(
@@ -128,6 +129,19 @@ class _FavouriteItem extends StatelessWidget {
 
           case MediaMenuAction.addToFavourite:
             context.read<FavouriteBloc>().add(ToggleFavourite(entity, index));
+            break;
+          case MediaMenuAction.addToPlaylist:
+            final file = await entity.file;
+            addToPlaylist(
+              MediaItem(
+                path: file!.path,
+                isNetwork: false,
+                type: entity.type==AssetType.audio?"audio":"video",
+                id: entity.id,
+                isFavourite: entity.isFavorite,
+              ),
+              context,
+            );
             break;
         }
       },

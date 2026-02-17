@@ -17,6 +17,7 @@ import '../blocs/video/video_state.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../utils/app_colors.dart';
+import '../widgets/add_to_playlist.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/app_button.dart';
 import '../widgets/image_item_widget.dart';
@@ -24,6 +25,7 @@ import '../widgets/image_widget.dart';
 import '../widgets/text_widget.dart';
 import 'bottom_bar_screen.dart';
 import 'home_screen.dart';
+import 'mini_player.dart';
 import 'player_screen.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -342,6 +344,19 @@ class _VideoScreenState extends State<VideoScreen> {
                                   index,
                                 );
                                 break;
+                              case MediaMenuAction.addToPlaylist:
+                                final file = await entity.file;
+                                addToPlaylist(
+                                  MediaItem(
+                                    path: file!.path,
+                                    isNetwork: false,
+                                    type: entity.type==AssetType.audio?"audio":"video",
+                                    id: entity.id,
+                                    isFavourite: entity.isFavorite,
+                                  ),
+                                  context,
+                                );
+                                break;
                             }
                           },
                           onTap: () async {
@@ -464,6 +479,19 @@ class _VideoScreenState extends State<VideoScreen> {
 
                     case MediaMenuAction.addToFavourite:
                       await _toggleFavourite(context, entity, index);
+                      break;
+                    case MediaMenuAction.addToPlaylist:
+                      final file = await entity.file;
+                      addToPlaylist(
+                        MediaItem(
+                          path: file!.path,
+                          isNetwork: false,
+                          type: entity.type==AssetType.audio?"audio":"video",
+                          id: entity.id,
+                          isFavourite: entity.isFavorite,
+                        ),
+                        context,
+                      );
                       break;
                   }
                 },

@@ -1,5 +1,3 @@
-////////////////////////////////////////// new/////
-
 import 'dart:async';
 import 'dart:io';
 import 'package:chewie/chewie.dart';
@@ -14,474 +12,17 @@ import 'package:video_player/video_player.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../models/playlist_model.dart';
+import '../services/global_player.dart';
 import '../services/playlist_service.dart';
+import '../utils/app_colors.dart';
+import '../widgets/add_to_playlist.dart';
+import '../widgets/app_button.dart';
+import '../widgets/customa_shape.dart';
+import '../widgets/favourite_button.dart';
 import '../widgets/image_widget.dart';
 
-class GlobalPlayer extends ChangeNotifier {
-  MaterialControlsState materialControlsState = MaterialControlsState();
-  static final GlobalPlayer _instance = GlobalPlayer._internal();
 
-  factory GlobalPlayer() => _instance;
 
-  GlobalPlayer._internal();
-
-  VideoPlayerController? controller;
-  ChewieController? chewie;
-  String? currentPath;
-  bool isLandscape = false;
-  bool isNetwork = false;
-  String? currentType; // "audio" or "video"
-  bool isLooping = false;
-
-  List<MediaItem> queue = [];
-  List<MediaItem> originalQueue = [];
-  int currentIndex = -1;
-  bool isShuffle = false;
-
-  void toggleShuffle() {
-    print("call ssss========$isShuffle");
-    isShuffle = !isShuffle;
-    print("call ssss========$isShuffle");
-
-    final currentItem = queue[currentIndex];
-
-    if (isShuffle) {
-      queue.shuffle();
-    } else {
-      queue = List.from(originalQueue);
-    }
-
-    currentIndex = queue.indexOf(currentItem);
-
-    notifyListeners();
-  }
-
-  void setQueue(List<MediaItem> items, int startIndex) {
-    originalQueue = List.from(items);
-    queue = List.from(items);
-    currentIndex = startIndex;
-  }
-
-  Future<void> toggleRotation() async {
-    isLandscape = !isLandscape;
-
-    if (isLandscape) {
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    } else {
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-
-      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
-
-    notifyListeners();
-  }
-
-  Future<void> playNext() async {
-    print("queue length is ===> ${queue.length}");
-    print("queue length is ===> ${queue}");
-    if (queue.isEmpty) return;
-    if (currentIndex + 1 >= queue.length) return;
-
-    currentIndex++;
-    final item = queue[currentIndex];
-    await play(item.path, network: item.isNetwork, type: item.type);
-  }
-
-  Future<void> playPrevious() async {
-    if (queue.isEmpty) return;
-    if (currentIndex - 1 < 0) return;
-
-    currentIndex--;
-    final item = queue[currentIndex];
-    await play(item.path, network: item.isNetwork, type: item.type);
-  }
-
-  void toggleLoop() {
-    isLooping = !isLooping;
-    controller?.setLooping(isLooping);
-  }
-
-  Future<void> play(
-    String path, {
-    bool network = false,
-    required String type,
-  }) async {
-    if (currentPath == path && controller != null) {
-      controller!.play();
-      return;
-    }
-
-    await controller?.dispose();
-
-    currentPath = path;
-    isNetwork = network;
-    currentType = type;
-
-    controller = isNetwork
-        ? VideoPlayerController.networkUrl(Uri.parse(path))
-        : VideoPlayerController.file(File(path));
-
-    await controller!.initialize();
-
-    // 🔥 ADD LISTENER HERE
-    controller!.addListener(() {
-      final value = controller!.value;
-      if (value.isInitialized &&
-          value.position >= value.duration &&
-          !isLooping) {
-        playNext();
-      }
-    });
-
-    chewie = type == "video"
-        ? ChewieController(
-            zoomAndPan: true,
-            deviceOrientationsOnEnterFullScreen: [
-              DeviceOrientation.landscapeLeft,
-              DeviceOrientation.landscapeRight,
-            ],
-
-            deviceOrientationsAfterFullScreen: [
-              DeviceOrientation.portraitUp,
-              DeviceOrientation.portraitDown,
-            ],
-            additionalOptions: (context) {
-              return [
-                // OptionItem(
-                //   onTap: (context) {
-                //     toggleRotation();
-                //     Navigator.pop(context);
-                //   },
-                //   iconData: Icons.screen_rotation,
-                //   title: isLandscape ? "Portrait Mode" : "Landscape Mode",
-                // ),
-                OptionItem(
-                  controlType: ControlType.miniVideo,
-                  onTap: (context) {
-                    Navigator.pop(context);
-                  },
-                  iconData: Icons.screen_rotation,
-                  title: "Mini Screen",
-                  iconImage: AppSvg.icMiniScreen,
-                ),
-                OptionItem(
-                  controlType: ControlType.volume,
-                  onTap: (context) {
-                    // toggleRotation();
-                    // Navigator.pop(context);
-                  },
-                  iconData: Icons.screen_rotation,
-                  title: "Volume",
-                  iconImage: AppSvg.icVolumeOff,
-                ),
-
-                OptionItem(
-                  controlType: ControlType.shuffle,
-                  onTap: (context) => toggleShuffle,
-                  iconData: Icons.shuffle,
-                  title: "Shuffle",
-                  iconImage: AppSvg.icShuffle,
-                ),
-                OptionItem(
-                  controlType: ControlType.playbackSpeed,
-                  onTap: (context) {
-                    // toggleShuffle();
-                  },
-                  iconData: Icons.shuffle,
-                  title: "video speed",
-                  iconImage: AppSvg.ic2x,
-                ),
-                OptionItem(
-                  controlType: ControlType.theme,
-                  onTap: (context) {
-                    toggleShuffle();
-                  },
-                  iconData: Icons.shuffle,
-                  title: "dark",
-                  iconImage: AppSvg.icDarkMode,
-                ),
-                OptionItem(
-                  controlType: ControlType.info,
-                  onTap: (context) {
-                    toggleShuffle();
-                  },
-                  iconData: Icons.shuffle,
-                  title: "info",
-                  iconImage: AppSvg.icInfo,
-                ),
-                OptionItem(
-                  controlType: ControlType.prev10,
-                  onTap: (context) {
-                    toggleShuffle();
-                  },
-                  iconData: Icons.shuffle,
-                  title: "prev10",
-                  iconImage: AppSvg.ic10Prev,
-                ),
-                OptionItem(
-                  controlType: ControlType.next10,
-                  onTap: (context) {
-                    toggleShuffle();
-                  },
-                  iconData: Icons.shuffle,
-                  title: "next10",
-                  iconImage: AppSvg.ic10Next,
-                ),
-
-                OptionItem(
-                  onTap: (context) {
-                    // chewie!.videoPlayerController.value.cancelAndRestartTimer();
-                    //
-                    // if (videoPlayerLatestValue.volume == 0) {
-                    //   chewie!.videoPlayerController.setVolume(chewie.videoPlayerController.videoPlayerOptions.);
-                    //   // controller.setVolume(_latestVolume ?? 0.5);
-                    // } else {
-                    //   _latestVolume = controller.value.volume;
-                    //   controller.setVolume(0.0);
-                    // }
-                  },
-                  controlType: ControlType.loop,
-                  iconData: Icons.shuffle,
-                  title: "Loop",
-                  iconImage: AppSvg.icLoop,
-                ),
-                OptionItem(
-                  controlType: ControlType.playbackSpeed,
-                  onTap: (context) async {
-                    final newPos =
-                        (controller!.value.position) - Duration(seconds: 10);
-                    controller!.seekTo(
-                      newPos > Duration.zero ? newPos : Duration.zero,
-                    );
-                  },
-                  iconData: Icons.replay_10,
-                  title: "kk",
-                  iconImage: AppSvg.ic10Prev,
-                ),
-                OptionItem(
-                  onTap: (context) async {},
-                  controlType: ControlType.miniVideo,
-                  iconData: Icons.replay_10,
-                  title: "miniScreen",
-                  iconImage: AppSvg.icMiniScreen,
-                ),
-              ];
-            },
-            materialProgressColors: ChewieProgressColors(
-              playedColor: Color(0XFF3D57F9),
-              backgroundColor: Color(0XFFF6F6F6),
-            ),
-
-            looping: true,
-            onSufflePressed: () {
-              toggleShuffle();
-            },
-            videoPlayerController: controller!,
-            // onPressedLooping: (){},
-            autoPlay: true,
-            allowFullScreen: true,
-          )
-        : null;
-  }
-
-  void pause() => controller?.pause();
-
-  void resume() => controller?.play();
-
-  void stop() {
-    controller?.pause();
-    controller?.seekTo(Duration.zero);
-  }
-
-  bool get isPlaying => controller?.value.isPlaying ?? false;
-}
-
-class MiniPlayer extends StatefulWidget {
-  const MiniPlayer({super.key});
-
-  @override
-  State<MiniPlayer> createState() => _MiniPlayerState();
-}
-
-class _MiniPlayerState extends State<MiniPlayer> {
-  final GlobalPlayer player = GlobalPlayer();
-  Timer? _timer;
-  Duration position = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    // update position every 500ms
-    _timer = Timer.periodic(Duration(milliseconds: 500), (_) {
-      if (player.controller != null && player.controller!.value.isInitialized) {
-        setState(() {
-          position = player.controller!.value.position;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (player.currentPath == null || player.controller == null)
-      return SizedBox.shrink();
-
-    final duration = player.controller!.value.duration;
-
-    return GestureDetector(
-      onTap: () {
-        // open full player
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PlayerScreen(
-              item: MediaItem(
-                path: player.currentPath!,
-                isNetwork: player.isNetwork,
-                type: player.currentType!,
-              ),
-            ),
-          ),
-        );
-
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (_) => PlayerScreen(
-        //       item: MediaItem(
-        //         path: player.currentPath!,
-        //         isNetwork: player.isNetwork,
-        //         type: player.currentType!, // ✅ REAL TYPE
-        //       ),
-        //     ),
-        //   ),
-        // );
-      },
-      child: Container(
-        color: Colors.grey[900],
-        height: 100,
-        padding: EdgeInsets.all(8),
-        child: Row(
-          children: [
-            // 🔹 Small video preview
-            SizedBox(
-              width: 120,
-              height: 70,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: player.controller!.value.size.width,
-                    height: player.controller!.value.size.height,
-                    child: VideoPlayer(player.controller!),
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(width: 8),
-
-            // 🔹 Info and controls
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    player.currentPath!.split('/').last,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 4),
-                  // 🔹 Progress bar
-                  LinearProgressIndicator(
-                    value: duration.inMilliseconds == 0
-                        ? 0
-                        : position.inMilliseconds / duration.inMilliseconds,
-                    backgroundColor: Colors.white24,
-                    color: Colors.redAccent,
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    "${_formatDuration(position)} / ${_formatDuration(duration)}",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-
-            // 🔹 Playback buttons
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.replay_10, color: Colors.white),
-                  onPressed: () {
-                    final newPos = position - Duration(seconds: 10);
-                    player.controller!.seekTo(
-                      newPos > Duration.zero ? newPos : Duration.zero,
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    player.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      if (player.isPlaying) {
-                        player.pause();
-                      } else {
-                        player.resume();
-                      }
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.forward_10, color: Colors.white),
-                  onPressed: () {
-                    final newPos = position + Duration(seconds: 10);
-                    player.controller!.seekTo(
-                      newPos < duration ? newPos : duration,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(d.inMinutes.remainder(60));
-    final seconds = twoDigits(d.inSeconds.remainder(60));
-    return "$minutes:$seconds";
-  }
-}
 
 class PlayerScreen extends StatefulWidget {
   final MediaItem item;
@@ -548,8 +89,8 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Future<List<MediaItem>> convertEntitiesToMediaItems(
-    List<AssetEntity> entities,
-  ) async {
+      List<AssetEntity> entities,
+      ) async {
     List<MediaItem> items = [];
     for (var entity in entities) {
       final file = await entity.file;
@@ -603,103 +144,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     context.read<FavouriteChangeBloc>().add(FavouriteUpdated(widget.entity!));
   }
 
-  void _addToPlaylist(MediaItem currentItem) {
-    final playlistBox = Hive.box('playlists');
-    String newPlaylistName = '';
 
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            "Add to Playlist",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Existing playlists
-                  if (playlistBox.isNotEmpty)
-                    ...List.generate(playlistBox.length, (index) {
-                      final playlist = playlistBox.getAt(index)!;
-                      return ListTile(
-                        leading: const Icon(Icons.queue_music),
-                        title: Text(playlist.name),
-                        onTap: () {
-                          // Add currentItem to the existing playlist
-                          if (!playlist.items.any(
-                            (e) => e.path == currentItem.path,
-                          )) {
-                            playlist.items.add(currentItem);
-                            playlistBox.putAt(
-                              index,
-                              playlist,
-                            ); // ✅ put updated PlaylistModel
-                          }
-
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Added to ${playlist.name}"),
-                            ),
-                          );
-                        },
-                      );
-                    }),
-
-                  if (playlistBox.isNotEmpty) const Divider(),
-
-                  // Create new playlist
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: "New Playlist Name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onChanged: (v) => newPlaylistName = v,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (newPlaylistName.trim().isEmpty) return;
-
-                final newPlaylist = PlaylistModel(
-                  name: newPlaylistName.trim(),
-                  items: [currentItem],
-                );
-                playlistBox.add(newPlaylist);
-
-                Navigator.pop(context);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Playlist \"$newPlaylistName\" created"),
-                  ),
-                );
-              },
-              child: const Text("Create"),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   bool get isAudio => currentItem?.type == "audio";
 
@@ -708,7 +153,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     return Scaffold(
       appBar: AppBar(
         title: AppText(
-          currentItem?.path.split('/').last ?? '',
+          isAudio ? "Music" : currentItem?.path.split('/').last ?? '',
           fontSize: 20,
           fontWeight: FontWeight.w500,
         ),
@@ -723,18 +168,18 @@ class _PlayerScreenState extends State<PlayerScreen>
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
-            onPressed: () => setState(() => isLocked = true),
-          ),
-          widget.entity != null
+          // IconButton(
+          //   icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
+          //   onPressed: () => setState(() => isLocked = true),
+          // ),
+          widget.entity != null && widget.entity!.type == AssetType.video
               ? FavouriteButton(entity: widget.entity!)
               : SizedBox(),
 
           IconButton(
             icon: const Icon(Icons.playlist_add),
             onPressed: () {
-              _addToPlaylist(currentItem!);
+              addToPlaylist(currentItem!,context);
             },
           ),
         ],
@@ -764,11 +209,11 @@ class _PlayerScreenState extends State<PlayerScreen>
             child: isAudio
                 ? _buildAudioPlayer()
                 : Stack(
-                    children: [
-                      // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
-                      Positioned(child: _buildVideoPlayer()),
-                    ],
-                  ),
+              children: [
+                // Chewie(controller: player.chewie!), // <-- Chewie already has a progress bar
+                Positioned(child: _buildVideoPlayer()),
+              ],
+            ),
           ),
           // Add overlay widgets here, e.g., lock button
           if (isLocked)
@@ -810,19 +255,49 @@ class _PlayerScreenState extends State<PlayerScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Icon
+              // Container(
+              //   height: 220,
+              //   width: 220,
+              //   decoration: BoxDecoration(
+              //     borderRadius: BorderRadius.circular(24),
+              //     color: Colors.white24,
+              //   ),
+              //   child: const Icon(
+              //     Icons.music_note_rounded,
+              //     size: 120,
+              //     color: Colors.white,
+              //   ),
+              // ),
+              // Source - https://stackoverflow.com/a/74490292
+              // Posted by Md. Yeasin Sheikh, modified by community. See post 'Timeline' for change history
+              // Retrieved 2026-02-16, License - CC BY-SA 4.0
               Container(
-                height: 220,
                 width: 220,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: Colors.white24,
-                ),
-                child: const Icon(
-                  Icons.music_note_rounded,
-                  size: 120,
-                  color: Colors.white,
+                // color: Colors.red,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 220,
+                      decoration: ShapeDecoration(
+                        shape: CustomShape(),
+                        color: Colors.purple,
+                      ),
+                    ),
+
+                    // Positioned widget to place FavoriteButton near curve top bump
+                    widget.entity!=null? Positioned(
+                      bottom: -10, // તમારા curve ની ઊંચાઈ અનુસાર adjust કરો
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: FavouriteButton(entity: widget.entity!),
+                      ),
+                    ):SizedBox(),
+                  ],
                 ),
               ),
+
               const SizedBox(height: 24),
               // Title
               Padding(
@@ -1098,65 +573,6 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 }
 
-class FavouriteButton extends StatefulWidget {
-  final AssetEntity entity;
 
-  const FavouriteButton({super.key, required this.entity});
 
-  @override
-  State<FavouriteButton> createState() => _FavouriteButtonState();
-}
 
-class _FavouriteButtonState extends State<FavouriteButton> {
-  late Box favBox;
-  bool favState = false;
-
-  @override
-  void initState() {
-    super.initState();
-    favBox = Hive.box('favourites'); // Make sure Hive is opened
-    _initFavState();
-  }
-
-  /// Initialize favourite state from Hive
-  Future<void> _initFavState() async {
-    final file = await widget.entity.file;
-    if (file == null) return;
-
-    setState(() {
-      favState = favBox.containsKey(file.path);
-    });
-  }
-
-  /// Toggle favourite using PlaylistService
-  Future<void> _toggleFavourite() async {
-    final file = await widget.entity.file;
-    if (file == null) return;
-
-    final playlistService = PlaylistService();
-    final newFavState = await playlistService.toggleFavourite(widget.entity);
-
-    setState(() {
-      favState = newFavState;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: favBox.listenable(),
-      builder: (context, Box box, _) {
-        return GestureDetector(
-          onTap: _toggleFavourite,
-          child: AppImage(src: favState ? AppSvg.likeIcon : AppSvg.unlikeIcon),
-        );
-
-        IconButton(
-          icon: Icon(favState ? Icons.favorite : Icons.favorite_border),
-          onPressed: _toggleFavourite,
-          color: favState ? Colors.red : null,
-        );
-      },
-    );
-  }
-}

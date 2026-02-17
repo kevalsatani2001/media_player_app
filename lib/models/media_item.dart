@@ -49,6 +49,15 @@ class MediaItem extends HiveObject {
       id: map['id'],
       isFavourite: map['isFavourite'],
     );
-  }}
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is MediaItem && runtimeType == other.runtimeType && path == other.path;
+
+  @override
+  int get hashCode => path.hashCode;
+}
 
 
