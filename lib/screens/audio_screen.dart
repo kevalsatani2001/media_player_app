@@ -22,6 +22,7 @@ import '../widgets/app_bar.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import 'bottom_bar_screen.dart';
+import 'detail_screen.dart';
 import 'home_screen.dart';
 // import 'mini_player.dart';
 import 'player_screen.dart';
@@ -92,8 +93,8 @@ class _AudioScreenState extends State<AudioScreen> {
           : Column(
         children: [
           CommonAppBar(
-            title: "Video & Music Player",
-            subTitle: "MEDIA PLAYER",
+            title: "videMusicPlayer",
+            subTitle: "mediaPlayer",
             actionWidget: GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -152,6 +153,7 @@ class _AudioBodyState extends State<_AudioBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         if (state is AudioLoading) {
@@ -276,8 +278,16 @@ class _AudioBodyState extends State<_AudioBody> {
 
                             /// ⋮ Menu
                             PopupMenuButton<MediaMenuAction>(
-                              padding: EdgeInsets.zero,
+                              elevation: 15,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              shadowColor: Colors.black.withOpacity(0.60),
+                              offset: Offset(0, 0),
+                              // splashRadius: 15,
                               icon: AppImage(src: AppSvg.dropDownMenuDot),
+                              menuPadding: EdgeInsets.symmetric(horizontal: 10),
                               onSelected: (action) async {
                                 switch (action) {
                                   case MediaMenuAction.detail:
@@ -293,7 +303,7 @@ class _AudioBodyState extends State<_AudioBody> {
                                     _shareItem(context, audio);
                                     break;
                                   case MediaMenuAction.delete:
-                                    _deleteCurrent(context, audio);
+                                    deleteCurrentItem(context, audio);
                                     break;
                                   case MediaMenuAction.addToFavourite:
                                     await _toggleFavourite(
@@ -318,38 +328,92 @@ class _AudioBodyState extends State<_AudioBody> {
                                 }
                               },
                               itemBuilder: (context) => [
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: MediaMenuAction.detail,
-                                  child: Text('Show detail page'),
-                                ),
-                                const PopupMenuItem(
-                                  value: MediaMenuAction.info,
-                                  child: Text('Show info dialog'),
-                                ),
-                                if (audio.type == AssetType.video)
-                                  const PopupMenuItem(
-                                    value: MediaMenuAction.thumb,
-                                    child: Text('Show 500 size thumb'),
+                                  child: Center(
+                                    child: AppText(
+                                      'Show detail page',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
                                   ),
-                                const PopupMenuItem(
-                                  value: MediaMenuAction.share,
-                                  child: Text('Share'),
                                 ),
+                                // const PopupMenuDivider(height: 0.5,),
+                                //  PopupMenuItem(
+                                //   value: MediaMenuAction.info,
+                                //   child:  Center(
+                                //     child: AppText(
+                                //       'Show info dialog',
+                                //       fontSize: 12,
+                                //       fontWeight: FontWeight.w500,
+                                //       color: colors.appBarTitleColor,
+                                //     ),
+                                //   ),
+                                // ),
+
+                                if (audio.type == AssetType.video)...[
+                                  const PopupMenuDivider(height: 0.5,),
+                                  PopupMenuItem(
+                                    value: MediaMenuAction.thumb,
+                                    child: Center(
+                                      child: AppText(
+                                        'Show 500 size thumb',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.appBarTitleColor,
+                                      ),
+                                    ),
+                                  ),],
+                                const PopupMenuDivider(height: 0.5,),
+                                PopupMenuItem(
+                                  value: MediaMenuAction.share,
+                                  child: Center(
+                                    child: AppText(
+                                      "Share",
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuDivider(height: 0.5,),
                                 PopupMenuItem(
                                   value: MediaMenuAction.addToFavourite,
-                                  child: Text(
-                                    audio.isFavorite
-                                        ? 'Remove from Favourite'
-                                        : 'Add to Favourite',
+                                  child: Center(
+                                    child: AppText(
+                                      audio.isFavorite
+                                          ? 'Remove from Favourite'
+                                          : 'Add to Favourite',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
                                   ),
                                 ),
-                                const PopupMenuItem(
+                                const PopupMenuDivider(height: 0.5,),
+                                PopupMenuItem(
                                   value: MediaMenuAction.delete,
-                                  child: Text('Delete'),
+                                  child: Center(
+                                    child: AppText(
+                                      'Delete',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
                                 ),
-                                const PopupMenuItem(
+                                const PopupMenuDivider(height: 0.5,),
+                                PopupMenuItem(
                                   value: MediaMenuAction.addToPlaylist,
-                                  child: Text('Add to playlist'),
+                                  child: Center(
+                                    child: AppText(
+                                      'Add to playlist',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

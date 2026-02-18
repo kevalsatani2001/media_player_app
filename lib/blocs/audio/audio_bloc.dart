@@ -126,6 +126,16 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     final total = await path.assetCountAsync;
 
     final entities = await path.getAssetListPaged(page: 0, size: 50);
+    await box.clear();
+    for (final entity in entities) {
+      final file = await entity.file;
+      if (file != null) {
+        box.put(
+          file.path,
+          MediaItem(path: file.path, isNetwork: false, type: 'audio',id: entity.id).toMap(),
+        );
+      }
+    }
 
     emit(AudioLoaded(
       entities: entities,

@@ -43,6 +43,7 @@ import '../blocs/video/video_bloc.dart';
 import '../widgets/image_item_widget.dart';
 import '../models/media_item.dart';
 import '../widgets/text_widget.dart';
+import 'detail_screen.dart';
 import 'home_screen.dart';
 import 'player_screen.dart';
 
@@ -1536,74 +1537,7 @@ final Center loadWidget = Center(
   ),
 );
 
-Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
-  final LatLng? latlng = await entity.latlngAsync();
-  final double? lat = latlng?.latitude ?? entity.latitude;
-  final double? lng = latlng?.longitude ?? entity.longitude;
 
-  final Widget w = Center(
-    child: Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(15),
-      child: Material(
-        color: Colors.white,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            GestureDetector(
-              child: _buildInfoItem('id', entity.id),
-              onLongPress: () {
-                Clipboard.setData(ClipboardData(text: entity.id));
-                Fluttertoast.showToast(msg: 'The id already copied.');
-              },
-            ),
-            _buildInfoItem('create', entity.createDateTime.toString()),
-            _buildInfoItem('modified', entity.modifiedDateTime.toString()),
-            _buildInfoItem('orientation', entity.orientation.toString()),
-            _buildInfoItem('size', entity.size.toString()),
-            _buildInfoItem('orientatedSize', entity.orientatedSize.toString()),
-            _buildInfoItem('duration', entity.videoDuration.toString()),
-            _buildInfoItemAsync('title', entity.titleAsync),
-            _buildInfoItem('lat', lat.toString()),
-            _buildInfoItem('lng', lng.toString()),
-            _buildInfoItem('is favorite', entity.isFavorite.toString()),
-            _buildInfoItem('relative path', entity.relativePath ?? 'null'),
-            _buildInfoItemAsync('mimeType', entity.mimeTypeAsync),
-          ],
-        ),
-      ),
-    ),
-  );
-  showDialog<void>(context: context, builder: (BuildContext c) => w);
-}
-
-Widget _buildInfoItem(String title, String? info) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Row(
-      children: <Widget>[
-        Container(
-          alignment: Alignment.centerLeft,
-          width: 88,
-          child: Text(title.padLeft(10)),
-        ),
-        Expanded(child: Text((info ?? 'null').padLeft(40))),
-      ],
-    ),
-  );
-}
-
-Widget _buildInfoItemAsync(String title, Future<String?> info) {
-  return FutureBuilder<String?>(
-    future: info,
-    builder: (BuildContext context, AsyncSnapshot<String?> snapshot) {
-      if (!snapshot.hasData) {
-        return _buildInfoItem(title, '');
-      }
-      return _buildInfoItem(title, snapshot.data);
-    },
-  );
-}
 
 Future<void> showResultDialog(
   BuildContext context,
@@ -1638,118 +1572,6 @@ Future<void> showResultDialog(
       );
     },
   );
-}
-
-class DetailPage extends StatefulWidget {
-  const DetailPage({super.key, required this.entity});
-
-  final AssetEntity entity;
-
-  @override
-  State<DetailPage> createState() => _DetailPageState();
-}
-
-class _DetailPageState extends State<DetailPage> {
-  bool useOrigin = true;
-  bool useMediaUri = true && !PlatformUtils.isOhos;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Asset detail'),
-        actions: <Widget>[
-          IconButton(icon: const Icon(Icons.info), onPressed: _showInfo),
-        ],
-      ),
-      body: Column(
-        children: <Widget>[
-          if (widget.entity.type == AssetType.image)
-            CheckboxListTile(
-              title: const Text('Use origin file.'),
-              onChanged: (bool? value) {
-                useOrigin = value!;
-                setState(() {});
-              },
-              value: useOrigin,
-            ),
-          if (widget.entity.type == AssetType.video && PlatformUtils.isOhos)
-            CheckboxListTile(
-              title: const Text('Use Media Uri'),
-              value: useMediaUri,
-              onChanged: (bool? value) {
-                useMediaUri = value!;
-                setState(() {});
-              },
-            ),
-          Expanded(
-            child: Container(
-              alignment: Alignment.center,
-              color: Colors.black,
-              child: _buildContent(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    if (widget.entity.isLivePhoto) {
-      return LivePhotosWidget(
-        entity: widget.entity,
-        useOrigin: useOrigin == true,
-      );
-    }
-    if (widget.entity.type == AssetType.audio ||
-        widget.entity.type == AssetType.video ||
-        widget.entity.isLivePhoto) {
-      return buildVideo();
-    }
-    return buildImage();
-  }
-
-  Widget buildImage() {
-    return AssetEntityImage(
-      widget.entity,
-      isOriginal: useOrigin == true,
-      fit: BoxFit.fill,
-      loadingBuilder:
-          (BuildContext context, Widget child, ImageChunkEvent? progress) {
-            if (progress == null) {
-              return child;
-            }
-            final double? value;
-            if (progress.expectedTotalBytes != null) {
-              value =
-                  progress.cumulativeBytesLoaded / progress.expectedTotalBytes!;
-            } else {
-              value = null;
-            }
-            return Center(
-              child: SizedBox.fromSize(
-                size: const Size.square(30),
-                child: CircularProgressIndicator(value: value),
-              ),
-            );
-          },
-    );
-  }
-
-  Widget buildVideo() {
-    return VideoWidget(
-      entity: widget.entity,
-      usingMediaUri: useMediaUri ?? true,
-    );
-  }
-
-  Future<void> _showInfo() {
-    return showInfoDialog(context, widget.entity);
-  }
-
-  Widget buildAudio() {
-    return const Center(child: Icon(Icons.audiotrack));
-  }
 }
 
 class VideoWidget extends StatefulWidget {

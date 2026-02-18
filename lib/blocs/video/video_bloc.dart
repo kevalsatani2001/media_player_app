@@ -182,18 +182,15 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
   //     ),
   //   );
   // }
-  Future<void> _onLoadMoreVideos(
-      LoadMoreVideos event,
-      Emitter<VideoState> emit,
-      ) async {
-    if (state is! VideoLoaded) return;
+  Future<void> _onLoadMoreVideos(LoadMoreVideos event, Emitter<VideoState> emit) async {
+    final current = state;
+    // જો પહેલેથી લોડિંગ ચાલતું હોય અથવા આપણે છેલ્લે પહોંચી ગયા હોઈએ તો અટકી જવું
+    if (current is! VideoLoaded || !current.hasMore) return;
 
-    final current = state as VideoLoaded;
+    // Pagination લોજિકમાં ચેક ઉમેરો કે શું આપણે ઓલરેડી લોડ કરી રહ્યા છીએ?
+    // આ માટે તમે VideoState માં 'isLoadingMore' જેવો ફ્લેગ પણ રાખી શકો.
 
-    if (!current.hasMore) return;
-
-    const pageSize = 7; // keep same everywhere
-
+    const pageSize = 7;
     final nextPage = current.page + 1;
 
     final moreEntities = await current.path.getAssetListPaged(
@@ -206,14 +203,11 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       return;
     }
 
-    emit(
-      current.copyWith(
-        entities: [...current.entities, ...moreEntities],
-        page: nextPage,
-        hasMore:
-        current.entities.length + moreEntities.length < current.totalCount,
-      ),
-    );
+    emit(current.copyWith(
+      entities: [...current.entities, ...moreEntities],
+      page: nextPage,
+      hasMore: (current.entities.length + moreEntities.length) < current.totalCount,
+    ));
   }
 
 }

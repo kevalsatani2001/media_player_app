@@ -237,6 +237,9 @@ class MaterialControlsState extends State<MaterialControls>
     _chewieController = ChewieController.of(context);
     controller = chewieController.videoPlayerController;
 
+    // Notifier ને અહીં ફરીથી મેળવો જેથી તે લેટેસ્ટ રહે
+    notifier = Provider.of<PlayerNotifier>(context, listen: false);
+
     if (oldController != chewieController) {
       _dispose();
       _initialize();
@@ -818,11 +821,21 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   void cancelAndRestartTimer() {
+    // ૧. જો વિજેટ ડિસ્પોઝ થઈ ગયું હોય તો આગળ વધશો નહીં
+    if (!mounted) return;
+
     _hideTimer?.cancel();
     _startHideTimer();
 
     setState(() {
-      notifier.hideStuff = false;
+      // ૨. Notifier વાપરતા પહેલા ટ્રાય-કેચ અથવા સેફ્ટી ચેક રાખવો
+      try {
+        if (mounted) {
+          notifier.hideStuff = false;
+        }
+      } catch (e) {
+        debugPrint("Notifier already disposed, ignoring...");
+      }
       _displayTapped = true;
     });
   }
@@ -917,10 +930,18 @@ class MaterialControlsState extends State<MaterialControls>
     final hideControlsTimer = chewieController.hideControlsTimer.isNegative
         ? ChewieController.defaultHideControlsTimer
         : chewieController.hideControlsTimer;
+
     _hideTimer = Timer(hideControlsTimer, () {
-      setState(() {
-        notifier.hideStuff = true;
-      });
+      // જો ટાઈમર પૂરો થાય ત્યાં સુધીમાં યુઝરે સ્ક્રીન છોડી દીધી હોય
+      if (mounted) {
+        setState(() {
+          try {
+            notifier.hideStuff = true;
+          } catch (e) {
+            // Ignore
+          }
+        });
+      }
     });
   }
 

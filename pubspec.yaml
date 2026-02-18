@@ -55,6 +55,9 @@ dependencies:
     sdk: flutter
   flutter_svg:
   provider:
+  in_app_review:
+  url_launcher:
+  rating_dialog:
 #  google_fonts:
 
 dev_dependencies:

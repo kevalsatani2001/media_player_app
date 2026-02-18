@@ -31,6 +31,7 @@ import '../widgets/home_card.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import 'bottom_bar_screen.dart';
+import 'detail_screen.dart';
 import 'home_screen.dart';
 
 class HomePage extends StatefulWidget {

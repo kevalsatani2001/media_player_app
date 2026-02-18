@@ -12,6 +12,7 @@ import '../models/media_item.dart';
 import '../widgets/add_to_playlist.dart';
 import '../widgets/image_item_widget.dart';
 import 'bottom_bar_screen.dart';
+import 'detail_screen.dart';
 import 'player_screen.dart';
 import 'home_screen.dart';
 
