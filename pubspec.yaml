@@ -59,6 +59,7 @@ dependencies:
   url_launcher:
   rating_dialog:
   flutter_staggered_animations:
+  google_mobile_ads:
 #  google_fonts:
 
 dev_dependencies:

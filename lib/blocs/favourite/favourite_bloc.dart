@@ -211,7 +211,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
             id: entity.id,
             path: file.path,
             isNetwork: false,
-            type: entity.type == AssetType.video ? 'video' : 'audio',
+            type: entity.type == AssetType.video ? 'video' : 'audio', isFavourite: entity.isFavorite,
           ).toMap(),
         );
       }

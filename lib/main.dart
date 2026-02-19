@@ -43,6 +43,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/blocs/favourite_change/favourite_change_bloc.dart';
@@ -51,8 +52,10 @@ import 'package:media_player/screens/favourite_screen.dart';
 import 'package:media_player/screens/language_screen.dart';
 import 'package:media_player/screens/onboarding_screen.dart';
 import 'package:media_player/screens/splash_screen.dart';
+import 'package:media_player/services/global_player.dart';
 import 'package:media_player/utils/app_string.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
 import 'blocs/audio/audio_bloc.dart';
 import 'blocs/count/count_bloc.dart';
@@ -80,6 +83,7 @@ import 'screens/recent_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MobileAds.instance.initialize();
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
     androidNotificationChannelName: 'Audio playback',
@@ -104,6 +108,7 @@ void main() async {
   runApp(
     MultiBlocProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => GlobalPlayer()),
         BlocProvider(create: (_) => ThemeBloc()),
         BlocProvider(create: (_) => LocaleBloc()),
         BlocProvider(

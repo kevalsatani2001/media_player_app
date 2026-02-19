@@ -611,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         item: MediaItem(
                           path: file.path,
                           isNetwork: false,
-                          type: 'video',
+                          type: 'video', id: entity.id, isFavourite: entity.isFavorite,
                         ),
                       ),
                     ),
@@ -1092,7 +1092,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
           context,
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
-              item: MediaItem(path: file.path, isNetwork: false, type: 'video'),
+              item: MediaItem(path: file.path, isNetwork: false, type: 'video', id: entity.id, isFavourite: entity.isFavorite),
             ),
           ),
         );

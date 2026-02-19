@@ -16,7 +16,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
 
   VideoBloc(this.box) : super(VideoInitial()) {
     on<LoadVideosFromGallery>(_onLoadVideosFromGallery);
-    on<PickVideos>(_onPickVideos);
+    // on<PickVideos>(_onPickVideos);
     on<LoadMoreVideos>(_onLoadMoreVideos);
     on<RefreshCounts>(_onRefreshCounts);
   }
@@ -121,7 +121,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       if (file != null) {
         box.put(
           file.path,
-          MediaItem(path: file.path, isNetwork: false, type: 'video',id: entity.id).toMap(),
+          MediaItem(path: file.path, isNetwork: false, type: 'video',id: entity.id,isFavourite: entity.isFavorite).toMap(),
         );
       }
     }
@@ -142,21 +142,21 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
 
 
   // Pick videos from file picker
-  Future<void> _onPickVideos(PickVideos event, Emitter<VideoState> emit) async {
-    final result = await event.filePicker();
-    if (result == null) return;
-
-    for (final path in result) {
-      final item = MediaItem(path: path, isNetwork: false, type: 'video',);
-      box.put(path, item.toMap());
-    }
-
-    // Refresh current list from Hive
-    final videos = box.values
-        .map((e) => MediaItem.fromMap(Map<String, dynamic>.from(e)))
-        .toList();
-    emit(HiveVideoUpdated(videos));
-  }
+  // Future<void> _onPickVideos(PickVideos event, Emitter<VideoState> emit) async {
+  //   final result = await event.filePicker();
+  //   if (result == null) return;
+  //
+  //   for (final path in result) {
+  //     final item = MediaItem(path: path, isNetwork: false, type: 'video',isFavourite: );
+  //     box.put(path, item.toMap());
+  //   }
+  //
+  //   // Refresh current list from Hive
+  //   final videos = box.values
+  //       .map((e) => MediaItem.fromMap(Map<String, dynamic>.from(e)))
+  //       .toList();
+  //   emit(HiveVideoUpdated(videos));
+  // }
 
   // Load more assets (pagination)
   // Future<void> _onLoadMoreVideos(

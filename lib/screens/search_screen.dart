@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:media_player/core/constants.dart';
+import 'package:media_player/widgets/image_item_widget.dart';
 import 'package:media_player/widgets/image_widget.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -24,30 +25,37 @@ class _SearchScreenState extends State<SearchScreen> {
   List<MediaItem> _results = [];
 
   void _performSearch(String query) {
-    query = query.toLowerCase();
+    if (query.isEmpty) {
+      setState(() => _results = []);
+      return;
+    }
 
+    final lowerQuery = query.toLowerCase();
+
+    // Hive boxes માંથી ડેટા મેળવો
     final videoBox = Hive.box('videos');
     final audioBox = Hive.box('audios');
 
-    final List<MediaItem> items = [];
+    // વિડિયો અને ઓડિયો બંનેના ડેટાને એક લિસ્ટમાં ભેગો કરો
+    final allItems = [
+      ...videoBox.values.map(
+            (e) => MediaItem.fromMap(Map<String, dynamic>.from(e)),
+      ),
+      ...audioBox.values.map(
+            (e) => MediaItem.fromMap(Map<String, dynamic>.from(e)),
+      ),
+    ];
 
-    for (final rawItem in videoBox.values) {
-      final item = MediaItem.fromMap(Map<String, dynamic>.from(rawItem));
-      if (item.path.toLowerCase().contains(query)) {
-        items.add(item);
-      }
-    }
+    // હવે પાથ (File Name) દ્વારા ફિલ્ટર કરો
+    final filtered = allItems.where((item) {
+      final fileName = item.path.split('/').last.toLowerCase();
+      return fileName.contains(lowerQuery);
+    }).toList();
 
-    for (final rawItem in audioBox.values) {
-      final item = MediaItem.fromMap(Map<String, dynamic>.from(rawItem));
-      if (item.path.toLowerCase().contains(query)) {
-        items.add(item);
-      }
-    }
-
-    setState(() => _results = items);
+    setState(() {
+      _results = filtered;
+    });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -57,14 +65,15 @@ class _SearchScreenState extends State<SearchScreen> {
         leading: Padding(
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20)),
+            onTap: () => Navigator.pop(context),
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+          ),
         ),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 7.5),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7.5),
             child: TextFormField(
               controller: _controller,
               autofocus: true,
@@ -87,13 +96,20 @@ class _SearchScreenState extends State<SearchScreen> {
                 suffixIcon: Padding(
                   padding: const EdgeInsets.all(8),
                   child: GestureDetector(
-                      onTap: _query.isEmpty?null:(){
-                        setState((){
-                          _controller.clear();
-                          _query = "";
-                        });
-                      },
-                      child: AppImage(src:_query.isEmpty? AppSvg.searchIconBorder:AppSvg.closeIcon)),
+                    onTap: _query.isEmpty
+                        ? null
+                        : () {
+                      setState(() {
+                        _controller.clear();
+                        _query = "";
+                      });
+                    },
+                    child: AppImage(
+                      src: _query.isEmpty
+                          ? AppSvg.searchIconBorder
+                          : AppSvg.closeIcon,
+                    ),
+                  ),
                 ),
                 border: OutlineInputBorder(
                   borderSide: BorderSide(color: colors.textFieldFill),
@@ -131,383 +147,149 @@ class _SearchScreenState extends State<SearchScreen> {
                 fontWeight: FontWeight.w400,
               ),
             )
-                : ListView.builder(
+                :
+
+
+            ListView.builder(
               itemCount: _results.length,
               itemBuilder: (_, i) {
                 final item = _results[i];
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 7.5,horizontal: 15),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colors.cardBackground,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    // height: 100,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        left: 10,
-                        top: 10,
-                        bottom: 10,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 7.5,
+                    horizontal: 15,
+                  ),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlayerScreen(item: item),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            // 🔑 important
-                            child:
-                            /*
-                                  AssetEntity(
-                                      relativePath: item.path,
-                                      id: item.id!,
-                                      typeInt: item.type == 'audio' ? 3 : 2,
-                                      width: 80,
-                                      height: 80,
-                                    ),
-                                   */
-                            AssetEntityImage(
-                              AssetEntity(
-                                relativePath: item.path,
-                                id: item.id!,
-                                typeInt: item.type == 'audio' ? 3 : 2,
+                      // height: 100,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          left: 10,
+                          top: 10,
+                          bottom: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
                                 width: 80,
-                                height: 80,
-                              ),
-                              thumbnailSize: const ThumbnailSize(160, 120),
-                              // 2x for quality
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.broken_image,
-                                    size: 20,
-                                    color: Colors.white,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                // 🔑 important
+                                child: assetAntityImage(AssetEntity(
+                                  relativePath: item.path,
+                                  id: item.id!,
+                                  typeInt: item.type == 'audio' ? 3 : 2,
+                                  width: 80,
+                                  height: 80,
+                                ),)
+                            ),
+                            SizedBox(width: 13),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    item.path.split('/').last,
+                                    maxLines: 1,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 13),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AppText(
-                                  item.path.split('/').last,
-                                  maxLines: 1,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                SizedBox(height: 7),
-                                AppText(
-                                  item.path,
-                                  maxLines: 1,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                  color: colors.textFieldBorder,
-                                ),
-                                SizedBox(height: 7),
-                                Row(
-                                  children: [
-                                    AppText(
-                                      formatDuration( AssetEntity(
-                                        relativePath: item.path,
-                                        id: item.id!,
-                                        typeInt: item.type == 'audio' ? 3 : 2,
-                                        width: 80,
-                                        height: 80,
-                                      ).duration),
-                                      maxLines: 2,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.appBarTitleColor,
-                                    ),
-                                    SizedBox(width: 10),
-                                    FutureBuilder<File?>(
-                                      future:  AssetEntity(
-                                        relativePath: item.path,
-                                        id: item.id!,
-                                        typeInt: item.type == 'audio' ? 3 : 2,
-                                        width: 80,
-                                        height: 80,
-                                      ).file,
-                                      builder: (context, snapshot) {
-                                        if (!snapshot.hasData ||
-                                            snapshot.data == null) {
-                                          return const SizedBox(height: 14);
-                                        }
+                                  SizedBox(height: 7),
+                                  AppText(
+                                    item.path,
+                                    maxLines: 1,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: colors.textFieldBorder,
+                                  ),
+                                  SizedBox(height: 7),
+                                  Row(
+                                    children: [
+                                      AppText(
+                                        formatDuration(
+                                          AssetEntity(
+                                            relativePath: item.path,
+                                            id: item.id!,
+                                            typeInt: item.type == 'audio'
+                                                ? 3
+                                                : 2,
+                                            width: 80,
+                                            height: 80,
+                                          ).duration,
+                                        ),
+                                        maxLines: 2,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.appBarTitleColor,
+                                      ),
+                                      SizedBox(width: 10),
+                                      FutureBuilder<File?>(
+                                        future: AssetEntity(
+                                          relativePath: item.path,
+                                          id: item.id!,
+                                          typeInt: item.type == 'audio'
+                                              ? 3
+                                              : 2,
+                                          width: 80,
+                                          height: 80,
+                                        ).file,
+                                        builder: (context, snapshot) {
+                                          if (!snapshot.hasData ||
+                                              snapshot.data == null) {
+                                            return const SizedBox(
+                                              height: 14,
+                                            );
+                                          }
 
-                                        final file = snapshot.data!;
+                                          final file = snapshot.data!;
 
-                                        if (!file.existsSync()) {
-                                          return const Text(
-                                            'Unavailable',
-                                            style: TextStyle(
-                                              color: Colors.redAccent,
-                                              fontSize: 11,
-                                            ),
+                                          if (!file.existsSync()) {
+                                            return const Text(
+                                              'Unavailable',
+                                              style: TextStyle(
+                                                color: Colors.redAccent,
+                                                fontSize: 11,
+                                              ),
+                                            );
+                                          }
+
+                                          final bytes = file.lengthSync();
+
+                                          return AppText(
+                                            _formatSize(bytes),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: colors.appBarTitleColor,
                                           );
-                                        }
-
-                                        final bytes = file.lengthSync();
-
-                                        return AppText(
-                                          _formatSize(bytes),
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 13),
-                          // _dropDownButton(),
-                          // PopupMenuButton<MediaMenuAction>(
-                          //   elevation: 10,
-                          //   color: Colors.white,
-                          //   shape: RoundedRectangleBorder(
-                          //     borderRadius: BorderRadius.circular(12),
-                          //   ),
-                          //   shadowColor: Colors.black.withOpacity(0.15),
-                          //   icon: AppImage(src: AppSvg.dropDownMenuDot),
-                          //   menuPadding: EdgeInsets.zero,
-                          //   // onSelected: (action) => onMenuSelected?.call(action),
-                          //   itemBuilder: (context) => [
-                          //     PopupMenuItem(
-                          //       value: MediaMenuAction.detail,
-                          //       child: Center(
-                          //         child: AppText(
-                          //           'Show detail page',
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.w500,
-                          //           color: colors.appBarTitleColor,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //
-                          //     const PopupMenuDivider(height: 0.5,),
-                          //     PopupMenuItem(
-                          //       value: MediaMenuAction.detail,
-                          //       child: Center(
-                          //         child: AppText(
-                          //           'Show detail page',
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.w500,
-                          //           color: colors.appBarTitleColor,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //
-                          //     const PopupMenuDivider(height: 0.5,),
-                          //     PopupMenuItem(
-                          //       value: MediaMenuAction.info,
-                          //       child:Center(
-                          //         child: AppText(
-                          //           'Show info dialog',
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.w500,
-                          //           color: colors.appBarTitleColor,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //
-                          //     if (entity.type == AssetType.video) ...[
-                          //       const PopupMenuDivider(height: 0.5,),
-                          //       PopupMenuItem(
-                          //         value: MediaMenuAction.thumb,
-                          //         child: Center(
-                          //           child: AppText(
-                          //             'Show 500 size thumb',
-                          //             fontSize: 12,
-                          //             fontWeight: FontWeight.w500,
-                          //             color: colors.appBarTitleColor,
-                          //           ),
-                          //         ),
-                          //       ),
-                          //     ],
-                          //
-                          //     // const PopupMenuDivider(height: 0.5,),
-                          //     //  PopupMenuItem(
-                          //     //   value: MediaMenuAction.share,
-                          //     //   child:Center(
-                          //     //     child: AppText(
-                          //     //       'Share',
-                          //     //       fontSize: 12,
-                          //     //       fontWeight: FontWeight.w500,
-                          //     //       color: colors.appBarTitleColor,
-                          //     //     ),
-                          //     //   ),
-                          //     // ),
-                          //
-                          //     const PopupMenuDivider(height: 0.5,),
-                          //
-                          //     PopupMenuItem(
-                          //       value: MediaMenuAction.addToFavourite,
-                          //       child:Center(
-                          //         child: AppText(
-                          //           entity.isFavorite
-                          //               ? 'Remove from Favourite'
-                          //               : 'Add to Favourite',
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.w500,
-                          //           color: colors.appBarTitleColor,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //
-                          //     const PopupMenuDivider(height: 0.5,),
-                          //
-                          //     PopupMenuItem(
-                          //       value: MediaMenuAction.delete,
-                          //       child: Center(
-                          //         child: AppText(
-                          //           'Delete',
-                          //           fontSize: 12,
-                          //           fontWeight: FontWeight.w500,
-                          //           color: colors.appBarTitleColor,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   ],
-                          // ),
-
-                          /*PopupMenuButton<MediaMenuAction>(
-                          borderRadius: BorderRadius.circular(10),
-                          color: colors.whiteColor,
-                          shadowColor: colors.blackColor.withOpacity(0.20),
-                          icon: AppImage(src: AppSvg.dropDownMenuDot),
-                          // onSelected: (action) => onMenuSelected?.call(action),
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: MediaMenuAction.detail,
-                              child: Text('Show detail page'),
-                            ),
-
-                            const PopupMenuDivider(),
-
-                            const PopupMenuItem(
-                              value: MediaMenuAction.info,
-                              child: Text('Show info dialog'),
-                            ),
-
-                            if (entity.type == AssetType.video) ...[
-                              const PopupMenuDivider(),
-                              const PopupMenuItem(
-                                value: MediaMenuAction.thumb,
-                                child: Text('Show 500 size thumb'),
-                              ),
-                            ],
-
-                            const PopupMenuDivider(),
-
-                            const PopupMenuItem(
-                              value: MediaMenuAction.share,
-                              child: Text('Share'),
-                            ),
-
-                            const PopupMenuDivider(),
-
-                            PopupMenuItem(
-                              value: MediaMenuAction.addToFavourite,
-                              child: Text(
-                                entity.isFavorite
-                                    ? 'Remove from Favourite'
-                                    : 'Add to Favourite',
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-
-                            const PopupMenuDivider(),
-
-                            const PopupMenuItem(
-                              value: MediaMenuAction.delete,
-                              child: Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
+                            SizedBox(width: 13),
                           ],
-                        ),*/
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                );
-                //   Column(
-                //   children: [
-                //     ImageItemWidget(
-                //       onTap: (){
-                //         Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (_) => PlayerScreen(item: item,
-                //             entity: AssetEntity(
-                //               relativePath: item.path,
-                //               id: item.id!,
-                //               typeInt: item.type == 'audio' ? 3 : 2,
-                //               width: 80,
-                //               height: 80,
-                //             ),),
-                //           ),
-                //         );
-                //       },
-                //       entity: AssetEntity(
-                //         relativePath: item.path,
-                //         id: item.id!,
-                //         typeInt: item.type == 'audio' ? 3 : 2,
-                //         width: 80,
-                //         height: 80,
-                //       ),
-                //       option: ThumbnailOption(
-                //         size: ThumbnailSize.square(200),
-                //       ),
-                //     ),
-                //   ],
-                // );
-                ListTile(
-                  leading: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: item.type == 'video'
-                        ? AssetEntityImage(
-                      width: double.infinity,
-                      AssetEntity(
-                        relativePath: item.path,
-                        id: item.id!,
-                        typeInt: item.type == 'audio' ? 3 : 2,
-                        width: 80,
-                        height: 80,
-                      ),
-                      isOriginal: false,
-                      thumbnailSize: ThumbnailSize.square(200),
-                      thumbnailFormat: ThumbnailFormat.jpeg,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, e, s) =>
-                          Text(e.toString()),
-                    )
-                        : Icon(
-                      item.type == 'video'
-                          ? Icons.video_file
-                          : Icons.music_note,
-                    ),
-                  ),
-                  title: Text(item.path.split('/').last, maxLines: 1),
-                  subtitle: Text(item.type.toUpperCase()),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PlayerScreen(item: item),
-                      ),
-                    );
-                  },
                 );
               },
             ),
@@ -521,5 +303,4 @@ class _SearchScreenState extends State<SearchScreen> {
     final mb = bytes / (1024 * 1024);
     return '${mb.toStringAsFixed(1)} MB';
   }
-
 }

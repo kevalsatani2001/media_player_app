@@ -73,6 +73,7 @@ class ChewieState extends State<Chewie> {
     }
   }
 
+  // chewie_player.dart માં listener મેથડ
   Future<void> listener() async {
     if (isControllerFullScreen && !_isFullScreen) {
       _wasPlayingBeforeFullScreen =
@@ -80,12 +81,14 @@ class ChewieState extends State<Chewie> {
       _resumeAppliedInFullScreen = false;
       _isFullScreen = isControllerFullScreen;
       await _pushFullScreenWidget(context);
-    } else if (_isFullScreen) {
-      Navigator.of(
-        context,
-        rootNavigator: widget.controller.useRootNavigator,
-      ).pop();
+    } else if (!isControllerFullScreen && _isFullScreen) { // અહીં ચેક ઉમેરો
       _isFullScreen = false;
+      if (mounted) {
+        Navigator.of(
+          context,
+          rootNavigator: widget.controller.useRootNavigator,
+        ).pop();
+      }
     }
   }
 

@@ -27,6 +27,7 @@ class PlayerScreen extends StatefulWidget {
   final int? index;
   final AssetEntity? entity;
   final List<AssetEntity>? entityList;
+  bool isPlaylist;
 
   PlayerScreen({
     super.key,
@@ -34,6 +35,7 @@ class PlayerScreen extends StatefulWidget {
     this.index = 0,
     this.entity,
     this.entityList = const [],
+    this.isPlaylist=false
   });
 
   @override
@@ -74,7 +76,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     // ૨. પ્લે કોલ કરો
     await player.play(
       widget.item.path,
-      type: widget.item.type,
+      type: widget.item.type, isFavourite: widget.item.isFavourite, id: widget.item.id,
     );
 await player.loadQueueFromHive(widget.item.type);
     // if (mounted) {
@@ -97,7 +99,7 @@ await player.loadQueueFromHive(widget.item.type);
             id: entity.id,
             path: file.path,
             isNetwork: false,
-            type: type,
+            type: type, isFavourite: entity.isFavorite,
           ),
         );
       }

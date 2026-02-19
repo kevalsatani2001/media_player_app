@@ -102,32 +102,6 @@ class _SettingScreenState extends State<SettingScreen> {
                           ),
                         );
                       },"preferredLanguage",AppSvg.languageIcon);
-
-                      Row(
-                        children: [
-                          Text('${AppStrings.get(context, 'language')}: '),
-                          const SizedBox(width: 16),
-                          DropdownButton<Locale>(
-                            value: localeState.locale,
-                            items: AppStrings.translations.keys.map((langCode) {
-                              // get the display name of the language from translations
-                              final langName =
-                                  AppStrings.translations[langCode]?['language'] ??
-                                      langCode;
-                              return DropdownMenuItem<Locale>(
-                                value: Locale(langCode),
-                                child: Text(langName),
-                              );
-                            }).toList(),
-                            onChanged: (locale) {
-                              if (locale != null) {
-                                context.read<LocaleBloc>().add(ChangeLocale(locale));
-                                setState(() {});
-                              }
-                            },
-                          ),
-                        ],
-                      );
                     },
                   ),
 
@@ -154,70 +128,13 @@ class _SettingScreenState extends State<SettingScreen> {
                     shareApp();
                   },"shareTheApp",AppSvg.shareAppIcon),
                   Divider(color: colors.dividerColor,),
-                  _buildSettingTab((){
+                  _buildSettingTab(() {
                     showDialog(
                       context: context,
-                      barrierDismissible: true, // set to false if you want to force a rating
-                      builder: (context) => RatingDialog(
-                        initialRating: 1.0,
-                        // your app's name?
-                        title:
-                        Text(
-                            context.tr('rateTheApp'),
-                            textAlign: TextAlign.center,
-                            style:TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: colors.appBarTitleColor,
-                              fontFamily: "Inter",
-                            )
-                        ),
-                        // encourage your user to leave a high rating?
-                        message:  Text(
-                          'Tap a star to set your rating. Add more description here if you want.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w400,
-                            color: colors.appBarTitleColor,
-                            fontFamily: "Inter",
-                          ),
-                        ),
-                        // your app's logo?
-                        submitButtonText: 'Submit',
-                        commentHint: 'Set your custom comment hint',
-                        onCancelled: () => print('cancelled'),
-                        onSubmitted: (response) async{
-                          print('rating: ${response.rating}, comment: ${response.comment}');
-
-                          // TODO: add your own logic
-                          if (response.rating < 3.0) {
-                            // ઈમેલ માટેની વિગતો તૈયાર કરો
-                            final Uri emailLaunchUri = Uri(
-                              scheme: 'mailto',
-                              path: 'your-email@example.com', // તમારી સપોર્ટ ઈમેલ આઈડી
-                              queryParameters: {
-                                'subject': 'App Feedback - Low Rating',
-                                'body': 'Rating: ${response.rating}\nComment: ${response.comment}\n\n(Please tell us how we can improve!)',
-                              },
-                            );
-
-                            // ઈમેલ એપ ખોલવાનો ટ્રાય કરો
-                            if (await canLaunchUrl(emailLaunchUri)) {
-                              await launchUrl(emailLaunchUri);
-                            } else {
-                              // જો ઈમેલ એપ ન ખુલે તો મેસેજ બતાવો
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Could not open email app')),
-                              );
-                            }
-                          } else {
-                            _rateAndReviewApp();
-                          }
-                        },
-                      ),
+                      barrierDismissible: true,
+                      builder: (context) => _buildCustomRatingDialog(context),
                     );
-                  },"rateTheApp",AppSvg.rateAppIcon),
+                  }, "rateTheApp", AppSvg.rateAppIcon),
                   Divider(color: colors.dividerColor,),
                   _buildSettingTab((){},"privacyPolicy",AppSvg.privacyPolicyIcon),
 
@@ -226,39 +143,133 @@ class _SettingScreenState extends State<SettingScreen> {
               ),
             ),
           ),
-          // const SizedBox(height: 20),
-          // BlocBuilder<LocaleBloc, LocaleState>(
-          //   builder: (context, localeState) {
-          //     return Row(
-          //       children: [
-          //         Text('${AppStrings.get(context, 'language')}: '),
-          //         const SizedBox(width: 16),
-          //         DropdownButton<Locale>(
-          //           value: localeState.locale,
-          //           items: AppStrings.translations.keys.map((langCode) {
-          //             // get the display name of the language from translations
-          //             final langName =
-          //                 AppStrings.translations[langCode]?['language'] ??
-          //                     langCode;
-          //             return DropdownMenuItem<Locale>(
-          //               value: Locale(langCode),
-          //               child: Text(langName),
-          //             );
-          //           }).toList(),
-          //           onChanged: (locale) {
-          //             if (locale != null) {
-          //               context.read<LocaleBloc>().add(ChangeLocale(locale));
-          //               setState(() {});
-          //             }
-          //           },
-          //         ),
-          //       ],
-          //     );
-          //   },
-          // ),
         ],
       ),
     );
+  }
+
+
+  Widget _buildCustomRatingDialog(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    double currentRating = 1.0;
+
+    return StatefulBuilder(builder: (context, setState) {
+      return AlertDialog(
+        backgroundColor: colors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // એપ આઈકોન અથવા રેટિંગ આઈકોન
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: colors.primary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.star_rounded, color: colors.primary, size: 40),
+            ),
+            const SizedBox(height: 20),
+            // ટાઇટલ
+            AppText(
+              context.tr('rateTheApp'),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: colors.appBarTitleColor,
+            ),
+            const SizedBox(height: 10),
+            // મેસેજ
+            AppText(
+              "Tap a star to set your rating.",
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: colors.secondaryText,
+              align: TextAlign.center,
+            ),
+            const SizedBox(height: 25),
+            // સ્ટાર્સ (Rating Stars)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => currentRating = index + 1.0);
+                  },
+                  child: Icon(
+                    index < currentRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: index < currentRating ? Colors.amber : colors.dividerColor,
+                    size: 45,
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 30),
+            // બટન્સ
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.dividerColor),
+                      ),
+                      child: Center(
+                        child: AppText("Cancel", fontSize: 16, color: colors.secondaryText),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context); // ડાયલોગ બંધ કરો
+
+                      if (currentRating < 3.0) {
+                        // લો-રેટિંગ માટે ઈમેલ લોજિક
+                        _launchEmailFeedback(currentRating);
+                      } else {
+                        // હાઈ-રેટિંગ માટે સ્ટોર રિવ્યુ
+                        _rateAndReviewApp();
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: AppText("Submit", fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      );
+    });
+  }
+
+// ઈમેલ લોન્ચ કરવા માટેનું ફંક્શન
+  void _launchEmailFeedback(double rating) async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'your-email@example.com',
+      queryParameters: {
+        'subject': 'App Feedback - $rating Stars',
+        'body': 'Hi, I gave $rating stars. Here is my feedback:\n\n',
+      },
+    );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    }
   }
 
   void shareApp() {

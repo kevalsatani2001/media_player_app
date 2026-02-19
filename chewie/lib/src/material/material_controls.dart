@@ -31,6 +31,7 @@ class MaterialControls extends StatefulWidget {
 class MaterialControlsState extends State<MaterialControls>
     with SingleTickerProviderStateMixin {
   bool isOptionOpen = false;
+
   // MaterialControlsState
   bool isLocked = false; // Controls Lock state
 
@@ -68,9 +69,9 @@ class MaterialControlsState extends State<MaterialControls>
   Widget build(BuildContext context) {
     if (videoPlayerLatestValue.hasError) {
       return chewieController.errorBuilder?.call(
-        context,
-        chewieController.videoPlayerController.value.errorDescription!,
-      ) ??
+            context,
+            chewieController.videoPlayerController.value.errorDescription!,
+          ) ??
           const Center(child: Icon(Icons.error, color: Colors.white, size: 42));
     }
 
@@ -86,16 +87,14 @@ class MaterialControlsState extends State<MaterialControls>
             children: [
               // _buildLockButton()
               AbsorbPointer(
-                  absorbing: notifier.hideStuff,child: Column(
-                children: [
-
-                ],
-              )),
+                absorbing: notifier.hideStuff,
+                child: Column(children: []),
+              ),
               if (_displayBufferingIndicator)
                 _chewieController?.bufferingBuilder?.call(context) ??
                     const Center(child: CircularProgressIndicator())
               else
-              // _buildHitArea(),
+                // _buildHitArea(),
                 _buildActionBar(),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -121,13 +120,13 @@ class MaterialControlsState extends State<MaterialControls>
       ),
     );
   }
-  bool isDarkMode = true;
 
+  bool isDarkMode = true;
 
   void performControllOperation(ControlType? type, OptionItem option, context) {
     switch (type) {
       case ControlType.info:
-            () {};
+        () {};
         break;
       case ControlType.miniVideo:
         Navigator.pop(context);
@@ -146,8 +145,8 @@ class MaterialControlsState extends State<MaterialControls>
         option.onTap;
         break;
       case ControlType.playbackSpeed:
-      // _onSpeedButtonTap;
-      // Navigator.pop(context);
+        // _onSpeedButtonTap;
+        // Navigator.pop(context);
         _onSpeedButtonTap();
         // _seekBackward;
         //_seekForward;
@@ -184,7 +183,7 @@ class MaterialControlsState extends State<MaterialControls>
         };
         break;
       default:
-            () {};
+        () {};
         break;
     }
   }
@@ -220,6 +219,7 @@ class MaterialControlsState extends State<MaterialControls>
 
   @override
   void dispose() {
+    _showAfterExpandCollapseTimer?.cancel();
     _dispose();
     super.dispose();
   }
@@ -249,10 +249,7 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   Widget _buildActionBar() {
-    return AbsorbPointer(
-      absorbing: isLocked,
-      child: _buildOptionsButton(),
-    );
+    return AbsorbPointer(absorbing: isLocked, child: _buildOptionsButton());
   }
 
   /*Widget _buildActionBar() {
@@ -287,7 +284,6 @@ class MaterialControlsState extends State<MaterialControls>
       ),
     );
   }
-
 
   List<OptionItem> _buildOptions(BuildContext context) {
     final options = <OptionItem>[
@@ -332,7 +328,7 @@ class MaterialControlsState extends State<MaterialControls>
               builder: (context) => OptionsDialog(
                 options: _buildOptions(context),
                 cancelButtonText:
-                chewieController.optionsTranslation?.cancelButtonText,
+                    chewieController.optionsTranslation?.cancelButtonText,
               ),
             );
           }
@@ -346,7 +342,7 @@ class MaterialControlsState extends State<MaterialControls>
           child: SizedBox(
             width: MediaQuery.of(context).size.width,
             child: Padding(
-              padding: const EdgeInsets.only(left: 10,right: 10,top: 10),
+              padding: const EdgeInsets.only(left: 10, right: 10, top: 10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -551,7 +547,6 @@ class MaterialControlsState extends State<MaterialControls>
                     //   },
                     // ),
 
-
                     // IconButton(
                     //   icon: const Icon(Icons.replay_10, color: Colors.white),
                     //   onPressed: () => _seekBackward,
@@ -588,9 +583,9 @@ class MaterialControlsState extends State<MaterialControls>
                     child: Row(
                       children: [
                         Text(formatDuration(videoPlayerLatestValue.position)),
-                        SizedBox(width: 10,),
+                        SizedBox(width: 10),
                         _buildProgressBar(),
-                        SizedBox(width: 10,),
+                        SizedBox(width: 10),
                         Text(formatDuration(videoPlayerLatestValue.duration)),
                       ],
                     ),
@@ -635,23 +630,27 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   Widget _buildExpandButton() {
-    return  AbsorbPointer(
-        absorbing: isLocked,
-        child: GestureDetector(
-          onTap: _onExpandCollapse,
-          child: AnimatedOpacity(
-            opacity: notifier.hideStuff ? 0.0 : 1.0,
-            duration: const Duration(milliseconds: 300),
-            child: AppImage(src:chewieController.isFullScreen?"assets/svg_icon/ic_bigscreen.svg":"assets/svg_icon/ic_miniscreen.svg"
-            ),
+    return AbsorbPointer(
+      absorbing: isLocked,
+      child: GestureDetector(
+        onTap: _onExpandCollapse,
+        child: AnimatedOpacity(
+          opacity: notifier.hideStuff ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          child: AppImage(
+            src: chewieController.isFullScreen
+                ? "assets/svg_icon/ic_bigscreen.svg"
+                : "assets/svg_icon/ic_miniscreen.svg",
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget _buildHitArea() {
     final bool isFinished =
         (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration) &&
-            videoPlayerLatestValue.duration.inSeconds > 0;
+        videoPlayerLatestValue.duration.inSeconds > 0;
     final bool showPlayButton =
         widget.showPlayButton && !_dragging && !notifier.hideStuff;
 
@@ -685,7 +684,6 @@ class MaterialControlsState extends State<MaterialControls>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-
             // IconButton(
             //   icon: const Icon(Icons.skip_previous, color: Colors.white),
             //   onPressed: chewieController.onPreviousVideo,
@@ -737,8 +735,7 @@ class MaterialControlsState extends State<MaterialControls>
                 ),
               ),
 
-            _buildExpandButton()
-
+            _buildExpandButton(),
           ],
         ),
       ),
@@ -821,29 +818,46 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   void cancelAndRestartTimer() {
-    // ૧. જો વિજેટ ડિસ્પોઝ થઈ ગયું હોય તો આગળ વધશો નહીં
-    if (!mounted) return;
+    if (!mounted) return; // આ લાઈન સૌથી મહત્વની છે
 
     _hideTimer?.cancel();
     _startHideTimer();
 
     setState(() {
-      // ૨. Notifier વાપરતા પહેલા ટ્રાય-કેચ અથવા સેફ્ટી ચેક રાખવો
       try {
+        // ચેક કરો કે notifier ખરેખર અસ્તિત્વમાં છે અને ડિસ્પોઝ નથી થયો
         if (mounted) {
           notifier.hideStuff = false;
         }
       } catch (e) {
-        debugPrint("Notifier already disposed, ignoring...");
+        debugPrint("Error updating notifier: $e");
       }
       _displayTapped = true;
+    });
+  }
+
+  void _startHideTimer() {
+    final hideControlsTimer = chewieController.hideControlsTimer.isNegative
+        ? ChewieController.defaultHideControlsTimer
+        : chewieController.hideControlsTimer;
+
+    _hideTimer = Timer(hideControlsTimer, () {
+      if (mounted) {
+        setState(() {
+          try {
+            notifier.hideStuff = true;
+          } catch (e) {
+            // ignore
+          }
+        });
+      }
     });
   }
 
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-            (chewieController.subtitle?.isNotEmpty ?? false);
+        (chewieController.subtitle?.isNotEmpty ?? false);
     controller.addListener(_updateState);
 
     _updateState();
@@ -862,29 +876,58 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   void _onExpandCollapse() {
-    setState(() {
-      notifier.hideStuff = true;
+    if (!mounted) return;
 
-      chewieController.toggleFullScreen();
+    setState(() {
+      // ૧. Notifier ચેક
+      try {
+        if (mounted) notifier.hideStuff = true;
+      } catch (e) {
+        debugPrint("Notifier disposed");
+      }
+
+      // ૨. ChewieController ચેક - આ સૌથી મહત્વનું છે
+      try {
+        // chewieController (getter) વાપરવાને બદલે _chewieController (variable) વાપરો
+        if (_chewieController != null) {
+          _chewieController!.toggleFullScreen();
+        }
+      } catch (e) {
+        debugPrint("ChewieController was already disposed, ignoring toggle.");
+        // જો કંટ્રોલર ડિસ્પોઝ હોય, તો મેન્યુઅલી પોપ કરો (જો ફૂલ સ્ક્રીનમાં ફસાઈ ગયા હોય તો)
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        return; // આગળ વધશો નહીં
+      }
+
+      _showAfterExpandCollapseTimer?.cancel();
       _showAfterExpandCollapseTimer = Timer(
         const Duration(milliseconds: 300),
             () {
-          setState(() {
-            cancelAndRestartTimer();
-          });
+          if (mounted) {
+            setState(() {
+              cancelAndRestartTimer();
+            });
+          }
         },
       );
     });
   }
-
+  // material_controls.dart માં _playPause મેથડ સુધારો
   void _playPause() {
+    if (!mounted) return; // વિજેટ છે કે નહીં તે ચેક કરો
+
     final bool isFinished =
         (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration) &&
-            videoPlayerLatestValue.duration.inSeconds > 0;
+        videoPlayerLatestValue.duration.inSeconds > 0;
 
     setState(() {
       if (controller.value.isPlaying) {
-        notifier.hideStuff = false;
+        // અહીં ફેરફાર: notifier ડિસ્પોઝ નથી થયો ને તે ચેક કરો
+        if (mounted) {
+          notifier.hideStuff = false;
+        }
         _hideTimer?.cancel();
         controller.pause();
       } else {
@@ -924,25 +967,6 @@ class MaterialControlsState extends State<MaterialControls>
 
   void _seekForward() {
     _seekRelative(const Duration(seconds: 10));
-  }
-
-  void _startHideTimer() {
-    final hideControlsTimer = chewieController.hideControlsTimer.isNegative
-        ? ChewieController.defaultHideControlsTimer
-        : chewieController.hideControlsTimer;
-
-    _hideTimer = Timer(hideControlsTimer, () {
-      // જો ટાઈમર પૂરો થાય ત્યાં સુધીમાં યુઝરે સ્ક્રીન છોડી દીધી હોય
-      if (mounted) {
-        setState(() {
-          try {
-            notifier.hideStuff = true;
-          } catch (e) {
-            // Ignore
-          }
-        });
-      }
-    });
   }
 
   void _bufferingTimerTimeout() {
@@ -1001,7 +1025,7 @@ class MaterialControlsState extends State<MaterialControls>
           _startHideTimer();
         },
         colors:
-        chewieController.materialProgressColors ??
+            chewieController.materialProgressColors ??
             ChewieProgressColors(
               playedColor: Theme.of(context).colorScheme.secondary,
               handleColor: Theme.of(context).colorScheme.secondary,

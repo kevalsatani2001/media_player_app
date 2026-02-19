@@ -20,8 +20,8 @@ class MediaItemAdapter extends TypeAdapter<MediaItem> {
       path: fields[0] as String,
       isNetwork: fields[1] as bool,
       type: fields[2] as String,
-      id: fields[3] as String?,
-      isFavourite: fields[4] as bool?,
+      id: fields[3] as String,
+      isFavourite: fields[4] as bool,
     );
   }
 

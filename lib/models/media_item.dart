@@ -17,17 +17,17 @@ class MediaItem extends HiveObject {
   final String type;
 
   @HiveField(3)
-  String? id;
+  String id;
 
   @HiveField(4)
-  bool? isFavourite;
+  bool isFavourite;
 
   MediaItem({
     required this.path,
     required this.isNetwork,
     required this.type,
-    this.id,
-    this.isFavourite,
+    required this.id,
+    required this.isFavourite,
   });
 
   Map<String, dynamic> toMap() {

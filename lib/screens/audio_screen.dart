@@ -205,6 +205,7 @@ class _AudioBodyState extends State<_AudioBody> {
                                   entityList: state.entities,
                                   entity: audio,
                                   item: MediaItem(
+                                    isFavourite: audio.isFavorite,
                                     id: audio.id,
                                     path: file.path,
                                     isNetwork: false,

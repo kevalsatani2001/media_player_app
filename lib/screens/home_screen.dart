@@ -309,179 +309,80 @@ class _HomePageState extends State<HomePage> with RouteAware{
             itemBuilder: (context, index) {
               final entity = entities[index];
               return AppTransition(
-                index: index,
-                child: ImageItemWidget(
-                  onMenuSelected: (action) async {
-                    switch (action) {
-                      case MediaMenuAction.detail:
-                        routeToDetailPage(entity);
-                        break;
+                  index: index,
+                  child: ImageItemWidget(
+                    onMenuSelected: (action) async {
+                      switch (action) {
+                        case MediaMenuAction.detail:
+                          routeToDetailPage(entity);
+                          break;
 
-                      case MediaMenuAction.info:
-                        showInfoDialog(context, entity);
-                        break;
+                        case MediaMenuAction.info:
+                          showInfoDialog(context, entity);
+                          break;
 
-                      case MediaMenuAction.thumb:
-                        showThumb(entity, 500);
-                        break;
+                        case MediaMenuAction.thumb:
+                          showThumb(entity, 500);
+                          break;
 
-                      case MediaMenuAction.share:
-                        _shareItem(context, entity);
-                        break;
+                        case MediaMenuAction.share:
+                          _shareItem(context, entity);
+                          break;
 
-                      case MediaMenuAction.delete:
-                        deleteCurrentItem(context, entity);
-                        break;
+                        case MediaMenuAction.delete:
+                          deleteCurrentItem(context, entity);
+                          break;
 
-                      case MediaMenuAction.addToFavourite:
-                        await _toggleFavourite(context, entity, index);
-                        break;
-                      case MediaMenuAction.addToPlaylist:
-                        final file = await entity.file;
-                        addToPlaylist(
-                          MediaItem(
-                            path: file!.path,
-                            isNetwork: false,
-                            type: entity.type==AssetType.audio?"audio":"video",
-                            id: entity.id,
-                            isFavourite: entity.isFavorite,
-                          ),
-                          context,
-                        );
-                        break;
-                    }
-                  },
-                  onTap: () async {
-                    print("vudio====${entity.typeInt}");
-                    final file = await entity.file;
-                    if (file == null || !file.existsSync()) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PlayerScreen(
-                          entity: entity,
-                          item: MediaItem(
-                            id: entity.id,
-                            path: file.path,
-                            isNetwork: false,
-                            type: entity.type == AssetType.video
-                                ? 'video'
-                                : 'audio',
-                          ),
-                        ),
-                      ),
-                    ).then((value) {
-                      context.read<VideoBloc>().add(
-                        LoadVideosFromGallery(showLoading: false),
-                      );
-                    });
-                  },
-                  isGrid: false,
-                  entity: entity,
-                  option: const ThumbnailOption(size: ThumbnailSize.square(300)),
-                )// તમારી ઓડિયો લિસ્ટ આઈટમ
-              );
-
-            },
-          );
-
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entities.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
-              crossAxisSpacing: 0,
-              mainAxisSpacing: 0,
-            ),
-            itemBuilder: (context, index) {
-              final entity = entities[index];
-              return Container(
-                height: 100,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      // 🔑 important
-                      child: AssetEntityImage(
-                        entity,
-                        thumbnailSize: const ThumbnailSize(160, 120),
-                        // 2x for quality
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 20,
-                              color: Colors.white,
+                        case MediaMenuAction.addToFavourite:
+                          await _toggleFavourite(context, entity, index);
+                          break;
+                        case MediaMenuAction.addToPlaylist:
+                          final file = await entity.file;
+                          addToPlaylist(
+                            MediaItem(
+                              path: file!.path,
+                              isNetwork: false,
+                              type: entity.type==AssetType.audio?"audio":"video",
+                              id: entity.id,
+                              isFavourite: entity.isFavorite,
                             ),
+                            context,
                           );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                          break;
+                      }
+                    },
+                    onTap: () async {
+                      print("vudio====${entity.typeInt}");
+                      final file = await entity.file;
+                      if (file == null || !file.existsSync()) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlayerScreen(
+                            entity: entity,
+                            item: MediaItem(
+                              isFavourite: entity.isFavorite,
+                              id: entity.id,
+                              path: file.path,
+                              isNetwork: false,
+                              type: entity.type == AssetType.video
+                                  ? 'video'
+                                  : 'audio',
+                            ),
+                          ),
+                        ),
+                      ).then((value) {
+                        context.read<VideoBloc>().add(
+                          LoadVideosFromGallery(showLoading: false),
+                        );
+                      });
+                    },
+                    isGrid: false,
+                    entity: entity,
+                    option: const ThumbnailOption(size: ThumbnailSize.square(300)),
+                  )// તમારી ઓડિયો લિસ્ટ આઈટમ
               );
 
-              ImageItemWidget(
-                entity: entity,
-                option: ThumbnailOption(size: ThumbnailSize.square(200)),
-                // onMenuSelected: (action) async {
-                //   switch (action) {
-                //     case MediaMenuAction.detail:
-                //       routeToDetailPage(entity);
-                //       break;
-                //
-                //     case MediaMenuAction.info:
-                //       showInfoDialog(context, entity);
-                //       break;
-                //
-                //     case MediaMenuAction.thumb:
-                //       showThumb(entity, 500);
-                //       break;
-                //
-                //     case MediaMenuAction.share:
-                //       _shareItem(context, entity);
-                //       break;
-                //
-                //     case MediaMenuAction.delete:
-                //       deleteCurrentItem(context, entity);
-                //       break;
-                //
-                //     case MediaMenuAction.addToFavourite:
-                //       await _toggleFavourite(context, entity, index);
-                //       break;
-                //   }
-                // },
-                onTap: () async {
-                  final file = await entity.file;
-                  if (file == null || !file.existsSync()) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerScreen(
-                        entity: entity,
-                        item: MediaItem(
-                          id: entity.id,
-                          path: file.path,
-                          isNetwork: false,
-                          type: entity.type == AssetType.video
-                              ? 'video'
-                              : 'audio',
-                        ),
-                      ),
-                    ),
-                  ).then((value) {
-                    context.read<VideoBloc>().add(LoadVideosFromGallery());
-                  });
-                },
-              );
             },
           );
         }
@@ -489,13 +390,6 @@ class _HomePageState extends State<HomePage> with RouteAware{
         return const SizedBox();
       },
     );
-  }
-
-
-
-  String _formatSize(int bytes) {
-    final mb = bytes / (1024 * 1024);
-    return '${mb.toStringAsFixed(1)} MB';
   }
 
 
@@ -557,8 +451,8 @@ class _HomePageState extends State<HomePage> with RouteAware{
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     if (folderList.isEmpty) {
       return  AppText(
-        "noFoldersFound",
-        color: colors.whiteColor
+          "noFoldersFound",
+          color: colors.whiteColor
       );
     }
 
@@ -582,16 +476,6 @@ class _HomePageState extends State<HomePage> with RouteAware{
 
 
     },);
-
-    ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: folderList.length,
-      itemBuilder: (context, index) {
-        final item = folderList[index];
-        return GalleryItemWidget(path: item, setState: setState);
-      },
-    );
   }
 
   // Load folders using PhotoManager
@@ -681,460 +565,33 @@ class _HomePageState extends State<HomePage> with RouteAware{
   }
 
   Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-    final file = await entity.file;
-    await Share.shareXFiles([XFile(file!.path)], text: entity.title);
-  }
-}
+    try {
+      // ૧. એસેટમાંથી ફાઈલ મેળવો
+      final File? file = await entity.file;
 
-/*
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
+      if (file != null && await file.exists()) {
+        // ૨. ફાઈલનો પાથ ચેક કરો
+        debugPrint("Sharing file path: ${file.path}");
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:video_player_app/screens/player_screen.dart';
-
-import '../blocs/home/home_tab_bolc.dart';
-import '../blocs/home/home_tab_event.dart';
-import '../blocs/home/home_tab_state.dart';
-import '../blocs/video/video_bloc.dart';
-import '../models/media_item.dart';
-import '../widgets/home_card.dart';
-import '../widgets/image_item_widget.dart';
-import 'home_screen.dart';
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  AssetPathProvider readPathProvider(BuildContext c) =>
-      c.read<AssetPathProvider>();
-
-  AssetPathProvider watchPathProvider(BuildContext c) =>
-      c.watch<AssetPathProvider>();
-  List<AssetPathEntity> folderList = <AssetPathEntity>[];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Media Player")),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Grid of Cards
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              padding: const EdgeInsets.all(12),
-              children: const [
-                HomeCard(
-                  title: "Video",
-                  icon: Icons.video_library,
-                  route: "/video",
-                ),
-                HomeCard(
-                  title: "Audio",
-                  icon: Icons.music_note,
-                  route: "/audio",
-                ),
-                HomeCard(
-                  title: "Playlist",
-                  icon: Icons.queue_music,
-                  route: "/playlist",
-                ),
-                HomeCard(
-                  title: "Favourite",
-                  icon: Icons.favorite,
-                  route: "/favourite",
-                ),
-                HomeCard(
-                  title: "Recent",
-                  icon: Icons.history,
-                  route: "/recent",
-                ),
-              ],
-            ),
-            // Custom Tab Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(child: _buildTab(context, "Video", 0)),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildTab(context, "Folder", 1)),
-                ],
-              ),
-            ),
-            // Tab Content
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: BlocBuilder<HomeTabBloc, HomeTabState>(
-                builder: (context, state) {
-                  if (state.selectedIndex == 0) {
-                    return _buildVideoSection();
-                  } else {
-                    return _buildFolderSection();
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTab(BuildContext context, String title, int index) {
-    return BlocBuilder<HomeTabBloc, HomeTabState>(
-      builder: (context, state) {
-        final isActive = state.selectedIndex == index;
-
-        return GestureDetector(
-          onTap: () async {
-            context.read<HomeTabBloc>().add(SelectTab(index));
-            if (index == 1) {
-              await _loadFolders();
-            } else if (index == 0) {
-              context.read<VideoBloc>().add(LoadVideosFromGallery());
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.white70,
-                  fontSize: 18,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              const SizedBox(height: 4),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 3,
-                width: isActive ? 30 : 0,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ],
-          ),
+        // ૩. ShareXFiles નો ઉપયોગ કરો
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: 'Sharing: ${entity.title ?? "Media File"}', // આ મેસેજ સાથે જશે
         );
-      },
-    );
-  }
-
-  // Video Section using VideoBloc
-  Widget _buildVideoSection() {
-    return BlocBuilder<VideoBloc, VideoState>(
-      builder: (context, state) {
-        if (state is VideoLoading) {
-          return const Center(child: CircularProgressIndicator.adaptive());
-        }
-
-        if (state is VideoError) {
-          return Center(child: Text(state.message));
-        }
-
-        if (state is VideoLoaded) {
-          final entities = state.entities;
-          if (entities.isEmpty) {
-            return const Text(
-              "No videos found",
-              style: TextStyle(color: Colors.white),
-            );
-          }
-
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entities.length,
-            gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
-              childAspectRatio: 1.3,
-            ),
-            itemBuilder: (context, index) {
-              final entity = entities[index];
-              return ImageItemWidget(
-                entity: entity,
-                option: ThumbnailOption(size: ThumbnailSize.square(200)),
-                onMenuSelected: (action) async {
-                  switch (action) {
-                    case MediaMenuAction.detail:
-                      routeToDetailPage(entity);
-                      break;
-
-                    case MediaMenuAction.info:
-                      showInfoDialog(context, entity);
-                      break;
-
-                    case MediaMenuAction.thumb:
-                      showThumb(entity, 500);
-                      break;
-
-                    case MediaMenuAction.share:
-                      _shareItem(context, entity);
-                      break;
-
-                    case MediaMenuAction.delete:
-                      _deleteCurrent(context, entity);
-                      break;
-
-                    case MediaMenuAction.addToFavourite:
-                      await _toggleFavourite(context, entity, index);
-                      break;
-                  }
-                },
-                onTap: () async {
-                  final file = await entity.file;
-                  if (file == null || !file.existsSync()) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          PlayerScreen(
-                            entity: entity,
-                            item: MediaItem(
-                              id: entity.id,
-                              path: file.path,
-                              isNetwork: false,
-                              type: entity.type == AssetType.video
-                                  ? 'video'
-                                  : 'audio',
-                            ),
-                          ),
-                    ),
-                  ).then((value) {
-                    context.read<VideoBloc>().add(LoadVideosFromGallery());
-                  },);
-                },
-              );
-            },
-          );
-        }
-
-        return const SizedBox();
-      },
-    );
-  }
-
-
-  Future<void> _deleteCurrent(BuildContext context,
-      AssetEntity entity,) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) =>
-          AlertDialog(
-            title: const Text('Delete media'),
-            content: const Text('Are you sure you want to delete this file?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-    );
-
-    if (confirm != true) return;
-
-    // ✅ Correct delete API
-    final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-
-    if (result.isNotEmpty) {
-      context
-          .read<VideoBloc>()
-          .add(LoadVideosFromGallery(showLoading: false));
-    }
-  }
-
-
-  Future<void> _toggleFavourite(BuildContext context,
-      AssetEntity entity,
-      int index,) async {
-    final favBox = Hive.box('favourites');
-    final bool isFavorite = entity.isFavorite;
-
-    final file = await entity.file;
-    if (file == null) return;
-
-    final key = file.path;
-
-    // 🔹 Update Hive
-    if (isFavorite) {
-      favBox.delete(key);
-    } else {
-      favBox.put(key, {
-        "path": file.path,
-        "isNetwork": false,
-        "type": entity.type == AssetType.audio ? "audio" : "video",
-      });
-    }
-
-    // 🔹 Update system favourite
-    if (PlatformUtils.isOhos) {
-      await PhotoManager.editor.ohos.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    } else if (Platform.isAndroid) {
-      await PhotoManager.editor.android.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    } else {
-      await PhotoManager.editor.darwin.favoriteAsset(
-        entity: entity,
-        favorite: !isFavorite,
-      );
-    }
-
-    // 🔹 Reload entity
-    final AssetEntity? newEntity = await entity.obtainForNewProperties();
-    if (!mounted || newEntity == null) return;
-
-    // 🔹 Update UI list
-    // readPathProvider(context).list[index] = newEntity;
-    context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-
-    setState(() {});
-  }
-
-
-  // Folder Section
-  Widget _buildFolderSection() {
-    if (folderList.isEmpty) {
-      return const Text(
-        "No folders found",
-        style: TextStyle(color: Colors.white),
-      );
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: folderList.length,
-      itemBuilder: (context, index) {
-        final item = folderList[index];
-        return GalleryItemWidget(path: item, setState: setState);
-      },
-    );
-  }
-
-  // Load folders using PhotoManager
-  Future<void> _loadFolders() async {
-    final permission = await PhotoManager.requestPermissionExtend(
-      requestOption: PermissionRequestOption(
-        androidPermission: AndroidPermission(
-          type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-          mediaLocation: true,
-        ),
-      ),
-    );
-    if (!permission.hasAccess) return;
-
-    final List<AssetPathEntity> galleryList =
-    await PhotoManager.getAssetPathList(
-      type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-      filterOption: FilterOptionGroup(),
-      pathFilterOption: PMPathFilter(
-        darwin: PMDarwinPathFilter(
-          type: [PMDarwinAssetCollectionType.album],
-        ),
-      ),
-    );
-
-    setState(() {
-      folderList.clear();
-      folderList.addAll(galleryList);
-    });
-  }
-
-  Future<void> routeToDetailPage(AssetEntity entity) async {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
-    );
-  }
-
-  Future<void> showThumb(AssetEntity entity, int size) async {
-    final String title;
-    if (entity.title?.isEmpty != false) {
-      title = await entity.titleAsync;
-    } else {
-      title = entity.title!;
-    }
-    print('entity.title = $title');
-    return showDialog(
-      context: context,
-      builder: (_) {
-        return FutureBuilder<Uint8List?>(
-          future: entity.thumbnailDataWithOption(
-            ThumbnailOption.ios(
-              size: const ThumbnailSize.square(500),
-              // resizeContentMode: ResizeContentMode.fill,
-            ),
-          ),
-          builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
-            Widget w;
-            if (snapshot.hasError) {
-              return ErrorWidget(snapshot.error!);
-            } else if (snapshot.hasData) {
-              final Uint8List data = snapshot.data!;
-              ui.decodeImageFromList(data, (ui.Image result) {
-                print('result size: ${result.width}x${result.height}');
-                // for 4288x2848
-              });
-              w = Image.memory(data);
-            } else {
-              w = Center(
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(20),
-                  child: const CircularProgressIndicator(),
-                ),
-              );
-            }
-            return GestureDetector(
-              child: w,
-              onTap: () => Navigator.pop(context),
-            );
-          },
+      } else {
+        debugPrint("File not found or entity.file returned null");
+        // જો ફાઈલ ના મળે તો યુઝરને મેસેજ બતાવો
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("File cannot be loaded for sharing")),
         );
-      },
-    );
-  }
-
-  Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-    final file = await entity.file;
-    await Share.shareXFiles([XFile(file!.path)], text: entity.title);
+      }
+    } catch (e) {
+      debugPrint("Error sharing file: $e");
+    }
   }
 }
- */
+
+
 Future<void> deleteCurrentItem(BuildContext context, AssetEntity entity) async {
   final colors = Theme.of(context).extension<AppThemeColors>()!;
   if (!Platform.isAndroid && !Platform.isIOS) return;

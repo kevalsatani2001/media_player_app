@@ -132,7 +132,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       if (file != null) {
         box.put(
           file.path,
-          MediaItem(path: file.path, isNetwork: false, type: 'audio',id: entity.id).toMap(),
+          MediaItem(path: file.path, isNetwork: false, type: 'audio',id: entity.id, isFavourite: entity.isFavorite).toMap(),
         );
       }
     }
