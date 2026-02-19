@@ -58,6 +58,7 @@ dependencies:
   in_app_review:
   url_launcher:
   rating_dialog:
+  flutter_staggered_animations:
 #  google_fonts:
 
 dev_dependencies:

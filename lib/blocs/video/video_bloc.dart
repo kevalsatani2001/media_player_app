@@ -113,7 +113,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
 
     final path = paths.first;
     final total = await path.assetCountAsync;
-    final entities = await path.getAssetListPaged(page: 0, size: 7);
+    final entities = await path.getAssetListPaged(page: 0, size: 100);
 
     await box.clear();
     for (final entity in entities) {
@@ -190,7 +190,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
     // Pagination લોજિકમાં ચેક ઉમેરો કે શું આપણે ઓલરેડી લોડ કરી રહ્યા છીએ?
     // આ માટે તમે VideoState માં 'isLoadingMore' જેવો ફ્લેગ પણ રાખી શકો.
 
-    const pageSize = 7;
+    const pageSize = 100;
     final nextPage = current.page + 1;
 
     final moreEntities = await current.path.getAssetListPaged(

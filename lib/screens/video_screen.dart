@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/services/hive_service.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager/platform_utils.dart';
@@ -78,14 +79,14 @@ class _VideoScreenState extends State<VideoScreen> {
     return widget.isComeHomeScreen?Scaffold(
       appBar:AppBar(
         title: !_isSearching
-            ? const Text('Videos')
+            ? const AppText('videos')
             : TextField(
           controller: _searchController,
           autofocus: true,
           style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Search videos...',
-            hintStyle: TextStyle(color: Colors.white54),
+          decoration: InputDecoration(
+            hintText: context.tr("searchVideos"),
+            hintStyle: const TextStyle(color: Colors.white54),
             border: InputBorder.none,
           ),
           onChanged: (value) {
@@ -171,7 +172,7 @@ class _VideoScreenState extends State<VideoScreen> {
       buildWhen: (previous, current) => current is VideoLoaded || current is VideoLoading || current is VideoError,
       builder: (context, state) {
         if (state is VideoLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator(color: Colors.red,));
         }
         if (state is VideoError) {
           return Center(child: Text(state.message));
@@ -187,7 +188,7 @@ class _VideoScreenState extends State<VideoScreen> {
           }).toList();
 
           if (entitiesToShow.isEmpty && _searchQuery.isNotEmpty) {
-            return const Center(child: Text("No results found"));
+            return const Center(child: AppText("noResultFound"));
           }
 
           return _isGridView
@@ -519,7 +520,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   String _formatSize(int bytes) {
     final mb = bytes / (1024 * 1024);
-    return '${mb.toStringAsFixed(1)} MB';
+    return '${mb.toStringAsFixed(1)} ${context.tr("mb")}';
   }
 
   Future<void> routeToDetailPage(AssetEntity entity) async {
@@ -633,45 +634,6 @@ class _VideoScreenState extends State<VideoScreen> {
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
 
     setState(() {});
-  }
-
-  Future<void> _deleteCurrents(
-      BuildContext context,
-      AssetEntity entity,
-      ) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-
-    final bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete media'),
-        content: const Text('Are you sure you want to delete this file?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    // ✅ Correct delete API
-    final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-
-    if (result.isNotEmpty) {
-      context
-          .read<VideoBloc>()
-          .add(LoadVideosFromGallery(showLoading: false));
-    }
   }
 }
 

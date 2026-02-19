@@ -27,6 +27,7 @@ import '../main.dart';
 import '../models/media_item.dart';
 import '../utils/app_colors.dart';
 import '../widgets/add_to_playlist.dart';
+import '../widgets/app_transition.dart';
 import '../widgets/home_card.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
@@ -107,8 +108,8 @@ class _HomePageState extends State<HomePage> with RouteAware{
     return Column(
       children: [
         CommonAppBar(
-          title: "Video & Music Player",
-          subTitle: "MEDIA PLAYER",
+          title: "videMusicPlayer",
+          subTitle: "mediaPlayer",
           actionWidget: GestureDetector(
             onTap: () {
               Navigator.push(
@@ -140,7 +141,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                   children: [
                     Expanded(
                       child: HomeCard(
-                        title: "Video",
+                        title: "video",
                         icon: AppSvg.videoIcon,
                         route: "/video",
                         count: videoCount,
@@ -150,7 +151,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                     SizedBox(width: 16),
                     Expanded(
                       child: HomeCard(
-                        title: "Audio",
+                        title: "audio",
                         icon: AppSvg.audioIcon,
                         route: "/audio",
                         count: audioCount,
@@ -164,7 +165,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                   children: [
                     Expanded(
                       child: HomeCard(
-                        title: "Playlist",
+                        title: "playlist",
                         icon: AppSvg.playlistIcon,
                         route: "/playlist",
                         count: playlistCount,
@@ -174,7 +175,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                     SizedBox(width: 16),
                     Expanded(
                       child: HomeCard(
-                        title: "Favourite",
+                        title: "favourite",
                         icon: AppSvg.favouriteIcon,
                         route: "/favourite",
                         count: favouriteCount,
@@ -210,9 +211,9 @@ class _HomePageState extends State<HomePage> with RouteAware{
                   ),
                   child: Row(
                     children: [
-                      _buildTab(context, "Video", 0),
+                      _buildTab(context, "video", 0),
                       const SizedBox(width: 25),
-                      _buildTab(context, "Folder", 1),
+                      _buildTab(context, "folder", 1),
                     ],
                   ),
                 ),
@@ -298,10 +299,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
         if (state is VideoLoaded) {
           final entities = state.entities;
           if (entities.isEmpty) {
-            return const Text(
-              "No videos found",
-              style: TextStyle(color: Colors.white),
-            );
+            return  AppText("noVideosFound",color: colors.whiteColor,);
           }
 
           return ListView.builder(
@@ -310,8 +308,9 @@ class _HomePageState extends State<HomePage> with RouteAware{
             itemCount: entities.length,
             itemBuilder: (context, index) {
               final entity = entities[index];
-              return
-                ImageItemWidget(
+              return AppTransition(
+                index: index,
+                child: ImageItemWidget(
                   onMenuSelected: (action) async {
                     switch (action) {
                       case MediaMenuAction.detail:
@@ -380,7 +379,9 @@ class _HomePageState extends State<HomePage> with RouteAware{
                   isGrid: false,
                   entity: entity,
                   option: const ThumbnailOption(size: ThumbnailSize.square(300)),
-                );
+                )// તમારી ઓડિયો લિસ્ટ આઈટમ
+              );
+
             },
           );
 
@@ -555,9 +556,9 @@ class _HomePageState extends State<HomePage> with RouteAware{
   Widget _buildFolderSection() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     if (folderList.isEmpty) {
-      return const Text(
-        "No folders found",
-        style: TextStyle(color: Colors.white),
+      return  AppText(
+        "noFoldersFound",
+        color: colors.whiteColor
       );
     }
 
@@ -572,7 +573,13 @@ class _HomePageState extends State<HomePage> with RouteAware{
         childAspectRatio: 1.05,
       ),itemBuilder: (context, index) {
       final item = folderList[index];
-      return GalleryItemWidget(path: item, setState: setState);
+      return AppTransition(
+        index: index,
+        columnCount: 3, // અહીં ગ્રીડની કોલમ લખો
+        child: GalleryItemWidget(path: item, setState: setState), // તમારો વીડિયો કે ફોટો વિજેટ
+      );
+
+
 
     },);
 

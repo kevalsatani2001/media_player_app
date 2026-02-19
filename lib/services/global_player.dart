@@ -21,7 +21,7 @@ class GlobalPlayer extends ChangeNotifier {
   factory GlobalPlayer() => _instance;
   GlobalPlayer._internal() {
     _initJustAudio(); // Constructor માં જ ઓડિયો પ્લેયર સેટ કરો
-    loadQueueFromHive();
+
   }
 
   // પ્લેયર્સ
@@ -38,13 +38,14 @@ class GlobalPlayer extends ChangeNotifier {
   bool isShuffle = false;
 
   // Just Audio Initializer
-  void _initJustAudio() {
+  void _initJustAudio() async{
     audioPlayer.currentIndexStream.listen((index) {
       // Jyare background mathi next/prev thay tyare aa trigger thase
       if (index != null && index < queue.length && index >= 0) {
         currentIndex = index;
         currentPath = queue[index].path;
-        currentType = "audio";
+        currentType = queue[index].type;
+        // currentType = "audio";
         notifyListeners();
       }
     });
@@ -55,6 +56,7 @@ class GlobalPlayer extends ChangeNotifier {
         // pan tame tamari logic mujab handle kari shako.
       }
     });
+    // await loadQueueFromHive();
   }
   // ૩. જૂના પ્લેયરને પ્રોપરલી બંધ કરવા માટે
   Future<void> _clearPreviousPlayer() async {
@@ -169,7 +171,8 @@ class GlobalPlayer extends ChangeNotifier {
     await play(item.path, network: item.isNetwork, type: item.type);
   }
 
-  Future<void> loadQueueFromHive() async {
+  Future<void> loadQueueFromHive(String type) async {
+print("type is ====------$type");
     try {
       // Hive boxes open karo
       final audioBox = Hive.box('audios');
@@ -179,16 +182,17 @@ class GlobalPlayer extends ChangeNotifier {
 
 
       // --- Audio Data ---
-      // for (var item in audioBox.values) {
-      //   if (item is my.MediaItem) {
-      //     // Jo direct object male to
-      //     allItems.add(item);
-      //   } else if (item is Map) {
-      //     // Jo Map male to factory method vapro
-      //     allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
-      //   }
-      // }
-
+      if(type=='audio'){
+      for (var item in audioBox.values) {
+        if (item is my.MediaItem) {
+          // Jo direct object male to
+          allItems.add(item);
+        } else if (item is Map) {
+          // Jo Map male to factory method vapro
+          allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
+        }
+      }}
+else{
       // --- Video Data ---
       for (var item in videoBox.values) {
         if (item is my.MediaItem) {
@@ -196,7 +200,7 @@ class GlobalPlayer extends ChangeNotifier {
         } else if (item is Map) {
           allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
         }
-      }
+      }}
 
       this.originalQueue = List.from(allItems);
       this.queue = List.from(allItems);
@@ -210,7 +214,8 @@ class GlobalPlayer extends ChangeNotifier {
 
   Future<void> play(String path, {bool network = false, required String type}) async {
 // 1. Queue check & find index
-    if (queue.isEmpty) await loadQueueFromHive();
+
+    // if (queue.isEmpty) await loadQueueFromHive();
 
     currentIndex = queue.indexWhere((element) => element.path == path);
 

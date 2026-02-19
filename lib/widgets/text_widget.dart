@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:media_player/screens/setting_screen.dart';
 
 import '../services/responsive_helper.dart';
 import '../utils/app_colors.dart';
@@ -37,7 +38,7 @@ class AppText extends StatelessWidget {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return Text(
-      text,
+      context.tr(text),
       maxLines: maxLines,
       textAlign: align,
       overflow: maxLines == null ? null : TextOverflow.ellipsis,

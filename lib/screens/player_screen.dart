@@ -76,12 +76,12 @@ class _PlayerScreenState extends State<PlayerScreen>
       widget.item.path,
       type: widget.item.type,
     );
-
-    if (mounted) {
-      setState(() {
-        currentItem = widget.item;
-      });
-    }
+await player.loadQueueFromHive(widget.item.type);
+    // if (mounted) {
+    //   setState(() {
+    //     currentItem = widget.item;
+    //   });
+    // }
   }
 
   Future<List<MediaItem>> convertEntitiesToMediaItems(

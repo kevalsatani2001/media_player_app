@@ -29,7 +29,7 @@ class AppStrings {
       'videMusicPlayer':"Video & Music Player",
       "mediaPlayer":"MEDIA PLAYER",
       "addToFavourite":"Add to Favourite",
-      "removeToFavourite":"Remove to Favourite",
+      "removeToFavourite":"Remove from Favourite",
       "delete":"Delete",
       "share":"Share",
       "showDetail":"Show detail",
@@ -39,6 +39,21 @@ class AppStrings {
       "shareTheApp":"Share the App",
       "rateTheApp":"Rate the App",
       "privacyPolicy":"Privacy Policy",
+
+
+      "playlist":"Playlist",
+      "noVideosFound":"No videos found",
+      "noAudioFileFound":"No audio files found",
+      "noFoldersFound":"No folders found",
+      "searchVideos":"Search videos...",
+      "noResultFound":"No results found",
+      "mb":"MB",
+      "cancel":"Cancel",
+      "showDetailPage":"Show detail page",
+      "loading":"Loading...",
+      "deleteMedia":"Delete media",
+      "showThumb500":"Show 500 size thumb",
+      "areYouSureWantDeleteThisFile?":"Are you sure you want to delete this file?",
     },
 
     'ar': {

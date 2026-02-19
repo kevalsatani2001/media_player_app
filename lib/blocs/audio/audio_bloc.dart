@@ -125,7 +125,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
     final path = paths.first;
     final total = await path.assetCountAsync;
 
-    final entities = await path.getAssetListPaged(page: 0, size: 50);
+    final entities = await path.getAssetListPaged(page: 0, size: 100);
     await box.clear();
     for (final entity in entities) {
       final file = await entity.file;
@@ -162,7 +162,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     final newEntities = await currentState.path.getAssetListPaged(
       page: nextPage,
-      size: 50,
+      size: 100,
     );
 
     final allEntities = [
