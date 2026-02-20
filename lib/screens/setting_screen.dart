@@ -161,16 +161,16 @@ class _SettingScreenState extends State<SettingScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // એપ આઈકોન અથવા રેટિંગ આઈકોન
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: colors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.star_rounded, color: colors.primary, size: 40),
-            ),
-            const SizedBox(height: 20),
+            // // એપ આઈકોન અથવા રેટિંગ આઈકોન
+            // Container(
+            //   padding: const EdgeInsets.all(15),
+            //   decoration: BoxDecoration(
+            //     color: colors.primary.withOpacity(0.1),
+            //     shape: BoxShape.circle,
+            //   ),
+            //   child: Icon(Icons.star_rounded, color: colors.primary, size: 40),
+            // ),
+            // const SizedBox(height: 20),
             // ટાઇટલ
             AppText(
               context.tr('rateTheApp'),
@@ -181,10 +181,10 @@ class _SettingScreenState extends State<SettingScreen> {
             const SizedBox(height: 10),
             // મેસેજ
             AppText(
-              "Tap a star to set your rating.",
-              fontSize: 14,
+              "howWouldYouLove",
+              fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: colors.secondaryText,
+              color: colors.textFieldBorder,
               align: TextAlign.center,
             ),
             const SizedBox(height: 25),
@@ -196,11 +196,17 @@ class _SettingScreenState extends State<SettingScreen> {
                   onTap: () {
                     setState(() => currentRating = index + 1.0);
                   },
-                  child: Icon(
-                    index < currentRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                    color: index < currentRating ? Colors.amber : colors.dividerColor,
-                    size: 45,
-                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: AppImage(src: index < currentRating ? AppSvg.starFill:AppSvg.startEmpty),
+                  )
+
+
+                  // Icon(
+                  //   index < currentRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                  //   color: index < currentRating ? Colors.amber : colors.dividerColor,
+                  //   size: 45,
+                  // ),
                 );
               }),
             ),
@@ -218,7 +224,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         border: Border.all(color: colors.dividerColor),
                       ),
                       child: Center(
-                        child: AppText("Cancel", fontSize: 16, color: colors.secondaryText),
+                        child: AppText("cancel", fontSize: 16, color: colors.secondaryText),
                       ),
                     ),
                   ),
@@ -244,7 +250,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
-                        child: AppText("Submit", fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+                        child: AppText("submit", fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

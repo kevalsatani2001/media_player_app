@@ -37,7 +37,7 @@ class AppStrings {
       "appTheme":"App Theme",
       "preferredLanguage":"Preferred Language",
       "shareTheApp":"Share the App",
-      "rateTheApp":"Rate the App",
+      "rateTheApp":"Rate our app",
       "privacyPolicy":"Privacy Policy",
 
 
@@ -49,10 +49,12 @@ class AppStrings {
       "noResultFound":"No results found",
       "mb":"MB",
       "cancel":"Cancel",
+      "submit":"Submit",
       "showDetailPage":"Show detail page",
       "loading":"Loading...",
       "deleteMedia":"Delete media",
       "showThumb500":"Show 500 size thumb",
+      "howWouldYouLove":"How would you Love this app?",
       "areYouSureWantDeleteThisFile?":"Are you sure you want to delete this file?",
     },
 

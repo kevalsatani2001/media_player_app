@@ -57,6 +57,10 @@ class AppSvg {
 
   static const String rightArrow = '$_base/right_arrow_icon.svg';
 
+
+  static const String starFill = '$_base/start_fill.svg';
+  static const String startEmpty = '$_base/ic_dstar.svg';
+
   ////////////////////// controls////////////////////////////
   static const String ic2x = '$_base/ic_2x.svg';
   static const String ic3x = '$_base/ic_3x.svg';

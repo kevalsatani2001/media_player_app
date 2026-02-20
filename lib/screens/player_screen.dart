@@ -265,21 +265,39 @@ await player.loadQueueFromHive(widget.item.type);
               clipBehavior: Clip.none,
               children: [
                 Container(
+                  width: double.infinity,
                   height: 220,
-                  decoration: ShapeDecoration(shape: CustomShape(), color: Colors.purple),
+                  decoration: ShapeDecoration(shape: CustomShape(), color: colors.background),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: AppImage(src: AppSvg.musicSelected,fit: BoxFit.cover,color: colors.primary.withOpacity(0.20),),
+                  ),
                 ),
                 widget.entity != null
                     ? Positioned(
-                  bottom: -10,
+                  bottom: -25,
                   left: 0,
                   right: 0,
-                  child: Center(child: FavouriteButton(entity: widget.entity!)),
+                  child: Center(child: Container(
+                      decoration:BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.whiteColor,
+                        boxShadow: [
+                          BoxShadow(offset: Offset(0,0),
+                          blurRadius: 15,
+                          color: colors.blackColor.withOpacity(0.20))
+                        ]
+
+                      ),child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: FavouriteButton(entity: widget.entity!),
+                      ))),
                 )
                     : SizedBox(),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 40),
 
           // 2. Title
           Padding(

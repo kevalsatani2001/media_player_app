@@ -30,6 +30,7 @@ class PlaylistScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
@@ -37,7 +38,7 @@ class PlaylistScreen extends StatelessWidget {
             child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
           ),
         ),
-        title: AppText("playlist", fontSize: 20, fontWeight: FontWeight.w500),
+        title: AppText("playList", fontSize: 20, fontWeight: FontWeight.w500),
       ),
       body: ValueListenableBuilder(
         valueListenable: box.listenable(),

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:media_player/screens/search_screen.dart';
 import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/services/hive_service.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -78,53 +79,49 @@ class _VideoScreenState extends State<VideoScreen> {
 
     return widget.isComeHomeScreen?Scaffold(
       appBar:AppBar(
-        title: !_isSearching
-            ? const AppText('videos')
-            : TextField(
-          controller: _searchController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: context.tr("searchVideos"),
-            hintStyle: const TextStyle(color: Colors.white54),
-            border: InputBorder.none,
+        leading: Padding(
+          padding: const EdgeInsets.all(16),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
           ),
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value.toLowerCase();
-            });
-          },
         ),
+        centerTitle: true,
+        title:
+            AppText("videos", fontSize: 20, fontWeight: FontWeight.w500),
+
         actions: [
-          !_isSearching
-              ? IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              setState(() {
-                _isSearching = true;
-              });
-            },
-          )
-              : IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              setState(() {
-                _isSearching = false;
-                _searchQuery = '';
-                _searchController.clear();
-              });
-            },
-          ),
-          Builder(builder: (context) {
-            return IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                context.read<VideoBloc>().add(
-                  PickVideos(() async {}),
-                );
+       GestureDetector(
+           onTap: () {
+             Navigator.push(
+               context,
+               MaterialPageRoute(builder: (_) => const SearchScreen()),
+             );
+           },
+           child: Container(
+               height:24,width:24,child: Padding(
+                 padding: const EdgeInsets.all(2),
+                 child: AppImage(src: "assets/svg_icon/search_icon.svg",height: 24,width: 24,),
+               ))),
+          // Builder(builder: (context) {
+          //   return IconButton(
+          //     icon: const Icon(Icons.add),
+          //     onPressed: () {
+          //       context.read<VideoBloc>().add(
+          //         PickVideos(() async {}),
+          //       );
+          //     },
+          //   );
+          // }),
+SizedBox(width: 12,),
+          GestureDetector(
+              onTap: (){
+                setState(() {
+                  _isGridView = !_isGridView;
+                });
               },
-            );
-          }),
+              child: AppImage(src: _isGridView ?AppSvg.listIcon:AppSvg.gridIcon)),
+          SizedBox(width: 15,),
         ],
       ),
       body:Column(

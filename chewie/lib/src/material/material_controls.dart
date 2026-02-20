@@ -277,10 +277,16 @@ class MaterialControlsState extends State<MaterialControls>
         height: barHeight,
         color: Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Icon(
-          isLocked ? Icons.lock : Icons.lock_open,
-          color: Colors.white,
+        child: AppImage(
+          src: isLocked
+              ? "assets/svg_icon/ic_unlock.svg"
+              : "assets/svg_icon/ic_lock.svg",
         ),
+
+        // Icon(
+        //   isLocked ? Icons.lock : Icons.lock_open,
+        //   color: Colors.white,
+        // ),
       ),
     );
   }
@@ -582,11 +588,23 @@ class MaterialControlsState extends State<MaterialControls>
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
-                        Text(formatDuration(videoPlayerLatestValue.position)),
+                        Text(
+                          formatDuration(videoPlayerLatestValue.position),
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0XFF222222),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
                         SizedBox(width: 10),
                         _buildProgressBar(),
                         SizedBox(width: 10),
-                        Text(formatDuration(videoPlayerLatestValue.duration)),
+                        Text(formatDuration(videoPlayerLatestValue.duration),
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Color(0XFF222222),
+                            fontWeight: FontWeight.w400,
+                          ),),
                       ],
                     ),
                   ),
@@ -639,8 +657,8 @@ class MaterialControlsState extends State<MaterialControls>
           duration: const Duration(milliseconds: 300),
           child: AppImage(
             src: chewieController.isFullScreen
-                ? "assets/svg_icon/ic_bigscreen.svg"
-                : "assets/svg_icon/ic_miniscreen.svg",
+                ? "assets/svg_icon/ic_zoomin.svg"
+                : "assets/svg_icon/ic_zoomout.svg",
           ),
         ),
       ),
@@ -699,7 +717,7 @@ class MaterialControlsState extends State<MaterialControls>
                 absorbing: isLocked,
                 child: CenterSeekButton(
                   iconData: Icons.replay_10,
-                  backgroundColor: Colors.black54,
+                  backgroundColor: Color(0XFF3D57F9),
                   iconColor: Colors.white,
                   show: showPlayButton,
                   fadeDuration: chewieController.materialSeekButtonFadeDuration,
@@ -712,7 +730,7 @@ class MaterialControlsState extends State<MaterialControls>
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: marginSize),
                 child: CenterPlayButton(
-                  backgroundColor: Colors.black54,
+                  backgroundColor: Color(0XFF3D57F9),
                   iconColor: Colors.white,
                   isFinished: isFinished,
                   isPlaying: controller.value.isPlaying,
@@ -726,7 +744,7 @@ class MaterialControlsState extends State<MaterialControls>
                 absorbing: isLocked,
                 child: CenterSeekButton(
                   iconData: Icons.forward_10,
-                  backgroundColor: Colors.black54,
+                  backgroundColor: Color(0XFF3D57F9),
                   iconColor: Colors.white,
                   show: showPlayButton,
                   fadeDuration: chewieController.materialSeekButtonFadeDuration,
@@ -904,7 +922,7 @@ class MaterialControlsState extends State<MaterialControls>
       _showAfterExpandCollapseTimer?.cancel();
       _showAfterExpandCollapseTimer = Timer(
         const Duration(milliseconds: 300),
-            () {
+        () {
           if (mounted) {
             setState(() {
               cancelAndRestartTimer();
@@ -914,6 +932,7 @@ class MaterialControlsState extends State<MaterialControls>
       );
     });
   }
+
   // material_controls.dart માં _playPause મેથડ સુધારો
   void _playPause() {
     if (!mounted) return; // વિજેટ છે કે નહીં તે ચેક કરો
