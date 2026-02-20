@@ -11,6 +11,7 @@ import '../core/constants.dart';
 import '../services/hive_service.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_string.dart';
+import '../widgets/app_toast.dart';
 
 class LanguageScreen extends StatefulWidget {
   bool isSettingPage;
@@ -60,29 +61,55 @@ class _LanguageScreenState extends State<LanguageScreen> {
   }
 
   /// Header Section
+  /// Header Section (Preview Logic સાથે)
   Widget _buildHeader(BuildContext context, AppThemeColors colors) {
+    // સિલેક્ટ કરેલી ભાષા મુજબ લખાણ મેળવો (Preview)
+    final previewStrings = AppStrings.translations[_selectedLangCode];
+    final title = previewStrings?['chooseLanguage'] ?? "Choose Language";
+    final subTitle = previewStrings?['selectPreferredLanguage'] ?? "Select your preferred language";
 
     return Container(
       padding: const EdgeInsets.only(top: 50, left: 16, right: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                AppText(
-                  widget.isSettingPage ? context.tr("home") : "Select Language",
-                  // AppStrings.get(context, 'chooseLanguage'),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                ),
-                const SizedBox(height: 5),
-                AppText(
-                  AppStrings.get(context, 'selectPreferredLanguage'),
-                  fontWeight: FontWeight.w400,
-                  fontSize: 13,
-                  color: colors.subTextColor.withOpacity(0.50),
+                if(widget.isSettingPage)...[
+                  Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: AppImage(
+                        src: AppSvg.backArrowIcon,
+                        height: 25,
+                        width: 25,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 15,)
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(
+                        title, // પ્રિવ્યૂ ટાઇટલ
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                      const SizedBox(height: 5),
+                      AppText(
+                        subTitle, // પ્રિવ્યૂ સબટાઈટલ
+                        fontWeight: FontWeight.w400,
+                        fontSize: 13,
+                        maxLines: 2,
+                        color: colors.subTextColor.withOpacity(0.50),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -92,10 +119,17 @@ class _LanguageScreenState extends State<LanguageScreen> {
             onTap: _selectedLangCode == null
                 ? null
                 : () {
-                    !widget.isSettingPage
-                        ? Navigator.pushReplacementNamed(context, '/onboarding')
-                        : Navigator.pop(context);
-                  },
+              // --- અહીં આખી એપ માટે સેવ થશે ---
+              HiveService.languageCode = _selectedLangCode!;
+              context.read<LocaleBloc>().add(ChangeLocale(Locale(_selectedLangCode!)));
+
+              // ✅ સેવ થયા પછી ટોસ્ટ
+              AppToast.show(context, "Language Saved", type: ToastType.success);
+
+              !widget.isSettingPage
+                  ? Navigator.pushReplacementNamed(context, '/onboarding')
+                  : Navigator.pop(context);
+            },
             child: AppImage(
               src: _selectedLangCode == null
                   ? AppSvg.doneUnSelect
@@ -160,16 +194,13 @@ class _LanguageScreenState extends State<LanguageScreen> {
     );
   }
 
-  /// Language Selection Logic
   void _onLanguageSelect(String langCode, Box settingsBox) {
     setState(() {
       _selectedLangCode = langCode;
+      // અહીં Bloc Call નથી કરવાનો, એટલે આખી એપમાં ચેન્જ નહીં થાય
     });
 
-    // Save language
-    settingsBox.put('setLocale', langCode);
-
-    // Update locale immediately
-    context.read<LocaleBloc>().add(ChangeLocale(Locale(langCode)));
+    // યુઝરને ખબર પડે કે સિલેક્ટ થયું છે એના માટે નાનો ટોસ્ટ (Optional)
+    // AppToast.show(context, "Preview changed", type: ToastType.info);
   }
 }

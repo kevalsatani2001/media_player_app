@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Navigator.pushReplacementNamed(context, '/language');
     // return;
-    final selectedLang = settingsBox.get('setLocale');
+    final selectedLang = settingsBox.get('languageCode');
     if (selectedLang == null) {
       Navigator.pushReplacementNamed(context, '/language');
     } else {

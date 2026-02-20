@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 import '../models/media_item.dart';
 import 'player_screen.dart';
@@ -34,7 +35,15 @@ class RecentScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => PlayerScreen(
-                          item: item,
+                          item: item,  entity: AssetEntity(
+                          id: item.id,
+                          typeInt: item.type == "audio" ? 3 : 2,
+                          width: 200,
+                          height: 200,
+                          isFavorite: item.isFavourite,
+                          title: item.path.split("/").last,
+                          relativePath: item.path,
+                        ),
                         ),
                       ),
                     );

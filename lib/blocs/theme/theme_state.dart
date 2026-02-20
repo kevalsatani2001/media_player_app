@@ -1,17 +1,31 @@
+// import 'package:flutter/material.dart';
+//
+// import '../../services/hive_service.dart';
+//
+// class ThemeState {
+//   final ThemeData themeData;
+//
+//   ThemeState({required this.themeData});
+// }
+// /*
+// class ThemeState {
+//   final ThemeData themeData;
+//   final bool isDark;
+//
+//   ThemeState({required this.themeData, required this.isDark});
+// }
+//  */
+
+
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-import '../../services/hive_service.dart';
-
-class ThemeState {
-  final ThemeData themeData;
-
-  ThemeState({required this.themeData});
-}
-/*
-class ThemeState {
+class ThemeState extends Equatable {
   final ThemeData themeData;
   final bool isDark;
 
-  ThemeState({required this.themeData, required this.isDark});
+  const ThemeState({required this.themeData, required this.isDark});
+
+  @override
+  List<Object?> get props => [themeData, isDark];
 }
- */

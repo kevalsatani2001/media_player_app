@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:media_player/widgets/search_button.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -13,11 +14,13 @@ import '../services/global_player.dart';
 import '../services/playlist_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/app_button.dart';
+import '../widgets/app_toast.dart';
+import '../widgets/app_transition.dart';
+import '../widgets/common_methods.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import '../widgets/text_widget.dart';
 import 'detail_screen.dart';
-import 'home_screen.dart';
 import 'player_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
@@ -38,7 +41,13 @@ class PlaylistScreen extends StatelessWidget {
             child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
           ),
         ),
-        title: AppText("playList", fontSize: 20, fontWeight: FontWeight.w500),
+        title: AppText("playlist", fontSize: 20, fontWeight: FontWeight.w500),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 15),
+            child: SearchButton(),
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: box.listenable(),
@@ -67,83 +76,86 @@ class PlaylistScreen extends StatelessWidget {
             itemCount: playlists.length,
             itemBuilder: (_, index) {
               final playlist = playlists[index];
-              return ListTile(
-                contentPadding: EdgeInsets.only(left: 15),
-                title: Text(playlist.name),
-                subtitle: Text('${playlist.items.length} items'),
-                trailing: PopupMenuButton<PlaylistMenuAction>(
-                  elevation: 15,
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              return AppTransition(
+                index: index,
+                child: ListTile(
+                  contentPadding: EdgeInsets.only(left: 15),
+                  title: Text(playlist.name),
+                  subtitle: Text('${playlist.items.length} items'),
+                  trailing: PopupMenuButton<PlaylistMenuAction>(
+                    elevation: 15,
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    shadowColor: Colors.black.withOpacity(0.60),
+                    offset: Offset(0, 0),
+                    // splashRadius: 15,
+                    icon: AppImage(src: AppSvg.dropDownMenuDot),
+                    menuPadding: EdgeInsets.symmetric(horizontal: 10),
+                    onSelected: (action) {
+                      switch (action) {
+                        case PlaylistMenuAction.rename:
+                          _showRenameDialog(context, box, index, playlist.name);
+                          break;
+                        case PlaylistMenuAction.delete:
+                          _confirmDelete(context, box, index, playlist.name);
+                          break;
+                        case PlaylistMenuAction.share:
+                          _sharePlaylist(context, playlist);
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: PlaylistMenuAction.rename,
+                        child: Center(
+                          child: AppText(
+                            'Rename',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: colors.appBarTitleColor,
+                          ),
+                        ),
+                      ),
+                      const PopupMenuDivider(height: 0.5),
+                      PopupMenuItem(
+                        value: PlaylistMenuAction.share,
+                        child: Center(
+                          child: AppText(
+                            'share',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: colors.appBarTitleColor,
+                          ),
+                        ),
+                      ),
+                      const PopupMenuDivider(height: 0.5),
+                      PopupMenuItem(
+                        value: PlaylistMenuAction.delete,
+                        child: Center(
+                          child: AppText(
+                            'delete',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: colors.appBarTitleColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  shadowColor: Colors.black.withOpacity(0.60),
-                  offset: Offset(0, 0),
-                  // splashRadius: 15,
-                  icon: AppImage(src: AppSvg.dropDownMenuDot),
-                  menuPadding: EdgeInsets.symmetric(horizontal: 10),
-                  onSelected: (action) {
-                    switch (action) {
-                      case PlaylistMenuAction.rename:
-                        _showRenameDialog(context, box, index, playlist.name);
-                        break;
-                      case PlaylistMenuAction.delete:
-                        _confirmDelete(context, box, index, playlist.name);
-                        break;
-                      case PlaylistMenuAction.share:
-                        _sharePlaylist(playlist);
-                        break;
-                    }
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PlaylistItemsScreen(
+                          name: playlist.name,
+                          items: playlist.items,
+                        ),
+                      ),
+                    );
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: PlaylistMenuAction.rename,
-                      child: Center(
-                        child: AppText(
-                          'Rename',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: colors.appBarTitleColor,
-                        ),
-                      ),
-                    ),
-                    const PopupMenuDivider(height: 0.5),
-                    PopupMenuItem(
-                      value: PlaylistMenuAction.share,
-                      child: Center(
-                        child: AppText(
-                          'share',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: colors.appBarTitleColor,
-                        ),
-                      ),
-                    ),
-                    const PopupMenuDivider(height: 0.5),
-                    PopupMenuItem(
-                      value: PlaylistMenuAction.delete,
-                      child: Center(
-                        child: AppText(
-                          'delete',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: colors.appBarTitleColor,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlaylistItemsScreen(
-                        name: playlist.name,
-                        items: playlist.items,
-                      ),
-                    ),
-                  );
-                },
               );
             },
           );
@@ -216,15 +228,27 @@ class PlaylistScreen extends StatelessWidget {
                     backgroundColor: colors.whiteColor,
                     onTap: () {
                       final newName = controller.text.trim();
-                      if (newName.isEmpty) return;
+                      if (newName.isEmpty) {
+                        AppToast.show(
+                          context,
+                          "Please enter a name",
+                          type: ToastType.error,
+                        );
+                        return;
+                      }
 
                       final playlist = box.getAt(index);
                       if (playlist != null) {
                         playlist.name = newName;
                         playlist.save();
+                        Navigator.pop(context);
+                        // ✅ Success Toast
+                        AppToast.show(
+                          context,
+                          "Playlist renamed to $newName",
+                          type: ToastType.success,
+                        );
                       }
-
-                      Navigator.pop(context);
                     },
                   ),
                 ),
@@ -294,6 +318,11 @@ class PlaylistScreen extends StatelessWidget {
                     onTap: () {
                       box.deleteAt(index);
                       Navigator.pop(context);
+                      AppToast.show(
+                        context,
+                        "Playlist '$name' deleted",
+                        type: ToastType.error,
+                      );
                     },
                   ),
                 ),
@@ -305,7 +334,10 @@ class PlaylistScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _sharePlaylist(PlaylistModel playlist) async {
+  Future<void> _sharePlaylist(
+      BuildContext context,
+      PlaylistModel playlist,
+      ) async {
     final List<XFile> files = [];
 
     for (final item in playlist.items) {
@@ -318,7 +350,8 @@ class PlaylistScreen extends StatelessWidget {
         final entity = AssetEntity(
           id: item.id,
           typeInt: item.type == "audio" ? 3 : 2,
-          width: 100, height: 100,
+          width: 100,
+          height: 100,
         );
         final File? assetFile = await entity.file;
         if (assetFile != null && assetFile.existsSync()) {
@@ -327,7 +360,10 @@ class PlaylistScreen extends StatelessWidget {
       }
     }
 
-    if (files.isEmpty) return;
+    if (files.isEmpty) {
+      AppToast.show(context, "No shareable files found", type: ToastType.error);
+      return;
+    }
     // WhatsApp લિમિટ માટે max 10 ફાઈલ
     final shareableFiles = files.length > 10 ? files.sublist(0, 10) : files;
 
@@ -354,7 +390,7 @@ class PlaylistItemsScreen extends StatefulWidget {
 
 class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   late List<MediaItem> currentItems;
-  bool favState = false;// લોકલ લિસ્ટ
+  bool favState = false; // લોકલ લિસ્ટ
 
   @override
   void initState() {
@@ -386,7 +422,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         padding: const EdgeInsets.only(top: 10),
         itemBuilder: (_, i) {
           final item = widget.items[i];
-          return _buildMediaCard(context, item, colors, i);
+          return AppTransition(
+            index: i,
+            child: _buildMediaCard(context, item, colors, i),
+          );
         },
       ),
     );
@@ -474,7 +513,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                   ),
                   icon: AppImage(src: AppSvg.dropDownMenuDot),
                   onSelected: (action) async {
-                    AssetEntity entity =  AssetEntity(
+                    AssetEntity entity = AssetEntity(
                       id: item.id,
                       typeInt: item.type == "audio" ? 3 : 2,
                       width: 200,
@@ -490,7 +529,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                         _removeFromPlaylist(index);
                         break;
                       case MediaMenuAction.addToFavourite:
-                        _toggleFavourite(context, entity,index);
+                        _toggleFavourite(context, entity, index);
                         break;
                       case MediaMenuAction.share:
                         _shareSingleItem(entity);
@@ -500,11 +539,21 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                     }
                   },
                   itemBuilder: (context) => [
-                    _buildPopupItem(MediaMenuAction.detail, 'showDetail', colors),
+                    _buildPopupItem(
+                      MediaMenuAction.detail,
+                      'showDetail',
+                      colors,
+                    ),
                     const PopupMenuDivider(height: 0.5),
                     _buildPopupItem(MediaMenuAction.share, 'share', colors),
                     const PopupMenuDivider(height: 0.5),
-                    _buildPopupItem(MediaMenuAction.addToFavourite, !item.isFavourite?'addToFavourite':"removeToFavourite", colors),
+                    _buildPopupItem(
+                      MediaMenuAction.addToFavourite,
+                      !item.isFavourite
+                          ? 'addToFavourite'
+                          : "removeToFavourite",
+                      colors,
+                    ),
                     const PopupMenuDivider(height: 0.5),
                     _buildPopupItem(
                       MediaMenuAction.delete,
@@ -521,9 +570,16 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     );
   }
 
-  Future<void> _toggleFavourite(BuildContext context, AssetEntity entity, int index) async {
+  Future<void> _toggleFavourite(
+      BuildContext context,
+      AssetEntity entity,
+      int index,
+      ) async {
     final file = await entity.file;
-    if (file == null) return;
+    if (file == null) {
+      AppToast.show(context, "File not found", type: ToastType.error);
+      return;
+    }
 
     final playlistService = PlaylistService();
     final newFavState = await playlistService.toggleFavourite(entity);
@@ -531,37 +587,12 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     setState(() {
       currentItems[index].isFavourite = newFavState;
     });
-  }
 
-  Future<void> _sharePlaylist(PlaylistModel playlist) async {
-    final List<XFile> files = [];
-
-    for (final item in playlist.items) {
-      // જો પાથ હોય અને ફાઈલ એક્ઝિસ્ટ કરતી હોય તો સીધી એડ કરો
-      if (item.path.isNotEmpty && File(item.path).existsSync()) {
-        files.add(XFile(item.path));
-      } else {
-        // નહીંતર AssetEntity દ્વારા ફાઈલ મેળવો
-        final entity = AssetEntity(
-          id: item.id,
-          typeInt: item.type == "audio" ? 3 : 2,
-          width: 100, height: 100,
-        );
-        final File? file = await entity.file;
-        if (file != null && await file.exists()) {
-          files.add(XFile(file.path));
-        }
-      }
-    }
-
-    if (files.isEmpty) return;
-
-    // WhatsApp/Apps લિમિટ માટે (દા.ત. ૧૦ ફાઈલ)
-    if (files.length > 10) files.removeRange(10, files.length);
-
-    await Share.shareXFiles(
-      files,
-      text: "Sharing ${files.length} items from playlist: ${playlist.name}",
+    // ✅ Toast Feedback
+    AppToast.show(
+      context,
+      newFavState ? "Added to Favourites" : "Removed from Favourites",
+      type: newFavState ? ToastType.success : ToastType.info,
     );
   }
 
@@ -585,8 +616,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 
   void _removeFromPlaylist(int index) {
     final playlistBox = Hive.box('playlists');
-
-    // પ્લેલિસ્ટ શોધો
     final playlistList = playlistBox.values.toList();
     final int playlistIndex = playlistList.indexWhere(
           (element) => element.name == widget.name,
@@ -594,19 +623,15 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 
     if (playlistIndex != -1) {
       final playlist = playlistBox.getAt(playlistIndex);
-
-      // ૧. Hive માંથી ડિલીટ કરો
       playlist.items.removeAt(index);
       playlistBox.putAt(playlistIndex, playlist);
 
-      // ૨. UI (Runtime) માંથી ડિલીટ કરવા માટે setState વાપરો
       setState(() {
         currentItems.removeAt(index);
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Removed from playlist")));
+      // ✅ SnackBar ની જગ્યાએ Toast
+      AppToast.show(context, "Removed from playlist", type: ToastType.info);
     }
   }
 
@@ -665,7 +690,19 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PlayerScreen(item: item, isPlaylist: true),
+        builder: (_) => PlayerScreen(
+          item: item,
+          isPlaylist: true,
+          entity: AssetEntity(
+            id: item.id,
+            typeInt: item.type == "audio" ? 3 : 2,
+            width: 200,
+            height: 200,
+            isFavorite: item.isFavourite,
+            title: item.path.split("/").last,
+            relativePath: item.path,
+          ),
+        ),
       ),
     );
   }
@@ -684,12 +721,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     try {
       final File? file = await entity.file;
       if (file != null && await file.exists()) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text: 'Sharing: ${entity.title ?? "Media File"}',
-        );
+        await Share.shareXFiles([
+          XFile(file.path),
+        ], text: 'Sharing: ${entity.title ?? "Media File"}');
       } else {
-        debugPrint("File not found for sharing");
+        AppToast.show(context, "File path is broken", type: ToastType.error);
       }
     } catch (e) {
       debugPrint("Error sharing: $e");

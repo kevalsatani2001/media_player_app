@@ -64,6 +64,10 @@ class HiveService {
 
   static set isDark(bool value) => settingsBox.put('isDark', value);
 
+  static String get themeMode => settingsBox.get('themeMode', defaultValue: 'system');
+
+  static set themeMode(String value) => settingsBox.put('themeMode', value);
+
   static String get languageCode =>
       settingsBox.get('languageCode', defaultValue: 'en');
 

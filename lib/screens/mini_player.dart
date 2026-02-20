@@ -13,193 +13,6 @@ import 'package:video_player/video_player.dart';
 import '../models/media_item.dart';
 import '../services/global_player.dart';
 
-class MiniPlayer extends StatefulWidget {
-  const MiniPlayer({super.key});
-
-  @override
-  State<MiniPlayer> createState() => _MiniPlayerState();
-}
-
-class _MiniPlayerState extends State<MiniPlayer> {
-  final GlobalPlayer player = GlobalPlayer();
-  Timer? _timer;
-  Duration position = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    // update position every 500ms
-    _timer = Timer.periodic(Duration(milliseconds: 500), (_) {
-      if (player.controller != null && player.controller!.value.isInitialized) {
-        setState(() {
-          position = player.controller!.value.position;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (player.currentPath == null || player.controller == null)
-      return SizedBox.shrink();
-
-    final duration = player.controller!.value.duration;
-
-    return GestureDetector(
-      onTap: () {
-        // open full player
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PlayerScreen(
-              item: MediaItem(
-                id: player.currentItemId!,
-                isFavourite: player.isFavourite!,
-                path: player.currentPath!,
-                isNetwork: false,
-                // isNetwork: player.i,
-                type: player.currentType!,
-              ),
-            ),
-          ),
-        );
-
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (_) => PlayerScreen(
-        //       item: MediaItem(
-        //         path: player.currentPath!,
-        //         isNetwork: player.isNetwork,
-        //         type: player.currentType!, // ✅ REAL TYPE
-        //       ),
-        //     ),
-        //   ),
-        // );
-      },
-      child: Container(
-        color: Colors.grey[900],
-        height: 100,
-        padding: EdgeInsets.all(8),
-        child: Row(
-          children: [
-            // 🔹 Small video preview
-            SizedBox(
-              width: 120,
-              height: 70,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: player.controller!.value.size.width,
-                    height: player.controller!.value.size.height,
-                    child: VideoPlayer(player.controller!),
-                  ),
-                ),
-              ),
-            ),
-
-            SizedBox(width: 8),
-
-            // 🔹 Info and controls
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    player.currentPath!.split('/').last,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 4),
-                  // 🔹 Progress bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10), // adjust for curve
-                    child: LinearProgressIndicator(
-                      value: duration.inMilliseconds == 0
-                          ? 0
-                          : position.inMilliseconds / duration.inMilliseconds,
-                      backgroundColor: Colors.white24,
-                      color: Colors.redAccent,
-                      minHeight: 6, // adjust height
-                    ),
-                  ),
-
-                  SizedBox(height: 2),
-                  Text(
-                    "${_formatDuration(position)} / ${_formatDuration(duration)}",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-
-            // 🔹 Playback buttons
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(Icons.replay_10, color: Colors.white),
-                  onPressed: () {
-                    final newPos = position - Duration(seconds: 10);
-                    player.controller!.seekTo(
-                      newPos > Duration.zero ? newPos : Duration.zero,
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    player.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      if (player.isPlaying) {
-                        player.pause();
-                      } else {
-                        player.resume();
-                      }
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.forward_10, color: Colors.white),
-                  onPressed: () {
-                    final newPos = position + Duration(seconds: 10);
-                    player.controller!.seekTo(
-                      newPos < duration ? newPos : duration,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDuration(Duration d) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(d.inMinutes.remainder(60));
-    final seconds = twoDigits(d.inSeconds.remainder(60));
-    return "$minutes:$seconds";
-  }
-}
 
 class SmartMiniPlayer extends StatefulWidget {
   const SmartMiniPlayer({super.key});
@@ -233,7 +46,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery
+        .of(context)
+        .size;
     final bool isSmallScreen = size.width < 360; // નાના ફોન માટે ચેક
     return SafeArea(
       child: AnimatedBuilder(
@@ -242,14 +57,19 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           if (player.currentPath == null) return const SizedBox.shrink();
 
           return player.currentType == "audio"
-              ? _buildAudioMiniPlayer(size: size, isSmall: isSmallScreen, key: ValueKey(player.currentPath))
-              : _buildVideoMiniPlayer(size: size, isSmall: isSmallScreen, key: ValueKey(player.currentPath));
+              ? _buildAudioMiniPlayer(size: size,
+              isSmall: isSmallScreen,
+              key: ValueKey(player.currentPath))
+              : _buildVideoMiniPlayer(size: size,
+              isSmall: isSmallScreen,
+              key: ValueKey(player.currentPath));
         },
       ),
     );
   }
 
-  Widget _buildAudioMiniPlayer({required Size size, required bool isSmall, Key? key}) {
+  Widget _buildAudioMiniPlayer(
+      {required Size size, required bool isSmall, Key? key}) {
     return _wrapper(
       key: key,
       isAudio: true,
@@ -263,14 +83,16 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             ),
             child: Row(
               children: [
-                AppImage(src: AppSvg.musicUnselected, height: isSmall ? 18 : 22),
+                AppImage(
+                    src: AppSvg.musicUnselected, height: isSmall ? 18 : 22),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _titleText(),
-                      AppText("Playing from Local", fontSize: isSmall ? 10 : 12),
+                      AppText(
+                          "Playing from Local", fontSize: isSmall ? 10 : 12),
                     ],
                   ),
                 ),
@@ -304,12 +126,14 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.skip_previous, size: isSmall ? 24 : 28),
+                            icon: Icon(Icons.skip_previous,
+                                size: isSmall ? 24 : 28),
                             onPressed: () => player.playPrevious(),
                           ),
                           _playPauseButton(Colors.black),
                           IconButton(
-                            icon: Icon(Icons.skip_next, size: isSmall ? 24 : 28),
+                            icon: Icon(Icons.skip_next,
+                                size: isSmall ? 24 : 28),
                             onPressed: () => player.playNext(),
                           ),
                         ],
@@ -342,7 +166,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
         double progress = 0.0;
         if (duration.inMilliseconds > 0) {
-          progress = (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+          progress = (position.inMilliseconds / duration.inMilliseconds).clamp(
+              0.0, 1.0);
         }
 
         return GestureDetector(
@@ -350,7 +175,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             // યુઝર જ્યારે આંગળી ફેરવે ત્યારે પ્રોગ્રેસ ગણવો
             final box = context.findRenderObject() as RenderBox;
             final localOffset = box.globalToLocal(details.globalPosition);
-            final double relativeProgress = (localOffset.dx / box.size.width).clamp(0.0, 1.0);
+            final double relativeProgress = (localOffset.dx / box.size.width)
+                .clamp(0.0, 1.0);
 
             final newDuration = duration * relativeProgress;
             player.audioPlayer.seek(newDuration);
@@ -367,7 +193,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
 
   // --- વીડિયો મિની પ્લેયર ---
-  Widget _buildVideoMiniPlayer({required Size size, required bool isSmall, Key? key}) {
+  Widget _buildVideoMiniPlayer(
+      {required Size size, required bool isSmall, Key? key}) {
     if (player.controller == null || !player.controller!.value.isInitialized) {
       return const SizedBox.shrink();
     }
@@ -380,14 +207,15 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
         double progress = 0.0;
         if (duration.inMilliseconds > 0) {
-          progress = (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
+          progress = (position.inMilliseconds / duration.inMilliseconds).clamp(
+              0.0, 1.0);
         }
 
-        return  _wrapper(
+        return _wrapper(
           key: key,
           isAudio: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: Row(
               children: [
                 // 🔹 Small video preview
@@ -426,11 +254,13 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                       SizedBox(height: 4),
                       // 🔹 Progress bar
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(10), // adjust for curve
+                        borderRadius: BorderRadius.circular(10),
+                        // adjust for curve
                         child: LinearProgressIndicator(
                           value: duration.inMilliseconds == 0
                               ? 0
-                              : position.inMilliseconds / duration.inMilliseconds,
+                              : position.inMilliseconds /
+                              duration.inMilliseconds,
                           backgroundColor: Colors.white24,
                           color: Colors.redAccent,
                           minHeight: 6, // adjust height
@@ -439,7 +269,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
                       SizedBox(height: 2),
                       Text(
-                        "${_formatDuration(position)} / ${_formatDuration(duration)}",
+                        "${_formatDuration(position)} / ${_formatDuration(
+                            duration)}",
                         style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                     ],
@@ -493,10 +324,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         );
       },
     );
-
-
-
-
   }
 
   // --- કોમન વિજેટ્સ ---
@@ -508,24 +335,33 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => PlayerScreen(
-              item: MediaItem(
-                isFavourite: player.isFavourite!,
-                id: player.currentItemId!,
-                path: player.currentPath!,
-                isNetwork: false,
-                type: player.currentType!,
-              ),
-              index: player.currentIndex,
-              entityList: const [],
-            ),
+            builder: (_) =>
+                PlayerScreen(
+                  entity: AssetEntity(id: player.currentItemId!,
+                      typeInt: player.currentType == "audio" ? 3 : 2,
+                      width: 200,
+                      height: 200,
+                      isFavorite:player.isFavourite!,
+                      relativePath: player.currentPath!,
+                      title: player.currentPath!.split("/").last),
+                  item: MediaItem(
+                    isFavourite: player.isFavourite!,
+                    id: player.currentItemId!,
+                    path: player.currentPath!,
+                    isNetwork: false,
+                    type: player.currentType!,
+                  ),
+                  index: player.currentIndex,
+                  entityList: const [],
+                ),
           ),
         );
       },
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: isAudio ? Colors.grey[300] : Colors.black87, // ઓડિયો માટે થોડો લાઈટ કલર
+          color: isAudio ? Colors.grey[300] : Colors.black87,
+          // ઓડિયો માટે થોડો લાઈટ કલર
           borderRadius: const BorderRadius.only(
             topRight: Radius.circular(20),
             topLeft: Radius.circular(20),
@@ -549,7 +385,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final path = player.currentPath;
 
     // જો પાથ ન હોય તો જ No Media બતાવો
-    final String fileName = path != null ? path.split('/').last : "No Media";
+    final String fileName = path != null ? path
+        .split('/')
+        .last : "No Media";
 
     return AppText(
       fileName,
@@ -606,9 +444,12 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           thumbColor: Colors.blueAccent,
         ),
         child: Slider(
-          value: pos.inMilliseconds.toDouble().clamp(0, dur.inMilliseconds.toDouble()),
+          value: pos.inMilliseconds.toDouble().clamp(
+              0, dur.inMilliseconds.toDouble()),
           min: 0,
-          max: dur.inMilliseconds.toDouble() > 0 ? dur.inMilliseconds.toDouble() : 1.0,
+          max: dur.inMilliseconds.toDouble() > 0
+              ? dur.inMilliseconds.toDouble()
+              : 1.0,
           onChanged: (value) {
             // જ્યારે યુઝર સ્લાઇડર ફેરવે ત્યારે વીડિયો સીક (Seek) થશે
             player.controller!.seekTo(Duration(milliseconds: value.toInt()));

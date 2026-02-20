@@ -60,6 +60,8 @@ class AppSvg {
 
   static const String starFill = '$_base/start_fill.svg';
   static const String startEmpty = '$_base/ic_dstar.svg';
+  static const String starHalf = '$_base/star_fill_half.svg';
+  static const String starHalfHalf = '$_base/star_fill_double_half.svg';
 
   ////////////////////// controls////////////////////////////
   static const String ic2x = '$_base/ic_2x.svg';

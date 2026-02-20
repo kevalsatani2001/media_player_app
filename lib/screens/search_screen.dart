@@ -2,13 +2,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:media_player/core/constants.dart';
+import 'package:media_player/screens/playlist_screen.dart';
 import 'package:media_player/widgets/image_item_widget.dart';
 import 'package:media_player/widgets/image_widget.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import '../models/media_item.dart';
+import '../models/playlist_model.dart';
 import '../utils/app_colors.dart';
+import '../widgets/app_toast.dart';
+import '../widgets/app_transition.dart';
+import '../widgets/common_methods.dart';
 import 'home_screen.dart';
 import 'player_screen.dart';
 
@@ -32,12 +37,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final lowerQuery = query.toLowerCase();
 
-    // Hive boxes માંથી ડેટા મેળવો
     final videoBox = Hive.box('videos');
     final audioBox = Hive.box('audios');
+    final playlistBox = Hive.box('playlists');
 
-    // વિડિયો અને ઓડિયો બંનેના ડેટાને એક લિસ્ટમાં ભેગો કરો
-    final allItems = [
+    // ૧. બધા જ વીડિયો અને ઓડિયો મેળવો
+    final allMedia = [
       ...videoBox.values.map(
             (e) => MediaItem.fromMap(Map<String, dynamic>.from(e)),
       ),
@@ -46,14 +51,33 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     ];
 
-    // હવે પાથ (File Name) દ્વારા ફિલ્ટર કરો
-    final filtered = allItems.where((item) {
+    // ૨. ફિલ્ટર કરેલા મીડિયા આઈટમ્સ (વીડિયો/ઓડિયો)
+    final filteredMedia = allMedia.where((item) {
       final fileName = item.path.split('/').last.toLowerCase();
       return fileName.contains(lowerQuery);
     }).toList();
 
+    // ૩. પ્લેલિસ્ટ ફિલ્ટર કરો (તમારા PlaylistModel મુજબ)
+    // જો પ્લેલિસ્ટનું નામ મેચ થાય, તો આપણે તેને એક સ્પેશિયલ MediaItem તરીકે સ્ટોર કરીશું
+    final filteredPlaylists = playlistBox.values
+        .cast<PlaylistModel>()
+        .where((pl) => pl.name.toLowerCase().contains(lowerQuery))
+        .map(
+          (pl) => MediaItem(
+        id: pl.name,
+        // પ્લેલિસ્ટનું નામ ID તરીકે
+        path: pl.name,
+        type: 'playlist',
+        // આ 'playlist' ટાઈપ આપણે ઓળખવા માટે વાપરીશું
+        isNetwork: false,
+        isFavourite: false,
+      ),
+    )
+        .toList();
+
     setState(() {
-      _results = filtered;
+      // વીડિયો, ઓડિયો અને પ્લેલિસ્ટ ત્રણેય રિઝલ્ટમાં દેખાશે
+      _results = [...filteredPlaylists, ...filteredMedia];
     });
   }
 
@@ -147,145 +171,203 @@ class _SearchScreenState extends State<SearchScreen> {
                 fontWeight: FontWeight.w400,
               ),
             )
-                :
-
-
-            ListView.builder(
+                : ListView.builder(
               itemCount: _results.length,
               itemBuilder: (_, i) {
                 final item = _results[i];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 7.5,
-                    horizontal: 15,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerScreen(item: item),
+                PlaylistModel? playlist;
+                if (item.type == 'playlist') {
+                  final playlistBox = Hive.box('playlists');
+                  playlist = playlistBox.values
+                      .cast<PlaylistModel>()
+                      .firstWhere((pl) => pl.name == item.path);
+                }
+
+                return AppTransition(
+                  index: i,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 7.5,
+                      horizontal: 15,
+                    ),
+                    child: GestureDetector(
+                      onTap: () async {
+                        if (item.type == 'playlist') {
+                          // પ્લેલિસ્ટ લોજિક...
+                          final playlistBox = Hive.box('playlists');
+                          playlist = playlistBox.values
+                              .cast<PlaylistModel>()
+                              .firstWhere((pl) => pl.name == item.path);
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PlaylistItemsScreen(
+                                name: playlist!.name,
+                                items: playlist!.items,
+                              ),
+                            ),
+                          );
+                        } else {
+                          // ફાઈલ ચેકિંગ
+                          final file = File(item.path);
+                          if (!await file.exists()) {
+                            // ✅ ફાઈલ ન મળે તો Error Toast
+                            AppToast.show(context, "File not found or deleted", type: ToastType.error);
+                            return;
+                          }
+
+                          // જો ફાઈલ હોય તો પ્લેયર સ્ક્રીન પર જાઓ
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PlayerScreen(
+                                item: item,
+                                entity: AssetEntity(
+                                  id: item.id,
+                                  typeInt: item.type == "audio" ? 3 : 2,
+                                  width: 200,
+                                  height: 200,
+                                  isFavorite: item.isFavourite,
+                                  title: item.path.split("/").last,
+                                  relativePath: item.path,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colors.cardBackground,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      // height: 100,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          top: 10,
-                          bottom: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
+                        // height: 100,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            left: 10,
+                            top: 10,
+                            bottom: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              // Row ના Thumbnail સેક્શનમાં
+                              Container(
                                 width: 80,
                                 height: 60,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(8),
+                                  color: item.type == 'playlist'
+                                      ? colors.primary.withOpacity(0.1)
+                                      : Colors.transparent,
                                 ),
                                 clipBehavior: Clip.antiAlias,
-                                // 🔑 important
-                                child: assetAntityImage(AssetEntity(
-                                  relativePath: item.path,
-                                  id: item.id!,
-                                  typeInt: item.type == 'audio' ? 3 : 2,
-                                  width: 80,
-                                  height: 80,
-                                ),)
-                            ),
-                            SizedBox(width: 13),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: [
-                                  AppText(
-                                    item.path.split('/').last,
-                                    maxLines: 1,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
+                                child: item.type == 'playlist'
+                                    ? Icon(Icons.playlist_play, color: colors.primary, size: 30)
+                                    : (item.type == 'audio'
+                                    ? videoPlaceholder(isAudio: true) // ઓડિયો હોય તો ડાયરેક્ટ પ્લેસહોલ્ડર
+                                    : assetAntityImage(
+                                  AssetEntity(
+                                    relativePath: item.path,
+                                    id: item.id!,
+                                    typeInt: 2, // ફક્ત વીડિયો માટે જ ૨ આપો
+                                    width: 80,
+                                    height: 80,
                                   ),
-                                  SizedBox(height: 7),
-                                  AppText(
-                                    item.path,
-                                    maxLines: 1,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w400,
-                                    color: colors.textFieldBorder,
-                                  ),
-                                  SizedBox(height: 7),
-                                  Row(
-                                    children: [
-                                      AppText(
-                                        formatDuration(
-                                          AssetEntity(
-                                            relativePath: item.path,
-                                            id: item.id!,
-                                            typeInt: item.type == 'audio'
-                                                ? 3
-                                                : 2,
-                                            width: 80,
-                                            height: 80,
-                                          ).duration,
-                                        ),
-                                        maxLines: 2,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        color: colors.appBarTitleColor,
-                                      ),
-                                      SizedBox(width: 10),
-                                      FutureBuilder<File?>(
-                                        future: AssetEntity(
-                                          relativePath: item.path,
-                                          id: item.id!,
-                                          typeInt: item.type == 'audio'
-                                              ? 3
-                                              : 2,
-                                          width: 80,
-                                          height: 80,
-                                        ).file,
-                                        builder: (context, snapshot) {
-                                          if (!snapshot.hasData ||
-                                              snapshot.data == null) {
-                                            return const SizedBox(
-                                              height: 14,
-                                            );
-                                          }
-
-                                          final file = snapshot.data!;
-
-                                          if (!file.existsSync()) {
-                                            return const Text(
-                                              'Unavailable',
-                                              style: TextStyle(
-                                                color: Colors.redAccent,
-                                                fontSize: 11,
-                                              ),
-                                            );
-                                          }
-
-                                          final bytes = file.lengthSync();
-
-                                          return AppText(
-                                            _formatSize(bytes),
+                                )),
+                              ),
+                              SizedBox(width: 13),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    AppText(
+                                      item.path.split('/').last,
+                                      maxLines: 1,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    SizedBox(height: 7),
+                                    AppText(
+                                      item.type!="playlist"?item.path:
+                                      "${playlist!.items.length} items",
+                                      maxLines: 1,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                      color: colors.textFieldBorder,
+                                    ),
+                                    SizedBox(height: 7),
+                                    if(item.type!="playlist")
+                                      Row(
+                                        children: [
+                                          AppText(
+                                            formatDuration(
+                                              AssetEntity(
+                                                relativePath: item.path,
+                                                id: item.id!,
+                                                typeInt: item.type == 'audio'
+                                                    ? 3
+                                                    : 2,
+                                                width: 80,
+                                                height: 80,
+                                              ).duration,
+                                            ),
+                                            maxLines: 2,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
                                             color: colors.appBarTitleColor,
-                                          );
-                                        },
+                                          ),
+                                          SizedBox(width: 10),
+                                          FutureBuilder<File?>(
+                                            future: AssetEntity(
+                                              relativePath: item.path,
+                                              id: item.id!,
+                                              typeInt: item.type == 'audio'
+                                                  ? 3
+                                                  : 2,
+                                              width: 80,
+                                              height: 80,
+                                            ).file,
+                                            builder: (context, snapshot) {
+                                              if (!snapshot.hasData ||
+                                                  snapshot.data == null) {
+                                                return const SizedBox(
+                                                  height: 14,
+                                                );
+                                              }
+
+                                              final file = snapshot.data!;
+
+                                              if (!file.existsSync()) {
+                                                return const Text(
+                                                  'Unavailable',
+                                                  style: TextStyle(
+                                                    color: Colors.redAccent,
+                                                    fontSize: 11,
+                                                  ),
+                                                );
+                                              }
+
+                                              final bytes = file.lengthSync();
+
+                                              return AppText(
+                                                _formatSize(bytes),
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w500,
+                                                color:
+                                                colors.appBarTitleColor,
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 13),
-                          ],
+                              SizedBox(width: 13),
+                            ],
+                          ),
                         ),
                       ),
                     ),

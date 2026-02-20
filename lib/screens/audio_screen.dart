@@ -21,12 +21,15 @@ import '../services/global_player.dart';
 import '../utils/app_colors.dart';
 import '../widgets/add_to_playlist.dart';
 import '../widgets/app_bar.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
+import '../widgets/common_methods.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import 'bottom_bar_screen.dart';
 import 'detail_screen.dart';
 import 'home_screen.dart';
+
 // import 'mini_player.dart';
 import 'player_screen.dart';
 
@@ -70,28 +73,61 @@ class _AudioScreenState extends State<AudioScreen> {
       child: widget.isComeHomeScreen
           ? Scaffold(
         appBar: AppBar(
-          title:  Text(context.tr("audios")),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () =>
-                  context.read<AudioBloc>().add(LoadAudios()),
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(
+                src: AppSvg.backArrowIcon,
+                height: 20,
+                width: 20,
+              ),
             ),
+          ),
+          centerTitle: true,
+          title: AppText(
+            "audio",
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
+              child: Container(
+                height: 24,
+                width: 24,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: AppImage(
+                    src: "assets/svg_icon/search_icon.svg",
+                    height: 24,
+                    width: 24,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 15),
           ],
         ),
         body: Column(
           children: [
             Expanded(child: _AudioBody()),
             Align(
-                alignment: Alignment.bottomCenter,
-                child: SmartMiniPlayer()
+              alignment: Alignment.bottomCenter,
+              child: SmartMiniPlayer(),
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
-          child: const Icon(Icons.refresh),
-        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
+        //   child: const Icon(Icons.refresh),
+        // ),
       )
           : Column(
         children: [
@@ -119,7 +155,7 @@ class _AudioScreenState extends State<AudioScreen> {
           ),
           Divider(color: colors.dividerColor),
           Expanded(child: _AudioBody()),
-          SmartMiniPlayer()
+          SmartMiniPlayer(),
         ],
       ),
     );
@@ -246,7 +282,9 @@ class _AudioBodyState extends State<_AudioBody> {
                                         height: 22,
                                       ),
                                       AppImage(
-                                        src: GlobalPlayer().currentPath == file.path
+                                        src:
+                                        GlobalPlayer().currentPath ==
+                                            file.path
                                             ? AppSvg.playerPause
                                             : AppSvg.playerResume,
                                         height: 18,
@@ -260,7 +298,8 @@ class _AudioBodyState extends State<_AudioBody> {
                                 /// 🎶 Title + Duration
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       AppText(
@@ -294,7 +333,9 @@ class _AudioBodyState extends State<_AudioBody> {
                                   offset: Offset(0, 0),
                                   // splashRadius: 15,
                                   icon: AppImage(src: AppSvg.dropDownMenuDot),
-                                  menuPadding: EdgeInsets.symmetric(horizontal: 10),
+                                  menuPadding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
                                   onSelected: (action) async {
                                     switch (action) {
                                       case MediaMenuAction.detail:
@@ -307,7 +348,7 @@ class _AudioBodyState extends State<_AudioBody> {
                                         showThumb(context, audio, 500);
                                         break;
                                       case MediaMenuAction.share:
-                                        _shareItem(context, audio);
+                                        shareItem(context, audio);
                                         break;
                                       case MediaMenuAction.delete:
                                         deleteCurrentItem(context, audio);
@@ -325,7 +366,9 @@ class _AudioBodyState extends State<_AudioBody> {
                                           MediaItem(
                                             path: file!.path,
                                             isNetwork: false,
-                                            type: audio.type==AssetType.audio?"audio":"video",
+                                            type: audio.type == AssetType.audio
+                                                ? "audio"
+                                                : "video",
                                             id: audio.id,
                                             isFavourite: audio.isFavorite,
                                           ),
@@ -335,93 +378,18 @@ class _AudioBodyState extends State<_AudioBody> {
                                     }
                                   },
                                   itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: MediaMenuAction.detail,
-                                      child: Center(
-                                        child: AppText(
-                                          'showDetailPage',
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        ),
-                                      ),
+                                    _buildItem(
+                                      MediaMenuAction.addToFavourite,
+                                      audio.isFavorite ? 'removeToFavourite' : 'addToFavourite',
                                     ),
-                                    // const PopupMenuDivider(height: 0.5,),
-                                    //  PopupMenuItem(
-                                    //   value: MediaMenuAction.info,
-                                    //   child:  Center(
-                                    //     child: AppText(
-                                    //       'Show info dialog',
-                                    //       fontSize: 12,
-                                    //       fontWeight: FontWeight.w500,
-                                    //       color: colors.appBarTitleColor,
-                                    //     ),
-                                    //   ),
-                                    // ),
-
-                                    if (audio.type == AssetType.video)...[
-                                      const PopupMenuDivider(height: 0.5,),
-                                      PopupMenuItem(
-                                        value: MediaMenuAction.thumb,
-                                        child: Center(
-                                          child: AppText(
-                                            'showThumb500',
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                            color: colors.appBarTitleColor,
-                                          ),
-                                        ),
-                                      ),],
-                                    const PopupMenuDivider(height: 0.5,),
-                                    PopupMenuItem(
-                                      value: MediaMenuAction.share,
-                                      child: Center(
-                                        child: AppText(
-                                          "share",
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const PopupMenuDivider(height: 0.5,),
-                                    PopupMenuItem(
-                                      value: MediaMenuAction.addToFavourite,
-                                      child: Center(
-                                        child: AppText(
-                                          audio.isFavorite
-                                              ? 'removeToFavourite'
-                                              : 'addToFavourite',
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const PopupMenuDivider(height: 0.5,),
-                                    PopupMenuItem(
-                                      value: MediaMenuAction.delete,
-                                      child: Center(
-                                        child: AppText(
-                                          'delete',
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        ),
-                                      ),
-                                    ),
-                                    const PopupMenuDivider(height: 0.5,),
-                                    PopupMenuItem(
-                                      value: MediaMenuAction.addToPlaylist,
-                                      child: Center(
-                                        child: AppText(
-                                          'addToPlaylist',
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          color: colors.appBarTitleColor,
-                                        ),
-                                      ),
-                                    ),
+                                    const PopupMenuDivider(height: 0.5),
+                                    _buildItem(MediaMenuAction.delete, 'delete'),
+                                    const PopupMenuDivider(height: 0.5),
+                                    _buildItem(MediaMenuAction.share, 'share'),
+                                    const PopupMenuDivider(height: 0.5),
+                                    _buildItem(MediaMenuAction.detail, 'showDetail'),
+                                    const PopupMenuDivider(height: 0.5),
+                                    _buildItem(MediaMenuAction.addToPlaylist, 'addToPlaylist'),
                                   ],
                                 ),
                               ],
@@ -432,8 +400,6 @@ class _AudioBodyState extends State<_AudioBody> {
                     },
                   ), // તમારી ઓડિયો લિસ્ટ આઈટમ
                 );
-
-
               },
             ),
           );
@@ -444,71 +410,24 @@ class _AudioBodyState extends State<_AudioBody> {
     );
   }
 
-  Future<void> routeToDetailPage(
-      BuildContext context,
-      AssetEntity entity,
-      ) async {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
+
+  _buildItem(MediaMenuAction action, String title) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    return PopupMenuItem(
+      value: action,
+      child: Center(
+        child: AppText(
+          title,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: colors.appBarTitleColor,
+        ),
+      ),
     );
   }
 
-  Future<void> showThumb(
-      BuildContext context,
-      AssetEntity entity,
-      int size,
-      ) async {
-    final String title;
-    if (entity.title?.isEmpty != false) {
-      title = await entity.titleAsync;
-    } else {
-      title = entity.title!;
-    }
-    print('entity.title = $title');
-    return showDialog(
-      context: context,
-      builder: (_) {
-        return FutureBuilder<Uint8List?>(
-          future: entity.thumbnailDataWithOption(
-            ThumbnailOption.ios(
-              size: const ThumbnailSize.square(500),
-              // resizeContentMode: ResizeContentMode.fill,
-            ),
-          ),
-          builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
-            Widget w;
-            if (snapshot.hasError) {
-              return ErrorWidget(snapshot.error!);
-            } else if (snapshot.hasData) {
-              final Uint8List data = snapshot.data!;
-              ui.decodeImageFromList(data, (ui.Image result) {
-                print('result size: ${result.width}x${result.height}');
-                // for 4288x2848
-              });
-              w = Image.memory(data);
-            } else {
-              w = Center(
-                child: Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.all(20),
-                  child: const CircularProgressIndicator(),
-                ),
-              );
-            }
-            return GestureDetector(
-              child: w,
-              onTap: () => Navigator.pop(context),
-            );
-          },
-        );
-      },
-    );
-  }
 
-  Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-    final file = await entity.file;
-    await Share.shareXFiles([XFile(file!.path)], text: entity.title);
-  }
+
 
   Future<void> _toggleFavourite(
       BuildContext context,
@@ -526,12 +445,24 @@ class _AudioBodyState extends State<_AudioBody> {
     // 🔹 Update Hive
     if (isFavorite) {
       favBox.delete(key);
+      AppToast.show(
+        context,
+        context.tr("removedFromFavourites"),
+        type: ToastType.info,
+      );
     } else {
       favBox.put(key, {
+        "id": entity.id,
         "path": file.path,
         "isNetwork": false,
+        "isFavourite": isFavorite,
         "type": entity.type == AssetType.audio ? "audio" : "video",
       });
+      AppToast.show(
+        context,
+        context.tr("addedToFavourite"),
+        type: ToastType.success,
+      );
     }
 
     // 🔹 Update system favourite

@@ -1,21 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:media_player/screens/search_screen.dart';
+import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/widgets/app_bar.dart';
-import 'package:media_player/widgets/app_button.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager/platform_utils.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:media_player/screens/player_screen.dart';
-
 import '../blocs/home/home_tab_bloc.dart';
 import '../blocs/home/home_tab_event.dart';
 import '../blocs/home/home_tab_state.dart';
@@ -27,10 +23,13 @@ import '../main.dart';
 import '../models/media_item.dart';
 import '../utils/app_colors.dart';
 import '../widgets/add_to_playlist.dart';
+import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
+import '../widgets/common_methods.dart';
 import '../widgets/home_card.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
+import '../widgets/shimmer_effect.dart';
 import 'bottom_bar_screen.dart';
 import 'detail_screen.dart';
 import 'home_screen.dart';
@@ -289,7 +288,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
     return BlocBuilder<VideoBloc, VideoState>(
       builder: (context, state) {
         if (state is VideoLoading) {
-          return const Center(child: CircularProgressIndicator.adaptive());
+          return const MediaShimmerLoading();
         }
 
         if (state is VideoError) {
@@ -326,7 +325,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                           break;
 
                         case MediaMenuAction.share:
-                          _shareItem(context, entity);
+                          shareItem(context, entity);
                           break;
 
                         case MediaMenuAction.delete:
@@ -409,12 +408,16 @@ class _HomePageState extends State<HomePage> with RouteAware{
     // 🔹 Update Hive
     if (isFavorite) {
       favBox.delete(key);
+      AppToast.show(context, context.tr("removedFromFavourites"), type: ToastType.info);
     } else {
       favBox.put(key, {
+        "id":entity.id,
         "path": file.path,
         "isNetwork": false,
+        "isFavourite":isFavorite,
         "type": entity.type == AssetType.audio ? "audio" : "video",
       });
+      AppToast.show(context, context.tr("addedToFavourite"), type: ToastType.success);
     }
 
     // 🔹 Update system favourite
@@ -564,112 +567,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
     );
   }
 
-  Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-    try {
-      // ૧. એસેટમાંથી ફાઈલ મેળવો
-      final File? file = await entity.file;
 
-      if (file != null && await file.exists()) {
-        // ૨. ફાઈલનો પાથ ચેક કરો
-        debugPrint("Sharing file path: ${file.path}");
-
-        // ૩. ShareXFiles નો ઉપયોગ કરો
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text: 'Sharing: ${entity.title ?? "Media File"}', // આ મેસેજ સાથે જશે
-        );
-      } else {
-        debugPrint("File not found or entity.file returned null");
-        // જો ફાઈલ ના મળે તો યુઝરને મેસેજ બતાવો
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("File cannot be loaded for sharing")),
-        );
-      }
-    } catch (e) {
-      debugPrint("Error sharing file: $e");
-    }
-  }
 }
 
 
-Future<void> deleteCurrentItem(BuildContext context, AssetEntity entity) async {
-  final colors = Theme.of(context).extension<AppThemeColors>()!;
-  if (!Platform.isAndroid && !Platform.isIOS) return;
-
-  final bool? confirm = await showDialog<bool>(
-    context: context,
-    builder: (_) => AlertDialog(
-      actionsPadding: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(20)),
-      insetPadding: EdgeInsets.symmetric(horizontal: 36),
-      contentPadding: EdgeInsets.only(left: 33,right: 33,bottom: 20,top: 40),
-      backgroundColor: colors.cardBackground,
-      title: AppText(
-        'Delete this file?',
-        fontSize: 18,
-        fontWeight: FontWeight.w500,
-        color: colors.appBarTitleColor,
-        align: TextAlign.center,
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppText(
-            'Are you sure to delete this selected files?',
-            fontSize: 17,
-            fontWeight: FontWeight.w400,
-            color: colors.dialogueSubTitle,
-            align: TextAlign.center,
-          ),
-          SizedBox(height: 30),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  title: "Yes",
-                  textColor: colors.dialogueSubTitle,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 17,
-                  backgroundColor: colors.whiteColor,
-                  onTap: () => Navigator.pop(context, true),
-                ),
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: AppButton(
-                  title: "No",
-                  textColor: colors.whiteColor,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 17,
-                  backgroundColor: colors.primary,
-                  onTap: () => Navigator.pop(context, false),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-
-      // content: const Text('Are you sure you want to delete this file?'),
-    ),
-  );
-
-  if (confirm != true) return;
-
-  // ✅ Correct delete API
-  final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-
-  if (result.isNotEmpty) {
-    context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-  }
-}
-
-String formatDuration(int totalSeconds) {
-  final hours = totalSeconds ~/ 3600;
-  final minutes = (totalSeconds % 3600) ~/ 60;
-  final seconds = totalSeconds % 60;
-
-  return '${hours.toString().padLeft(2, '0')}:'
-      '${minutes.toString().padLeft(2, '0')}:'
-      '${seconds.toString().padLeft(2, '0')}';
-}

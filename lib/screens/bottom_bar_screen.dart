@@ -68,21 +68,28 @@ class _HomeScreenState extends State<HomeScreen> {
         BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
         BlocProvider(
           create: (_) =>
-          VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
+              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
         ), // Bottom nav bloc
       ],
       child: BlocBuilder<BottomNavBloc, BottomNavState>(
         builder: (context, bottomState) {
           return WillPopScope(
-            onWillPop: () async{
-              if(bottomState.selectedIndex==0){
+            onWillPop: () async {
+              if (bottomState.selectedIndex == 0) {
                 showDialog(
                   context: context,
                   builder: (_) => AlertDialog(
                     actionsPadding: EdgeInsets.zero,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusGeometry.circular(20),
+                    ),
                     insetPadding: EdgeInsets.symmetric(horizontal: 36),
-                    contentPadding: EdgeInsets.only(left: 33,right: 33,bottom: 20,top: 40),
+                    contentPadding: EdgeInsets.only(
+                      left: 33,
+                      right: 33,
+                      bottom: 20,
+                      top: 40,
+                    ),
                     backgroundColor: colors.cardBackground,
                     title: AppText(
                       'Exit app?',
@@ -111,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.w500,
                                 fontSize: 17,
                                 backgroundColor: colors.whiteColor,
-                                onTap: () =>SystemNavigator.pop(),
+                                onTap: () => SystemNavigator.pop(),
                               ),
                             ),
                             SizedBox(width: 14),
@@ -133,11 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     // content: const Text('Are you sure you want to delete this file?'),
                   ),
                 );
-              }
-              else{
-                context.read<BottomNavBloc>().add(
-                  SelectBottomTab(0),
-                );
+              } else {
+                context.read<BottomNavBloc>().add(SelectBottomTab(0));
               }
               return true;
             },
@@ -218,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildBottomNavItem(
-                                  () {
+                              () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(0),
                                 );
@@ -229,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.homeUnselected,
                             ),
                             _buildBottomNavItem(
-                                  () {
+                              () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(1),
                                 );
@@ -240,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.videoUnselected,
                             ),
                             _buildBottomNavItem(
-                                  () {
+                              () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(2),
                                 );
@@ -251,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppSvg.musicUnselected,
                             ),
                             _buildBottomNavItem(
-                                  () {
+                              () {
                                 context.read<BottomNavBloc>().add(
                                   SelectBottomTab(3),
                                 );
@@ -281,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
         BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
         BlocProvider(
           create: (_) =>
-          VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
+              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
         ), // Bottom nav bloc
       ],
       child: BlocBuilder<BottomNavBloc, BottomNavState>(
@@ -352,12 +356,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _buildBottomNavItem(
-      void Function()? onTap,
-      BottomNavState bottomState,
-      int index,
-      String selectedIcon,
-      String unSelectedIcon,
-      ) {
+    void Function()? onTap,
+    BottomNavState bottomState,
+    int index,
+    String selectedIcon,
+    String unSelectedIcon,
+  ) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return GestureDetector(
       onTap: onTap,
@@ -387,20 +391,21 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         return HomePage();
-    // return _buildHomeTab();
+      // return _buildHomeTab();
       case 1:
         return BlocProvider(
-          create: (_) => VideoBloc(Hive.box('videos'))
-            ..add(LoadVideosFromGallery(showLoading: false)),
-          child: VideoScreen(isComeHomeScreen: false,)
+          create: (_) =>
+              VideoBloc(Hive.box('videos'))
+                ..add(LoadVideosFromGallery(showLoading: false)),
+          child: VideoScreen(isComeHomeScreen: false),
         );
-    // return VideoScreen(isComeHomeScreen: false);
-    // return _buildVideoSection();
+      // return VideoScreen(isComeHomeScreen: false);
+      // return _buildVideoSection();
       case 2:
         return AudioScreen(isComeHomeScreen: false);
       case 3:
         return SettingScreen();
-    // return _buildSettingsTab();
+      // return _buildSettingsTab();
       default:
         return const SizedBox();
     }
@@ -440,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // get the display name of the language from translations
                       final langName =
                           AppStrings.translations[langCode]?['language'] ??
-                              langCode;
+                          langCode;
                       return DropdownMenuItem<Locale>(
                         value: Locale(langCode),
                         child: Text(langName),
@@ -608,10 +613,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => PlayerScreen(
+                        entity: entity,
                         item: MediaItem(
                           path: file.path,
                           isNetwork: false,
-                          type: 'video', id: entity.id, isFavourite: entity.isFavorite,
+                          type: 'video',
+                          id: entity.id,
+                          isFavourite: entity.isFavorite,
                         ),
                       ),
                     ),
@@ -666,15 +674,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!permission.hasAccess) return;
 
     final List<AssetPathEntity> galleryList =
-    await PhotoManager.getAssetPathList(
-      type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-      filterOption: FilterOptionGroup(),
-      pathFilterOption: PMPathFilter(
-        darwin: PMDarwinPathFilter(
-          type: [PMDarwinAssetCollectionType.album],
-        ),
-      ),
-    );
+        await PhotoManager.getAssetPathList(
+          type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
+          filterOption: FilterOptionGroup(),
+          pathFilterOption: PMPathFilter(
+            darwin: PMDarwinPathFilter(
+              type: [PMDarwinAssetCollectionType.album],
+            ),
+          ),
+        );
 
     setState(() {
       folderList.clear();
@@ -751,7 +759,7 @@ class GalleryItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AppImage(src: AppSvg.folderIcon),
-              SizedBox(height: 21.22,),
+              SizedBox(height: 21.22),
               AppText(
                 item.name,
                 align: TextAlign.center,
@@ -1075,7 +1083,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
               MediaItem(
                 path: file!.path,
                 isNetwork: false,
-                type: entity.type==AssetType.audio?"audio":"video",
+                type: entity.type == AssetType.audio ? "audio" : "video",
                 id: entity.id,
                 isFavourite: entity.isFavorite,
               ),
@@ -1092,7 +1100,14 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
           context,
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
-              item: MediaItem(path: file.path, isNetwork: false, type: 'video', id: entity.id, isFavourite: entity.isFavorite),
+              entity: entity,
+              item: MediaItem(
+                path: file.path,
+                isNetwork: false,
+                type: 'video',
+                id: entity.id,
+                isFavourite: entity.isFavorite,
+              ),
             ),
           ),
         );
@@ -1536,8 +1551,6 @@ final Center loadWidget = Center(
         : const CircularProgressIndicator(),
   ),
 );
-
-
 
 Future<void> showResultDialog(
   BuildContext context,

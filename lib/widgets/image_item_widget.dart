@@ -6,6 +6,7 @@ import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import '../core/constants.dart';
 import '../screens/home_screen.dart';
 import '../utils/app_colors.dart';
+import 'common_methods.dart';
 import 'image_widget.dart';
 
 enum MediaMenuAction {
@@ -145,7 +146,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                   ),
                 ),
                 SizedBox(width: 0),
-                _dropDownButton(),
+                _dropDownButton(widget.entity),
               ],
             ),
           ],
@@ -261,7 +262,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                 ),
               ),
               SizedBox(width: 13),
-              _dropDownButton(),
+              _dropDownButton(widget.entity),
             ],
           ),
         ),
@@ -399,7 +400,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                   ),
                 ),
                 SizedBox(width: 0),
-                _dropDownButton(),
+                _dropDownButton(widget.entity),
               ],
             ),
           ],
@@ -419,7 +420,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
     return '${mb.toStringAsFixed(1)} MB';
   }
 
-  Widget _dropDownButton() {
+  Widget _dropDownButton(AssetEntity entity) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return PopupMenuButton<MediaMenuAction>(
       elevation: 15,
@@ -433,69 +434,49 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
 
       onSelected: (action) => widget.onMenuSelected?.call(action),
       itemBuilder: (context) => [
-        PopupMenuItem(
-          value: MediaMenuAction.addToFavourite,
-          child: Center(
-            child: AppText(
-              widget.entity.isFavorite
-                  ? 'Remove from Favourite'
-                  : 'Add to Favourite',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
-            ),
-          ),
-        ),
-
-        const PopupMenuDivider(height: 0.5),
-        PopupMenuItem(
-          value: MediaMenuAction.delete,
-          child: Center(
-            child: AppText(
-              'Delete',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
-            ),
-          ),
+        _buildItem(
+          MediaMenuAction.addToFavourite,
+          widget.entity.isFavorite ? 'removeToFavourite' : 'addToFavourite',
         ),
         const PopupMenuDivider(height: 0.5),
-        PopupMenuItem(
-          value: MediaMenuAction.share,
-          child: Center(
-            child: AppText(
-              'Share',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
-            ),
-          ),
-        ),
+        _buildItem(MediaMenuAction.delete, 'delete'),
         const PopupMenuDivider(height: 0.5),
-        PopupMenuItem(
-          value: MediaMenuAction.detail,
-          child: Center(
-            child: AppText(
-              'Show detail page',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
-            ),
-          ),
-        ),
+        _buildItem(MediaMenuAction.share, 'share'),
         const PopupMenuDivider(height: 0.5),
-        PopupMenuItem(
-          value: MediaMenuAction.addToPlaylist,
-          child: Center(
-            child: AppText(
-              'Add to playlist',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
+        if (entity.type == AssetType.video) ...[
+          const PopupMenuDivider(height: 0.5),
+          PopupMenuItem(
+            value: MediaMenuAction.thumb,
+            child: Center(
+              child: AppText(
+                'showThumb500',
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: colors.appBarTitleColor,
+              ),
             ),
           ),
-        ),
+        ],
+        const PopupMenuDivider(height: 0.5),
+        _buildItem(MediaMenuAction.detail, 'showDetail'),
+        const PopupMenuDivider(height: 0.5),
+        _buildItem(MediaMenuAction.addToPlaylist, 'addToPlaylist'),
       ],
+    );
+  }
+
+  _buildItem(MediaMenuAction action, String title) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    return PopupMenuItem(
+      value: action,
+      child: Center(
+        child: AppText(
+          title,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: colors.appBarTitleColor,
+        ),
+      ),
     );
   }
 
@@ -509,7 +490,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
   }
 }
 
-Widget _videoPlaceholder({bool? isAudio = false}) {
+Widget videoPlaceholder({bool? isAudio = false}) {
   return Container(
     color: Colors.black12,
     child: Center(
@@ -523,19 +504,26 @@ Widget _videoPlaceholder({bool? isAudio = false}) {
 }
 
 Widget? assetAntityImage(AssetEntity entity) {
+  // ૧. જો ટાઇપ ઓડિયો (3) હોય, તો ડાયરેક્ટ પ્લેસહોલ્ડર જ રિટર્ન કરો
+  // કારણ કે ઓડિયોમાંથી થંબનેલ કાઢવાનો ઓપરેશન સપોર્ટેડ નથી.
+  if (entity.typeInt == 3 || entity.type == AssetType.audio) {
+    return videoPlaceholder(isAudio: true);
+  }
+
   return FutureBuilder<File?>(
     future: entity.file,
     builder: (context, snapshot) {
       if (!snapshot.hasData || snapshot.data == null) {
-        return _videoPlaceholder(isAudio: entity.typeInt == 3);
+        return videoPlaceholder(isAudio: false);
       }
 
       final file = snapshot.data!;
 
       if (!file.existsSync() || file.lengthSync() == 0) {
-        return _videoPlaceholder(isAudio: entity.typeInt == 3);
+        return videoPlaceholder(isAudio: false);
       }
 
+      // ૨. ફક્ત વીડિયો કે ઈમેજ માટે જ AssetEntityImage વાપરવું
       return AssetEntityImage(
         entity,
         width: double.infinity,
@@ -543,8 +531,9 @@ Widget? assetAntityImage(AssetEntity entity) {
         thumbnailSize: const ThumbnailSize.square(300),
         thumbnailFormat: ThumbnailFormat.jpeg,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
-          return _videoPlaceholder(isAudio: entity.typeInt == 3);
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint("Thumbnail Error: $error");
+          return videoPlaceholder(isAudio: false);
         },
       );
     },

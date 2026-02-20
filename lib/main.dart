@@ -62,6 +62,7 @@ import 'blocs/count/count_bloc.dart';
 import 'blocs/count/count_event.dart';
 import 'blocs/favourite/favourite_bloc.dart';
 import 'blocs/local/local_bloc.dart';
+import 'blocs/local/local_event.dart';
 import 'blocs/local/local_state.dart';
 import 'blocs/theme/theme_bloc.dart';
 import 'blocs/theme/theme_state.dart';
@@ -85,10 +86,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
-    androidNotificationChannelName: 'Audio playback',
-    androidNotificationOngoing: true,
-    androidShowNotificationBadge: true
+      androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationOngoing: true,
+      androidShowNotificationBadge: true
   );
 
   await Hive.initFlutter();
@@ -110,7 +111,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => GlobalPlayer()),
         BlocProvider(create: (_) => ThemeBloc()),
-        BlocProvider(create: (_) => LocaleBloc()),
+        BlocProvider(
+          create: (_) => LocaleBloc()..add(ChangeLocale(Locale(HiveService.languageCode))),
+        ),
         BlocProvider(
           create: (_) => HomeCountBloc()..add(LoadCounts()),
         ),
@@ -171,6 +174,7 @@ class _MyAppState extends State<MyApp> {
               ],
               // localizationsDelegates: _localization.localizationsDelegates,
               locale: localeState.locale,
+
               initialRoute: '/splash',
               routes: {
                 '/': (_) => const HomeScreen(),
