@@ -35,7 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   video_player:
-  file_picker: ^10.3.10
+#  file_picker: ^10.3.10
   video_thumbnail:
   path_provider:
   hive_flutter:
@@ -61,6 +61,7 @@ dependencies:
   flutter_staggered_animations:
   google_mobile_ads:
   shimmer:
+  lottie:
 #  google_fonts:
 
 dev_dependencies:
@@ -96,6 +97,7 @@ flutter:
     - assets/svg_icon/
     - assets/png_photo/
     - assets/fonts/
+    - assets/animation/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

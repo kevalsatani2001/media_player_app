@@ -10,6 +10,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color danger;
   final Color success;
   final Color primary;
+  final Color primary2;
   final Color hintText;
   final Color text;
   final Color subTextColor;
@@ -23,6 +24,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color dividerColor;
   final Color lightThemePrimary;
   final Color secondaryText;
+  final Color grey1;
   // final Color cardBorder;
 
   const AppThemeColors({
@@ -34,6 +36,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.danger,
     required this.success,
     required this.primary,
+    required this.primary2,
     required this.hintText,
     required this.text,
     required this.textFieldFill,
@@ -47,6 +50,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.dividerColor,
     required this.lightThemePrimary,
     required this.secondaryText,
+    required this.grey1,
   });
 
   @override
@@ -59,6 +63,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? danger,
     Color? success,
     Color? primary,
+    Color? primary2,
     Color? hintText,
     Color? text,
     Color? textFieldFill,
@@ -72,6 +77,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? dividerColor,
     Color? lightThemePrimary,
     Color? secondaryText,
+    Color? grey1,
   }) {
     return AppThemeColors(
       background: background ?? this.background,
@@ -82,6 +88,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       danger: danger ?? this.danger,
       success: success ?? this.success,
       primary: primary ?? this.primary,
+      primary2: primary2 ?? this.primary2,
       hintText: primary ?? this.hintText,
       text: primary ?? this.text,
       textFieldFill: textFieldFill ?? this.textFieldFill,
@@ -95,6 +102,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       dividerColor: dividerColor ?? this.dividerColor,
       lightThemePrimary: lightThemePrimary ?? this.lightThemePrimary,
       secondaryText: secondaryText ?? this.secondaryText,
+      grey1: grey1 ?? this.grey1,
     );
   }
 
@@ -111,6 +119,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       danger: Color.lerp(danger, other.danger, t)!,
       success: Color.lerp(success, other.success, t)!,
       primary: Color.lerp(primary, other.primary, t)!,
+      primary2: Color.lerp(primary2, other.primary2, t)!,
       hintText: Color.lerp(hintText, other.hintText, t)!,
       text: Color.lerp(text, other.text, t)!,
       textFieldFill: Color.lerp(textFieldFill, other.textFieldFill, t)!,
@@ -124,6 +133,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       dividerColor: Color.lerp(dividerColor, other.dividerColor, t)!,
       lightThemePrimary: Color.lerp(lightThemePrimary, other.lightThemePrimary, t)!,
       secondaryText: Color.lerp(secondaryText, other.secondaryText, t)!,
+      grey1: Color.lerp(grey1, other.grey1, t)!,
     );
   }
 }
@@ -148,6 +158,7 @@ class AppTheme {
           danger: Colors.red,
           success: Colors.green,
           primary: Color(0XFF3D57F9),
+          primary2: Color(0XFF9570FF),
           hintText: Color(0XFF3D57F9),
           text: Color(0XFF3D57F9),
           textFieldFill: Color(0XFFF6F6F6),
@@ -161,6 +172,7 @@ class AppTheme {
           dividerColor: Color(0XFFE0E0E0),
           lightThemePrimary: Color(0XFF297AFC),
           secondaryText: Color(0XFF5C5C5C),
+          grey1: Color(0XFF333333),
         ),
       ],
     );
@@ -185,6 +197,7 @@ class AppTheme {
           danger: Colors.green,
           success: Colors.greenAccent,
           primary: Color(0XFF3D57F9),
+          primary2: Color(0XFF9570FF),
           hintText: Color(0XFF3D57F9),
           text: Color(0XFF3D57F9),
           textFieldFill: Color(0XFFF6F6F6),
@@ -198,6 +211,7 @@ class AppTheme {
           dividerColor: Color(0XFFE0E0E0),
           lightThemePrimary: Color(0XFF297AFC),
           secondaryText: Color(0XFF5C5C5C),
+          grey1: Color(0XFF333333),
         ),
       ],
     );

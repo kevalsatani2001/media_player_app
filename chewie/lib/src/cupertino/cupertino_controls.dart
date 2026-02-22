@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../widgets/custom_loader.dart';
+
 class CupertinoControls extends StatefulWidget {
   const CupertinoControls({
     required this.backgroundColor,
@@ -95,7 +97,7 @@ class _CupertinoControlsState extends State<CupertinoControls>
             children: [
               if (_displayBufferingIndicator)
                 _chewieController?.bufferingBuilder?.call(context) ??
-                    const Center(child: CircularProgressIndicator())
+                     Center(child: CustomLoader())
               else
                 _buildHitArea(),
               Column(

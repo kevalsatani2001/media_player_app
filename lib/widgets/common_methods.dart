@@ -1,6 +1,7 @@
 /////////common methods
 
 
+import 'dart:math' as Math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -18,6 +19,7 @@ import '../blocs/video/video_event.dart';
 import '../screens/detail_screen.dart';
 import '../utils/app_colors.dart';
 import '../widgets/app_toast.dart';
+import 'custom_loader.dart';
 
 
 Future<void> deleteCurrentItem(BuildContext context, AssetEntity entity) async {
@@ -170,7 +172,7 @@ Future<void> showThumb(
               child: Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(20),
-                child: const CircularProgressIndicator(),
+                child: const CustomLoader(),
               ),
             );
           }
@@ -182,4 +184,29 @@ Future<void> showThumb(
       );
     },
   );
+}
+
+String formatSize(int bytes,BuildContext context) {
+  if (bytes <= 0) return "0 B";
+
+  // const suffixes = ["B", "KB", "MB", "GB", "TB"];
+  final suffixes = [
+  context.tr("b"),
+    context.tr("kb"),
+    context.tr("mb"),
+    context.tr("gb"),
+    context.tr("tb")
+  ];
+
+  // સાઈઝ મુજબ ઇન્ડેક્સ નક્કી કરવા માટે log વાપરી શકાય
+  // અથવા સાદો logic:
+  var i = (Math.log(bytes) / Math.log(1024)).floor();
+
+  // જો ઇન્ડેક્સ લિસ્ટની બહાર જતો હોય તો છેલ્લો યુનિટ લો
+  if (i >= suffixes.length) i = suffixes.length - 1;
+
+  final double size = bytes / Math.pow(1024, i);
+
+  // જો સાઈઝ પૂર્ણાંક હોય તો ડેસિમલ વગર બતાવો, નહીંતર 1 પોઈન્ટ સાથે
+  return '${size.toStringAsFixed(size < 10 && i > 0 ? 1 : 0)} ${suffixes[i]}';
 }

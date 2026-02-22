@@ -63,6 +63,11 @@ class AppSvg {
   static const String starHalf = '$_base/star_fill_half.svg';
   static const String starHalfHalf = '$_base/star_fill_double_half.svg';
 
+  static const String playVid = '$_base/ic_playvid.svg';
+  static const String pauseVid = '$_base/ic_vid_pause.svg';
+  static const String skipNext = '$_base/ic_skip_next.svg';
+  static const String skipPrev = '$_base/ic_skip_prev.svg';
+
   ////////////////////// controls////////////////////////////
   static const String ic2x = '$_base/ic_2x.svg';
   static const String ic3x = '$_base/ic_3x.svg';
@@ -79,6 +84,13 @@ class AppSvg {
   static const String icRotation = '$_base/rotation_icon.svg';
   static const String ic10Prev = '$_base/ic_10_sec_prev.svg';
   static const String ic10Next = '$_base/ic_10_sec_next.svg';
+
+  static const String icOnboarding1 = '$_base/onboarding_1.svg';
+  static const String icOnboarding2 = '$_base/onboarding_2.svg';
+  static const String icOnboarding3 = '$_base/onboarding_3.svg';
+  static const String icOnboarding4 = '$_base/onboarding_4.svg';
+
+
 
   ////////////////////////////////////////////// png /////////////////////////////
   static const String introBackground = '$_basePng/intro_background.png';

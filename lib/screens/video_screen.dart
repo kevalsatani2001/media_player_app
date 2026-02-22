@@ -21,6 +21,7 @@ import '../widgets/app_bar.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
 import '../widgets/common_methods.dart';
+import '../widgets/custom_loader.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import '../widgets/text_widget.dart';
@@ -189,8 +190,9 @@ class _VideoScreenState extends State<VideoScreen> {
           current is VideoError,
       builder: (context, state) {
         if (state is VideoLoading) {
+          print("llllllll===> ");
           return const Center(
-            child: CircularProgressIndicator(color: Colors.red),
+            child: CustomLoader(),
           );
         }
         if (state is VideoError) {
@@ -236,7 +238,7 @@ class _VideoScreenState extends State<VideoScreen> {
       itemBuilder: (context, index) {
         // ✅ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CustomLoader());
         }
 
         final entity = entitiesToShow[index];
@@ -418,8 +420,8 @@ class _VideoScreenState extends State<VideoScreen> {
         // ✅ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
+            padding: EdgeInsets.all(0),
+            child: Center(child: CustomLoader()),
           );
         }
         final entity = entitiesToShow[index];
@@ -534,7 +536,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 child: Container(
                   color: Colors.white,
                   padding: const EdgeInsets.all(20),
-                  child: const CircularProgressIndicator(),
+                  child: const CustomLoader(),
                 ),
               );
             }

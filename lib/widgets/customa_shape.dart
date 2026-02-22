@@ -15,7 +15,7 @@ class CustomShape extends ShapeBorder {
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
     final double radius = 24;
     final double curveWidth = rect.width / 4.5; // bump width
-    final double curveHeight = 20; // bump height
+    final double curveHeight = 23; // bump height
 
     Path path = Path();
 

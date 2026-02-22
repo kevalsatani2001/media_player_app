@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -40,116 +41,142 @@ class ImageItemWidget extends StatefulWidget {
 }
 
 class _ImageItemWidgetState extends State<ImageItemWidget> {
+
   Widget buildContent(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     if (widget.entity.type == AssetType.audio) {
       return Padding(
         padding: const EdgeInsets.all(4.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: widget.entity is AssetEntity
-                  ? Stack(
-                children: [
-                  Center(child: Icon(Icons.audiotrack, size: 30)),
-                  if (widget.entity.isFavorite)
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 50),
-                        child: Container(
+        child: Container(
+          height: double.infinity,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: colors.textFieldFill,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: widget.entity is AssetEntity
+                    ? Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 10,
+                        left: 10,
+                        right: 10,
+                        bottom: 5,
+                      ),
+                      child: Container(
+                          height: double.infinity,
+                          width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(8),
+                            color: colors.whiteColor,
                           ),
-                          height: 20,
-                          width: 20,
-
-                          alignment: Alignment.topRight,
-                          padding: const EdgeInsets.all(0),
-                          child: Center(
-                            child: Icon(
-                              Icons.favorite,
-                              color: Colors.redAccent,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ),
+                          child: Center(child: Icon(Icons.audiotrack, size: 30))),
                     ),
-                ],
-              )
-                  : Container(color: Colors.black12),
-            ),
+                    if (widget.entity.isFavorite)
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: colors.whiteColor,
+                              shape: BoxShape.circle,
+                            ),
+                            height: 20,
+                            width: 20,
 
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      AppText(
-                        widget.entity.title ?? "",
-                        maxLines: 1,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      SizedBox(height: 8),
-                      if (widget.entity is AssetEntity) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _formatDuration(widget.entity.duration),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
+                            alignment: Alignment.topRight,
+                            padding: const EdgeInsets.all(0),
+                            child: Center(
+                              child: Icon(
+                                Icons.favorite,
+                                color: Colors.redAccent,
+                                size: 16,
                               ),
                             ),
-
-                            SizedBox(width: 0),
-
-                            FutureBuilder<File?>(
-                              future: widget.entity.file,
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData ||
-                                    snapshot.data == null) {
-                                  return const SizedBox(height: 14);
-                                }
-
-                                final file = snapshot.data!;
-
-                                if (!file.existsSync()) {
-                                  return const Text(
-                                    'Unavailable',
-                                    style: TextStyle(
-                                      color: Colors.redAccent,
-                                      fontSize: 11,
-                                    ),
-                                  );
-                                }
-
-                                final bytes = file.lengthSync();
-
-                                return Text(
-                                  _formatSize(bytes),
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
+                          ),
                         ),
-                      ],
-                    ],
-                  ),
+                      ),
+                  ],
+                )
+                    : Container(color: Colors.black12),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          AppText(
+                            widget.entity.title ?? "",
+                            maxLines: 1,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          SizedBox(height: 8),
+                          // if (widget.entity is AssetEntity) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                AppText(
+                                  formatDuration(widget.entity.duration),
+                                  maxLines: 2,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: colors.textFieldBorder,
+                                ),
+
+                                SizedBox(width: 0),
+
+                                FutureBuilder<File?>(
+                                  future: widget.entity.file,
+                                  builder: (context, snapshot) {
+                                    if (!snapshot.hasData ||
+                                        snapshot.data == null) {
+                                      return const SizedBox(height: 14);
+                                    }
+
+                                    final file = snapshot.data!;
+
+                                    if (!file.existsSync()) {
+                                      return AppText(
+                                        'unavailable',
+                                        fontSize: 11,
+                                        color:Colors.redAccent,
+                                      );
+                                    }
+
+                                    final bytes = file.lengthSync();
+
+                                    return AppText(
+                                      formatSize(bytes,context),
+                                      maxLines: 2,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.textFieldBorder,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          // ],
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 0),
+                    _dropDownButton(widget.entity),
+                  ],
                 ),
-                SizedBox(width: 0),
-                _dropDownButton(widget.entity),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -220,7 +247,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                     Row(
                       children: [
                         AppText(
-                          _formatDuration(entity.duration),
+                          formatDuration(entity.duration),
                           maxLines: 2,
                           fontSize: 10,
                           fontWeight: FontWeight.w500,
@@ -237,19 +264,17 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                             final file = snapshot.data!;
 
                             if (!file.existsSync()) {
-                              return const Text(
-                                'Unavailable',
-                                style: TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 11,
-                                ),
+                              return  AppText(
+                                'unavailable',
+                                fontSize: 11,
+                                color:Colors.redAccent,
                               );
                             }
 
                             final bytes = file.lengthSync();
 
                             return AppText(
-                              _formatSize(bytes),
+                              formatSize(bytes,context),
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                               color: colors.appBarTitleColor,
@@ -373,19 +398,17 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                                   final file = snapshot.data!;
 
                                   if (!file.existsSync()) {
-                                    return const Text(
-                                      'Unavailable',
-                                      style: TextStyle(
-                                        color: Colors.redAccent,
-                                        fontSize: 11,
-                                      ),
+                                    return  AppText(
+                                     'unavailable',
+                                      fontSize: 11,
+                                        color:Colors.redAccent,
                                     );
                                   }
 
                                   final bytes = file.lengthSync();
 
                                   return AppText(
-                                    _formatSize(bytes),
+                                    formatSize(bytes,context),
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                     color: colors.textFieldBorder,
@@ -409,16 +432,11 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
     );
   }
 
-  String _formatDuration(int seconds) {
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-
-  String _formatSize(int bytes) {
-    final mb = bytes / (1024 * 1024);
-    return '${mb.toStringAsFixed(1)} MB';
-  }
+  // String _formatDuration(int seconds) {
+  //   final m = seconds ~/ 60;
+  //   final s = seconds % 60;
+  //   return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  // }
 
   Widget _dropDownButton(AssetEntity entity) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;

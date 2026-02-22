@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/widgets/search_button.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
@@ -69,7 +70,7 @@ class PlaylistScreen extends StatelessWidget {
             }
           }
           if (playlists.isEmpty) {
-            return const Center(child: Text("No playlists found."));
+            return const Center(child: AppText("noPlaylistsFound"));
           }
 
           return ListView.builder(
@@ -111,7 +112,7 @@ class PlaylistScreen extends StatelessWidget {
                         value: PlaylistMenuAction.rename,
                         child: Center(
                           child: AppText(
-                            'Rename',
+                            'rename',
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: colors.appBarTitleColor,
@@ -200,9 +201,9 @@ class PlaylistScreen extends StatelessWidget {
             TextField(
               controller: controller,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration:  InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: "Playlist name",
+                labelText: context.tr("playlistName"),
               ),
             ),
             SizedBox(height: 30),
@@ -210,7 +211,7 @@ class PlaylistScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    title: "Cancel",
+                    title: "cancel",
                     textColor: colors.whiteColor,
                     fontWeight: FontWeight.w500,
                     fontSize: 17,
@@ -221,7 +222,7 @@ class PlaylistScreen extends StatelessWidget {
                 SizedBox(width: 14),
                 Expanded(
                   child: AppButton(
-                    title: "Rename",
+                    title: "rename",
                     textColor: colors.dialogueSubTitle,
                     fontWeight: FontWeight.w500,
                     fontSize: 17,
@@ -231,7 +232,7 @@ class PlaylistScreen extends StatelessWidget {
                       if (newName.isEmpty) {
                         AppToast.show(
                           context,
-                          "Please enter a name",
+                          context.tr("pleaseEnterName"),
                           type: ToastType.error,
                         );
                         return;
@@ -245,7 +246,7 @@ class PlaylistScreen extends StatelessWidget {
                         // ✅ Success Toast
                         AppToast.show(
                           context,
-                          "Playlist renamed to $newName",
+                          "${context.tr("playlistRenamedTo")} $newName",
                           type: ToastType.success,
                         );
                       }
@@ -278,7 +279,7 @@ class PlaylistScreen extends StatelessWidget {
         ),
         backgroundColor: colors.cardBackground,
         title: AppText(
-          'Delete Playlist',
+          'deletePlaylist',
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: colors.appBarTitleColor,
@@ -288,7 +289,7 @@ class PlaylistScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             AppText(
-              '"Delete \"$name\" permanently?"',
+              '"${context.tr('delete')} \"$name\" ${context.tr("permanently")}"',
               fontSize: 17,
               fontWeight: FontWeight.w400,
               color: colors.dialogueSubTitle,
@@ -299,7 +300,7 @@ class PlaylistScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    title: "Cancel",
+                    title: "cancel",
                     textColor: colors.whiteColor,
                     fontWeight: FontWeight.w500,
                     fontSize: 17,
@@ -310,7 +311,7 @@ class PlaylistScreen extends StatelessWidget {
                 SizedBox(width: 14),
                 Expanded(
                   child: AppButton(
-                    title: "Delete",
+                    title: "delete",
                     textColor: colors.dialogueSubTitle,
                     fontWeight: FontWeight.w500,
                     fontSize: 17,
@@ -320,7 +321,7 @@ class PlaylistScreen extends StatelessWidget {
                       Navigator.pop(context);
                       AppToast.show(
                         context,
-                        "Playlist '$name' deleted",
+                        "${context.tr("playlist")} '$name' ${context.tr("deleted")}",
                         type: ToastType.error,
                       );
                     },
@@ -361,7 +362,7 @@ class PlaylistScreen extends StatelessWidget {
     }
 
     if (files.isEmpty) {
-      AppToast.show(context, "No shareable files found", type: ToastType.error);
+      AppToast.show(context, "${context.tr("noShareableFilesFound")}", type: ToastType.error);
       return;
     }
     // WhatsApp લિમિટ માટે max 10 ફાઈલ
@@ -369,7 +370,7 @@ class PlaylistScreen extends StatelessWidget {
 
     await Share.shareXFiles(
       shareableFiles,
-      text: "Sharing playlist: ${playlist.name}",
+      text: "${context.tr("sharingPlaylist")} ${playlist.name}",
     );
   }
 }
@@ -416,7 +417,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         title: AppText(widget.name, fontSize: 18, fontWeight: FontWeight.w600),
       ),
       body: widget.items.isEmpty
-          ? const Center(child: AppText("Playlist empty", fontSize: 16))
+          ? const Center(child: AppText("playlistEmpty", fontSize: 16))
           : ListView.builder(
         itemCount: widget.items.length,
         padding: const EdgeInsets.only(top: 10),
@@ -497,7 +498,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                         children: [
                           _buildDuration(item, colors),
                           const SizedBox(width: 15),
-                          _buildFileSize(item, colors),
+                          _buildFileSize(item, colors,context),
                         ],
                       ),
                     ],
@@ -557,7 +558,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                     const PopupMenuDivider(height: 0.5),
                     _buildPopupItem(
                       MediaMenuAction.delete,
-                      'Remove from Playlist',
+                      'removeFromPlayList',
                       colors,
                     ),
                   ],
@@ -577,7 +578,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       ) async {
     final file = await entity.file;
     if (file == null) {
-      AppToast.show(context, "File not found", type: ToastType.error);
+      AppToast.show(context, context.tr("fileNotFoundMsg"), type: ToastType.error);
       return;
     }
 
@@ -591,7 +592,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     // ✅ Toast Feedback
     AppToast.show(
       context,
-      newFavState ? "Added to Favourites" : "Removed from Favourites",
+      newFavState ? "${context.tr("addedToFavourite")}" : "${context.tr("removedFromFavourites")}",
       type: newFavState ? ToastType.success : ToastType.info,
     );
   }
@@ -631,7 +632,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       });
 
       // ✅ SnackBar ની જગ્યાએ Toast
-      AppToast.show(context, "Removed from playlist", type: ToastType.info);
+      AppToast.show(context, "${context.tr("removedFromFavourites")}", type: ToastType.info);
     }
   }
 
@@ -652,7 +653,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   // File Size Helper
-  Widget _buildFileSize(MediaItem item, AppThemeColors colors) {
+  Widget _buildFileSize(MediaItem item, AppThemeColors colors,BuildContext context) {
     return FutureBuilder<File?>(
       future: AssetEntity(
         id: item.id ?? "",
@@ -664,8 +665,8 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         if (!snapshot.hasData || snapshot.data == null) return const SizedBox();
         final bytes = snapshot.data!.lengthSync();
         final mb = bytes / (1024 * 1024);
-        return AppText(
-          '${mb.toStringAsFixed(1)} MB',
+        return AppText(formatSize(bytes,context),
+          // '${mb.toStringAsFixed(1)} MB',
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: colors.appBarTitleColor,
@@ -723,9 +724,9 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       if (file != null && await file.exists()) {
         await Share.shareXFiles([
           XFile(file.path),
-        ], text: 'Sharing: ${entity.title ?? "Media File"}');
+        ], text: '${context.tr("sharing")} ${entity.title ?? "${context.tr("mediaFile")}"}');
       } else {
-        AppToast.show(context, "File path is broken", type: ToastType.error);
+        AppToast.show(context, "${context.tr("filePathIsBroken")}", type: ToastType.error);
       }
     } catch (e) {
       debugPrint("Error sharing: $e");

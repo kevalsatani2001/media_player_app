@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:media_player/screens/search_screen.dart';
+import 'package:media_player/screens/setting_screen.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import '../blocs/favourite/favourite_bloc.dart';
@@ -11,6 +13,7 @@ import '../blocs/favourite/favourite_state.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../widgets/add_to_playlist.dart';
+import '../widgets/custom_loader.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import '../widgets/text_widget.dart';
@@ -19,9 +22,14 @@ import 'detail_screen.dart';
 import 'player_screen.dart';
 import 'home_screen.dart';
 
-class FavouriteScreen extends StatelessWidget {
+class FavouriteScreen extends StatefulWidget {
   const FavouriteScreen({super.key});
 
+  @override
+  State<FavouriteScreen> createState() => _FavouriteScreenState();
+}
+
+class _FavouriteScreenState extends State<FavouriteScreen> {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('favourites');
@@ -37,11 +45,11 @@ class FavouriteScreen extends StatelessWidget {
           ),
         ),
           centerTitle: true,
-          title: AppText("favourites", fontSize: 20, fontWeight: FontWeight.w500),),
+          title: AppText("favourite", fontSize: 20, fontWeight: FontWeight.w500),),
         body: BlocBuilder<FavouriteBloc, FavouriteState>(
           builder: (context, state) {
             if (state is FavouriteLoading) {
-              return const Center(child: CircularProgressIndicator.adaptive());
+              return  Center(child: CustomLoader());
             }
 
             if (state is FavouriteError) {
@@ -50,11 +58,14 @@ class FavouriteScreen extends StatelessWidget {
 
             if (state is FavouriteLoaded) {
               if (state.entities.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'No favourites yet.\nAdd some videos or audio to see them here!',
+                return Center(
+                  child:
+
+
+                  Text(
+                    "${context.tr("noFavouriteYet")}\n${context.tr("addSomeVideosOrAudio")}",
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 );
               }
@@ -80,12 +91,12 @@ class _FavouriteGrid extends StatelessWidget {
     final entities = state.entities;
 
     return GridView.builder(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(15),
       gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-        childAspectRatio: 1.3,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 15,
+        childAspectRatio: 1.05,
       ),
       itemCount: entities.length,
       itemBuilder: (context, index) {
@@ -209,7 +220,7 @@ Future<void> _showThumb(BuildContext context, AssetEntity entity) {
             child: Image.memory(snapshot.data!),
           );
         }
-        return const Center(child: CircularProgressIndicator());
+        return  Center(child: CustomLoader());
       },
     ),
   );

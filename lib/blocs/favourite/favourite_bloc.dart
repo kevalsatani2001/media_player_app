@@ -139,7 +139,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
       // 🔹 Load first page
       final List<AssetEntity> pageEntities = await path.getAssetListPaged(
         page: 0,
-        size: 50,
+        size: 2000,
       );
 
       // 🔹 Filter favourites ONLY (FIX)
@@ -178,7 +178,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
 
     final List<AssetEntity> pageEntities = await current.path.getAssetListPaged(
       page: nextPage,
-      size: 50,
+      size: 2000,
     );
 
     // 🔹 Filter favourites ONLY

@@ -26,6 +26,8 @@ import '../widgets/add_to_playlist.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
 import '../widgets/common_methods.dart';
+import '../widgets/custom_loader.dart';
+import '../widgets/gallary_item_widget.dart';
 import '../widgets/home_card.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
@@ -33,6 +35,7 @@ import '../widgets/shimmer_effect.dart';
 import 'bottom_bar_screen.dart';
 import 'detail_screen.dart';
 import 'home_screen.dart';
+import 'mini_player.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -231,6 +234,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                     },
                   ),
                 ),
+
               ],
             ),
           ),
@@ -553,7 +557,7 @@ class _HomePageState extends State<HomePage> with RouteAware{
                 child: Container(
                   color: Colors.white,
                   padding: const EdgeInsets.all(20),
-                  child: const CircularProgressIndicator(),
+                  child: const CustomLoader(),
                 ),
               );
             }

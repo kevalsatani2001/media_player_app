@@ -94,12 +94,12 @@ class _SettingScreenState extends State<SettingScreen> {
               child: Column(
                 children: [
                   _buildSettingTab((){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ThemeScreen(),
-                      ),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (_) => ThemeScreen(),
+                    //   ),
+                    // );
                   },"appTheme",AppSvg.appThemeIcon),
                   Divider(color: colors.dividerColor,),
 
@@ -123,7 +123,7 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
           ),
           SizedBox(height: 20,),
-          AppText("Other Settings",fontSize: 15,fontWeight: FontWeight.w500,color: colors.lightThemePrimary,),
+          AppText("otherSettings",fontSize: 15,fontWeight: FontWeight.w500,color: colors.lightThemePrimary,),
           SizedBox(height: 20,),
           Container(
             decoration: BoxDecoration(
@@ -285,8 +285,8 @@ class _SettingScreenState extends State<SettingScreen> {
       scheme: 'mailto',
       path: 'your-email@example.com',
       queryParameters: {
-        'subject': 'App Feedback - $rating Stars',
-        'body': 'Hi, I gave $rating stars. Here is my feedback:\n\n',
+        'subject': '${context.tr('appFeedback')} - $rating ${context.tr('stars')}',
+        'body': '${context.tr("hiIGave")} $rating ${context.tr('stars')}. ${context.tr("hereIsMyFeedback")}\n\n',
       },
     );
     if (await canLaunchUrl(emailLaunchUri)) {
@@ -295,13 +295,13 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   void shareApp() {
-    const String appMessage =
-        "Check out this amazing Video & Music Player app! 🎶🎬\n\n"
-        "Download it now from Play Store:\n"
+     String appMessage =
+        "${context.tr("checkOutThisAmazing")} 🎶🎬\n\n"
+        "${context.tr("downloadItNowFrom")}\n"
         "https://play.google.com/store/apps/details?id=your.package.name";
 
     // Share.share ફંક્શન સિસ્ટમ ડાયલોગ ઓપન કરશે
-    Share.share(appMessage, subject: 'Download Media Player');
+    Share.share(appMessage, subject: "${context.tr('downloadMediaPlayer')}");
   }
 
   Widget _buildSettingTab(void Function()? onTap, String title, String icon) {
@@ -436,8 +436,8 @@ class _ThemeScreenState extends State<ThemeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppText("Appearance", fontWeight: FontWeight.w600, fontSize: 20),
-            AppText("Select app theme", fontSize: 13, color: colors.subTextColor.withOpacity(0.5)),
+            AppText("appearance", fontWeight: FontWeight.w600, fontSize: 20),
+            AppText("selectAppTheme", fontSize: 13, color: colors.subTextColor.withOpacity(0.5)),
           ],
         ),
         actions: [
@@ -451,7 +451,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                 context.read<ThemeBloc>().add(UpdateThemeMode(_tempSelectedTheme));
 
                 // ૨. સક્સેસ ટોસ્ટ
-                AppToast.show(context, "Theme updated successfully", type: ToastType.success);
+                AppToast.show(context, "${context.tr("themeUpdatesSuccessfully")}", type: ToastType.success);
 
                 // ૩. સ્ક્રીન બંધ કરો
                 Navigator.pop(context);
@@ -474,9 +474,9 @@ class _ThemeScreenState extends State<ThemeScreen> {
             children: [
               const SizedBox(height: 10),
               // Enum મુજબ જ 'light', 'dark', 'system' કી વાપરો
-              _buildOption("Light Mode", "classicLight", AppThemeMode.light.name, Icons.wb_sunny_outlined, colors),
-              _buildOption("Dark Mode", "modernDark", AppThemeMode.dark.name, Icons.nightlight_round_outlined, colors),
-              _buildOption("System Default", "followDevice", AppThemeMode.system.name, Icons.settings_brightness_outlined, colors),
+              _buildOption("lightMode", "classicLight", AppThemeMode.light.name, Icons.wb_sunny_outlined, colors),
+              _buildOption("darkMode", "modernDark", AppThemeMode.dark.name, Icons.nightlight_round_outlined, colors),
+              _buildOption("systemDefault", "followDevice", AppThemeMode.system.name, Icons.settings_brightness_outlined, colors),
             ],
           ),
         ),

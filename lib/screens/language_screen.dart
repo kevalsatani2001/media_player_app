@@ -124,7 +124,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               context.read<LocaleBloc>().add(ChangeLocale(Locale(_selectedLangCode!)));
 
               // ✅ સેવ થયા પછી ટોસ્ટ
-              AppToast.show(context, "Language Saved", type: ToastType.success);
+              AppToast.show(context, "${context.tr("languageSaved")}", type: ToastType.success);
 
               !widget.isSettingPage
                   ? Navigator.pushReplacementNamed(context, '/onboarding')

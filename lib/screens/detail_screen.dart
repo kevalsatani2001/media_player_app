@@ -193,7 +193,10 @@ Widget _buildInfoItem(String title, String? info) {
         Container(
           alignment: Alignment.centerLeft,
           width: 90,
-          child: AppText(title.padLeft(10),fontWeight: FontWeight.w500,),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: AppText(title,fontWeight: FontWeight.w500,),
+          ),
         ),
         AppText(":",fontWeight: FontWeight.w500,),
         SizedBox(width: 20,),

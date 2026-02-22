@@ -28,13 +28,17 @@ class _FavouriteButtonState extends State<FavouriteButton> {
   }
 
   /// Initialize favourite state from Hive
+  /// Initialize favourite state from Hive
   Future<void> _initFavState() async {
     final file = await widget.entity.file;
     if (file == null) return;
 
-    setState(() {
-      favState = favBox.containsKey(file.path);
-    });
+    // જો વિજેટ હજી સ્ક્રીન પર હોય (mounted હોય), તો જ setState કરવું
+    if (mounted) {
+      setState(() {
+        favState = favBox.containsKey(file.path);
+      });
+    }
   }
 
   /// Toggle favourite using PlaylistService
@@ -45,9 +49,12 @@ class _FavouriteButtonState extends State<FavouriteButton> {
     final playlistService = PlaylistService();
     final newFavState = await playlistService.toggleFavourite(widget.entity);
 
-    setState(() {
-      favState = newFavState;
-    });
+    // અહીં પણ mounted ચેક કરવું જરૂરી છે
+    if (mounted) {
+      setState(() {
+        favState = newFavState;
+      });
+    }
   }
 
   @override

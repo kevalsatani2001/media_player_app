@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../widgets/custom_loader.dart';
+
 class MaterialControls extends StatefulWidget {
   const MaterialControls({this.showPlayButton = true, super.key});
 
@@ -30,6 +32,22 @@ class MaterialControls extends StatefulWidget {
 
 class MaterialControlsState extends State<MaterialControls>
     with SingleTickerProviderStateMixin {
+
+
+  Color get primaryColor =>
+      isDarkMode ? const Color(0XFF3D57F9) : const Color(0XFF3D57F9);
+
+  Color get backgroundColor =>
+      isDarkMode ? Colors.black : Colors.white;
+
+  Color get textColor =>
+      isDarkMode ? Colors.white : const Color(0XFF222222);
+
+  Color get iconColor =>
+      isDarkMode ? Colors.white : const Color(0XFF222222);
+
+  Color get progressBgColor =>
+      isDarkMode ? Colors.white24 : Colors.black26;
   bool isOptionOpen = false;
 
   // MaterialControlsState
@@ -85,14 +103,14 @@ class MaterialControlsState extends State<MaterialControls>
           absorbing: notifier.hideStuff,
           child: Stack(
             children: [
-              // _buildLockButton()
+              // _buildLockButton(),
               AbsorbPointer(
                 absorbing: notifier.hideStuff,
                 child: Column(children: []),
               ),
               if (_displayBufferingIndicator)
                 _chewieController?.bufferingBuilder?.call(context) ??
-                    const Center(child: CircularProgressIndicator())
+                    const Center(child: CustomLoader())
               else
                 // _buildHitArea(),
                 _buildActionBar(),
@@ -123,10 +141,14 @@ class MaterialControlsState extends State<MaterialControls>
 
   bool isDarkMode = true;
 
-  void performControllOperation(ControlType? type, OptionItem option, context) {
+  void performControllOperation(
+    ControlType? type,
+    OptionItem option,
+    context,
+  ) async {
     switch (type) {
       case ControlType.info:
-        () {};
+        option.onTap;
         break;
       case ControlType.miniVideo:
         Navigator.pop(context);
@@ -142,6 +164,9 @@ class MaterialControlsState extends State<MaterialControls>
         }
         break;
       case ControlType.shuffle:
+        setState(() {
+          isShuffle = !isShuffle;
+        });
         option.onTap;
         break;
       case ControlType.playbackSpeed:
@@ -175,12 +200,11 @@ class MaterialControlsState extends State<MaterialControls>
         break;
 
       case ControlType.loop:
-        () async {
-          setState(() {
-            loop = !loop;
-          });
-          await chewieController.setLooping(loop);
-        };
+        setState(() {
+          loop = !loop;
+        });
+        await chewieController.setLooping(loop);
+        print("loop==>");
         break;
       default:
         () {};
@@ -192,6 +216,10 @@ class MaterialControlsState extends State<MaterialControls>
     switch (type) {
       case ControlType.info:
         return "assets/svg_icon/ic_info.svg";
+      case ControlType.zoomScreen:
+        return "assets/svg_icon/ic_zoomin.svg";
+      case ControlType.smallScreen:
+        return "assets/svg_icon/ic_zoomout.svg";
       case ControlType.miniVideo:
         return "assets/svg_icon/ic_miniscreen.svg";
       case ControlType.volume:
@@ -199,15 +227,19 @@ class MaterialControlsState extends State<MaterialControls>
             ? "assets/svg_icon/ic_volumeon.svg"
             : "assets/svg_icon/ic_volumeoff.svg";
       case ControlType.shuffle:
-        return "assets/svg_icon/ic_shuffle.svg";
+        return isShuffle
+            ? "assets/svg_icon/ic_shuffle_active.svg"
+            : "assets/svg_icon/ic_shuffle.svg";
       case ControlType.playbackSpeed:
         return "assets/svg_icon/ic_2x.svg";
       case ControlType.theme:
         return isDarkMode
-            ? "assets/svg_icon/ic_10_sec_prev.svg"
+            ? "assets/svg_icon/ic_dark_active.svg"
             : "assets/svg_icon/ic_darkmode.svg";
       case ControlType.loop:
-        return "assets/svg_icon/ic_loop.svg";
+        return loop
+            ? "assets/svg_icon/ic_loop_active.svg"
+            : "assets/svg_icon/ic_loop.svg";
       case ControlType.prev10:
         return "assets/svg_icon/ic_10_sec_prev.svg";
       case ControlType.next10:
@@ -267,26 +299,31 @@ class MaterialControlsState extends State<MaterialControls>
   }*/
 
   Widget _buildLockButton() {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          isLocked = !isLocked; // Toggle Lock
-        });
-      },
-      child: Container(
-        height: barHeight,
-        color: Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: AppImage(
-          src: isLocked
-              ? "assets/svg_icon/ic_unlock.svg"
-              : "assets/svg_icon/ic_lock.svg",
+    return AnimatedOpacity(
+      // જો hideStuff true હોય તો opacity 0 (અદ્રશ્ય), નહીતર 1.0 (દ્રશ્ય)
+      opacity: notifier.hideStuff ? 0.0 : 1.0,
+      duration: const Duration(milliseconds: 300),
+      child: AbsorbPointer(
+        // જ્યારે controls છુપાયેલા હોય ત્યારે ક્લિક ન થાય તે માટે
+        absorbing: notifier.hideStuff,
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              isLocked = !isLocked; // Toggle Lock
+            });
+            // જો તમે ઈચ્છો કે લોક કર્યા પછી કંટ્રોલ્સ તરત છુપાઈ જાય:
+            if (isLocked) {
+              cancelAndRestartTimer();
+            }
+          },
+          child: AppImage(
+            height: 40,
+            width: 40,
+            src: isLocked
+                ? "assets/svg_icon/ic_lock.svg" // લોક હોય ત્યારે લોક આઈકોન
+                : "assets/svg_icon/ic_unlock.svg", // અનલોક હોય ત્યારે અનલોક આઈકોન
+          ),
         ),
-
-        // Icon(
-        //   isLocked ? Icons.lock : Icons.lock_open,
-        //   color: Colors.white,
-        // ),
       ),
     );
   }
@@ -352,7 +389,7 @@ class MaterialControlsState extends State<MaterialControls>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppImage(src: "assets/svg_icon/ic_on.svg"),
+                  // AppImage(src: "assets/svg_icon/ic_on.svg"),
 
                   Expanded(
                     child: Wrap(
@@ -406,7 +443,7 @@ class MaterialControlsState extends State<MaterialControls>
                     ),
                   ),
 
-                  AppImage(src: "assets/svg_icon/ic_off.svg"),
+                  // AppImage(src: "assets/svg_icon/ic_off.svg"),
                 ],
               ),
             ),
@@ -514,6 +551,9 @@ class MaterialControlsState extends State<MaterialControls>
       opacity: notifier.hideStuff ? 0.0 : 1.0,
       duration: const Duration(milliseconds: 300),
       child: Container(
+        decoration: BoxDecoration(
+          color: backgroundColor.withOpacity(0.95),
+        ),
         height: barHeight + (chewieController.isFullScreen ? 5.0 : 0),
         padding: EdgeInsets.only(
           left: 20,
@@ -592,19 +632,21 @@ class MaterialControlsState extends State<MaterialControls>
                           formatDuration(videoPlayerLatestValue.position),
                           style: TextStyle(
                             fontSize: 15,
-                            color: Color(0XFF222222),
+                            color: textColor,
                             fontWeight: FontWeight.w400,
                           ),
                         ),
                         SizedBox(width: 10),
                         _buildProgressBar(),
                         SizedBox(width: 10),
-                        Text(formatDuration(videoPlayerLatestValue.duration),
+                        Text(
+                          formatDuration(videoPlayerLatestValue.duration),
                           style: TextStyle(
                             fontSize: 15,
-                            color: Color(0XFF222222),
+                            color: textColor,
                             fontWeight: FontWeight.w400,
-                          ),),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -656,9 +698,11 @@ class MaterialControlsState extends State<MaterialControls>
           opacity: notifier.hideStuff ? 0.0 : 1.0,
           duration: const Duration(milliseconds: 300),
           child: AppImage(
+            height: 40,
+            width: 40,
             src: chewieController.isFullScreen
-                ? "assets/svg_icon/ic_zoomin.svg"
-                : "assets/svg_icon/ic_zoomout.svg",
+                ? getIcon(ControlType.smallScreen)
+                : getIcon(ControlType.zoomScreen),
           ),
         ),
       ),
@@ -666,95 +710,84 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   Widget _buildHitArea() {
-    final bool isFinished =
-        (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration) &&
-        videoPlayerLatestValue.duration.inSeconds > 0;
-    final bool showPlayButton =
-        widget.showPlayButton && !_dragging && !notifier.hideStuff;
-
     return GestureDetector(
       onTap: () {
-        if (videoPlayerLatestValue.isPlaying) {
-          if (_chewieController?.pauseOnBackgroundTap ?? false) {
-            _playPause();
-            cancelAndRestartTimer();
-          } else {
-            if (_displayTapped) {
-              setState(() {
-                notifier.hideStuff = true;
-              });
-            } else {
-              cancelAndRestartTimer();
-            }
-          }
-        } else {
-          _playPause();
-
-          setState(() {
-            notifier.hideStuff = true;
-          });
-        }
+        // // Toggle logic: jo dikhay chhe to hide karo, nahi to show karo
+        // setState(() {
+        //   notifier.hideStuff = !notifier.hideStuff;
+        // });
+        //
+        // // Jo controls show thaya hoy, to thodi var pachi automatic hide thava mate timer start karo
+        // if (!notifier.hideStuff) {
+        //   cancelAndRestartTimer();
+        // } else {
+        //   _hideTimer?.cancel(); // Jo manually hide kari didhu hoy to timer cancel karo
+        // }
       },
       child: Container(
         alignment: Alignment.center,
         color: Colors.transparent,
-        // The Gesture Detector doesn't expand to the full size of the container without this; Not sure why!
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // IconButton(
-            //   icon: const Icon(Icons.skip_previous, color: Colors.white),
-            //   onPressed: chewieController.onPreviousVideo,
-            // ),
-            //
-            // IconButton(
-            //   icon: const Icon(Icons.skip_next, color: Colors.white),
-            //   onPressed: chewieController.onNextVideo,
-            // ),
-            _buildLockButton(),
-            if (!isFinished && !chewieController.isLive)
+        // Aa akha screen par tap jilse pan video pause nahi kare
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: chewieController.isFullScreen
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.spaceBetween,
+            children: [
+              _buildLockButton(),
+              // SizedBox(width: chewieController.isFullScreen ? 40 : 0),
+              if (chewieController.isFullScreen) Spacer(),
+              // Replay Button
+              if (!chewieController.isLive)
+                AbsorbPointer(
+                  absorbing: isLocked,
+                  child: CenterSeekButton(
+                    iconData: Icons.replay_10,
+                    backgroundColor: primaryColor,
+                    iconColor: Colors.white,
+                    show: !notifier.hideStuff,
+                    // Jo hideStuff false hoy to j dekhay
+                    onPressed: _seekBackward,
+                  ),
+                ),
+              SizedBox(width: chewieController.isFullScreen ? 20 : 0),
+              // Main Play/Pause Button - Fakt aa click thase tyare j play/pause thase
               AbsorbPointer(
                 absorbing: isLocked,
-                child: CenterSeekButton(
-                  iconData: Icons.replay_10,
-                  backgroundColor: Color(0XFF3D57F9),
-                  iconColor: Colors.white,
-                  show: showPlayButton,
-                  fadeDuration: chewieController.materialSeekButtonFadeDuration,
-                  iconSize: chewieController.materialSeekButtonSize,
-                  onPressed: _seekBackward,
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: marginSize),
+                  child: CenterPlayButton(
+                    backgroundColor: const Color(0XFF3D57F9),
+                    iconColor: Colors.white,
+                    isFinished:
+                        (videoPlayerLatestValue.position >=
+                        videoPlayerLatestValue.duration),
+                    isPlaying: controller.value.isPlaying,
+                    show: !notifier.hideStuff,
+                    onPressed:
+                        _playPause, // Fakt button par click karvathi play/pause thase
+                  ),
                 ),
               ),
-            AbsorbPointer(
-              absorbing: isLocked,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: marginSize),
-                child: CenterPlayButton(
-                  backgroundColor: Color(0XFF3D57F9),
-                  iconColor: Colors.white,
-                  isFinished: isFinished,
-                  isPlaying: controller.value.isPlaying,
-                  show: showPlayButton,
-                  onPressed: _playPause,
+              SizedBox(width: chewieController.isFullScreen ? 20 : 0),
+              // Forward Button
+              if (!chewieController.isLive)
+                AbsorbPointer(
+                  absorbing: isLocked,
+                  child: CenterSeekButton(
+                    iconData: Icons.forward_10,
+                    backgroundColor: const Color(0XFF3D57F9),
+                    iconColor: Colors.white,
+                    show: !notifier.hideStuff,
+                    onPressed: _seekForward,
+                  ),
                 ),
-              ),
-            ),
-            if (!isFinished && !chewieController.isLive)
-              AbsorbPointer(
-                absorbing: isLocked,
-                child: CenterSeekButton(
-                  iconData: Icons.forward_10,
-                  backgroundColor: Color(0XFF3D57F9),
-                  iconColor: Colors.white,
-                  show: showPlayButton,
-                  fadeDuration: chewieController.materialSeekButtonFadeDuration,
-                  iconSize: chewieController.materialSeekButtonSize,
-                  onPressed: _seekForward,
-                ),
-              ),
-
-            _buildExpandButton(),
-          ],
+              if (chewieController.isFullScreen) Spacer(),
+              // SizedBox(width: chewieController.isFullScreen ? 40 : 0),
+              _buildExpandButton(),
+            ],
+          ),
         ),
       ),
     );
@@ -1073,4 +1106,6 @@ enum ControlType {
   loop,
   nextVideo,
   prevVideo,
+  zoomScreen,
+  smallScreen,
 }

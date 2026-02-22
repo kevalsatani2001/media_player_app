@@ -17,6 +17,7 @@ import 'package:share_plus/share_plus.dart';
 import '../blocs/audio/audio_bloc.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
+import '../models/media_item.dart' as my;
 import '../services/global_player.dart';
 import '../utils/app_colors.dart';
 import '../widgets/add_to_playlist.dart';
@@ -24,6 +25,7 @@ import '../widgets/app_bar.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
 import '../widgets/common_methods.dart';
+import '../widgets/custom_loader.dart';
 import '../widgets/image_item_widget.dart';
 import '../widgets/image_widget.dart';
 import 'bottom_bar_screen.dart';
@@ -196,7 +198,7 @@ class _AudioBodyState extends State<_AudioBody> {
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         if (state is AudioLoading) {
-          return const Center(child: CircularProgressIndicator.adaptive());
+          return Center(child: CustomLoader());
         }
 
         if (state is AudioError) {
@@ -234,6 +236,25 @@ class _AudioBodyState extends State<_AudioBody> {
                         child: GestureDetector(
                           onTap: () {
                             print("audio====${audio.typeInt}");
+                            // ૧. આખા લિસ્ટને MediaItem માં કન્વર્ટ કરો
+                            List<MediaItem> audioList = state.entities.map((e) => MediaItem(
+                              path: file.path, // ખાતરી કરો કે 'path' સાચો છે
+                              type: 'audio',
+                              id: e.id,
+                              isFavourite: e.isFavorite, isNetwork: e.isFavorite,
+                            )).toList();
+
+                            // ૨. પ્લેયરની ક્યુ સેટ કરો (આનાથી જૂનો ડેટા નીકળી જશે)
+                            GlobalPlayer().setQueue(audioList, index);
+
+                            // ૩. હવે પ્લે ફંક્શન કોલ કરો
+                            GlobalPlayer().play(
+                              audio.relativePath!,
+                              type: 'audio',
+                              isFavourite: audio.isFavorite,
+                              id: audio.id,
+                              fromPlaylist: true,
+                            );
                             Navigator.push(
                               context,
                               MaterialPageRoute(

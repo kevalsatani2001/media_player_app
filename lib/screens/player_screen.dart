@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:chewie/chewie.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
@@ -11,6 +12,7 @@ import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../services/global_player.dart';
 import '../utils/app_colors.dart';
+import '../widgets/custom_loader.dart';
 import '../widgets/customa_shape.dart';
 import '../widgets/favourite_button.dart';
 import '../widgets/image_widget.dart';
@@ -84,8 +86,8 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Future<List<MediaItem>> convertEntitiesToMediaItems(
-      List<AssetEntity> entities,
-      ) async {
+    List<AssetEntity> entities,
+  ) async {
     List<MediaItem> items = [];
     for (var entity in entities) {
       final file = await entity.file;
@@ -159,13 +161,15 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return AnimatedBuilder(
       animation: player,
       builder: (context, _) {
         return Scaffold(
+          backgroundColor: colors.background,
           appBar: AppBar(
             title: AppText(
-              isAudio ? "Music" : currentItem?.path.split('/').last ?? '',
+              isAudio ? "audio" : currentItem?.path.split('/').last ?? '',
               fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
@@ -189,7 +193,10 @@ class _PlayerScreenState extends State<PlayerScreen>
               //   onPressed: () => setState(() => isLocked = true),
               // ),
               widget.entity != null && widget.entity!.type == AssetType.video
-                  ? FavouriteButton(entity: widget.entity!)
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 15),
+                      child: FavouriteButton(entity: widget.entity),
+                    )
                   : SizedBox(),
 
               // IconButton(
@@ -225,12 +232,12 @@ class _PlayerScreenState extends State<PlayerScreen>
               Positioned.fill(
                 child: isAudio
                     ? (player.queue.isEmpty && player.currentPath == null)
-                    ? const Center(
-                  child: CircularProgressIndicator(),
-                ) // ડેટા લોડ થાય ત્યાં સુધી
-                    : _buildAudioPlayer()
+                          ? Center(
+                              child: CustomLoader(color: colors.whiteColor),
+                            ) // ડેટા લોડ થાય ત્યાં સુધી
+                          : _buildAudioPlayer()
                     : (player.controller != null &&
-                    player.controller!.value.isInitialized)
+                          player.controller!.value.isInitialized)
                     ? _buildVideoPlayer()
                     : _buildVideoLoadingPlaceholder(),
               ),
@@ -256,86 +263,87 @@ class _PlayerScreenState extends State<PlayerScreen>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.primary.withOpacity(0.30),
-            colors.primary.withOpacity(0.20),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: colors.whiteColor,
+        // gradient: LinearGradient(
+        //   colors: [
+        //     colors.primary,
+        //     colors.primary.withOpacity(0.30),
+        //     colors.primary.withOpacity(0.20),
+        //   ],
+        //   begin: Alignment.topLeft,
+        //   end: Alignment.bottomRight,
+        // ),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // 1. Image/Icon UI (તમારું જે છે તે જ)
-          Container(
-            width: 220,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 220,
-                  decoration: ShapeDecoration(
-                    shape: CustomShape(),
-                    color: colors.background,
-                  ),
-                  child:  Padding(
-                    padding: const EdgeInsets.all(23),
-                    child: AppImage(
-                      src: AppSvg.musicSelected,
-                      fit: BoxFit.cover,
-                      color: colors.primary.withOpacity(0.20),
+          SizedBox(height: 70),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 56),
+            child: Container(
+              // width: 220,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 320,
+                    decoration: ShapeDecoration(
+                      shape: CustomShape(),
+                      color: colors.background,
                     ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -25,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colors.whiteColor,
-                        boxShadow: [
-                          BoxShadow(
-                            offset: Offset(0, 0),
-                            blurRadius: 15,
-                            color: colors.blackColor.withOpacity(0.20),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: FavouriteButton(entity: widget.entity!),
+                    child: Padding(
+                      padding: const EdgeInsets.all(23),
+                      child: AppImage(
+                        src: AppSvg.musicSelected,
+                        fit: BoxFit.cover,
+                        color: colors.primary,
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    bottom: -25,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.whiteColor,
+                          boxShadow: [
+                            BoxShadow(
+                              offset: Offset(0, 0),
+                              blurRadius: 15,
+                              color: colors.blackColor.withOpacity(0.20),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: FavouriteButton(entity: widget.entity!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 62),
 
           // 2. Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              getTitle() ?? '',
-              textAlign: TextAlign.center,
+            child: AppText(
+              getTitle(),
+              fontSize: 20,
               maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+              fontWeight: FontWeight.w600,
+              color: colors.grey1,
             ),
           ),
-          const SizedBox(height: 20),
+          Spacer(),
 
           // 3. Slider (just_audio ના Stream સાથે - આનાથી ચોંટશે નહીં)
           Padding(
@@ -377,16 +385,21 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        AppText(_fmt(position), color: colors.primary),
+                        AppText(
+                          _fmt(position),
+                          color: colors.primary2,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
                         const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.skip_previous),
+                        CupertinoButton(
                           onPressed: () async {
                             await player.playPrevious();
                             setState(() {
                               currentItem = player.queue[player.currentIndex];
                             });
                           },
+                          child: AppImage(src: AppSvg.skipPrev),
                         ),
                         const SizedBox(width: 8),
                         // Play/Pause Button
@@ -396,30 +409,35 @@ class _PlayerScreenState extends State<PlayerScreen>
                             final isPlaying = snapshot.data ?? false;
                             return IconButton(
                               iconSize: 64,
-                              icon: Icon(
-                                isPlaying
-                                    ? Icons.pause_circle_filled
-                                    : Icons.play_circle_filled,
+                              icon: AppImage(
+                                src: isPlaying
+                                    ? AppSvg.pauseVid
+                                    : AppSvg.playVid,
+                                height: 61,
+                                width: 61,
                               ),
                               onPressed: () =>
-                              isPlaying ? player.pause() : player.resume(),
+                                  isPlaying ? player.pause() : player.resume(),
                             );
                           },
                         ),
                         const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.skip_next),
+                        CupertinoButton(
                           onPressed: () async {
                             await player.playNext();
-                            // setState(() {
-                            //   currentItem = player.queue[player.currentIndex];
-                            // });
                           },
+                          child: AppImage(src: AppSvg.skipNext),
                         ),
                         const SizedBox(width: 8),
-                        AppText(_fmt(duration), color: colors.primary),
+                        AppText(
+                          _fmt(duration),
+                          color: colors.primary2,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 62),
                   ],
                 );
               },
@@ -477,12 +495,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     shape: CustomShape(),
                     color: Colors.black26, // વીડિયો માટે થોડો ડાર્ક લુક
                   ),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
+                  child: const Center(child: CustomLoader()),
                 ),
                 const Positioned(
                   bottom: 20,
@@ -514,7 +527,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
           const SizedBox(height: 10),
           const AppText(
-            "Initializing Video Player...",
+            "initializingVideoPlayer",
             fontSize: 14,
             color: Colors.black54,
           ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
@@ -12,7 +13,6 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:video_player/video_player.dart';
 import '../models/media_item.dart';
 import '../services/global_player.dart';
-
 
 class SmartMiniPlayer extends StatefulWidget {
   const SmartMiniPlayer({super.key});
@@ -46,9 +46,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery
-        .of(context)
-        .size;
+    final size = MediaQuery.of(context).size;
     final bool isSmallScreen = size.width < 360; // નાના ફોન માટે ચેક
     return SafeArea(
       child: AnimatedBuilder(
@@ -57,19 +55,26 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           if (player.currentPath == null) return const SizedBox.shrink();
 
           return player.currentType == "audio"
-              ? _buildAudioMiniPlayer(size: size,
-              isSmall: isSmallScreen,
-              key: ValueKey(player.currentPath))
-              : _buildVideoMiniPlayer(size: size,
-              isSmall: isSmallScreen,
-              key: ValueKey(player.currentPath));
+              ? _buildAudioMiniPlayer(
+                  size: size,
+                  isSmall: isSmallScreen,
+                  key: ValueKey(player.currentPath),
+                )
+              : _buildVideoMiniPlayer(
+                  size: size,
+                  isSmall: isSmallScreen,
+                  key: ValueKey(player.currentPath),
+                );
         },
       ),
     );
   }
 
-  Widget _buildAudioMiniPlayer(
-      {required Size size, required bool isSmall, Key? key}) {
+  Widget _buildAudioMiniPlayer({
+    required Size size,
+    required bool isSmall,
+    Key? key,
+  }) {
     return _wrapper(
       key: key,
       isAudio: true,
@@ -84,7 +89,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             child: Row(
               children: [
                 AppImage(
-                    src: AppSvg.musicUnselected, height: isSmall ? 18 : 22),
+                  src: AppSvg.musicUnselected,
+                  height: isSmall ? 18 : 22,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -92,7 +99,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     children: [
                       _titleText(),
                       AppText(
-                          "Playing from Local", fontSize: isSmall ? 10 : 12),
+                        "playingFromLocal",
+                        fontSize: isSmall ? 10 : 12,
+                      ),
                     ],
                   ),
                 ),
@@ -121,24 +130,23 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   color: Colors.white,
                   child: Column(
                     children: [
-                      SizedBox(height: size.height * 0.05), // Responsive gap
+                      SizedBox(height: size.height * 0.03), // Responsive gap
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.skip_previous,
-                                size: isSmall ? 24 : 28),
+                          CupertinoButton(
                             onPressed: () => player.playPrevious(),
+                            child: AppImage(src: AppSvg.skipPrev),
                           ),
+
                           _playPauseButton(Colors.black),
-                          IconButton(
-                            icon: Icon(Icons.skip_next,
-                                size: isSmall ? 24 : 28),
+                          CupertinoButton(
                             onPressed: () => player.playNext(),
+                            child: AppImage(src: AppSvg.skipNext),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 0),
                     ],
                   ),
                 ),
@@ -167,7 +175,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         double progress = 0.0;
         if (duration.inMilliseconds > 0) {
           progress = (position.inMilliseconds / duration.inMilliseconds).clamp(
-              0.0, 1.0);
+            0.0,
+            1.0,
+          );
         }
 
         return GestureDetector(
@@ -193,22 +203,28 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
 
   // --- વીડિયો મિની પ્લેયર ---
-  Widget _buildVideoMiniPlayer(
-      {required Size size, required bool isSmall, Key? key}) {
+  Widget _buildVideoMiniPlayer({
+    required Size size,
+    required bool isSmall,
+    Key? key,
+  }) {
     if (player.controller == null || !player.controller!.value.isInitialized) {
       return const SizedBox.shrink();
     }
 
-    return StreamBuilder<Duration>(
-      stream: player.audioPlayer.positionStream,
-      builder: (context, snapshot) {
-        final position = snapshot.data ?? Duration.zero;
-        final duration = player.audioPlayer.duration ?? Duration.zero;
+    // ValueListenableBuilder નો ઉપયોગ કરો જેથી વીડિયોની પોઝિશન બદલાય ત્યારે UI અપડેટ થાય
+    return ValueListenableBuilder(
+      valueListenable: player.controller!,
+      builder: (context, VideoPlayerValue value, child) {
+        final position = value.position;
+        final duration = value.duration;
 
         double progress = 0.0;
         if (duration.inMilliseconds > 0) {
           progress = (position.inMilliseconds / duration.inMilliseconds).clamp(
-              0.0, 1.0);
+            0.0,
+            1.0,
+          );
         }
 
         return _wrapper(
@@ -218,7 +234,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
             child: Row(
               children: [
-                // 🔹 Small video preview
+                // વીડિયો પ્રિવ્યૂ
                 SizedBox(
                   width: 120,
                   height: 70,
@@ -227,17 +243,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     child: FittedBox(
                       fit: BoxFit.cover,
                       child: SizedBox(
-                        width: player.controller!.value.size.width,
-                        height: player.controller!.value.size.height,
+                        width: value.size.width,
+                        height: value.size.height,
                         child: VideoPlayer(player.controller!),
                       ),
                     ),
                   ),
                 ),
 
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
 
-                // 🔹 Info and controls
+                // ઇન્ફો અને સ્લાઇડર
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,45 +261,51 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     children: [
                       Text(
                         player.currentPath!.split('/').last,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
-                      // 🔹 Progress bar
+                      const SizedBox(height: 4),
+
+                      // 🔹 સુધારેલું પ્રોગ્રેસ બાર
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        // adjust for curve
                         child: LinearProgressIndicator(
-                          value: duration.inMilliseconds == 0
-                              ? 0
-                              : position.inMilliseconds /
-                              duration.inMilliseconds,
+                          value: progress, // અહીં ગણતરી કરેલ progress વાપરો
                           backgroundColor: Colors.white24,
                           color: Colors.redAccent,
-                          minHeight: 6, // adjust height
+                          minHeight: 6,
                         ),
                       ),
 
-                      SizedBox(height: 2),
+                      const SizedBox(height: 4),
+                      // 🔹 સાચો સમય બતાવશે
                       Text(
-                        "${_formatDuration(position)} / ${_formatDuration(
-                            duration)}",
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                        "${_formatDuration(position)} / ${_formatDuration(duration)}",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                // 🔹 Playback buttons
+                // કંટ્રોલ બટન્સ
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.replay_10, color: Colors.white),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.replay_10,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                       onPressed: () {
-                        final newPos = position - Duration(seconds: 10);
+                        final newPos = position - const Duration(seconds: 10);
                         player.controller!.seekTo(
                           newPos > Duration.zero ? newPos : Duration.zero,
                         );
@@ -291,26 +313,31 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     ),
                     IconButton(
                       icon: Icon(
-                        player.isPlaying
+                        value
+                                .isPlaying // Controller ની વેલ્યુ માંથી ચેક કરો
                             ? Icons.pause_circle_filled
                             : Icons.play_circle_filled,
                         color: Colors.white,
-                        size: 30,
+                        size: 35,
                       ),
                       onPressed: () {
-                        setState(() {
-                          if (player.isPlaying) {
-                            player.pause();
-                          } else {
-                            player.resume();
-                          }
-                        });
+                        if (value.isPlaying) {
+                          player.pause();
+                        } else {
+                          player.resume();
+                        }
                       },
                     ),
                     IconButton(
-                      icon: Icon(Icons.forward_10, color: Colors.white),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.forward_10,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                       onPressed: () {
-                        final newPos = position + Duration(seconds: 10);
+                        final newPos = position + const Duration(seconds: 10);
                         player.controller!.seekTo(
                           newPos < duration ? newPos : duration,
                         );
@@ -335,25 +362,26 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                PlayerScreen(
-                  entity: AssetEntity(id: player.currentItemId!,
-                      typeInt: player.currentType == "audio" ? 3 : 2,
-                      width: 200,
-                      height: 200,
-                      isFavorite:player.isFavourite!,
-                      relativePath: player.currentPath!,
-                      title: player.currentPath!.split("/").last),
-                  item: MediaItem(
-                    isFavourite: player.isFavourite!,
-                    id: player.currentItemId!,
-                    path: player.currentPath!,
-                    isNetwork: false,
-                    type: player.currentType!,
-                  ),
-                  index: player.currentIndex,
-                  entityList: const [],
-                ),
+            builder: (_) => PlayerScreen(
+              entity: AssetEntity(
+                id: player.currentItemId!,
+                typeInt: player.currentType == "audio" ? 3 : 2,
+                width: 200,
+                height: 200,
+                isFavorite: player.isFavourite!,
+                relativePath: player.currentPath!,
+                title: player.currentPath!.split("/").last,
+              ),
+              item: MediaItem(
+                isFavourite: player.isFavourite!,
+                id: player.currentItemId!,
+                path: player.currentPath!,
+                isNetwork: false,
+                type: player.currentType!,
+              ),
+              index: player.currentIndex,
+              entityList: const [],
+            ),
           ),
         );
       },
@@ -385,9 +413,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final path = player.currentPath;
 
     // જો પાથ ન હોય તો જ No Media બતાવો
-    final String fileName = path != null ? path
-        .split('/')
-        .last : "No Media";
+    final String fileName = path != null ? path.split('/').last : "noMedia";
 
     return AppText(
       fileName,
@@ -403,11 +429,11 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
     bool playing = player.isPlaying;
 
-    return IconButton(
-      icon: Icon(
-        playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        color: color,
-        size: 35,
+    return CupertinoButton(
+      child: AppImage(
+        src: playing ? AppSvg.pauseVid : AppSvg.playVid,
+        height: 45,
+        width: 45,
       ),
       onPressed: () {
         if (playing) {
@@ -445,7 +471,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         ),
         child: Slider(
           value: pos.inMilliseconds.toDouble().clamp(
-              0, dur.inMilliseconds.toDouble()),
+            0,
+            dur.inMilliseconds.toDouble(),
+          ),
           min: 0,
           max: dur.inMilliseconds.toDouble() > 0
               ? dur.inMilliseconds.toDouble()

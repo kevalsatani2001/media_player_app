@@ -16,6 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
+import '../../widgets/custom_loader.dart';
+
 class MaterialDesktopControls extends StatefulWidget {
   const MaterialDesktopControls({this.showPlayButton = true, super.key});
 
@@ -106,7 +108,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
               children: [
                 if (_displayBufferingIndicator)
                   _chewieController?.bufferingBuilder?.call(context) ??
-                      const Center(child: CircularProgressIndicator())
+                      const Center(child: CustomLoader())
                 else
                   _buildHitArea(),
                 Column(

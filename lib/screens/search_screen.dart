@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:media_player/core/constants.dart';
 import 'package:media_player/screens/playlist_screen.dart';
+import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/widgets/image_item_widget.dart';
 import 'package:media_player/widgets/image_widget.dart';
 import 'package:media_player/widgets/text_widget.dart';
@@ -106,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 // 32,maxHeight: 32),
                 fillColor: colors.textFieldFill,
                 filled: true,
-                hintText: 'Search anything....',
+                hintText: context.tr("searchAnything"),
                 hintStyle: TextStyle(
                   fontFamily: "inter",
                   fontSize: 18,
@@ -158,7 +159,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: _query.isEmpty
                 ? const Center(
               child: AppText(
-                "Search videos and audios",
+                "searchVideosAudios",
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
               ),
@@ -166,7 +167,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 : _results.isEmpty
                 ? const Center(
               child: AppText(
-                "No Data found",
+                "noDataFound",
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
               ),
@@ -213,7 +214,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           final file = File(item.path);
                           if (!await file.exists()) {
                             // ✅ ફાઈલ ન મળે તો Error Toast
-                            AppToast.show(context, "File not found or deleted", type: ToastType.error);
+                            AppToast.show(context, context.tr("fileNotFoundOrDeleted"), type: ToastType.error);
                             return;
                           }
 
@@ -340,19 +341,17 @@ class _SearchScreenState extends State<SearchScreen> {
                                               final file = snapshot.data!;
 
                                               if (!file.existsSync()) {
-                                                return const Text(
-                                                  'Unavailable',
-                                                  style: TextStyle(
-                                                    color: Colors.redAccent,
-                                                    fontSize: 11,
-                                                  ),
+                                                return  AppText(
+                                                  'unavailable',
+                                                  fontSize: 11,
+                                                  color:Colors.redAccent,
                                                 );
                                               }
 
                                               final bytes = file.lengthSync();
 
                                               return AppText(
-                                                _formatSize(bytes),
+                                                formatSize(bytes,context),
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.w500,
                                                 color:
@@ -381,8 +380,5 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  String _formatSize(int bytes) {
-    final mb = bytes / (1024 * 1024);
-    return '${mb.toStringAsFixed(1)} MB';
-  }
+
 }

@@ -18,6 +18,7 @@ import 'package:just_audio_background/just_audio_background.dart'
 as bg; // Alias આપો
 import '../models/media_item.dart' as my;
 import '../models/playlist_model.dart';
+import '../screens/detail_screen.dart';
 
 class GlobalPlayer extends ChangeNotifier {
   AssetEntity? currentEntity;
@@ -535,6 +536,8 @@ class GlobalPlayer extends ChangeNotifier {
       WakelockPlus.enable();
       _startPositionSaver();
       notifyListeners();
+      print("queue length is ========${queue.length}");
+      print("queue length is ========${queue}");
     } catch (e) {
       debugPrint("Playback Error Details: $e");
       notifyListeners();
@@ -655,20 +658,22 @@ class GlobalPlayer extends ChangeNotifier {
 
       OptionItem(
         controlType: ControlType.shuffle,
-        onTap: (context) => toggleShuffle,
+        onTap: (context) => (){
+          toggleShuffle();
+        },
         iconData: Icons.shuffle,
         title: "Shuffle",
         iconImage: AppSvg.icShuffle,
       ),
-      OptionItem(
-        controlType: ControlType.playbackSpeed,
-        onTap: (context) {
-          // toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "video speed",
-        iconImage: AppSvg.ic2x,
-      ),
+      // OptionItem(
+      //   controlType: ControlType.playbackSpeed,
+      //   onTap: (context) {
+      //     // toggleShuffle();
+      //   },
+      //   iconData: Icons.shuffle,
+      //   title: "video speed",
+      //   iconImage: AppSvg.ic2x,
+      // ),
       OptionItem(
         controlType: ControlType.theme,
         onTap: (context) {
@@ -678,33 +683,36 @@ class GlobalPlayer extends ChangeNotifier {
         title: "dark",
         iconImage: AppSvg.icDarkMode,
       ),
-      OptionItem(
-        controlType: ControlType.info,
-        onTap: (context) {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "info",
-        iconImage: AppSvg.icInfo,
-      ),
-      OptionItem(
-        controlType: ControlType.prev10,
-        onTap: (context) {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "prev10",
-        iconImage: AppSvg.ic10Prev,
-      ),
-      OptionItem(
-        controlType: ControlType.next10,
-        onTap: (context) {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "next10",
-        iconImage: AppSvg.ic10Next,
-      ),
+      // OptionItem(
+      //   controlType: ControlType.info,
+      //   onTap: (context) async{
+      //     Navigator.of(context).push<void>(
+      //       MaterialPageRoute<void>(builder: (_) => DetailPage(entity: AssetEntity(id: currentItemId!, typeInt: currentType=="audio"?3:2, width: 200, height: 200,isFavorite: isFavourite!,relativePath: currentPath))),
+      //     );
+      //     // await routeToDetailPage(AssetEntity(id: currentItemId!, typeInt: currentType=="audio"?3:2, width: 200, height: 200,isFavorite: isFavourite!,relativePath: currentPath), context);
+      //   },
+      //   iconData: Icons.shuffle,
+      //   title: "info",
+      //   iconImage: AppSvg.icInfo,
+      // ),
+      // OptionItem(
+      //   controlType: ControlType.prev10,
+      //   onTap: (context) {
+      //     toggleShuffle();
+      //   },
+      //   iconData: Icons.shuffle,
+      //   title: "prev10",
+      //   iconImage: AppSvg.ic10Prev,
+      // ),
+      // OptionItem(
+      //   controlType: ControlType.next10,
+      //   onTap: (context) {
+      //     toggleShuffle();
+      //   },
+      //   iconData: Icons.shuffle,
+      //   title: "next10",
+      //   iconImage: AppSvg.ic10Next,
+      // ),
 
       OptionItem(
         onTap: (context) {
@@ -723,23 +731,23 @@ class GlobalPlayer extends ChangeNotifier {
         title: "Loop",
         iconImage: AppSvg.icLoop,
       ),
-      OptionItem(
-        controlType: ControlType.playbackSpeed,
-        onTap: (context) async {
-          final newPos = (controller!.value.position) - Duration(seconds: 10);
-          controller!.seekTo(newPos > Duration.zero ? newPos : Duration.zero);
-        },
-        iconData: Icons.replay_10,
-        title: "kk",
-        iconImage: AppSvg.ic10Prev,
-      ),
-      OptionItem(
-        onTap: (context) async {},
-        controlType: ControlType.miniVideo,
-        iconData: Icons.replay_10,
-        title: "miniScreen",
-        iconImage: AppSvg.icMiniScreen,
-      ),
+      // OptionItem(
+      //   controlType: ControlType.playbackSpeed,
+      //   onTap: (context) async {
+      //     final newPos = (controller!.value.position) - Duration(seconds: 10);
+      //     controller!.seekTo(newPos > Duration.zero ? newPos : Duration.zero);
+      //   },
+      //   iconData: Icons.replay_10,
+      //   title: "kk",
+      //   iconImage: AppSvg.ic10Prev,
+      // ),
+      // OptionItem(
+      //   onTap: (context) async {},
+      //   controlType: ControlType.miniVideo,
+      //   iconData: Icons.replay_10,
+      //   title: "miniScreen",
+      //   iconImage: AppSvg.icMiniScreen,
+      // ),
     ];
   }
 
@@ -754,6 +762,12 @@ class GlobalPlayer extends ChangeNotifier {
       type: item.type,
       isFavourite: item.isFavourite,
       id: item.id,
+    );
+  }
+
+  Future<void> routeToDetailPage(AssetEntity entity,BuildContext context) async {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
     );
   }
 }
