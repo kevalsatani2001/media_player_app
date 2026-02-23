@@ -449,7 +449,11 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
   Widget _closeButton(Color color) {
     return IconButton(
-      icon: Icon(Icons.close, color: color.withOpacity(0.6), size: 20),
+      icon: AppImage(src: AppSvg.closeIcon),
+
+
+
+      // Icon(Icons.close, color: color.withOpacity(0.6), size: 20),
       onPressed: () => player.stop(),
     );
   }

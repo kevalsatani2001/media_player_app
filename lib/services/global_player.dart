@@ -56,17 +56,26 @@ class GlobalPlayer extends ChangeNotifier {
     });
 
     audioPlayer.currentIndexStream.listen((index) {
-      // Jyare background mathi next/prev thay tyare aa trigger thase
-      if (index != null && index < queue.length && index >= 0) {
-        currentIndex = index;
-        currentPath = queue[index].path;
-        currentType = queue[index].type;
-        isFavourite = queue[index].isFavourite;
-        currentItemId = queue[index].id;
-        // currentType = "audio";
+      if (index != null) {
+        // આ ઇન્ડેક્સ ઓડિયો લિસ્ટનો છે.
+        // જો તમારે મેઈન ક્યુ (queue) નો ઇન્ડેક્સ જોઈતો હોય, તો પાથ દ્વારા શોધી લેવો:
+        final currentAudioItem = queue[index]; // itemsForSource ને ગ્લોબલ રાખવું પડે અથવા...
+        currentIndex = queue.indexWhere((e) => e.path == audioPlayer.sequence?[index].tag.id);
         notifyListeners();
-        print("in side init======");
-        print("in side init======$isFavourite");
+      }
+      if (currentIndex != null && currentIndex < queue.length && currentIndex >= 0) {
+        // currentIndex = index;
+        final item = queue[currentIndex]; // ક્યુ માંથી ડેટા લો
+        currentPath = item.path;
+        currentType = item.type;
+        isFavourite = item.isFavourite;
+        currentItemId = item.id;
+
+        // AssetEntity પણ અપડેટ કરો જેથી UI બદલાય
+        AssetEntity.fromId(item.id).then((entity) {
+          currentEntity = entity;
+          notifyListeners();
+        });
       }
     });
 
@@ -169,42 +178,21 @@ class GlobalPlayer extends ChangeNotifier {
   Future<void> playNext() async {
     if (queue.isEmpty) return;
 
-    int nextIndex = (currentIndex + 1) % queue.length;
-
-    // જો આપણે ફરીથી એ જ ઇન્ડેક્સ પર આવી ગયા હોઈએ (બધા વિડિયો સ્કીપ થયા હોય), તો અટકી જવું
-    int startTrackIndex = currentIndex;
-
-    while (true) {
-      final nextItem = queue[nextIndex];
-      final isAppInBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
-
-      // જો વિડિયો હોય અને એપ બેકગ્રાઉન્ડમાં હોય, તો સ્કીપ કરો
-      if (nextItem.type == 'video' && isAppInBackground) {
-        nextIndex = (nextIndex + 1) % queue.length;
-
-        // જો આખું લિસ્ટ ચેક થઈ ગયું હોય અને કઈ વગાડવા જેવું ન મળે તો બ્રેક કરો
-        if (nextIndex == startTrackIndex) {
-          debugPrint("No playable audio found in background.");
-          return;
-        }
-        continue;
+    if (currentType == "audio") {
+      // જો ઓડિયો હોય તો just_audio ને જ નેક્સ્ટ કરવા કહો
+      if (audioPlayer.hasNext) {
+        await audioPlayer.seekToNext();
+      } else {
+        // જો લિસ્ટ પૂરું થઈ જાય તો પહેલા ગીત પર જાઓ
+        await audioPlayer.seek(Duration.zero, index: 0);
       }
-      break; // યોગ્ય આઈટમ મળી ગઈ
+    } else {
+      // વીડિયો માટે તમારું લોજિક
+      int nextIndex = (currentIndex + 1) % queue.length;
+      currentIndex = nextIndex;
+      final item = queue[currentIndex];
+      await play(item.path, type: item.type, id: item.id, isFavourite: item.isFavourite, fromPlaylist: true);
     }
-
-    currentIndex = nextIndex;
-    final item = queue[currentIndex];
-    if (chewie != null && chewie!.isFullScreen) {
-      chewie!.exitFullScreen(); // નવો વીડિયો શરૂ થાય એ પહેલા ફૂલ સ્ક્રીન માંથી બહાર નીકળો
-    }
-    await play(
-      item.path,
-      type: item.type,
-      id: item.id,
-      isFavourite: item.isFavourite,
-      network: item.isNetwork,
-      fromPlaylist: true, // આ ઉમેરવું જરૂરી છે
-    );
     notifyListeners();
   }
 
@@ -275,17 +263,17 @@ class GlobalPlayer extends ChangeNotifier {
   Future<void> playPrevious() async {
     if (queue.isEmpty) return;
 
-    currentIndex = (currentIndex - 1 < 0) ? queue.length - 1 : currentIndex - 1;
-    final item = queue[currentIndex];
-
-    await play(
-      item.path,
-      type: item.type,
-      id: item.id,
-      isFavourite: item.isFavourite,
-      network: item.isNetwork,
-      fromPlaylist: true, // આ ભૂલતા નહીં
-    );
+    if (currentType == "audio") {
+      if (audioPlayer.hasPrevious) {
+        await audioPlayer.seekToPrevious();
+      } else {
+        await audioPlayer.seek(Duration.zero, index: queue.length - 1);
+      }
+    } else {
+      currentIndex = (currentIndex - 1 < 0) ? queue.length - 1 : currentIndex - 1;
+      final item = queue[currentIndex];
+      await play(item.path, type: item.type, id: item.id, isFavourite: item.isFavourite, fromPlaylist: true);
+    }
     notifyListeners();
   }
 
@@ -439,7 +427,7 @@ class GlobalPlayer extends ChangeNotifier {
   //     notifyListeners();
   //   }
   // }
-
+  bool _isLoading = false; // આ લાઈન GlobalPlayer ક્લાસની અંદર ઉપર ઉમેરવી
 
   Future<void> play(
       String path, {
@@ -447,60 +435,81 @@ class GlobalPlayer extends ChangeNotifier {
         required String type,
         required bool isFavourite,
         required String id,
-        bool fromPlaylist = false, // તમે ઉમેરેલો નવો પેરામીટર
+        bool fromPlaylist = false,
       }) async {
-// ૧. Index સેટઅપ
-    currentIndex = queue.indexWhere((element) => element.path == path);
-    if (currentIndex == -1 && !fromPlaylist) {
-      final newItem = my.MediaItem(
-        path: path,
-        type: type,
-        isNetwork: network,
-        isFavourite: isFavourite,
-        id: id,
-      );
-      queue.add(newItem);
-      currentIndex = queue.length - 1;
-    }
-
-    await _clearPreviousPlayer();
-    currentPath = path;
-    currentType = type; // આ મહત્વનું છે
-    this.isFavourite = isFavourite;
-    currentItemId = id;
+    // જો ઓલરેડી કંઈક લોડ થઈ રહ્યું હોય, તો બીજી રિક્વેસ્ટને રોકો
+    if (_isLoading) return;
+    _isLoading = true;
 
     try {
+      // ૧. Index સેટઅપ
+      currentIndex = queue.indexWhere((element) => element.path == path);
+      if (currentIndex == -1 && !fromPlaylist) {
+        final newItem = my.MediaItem(
+          path: path,
+          type: type,
+          isNetwork: network,
+          isFavourite: isFavourite,
+          id: id,
+        );
+        queue.add(newItem);
+        currentIndex = queue.length - 1;
+      }
+
+      // ૨. જૂના પ્લેયરને ક્લીનઅપ કરો
+      await _clearPreviousPlayer();
+
+      currentPath = path;
+      currentType = type;
+      this.isFavourite = isFavourite;
+      currentItemId = id;
+
+      // ૩. ફેવરિટ બટન માટે સાચી એન્ટિટી લોડ કરો
+      try {
+        currentEntity = await AssetEntity.fromId(id);
+      } catch (e) {
+        debugPrint("Entity load error: $e");
+      }
+
       final session = await AudioSession.instance;
 
       if (type == "audio") {
-        // --- અહીં ફેરફાર છે ---
-        // જો પ્લેલિસ્ટ માંથી હોય, તો બધી આઈટમ લેવી (Audio + Video)
-        // જો પ્લેલિસ્ટ માંથી ના હોય, તો જૂનું ફિલ્ટર લોજિક રાખવું
+        // ૧. શફલ મોડ બંધ કરો જેથી ઇન્ડેક્સ પ્રોપર સેટ થાય
+        await audioPlayer.setShuffleModeEnabled(false);
 
+        // ૨. ઓડિયો આઈટમ્સનું ફિલ્ટર કરેલું લિસ્ટ
         final List<my.MediaItem> itemsForSource = queue
-            .where((i) => i.type == 'audio') // ફક્ત ઓડિયો જ ઓડિયો પ્લેયરમાં જવા જોઈએ
+            .where((i) => i.type == 'audio')
             .toList();
 
+        // ૩. ઓડિયો સોર્સ તૈયાર કરો
         final audioSources = itemsForSource.map((item) {
           return AudioSource.uri(
             item.isNetwork ? Uri.parse(item.path) : Uri.file(item.path),
             tag: bg.MediaItem(
-              id: item.path,
+              id: item.path, // આ ID (path) થી જ આપણે સાચો ઇન્ડેક્સ શોધીશું
               album: fromPlaylist ? "Playlist" : "My Library",
               title: item.path.split('/').last,
             ),
           );
         }).toList();
 
-        int audioIndex = itemsForSource.indexWhere((e) => e.path == path);
+        // ૪. સાચો ઇન્ડેક્સ જે આઈટમ પર ક્લિક કર્યું છે તેના પાથ પરથી શોધો
+        int correctAudioIndex = itemsForSource.indexWhere((e) => e.path == path);
 
+        // જો ઇન્ડેક્સ ના મળે તો ૦ સેટ કરો
+        if (correctAudioIndex == -1) correctAudioIndex = 0;
+
+        // ૫. લોડિંગ શરૂ કરો
         await audioPlayer.setAudioSource(
           ConcatenatingAudioSource(children: audioSources),
-          initialIndex: audioIndex >= 0 ? audioIndex : 0,
+          initialIndex: correctAudioIndex, // અહીં જાદુ છે
+          initialPosition: Duration.zero,
         );
-        audioPlayer.play();
+
+        await audioPlayer.play();
       } else {
-        // --- વીડિયો પ્લેયર લોજિક (તમારું જે છે એ જ, કોઈ જ ફેરફાર નથી) ---
+        // --- વીડિયો પ્લેયર લોજિક ---
         await session.configure(const AudioSessionConfiguration.music());
 
         controller = network
@@ -508,7 +517,7 @@ class GlobalPlayer extends ChangeNotifier {
             : VideoPlayerController.file(File(path));
 
         await controller!.initialize().timeout(const Duration(seconds: 15));
-        // await _clearPreviousPlayer();
+
         chewie = ChewieController(
           zoomAndPan: true,
           aspectRatio: controller!.value.aspectRatio,
@@ -536,10 +545,13 @@ class GlobalPlayer extends ChangeNotifier {
       WakelockPlus.enable();
       _startPositionSaver();
       notifyListeners();
-      print("queue length is ========${queue.length}");
-      print("queue length is ========${queue}");
+
     } catch (e) {
-      debugPrint("Playback Error Details: $e");
+      // "Loading interrupted" એરરને અહીં કેચ કરીને સાયલન્ટ કરી દેશે
+      debugPrint("Playback Error Handled: $e");
+    } finally {
+      // ગમે તે થાય, લોડિંગ પૂરું થાય એટલે ફ્લેગ ફોલ્સ કરો
+      _isLoading = false;
       notifyListeners();
     }
   }

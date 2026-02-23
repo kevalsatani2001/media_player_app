@@ -278,14 +278,19 @@ class _PlayerScreenState extends State<PlayerScreen>
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           // 1. Image/Icon UI (તમારું જે છે તે જ)
+          // --- આ કોડ તમારા _buildAudioPlayer માં રિપ્લેસ કરો ---
+
           SizedBox(height: 70),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
             child: Container(
-              // width: 220,
+              // અહી ધ્યાન આપો: હાઈટ ૩૨૦ + ૨૫ = ૩૪૫ કરી દીધી છે
+              height: 345,
+              width: double.infinity,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
+                  // ૧. મુખ્ય શેપ (જે ૩૨૦ હાઈટનો જ રહેશે)
                   Container(
                     width: double.infinity,
                     height: 320,
@@ -302,8 +307,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                       ),
                     ),
                   ),
+
+                  // ૨. ફેવરિટ બટન
+                  // હવે આપણે bottom: 0 આપીશું જેથી તે ૩૪૫ ની અંદર જ ગણાય
                   Positioned(
-                    bottom: -25,
+                    bottom: 0,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -313,15 +321,17 @@ class _PlayerScreenState extends State<PlayerScreen>
                           color: colors.whiteColor,
                           boxShadow: [
                             BoxShadow(
-                              offset: Offset(0, 0),
+                              offset: const Offset(0, 0),
                               blurRadius: 15,
                               color: colors.blackColor.withOpacity(0.20),
                             ),
                           ],
                         ),
+                        // બટન ની ફરતે થોડી મોટી પેડિંગ આપો જેથી ક્લિક એરિયા વધે
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: FavouriteButton(entity: widget.entity!),
+                          padding: const EdgeInsets.all(8),
+                          child: FavouriteButton(entity: player.currentEntity ?? widget.entity,),
+                          // child: FavouriteButton(entity: widget.entity),
                         ),
                       ),
                     ),
@@ -330,6 +340,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             ),
           ),
+          // const SizedBox(height: 37), // ૬૨ માંથી ૨૫ બાદ કર્યા કારણ કે બટન હવે અંદર છે
           const SizedBox(height: 62),
 
           // 2. Title
@@ -337,10 +348,11 @@ class _PlayerScreenState extends State<PlayerScreen>
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: AppText(
               getTitle(),
-              fontSize: 20,
+              fontSize: 18,
               maxLines: 2,
               fontWeight: FontWeight.w600,
               color: colors.grey1,
+              align:TextAlign.center
             ),
           ),
           Spacer(),
@@ -425,6 +437,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                         CupertinoButton(
                           onPressed: () async {
                             await player.playNext();
+                            if (mounted) {
+                              setState(() {
+                                currentItem = player.queue[player.currentIndex];
+                              });
+                            }
                           },
                           child: AppImage(src: AppSvg.skipNext),
                         ),
