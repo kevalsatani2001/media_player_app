@@ -83,9 +83,9 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   Widget build(BuildContext context) {
     if (_latestValue.hasError) {
       return chewieController.errorBuilder?.call(
-            context,
-            chewieController.videoPlayerController.value.errorDescription!,
-          ) ??
+        context,
+        chewieController.videoPlayerController.value.errorDescription!,
+      ) ??
           const Center(child: Icon(Icons.error, color: Colors.white, size: 42));
     }
 
@@ -182,7 +182,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
         iconData: Icons.speed,
         iconImage: "assets/svg_icon/ic_on.svg",
         title:
-            chewieController.optionsTranslation?.playbackSpeedButtonText ??
+        chewieController.optionsTranslation?.playbackSpeedButtonText ??
             'Playback speed',
       ),
     ];
@@ -210,7 +210,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
               builder: (context) => OptionsDialog(
                 options: options,
                 cancelButtonText:
-                    chewieController.optionsTranslation?.cancelButtonText,
+                chewieController.optionsTranslation?.cancelButtonText,
               ),
             );
           }
@@ -340,7 +340,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   Widget _buildHitArea() {
     final bool isFinished =
         _latestValue.position >= _latestValue.duration &&
-        _latestValue.duration.inSeconds > 0;
+            _latestValue.duration.inSeconds > 0;
     final bool showPlayButton =
         widget.showPlayButton && !_dragging && !notifier.hideStuff;
 
@@ -387,7 +387,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
       useRootNavigator: chewieController.useRootNavigator,
       builder: (context) => PlaybackSpeedDialog(
         speeds: chewieController.playbackSpeeds,
-        selected: _latestValue.playbackSpeed,
+        selectedSpeed: _latestValue.playbackSpeed,
       ),
     );
 
@@ -474,7 +474,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+            (chewieController.subtitle?.isNotEmpty ?? false);
     controller.addListener(_updateState);
 
     _updateState();
@@ -501,7 +501,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
 
     _showAfterExpandCollapseTimer = Timer(
       const Duration(milliseconds: 300),
-      () {
+          () {
         setState(() {
           _cancelAndRestartTimer();
         });
@@ -621,7 +621,7 @@ class _MaterialDesktopControlsState extends State<MaterialDesktopControls>
           _startHideTimer();
         },
         colors:
-            chewieController.materialProgressColors ??
+        chewieController.materialProgressColors ??
             ChewieProgressColors(
               playedColor: Theme.of(context).colorScheme.secondary,
               handleColor: Theme.of(context).colorScheme.secondary,

@@ -802,7 +802,7 @@ class MaterialControlsState extends State<MaterialControls>
       useRootNavigator: chewieController.useRootNavigator,
       builder: (context) => PlaybackSpeedDialog(
         speeds: chewieController.playbackSpeeds,
-        selected: videoPlayerLatestValue.playbackSpeed,
+        selectedSpeed: videoPlayerLatestValue.playbackSpeed,
       ),
     );
 

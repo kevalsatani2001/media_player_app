@@ -1,3 +1,5 @@
+
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -355,30 +357,31 @@ class _HomePageState extends State<HomePage> with RouteAware{
                       }
                     },
                     onTap: () async {
-                      print("vudio====${entity.typeInt}");
-                      final file = await entity.file;
-                      if (file == null || !file.existsSync()) return;
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerScreen(
-                            entity: entity,
-                            item: MediaItem(
-                              isFavourite: entity.isFavorite,
-                              id: entity.id,
-                              path: file.path,
-                              isNetwork: false,
-                              type: entity.type == AssetType.video
-                                  ? 'video'
-                                  : 'audio',
-                            ),
-                          ),
-                        ),
-                      ).then((value) {
-                        context.read<VideoBloc>().add(
-                          LoadVideosFromGallery(showLoading: false),
-                        );
-                      });
+                      _navigateToPlayer(context, entities.cast<AssetEntity>(), index);
+                      // print("vudio====${entity.typeInt}");
+                      // final file = await entity.file;
+                      // if (file == null || !file.existsSync()) return;
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (_) => PlayerScreen(
+                      //       entity: entity,
+                      //       item: MediaItem(
+                      //         isFavourite: entity.isFavorite,
+                      //         id: entity.id,
+                      //         path: file.path,
+                      //         isNetwork: false,
+                      //         type: entity.type == AssetType.video
+                      //             ? 'video'
+                      //             : 'audio',
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ).then((value) {
+                      //   context.read<VideoBloc>().add(
+                      //     LoadVideosFromGallery(showLoading: false),
+                      //   );
+                      // });
                     },
                     isGrid: false,
                     entity: entity,
@@ -570,8 +573,38 @@ class _HomePageState extends State<HomePage> with RouteAware{
       },
     );
   }
+  void _navigateToPlayer(BuildContext context, List<AssetEntity> allEntities, int currentIndex) async {
+    final entity = allEntities[currentIndex];
+    final file = await entity.file;
+
+    if (file == null || !file.existsSync()) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlayerScreen(
+          entity: entity,
+          item: MediaItem(
+            isFavourite: entity.isFavorite,
+            id: entity.id,
+            path: file.path,
+            isNetwork: false,
+            type: 'video',
+          ),
+          index: currentIndex,
+          entityList: allEntities, // આખી લિસ્ટ મોકલો જેથી Next/Prev ચાલે
+        ),
+      ),
+    ).then((value) {
+      // પ્લેયર માંથી પાછા આવ્યા પછી લિસ્ટ રિફ્રેશ કરવા માટે
+      context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+    });
+  }
 
 
 }
+
+
+
 
 

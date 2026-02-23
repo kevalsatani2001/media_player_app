@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +9,8 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:share_plus/share_plus.dart';
 import '../blocs/favourite/favourite_bloc.dart';
 import '../blocs/favourite/favourite_state.dart';
+import '../blocs/video/video_bloc.dart';
+import '../blocs/video/video_event.dart';
 import '../core/constants.dart';
 import '../models/media_item.dart';
 import '../widgets/add_to_playlist.dart';
@@ -37,19 +38,25 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
     return BlocProvider(
       create: (_) => FavouriteBloc(box)..add(LoadFavourite()),
       child: Scaffold(
-        appBar: AppBar(leading: Padding(
-          padding: const EdgeInsets.all(16),
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+            ),
+          ),
+          centerTitle: true,
+          title: AppText(
+            "favourite",
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
           ),
         ),
-          centerTitle: true,
-          title: AppText("favourite", fontSize: 20, fontWeight: FontWeight.w500),),
         body: BlocBuilder<FavouriteBloc, FavouriteState>(
           builder: (context, state) {
             if (state is FavouriteLoading) {
-              return  Center(child: CustomLoader());
+              return Center(child: CustomLoader());
             }
 
             if (state is FavouriteError) {
@@ -59,10 +66,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             if (state is FavouriteLoaded) {
               if (state.entities.isEmpty) {
                 return Center(
-                  child:
-
-
-                  Text(
+                  child: Text(
                     "${context.tr("noFavouriteYet")}\n${context.tr("addSomeVideosOrAudio")}",
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
@@ -92,7 +96,7 @@ class _FavouriteGrid extends StatelessWidget {
 
     return GridView.builder(
       padding: const EdgeInsets.all(15),
-      gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 15,
@@ -104,17 +108,79 @@ class _FavouriteGrid extends StatelessWidget {
           context.read<FavouriteBloc>().add(LoadMoreFavourites());
         }
 
-        return _FavouriteItem(entity: entities[index], index: index);
+        return GestureDetector(
+          onTap: () {
+            // ૧. લિસ્ટમાંથી માત્ર AssetEntity ફિલ્ટર કરો
+            final List<AssetEntity> validEntities = entities
+                .whereType<AssetEntity>()
+                .toList();
+
+            // ૨. સાચો ઇન્ડેક્સ શોધો
+            final int actualIndex = validEntities.indexOf(
+              entities[index] as AssetEntity,
+            );
+            print("index is ===> $actualIndex");
+            print("index is ===> ${validEntities.length}");
+
+            if (actualIndex != -1) {
+              _navigateToPlayer(context, validEntities, actualIndex);
+            }
+          },
+          child: _FavouriteItem(
+            entity: entities[index],
+            index: index,
+            entityList: entities,
+          ),
+        );
       },
     );
+  }
+
+  void _navigateToPlayer(
+    BuildContext context,
+    List<AssetEntity> allEntities,
+    int currentIndex,
+  ) async {
+    final entity = allEntities[currentIndex];
+    final file = await entity.file;
+
+    if (file == null || !file.existsSync()) return;
+    print("ent===> ${entity.type}");
+    print("ent===> ${entity.title}");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlayerScreen(
+          entity: entity,
+          item: MediaItem(
+            isFavourite: entity.isFavorite,
+            id: entity.id,
+            path: file.path,
+            isNetwork: false,
+            // અહીં entity.type નો ઉપયોગ કરવો વધુ સુરક્ષિત છે
+            type: entity.type == AssetType.audio ? "audio" : "video",
+          ),
+          index: currentIndex,
+          entityList: allEntities,
+        ),
+      ),
+    ).then((value) {
+      // પાછા આવ્યા પછી ફેવરિટ લિસ્ટ રિફ્રેશ કરવા માટે
+      context.read<FavouriteBloc>().add(LoadFavourite());
+    });
   }
 }
 
 class _FavouriteItem extends StatelessWidget {
   final AssetEntity entity;
+  List<AssetEntity> entityList;
   final int index;
 
-  const _FavouriteItem({required this.entity, required this.index});
+  _FavouriteItem({
+    required this.entity,
+    required this.index,
+    required this.entityList,
+  });
 
   ThumbnailOption get _thumbOption =>
       const ThumbnailOption(size: ThumbnailSize.square(200));
@@ -125,7 +191,7 @@ class _FavouriteItem extends StatelessWidget {
       key: ValueKey(entity.id),
       entity: entity,
       option: _thumbOption,
-      onMenuSelected: (action) async{
+      onMenuSelected: (action) async {
         switch (action) {
           case MediaMenuAction.detail:
             Navigator.push(
@@ -147,7 +213,7 @@ class _FavouriteItem extends StatelessWidget {
             break;
 
           case MediaMenuAction.delete:
-          // optional: implement delete via Bloc later
+            // optional: implement delete via Bloc later
             break;
 
           case MediaMenuAction.addToFavourite:
@@ -159,7 +225,7 @@ class _FavouriteItem extends StatelessWidget {
               MediaItem(
                 path: file!.path,
                 isNetwork: false,
-                type: entity.type==AssetType.audio?"audio":"video",
+                type: entity.type == AssetType.audio ? "audio" : "video",
                 id: entity.id,
                 isFavourite: entity.isFavorite,
               ),
@@ -168,34 +234,7 @@ class _FavouriteItem extends StatelessWidget {
             break;
         }
       },
-      onTap: () async {
-        final file = await entity.file;
-        if (file == null || !file.existsSync()) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => BlocProvider.value(
-              value: context.read<FavouriteBloc>(), // reuse the existing bloc
-              child: PlayerScreen(
-                item: MediaItem(id:entity.id,path: file.path, isNetwork: false, type: 'video',isFavourite: entity.isFavorite),
-                index: index,
-                entity: entity,
-              ),
-            ),
-          ),
-        );
-
-
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (_) => PlayerScreen(
-        //
-        //       item: MediaItem(path: file.path, isNetwork: false, type: 'video',isFavourite: entity.isFavorite),
-        //     ),
-        //   ),
-        // );
-      },
+      onTap: null,
     );
   }
 }
@@ -220,7 +259,7 @@ Future<void> _showThumb(BuildContext context, AssetEntity entity) {
             child: Image.memory(snapshot.data!),
           );
         }
-        return  Center(child: CustomLoader());
+        return Center(child: CustomLoader());
       },
     ),
   );

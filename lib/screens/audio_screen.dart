@@ -1,3 +1,6 @@
+
+
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -12,6 +15,7 @@ import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager/platform_utils.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../blocs/audio/audio_bloc.dart';
@@ -218,208 +222,198 @@ class _AudioBodyState extends State<_AudioBody> {
               itemBuilder: (context, index) {
                 final audio = state.entities[index];
                 final colors = Theme.of(context).extension<AppThemeColors>()!;
-                return AppTransition(
-                  index: index,
-                  child: FutureBuilder<File?>(
-                    future: audio.file,
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const ListTile(
-                          leading: Icon(Icons.music_note),
-                          title: AppText("loading"),
-                        );
-                      }
+                return Consumer<GlobalPlayer>(
+                    builder: (context, player, child) {
+                      final isCurrentPlaying = player.currentEntity?.id == audio.id;
+                      final isFav = isCurrentPlaying ? (player.currentEntity?.isFavorite ?? audio.isFavorite) : audio.isFavorite;
+                      return AppTransition(
+                        index: index,
+                        child: FutureBuilder<File?>(
+                          future: audio.file,
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const ListTile(
+                                leading: Icon(Icons.music_note),
+                                title: AppText("loading"),
+                              );
+                            }
 
-                      final file = snapshot.data!;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 7.5),
-                        child: GestureDetector(
-                          onTap: () {
-                            print("audio====${audio.typeInt}");
-                            // ૧. આખા લિસ્ટને MediaItem માં કન્વર્ટ કરો
-                            List<MediaItem> audioList = state.entities.map((e) => MediaItem(
-                              path: file.path, // ખાતરી કરો કે 'path' સાચો છે
-                              type: 'audio',
-                              id: e.id,
-                              isFavourite: e.isFavorite, isNetwork: e.isFavorite,
-                            )).toList();
+                            final file = snapshot.data!;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 7.5),
+                              child: GestureDetector(
+                                onTap: () {
+                                  GlobalPlayer().initAndPlay(
+                                    entities: state.entities, // આખું લિસ્ટ (Playlist/Video list)
+                                    selectedId:audio.id, // જે આઈટમ ક્લિક થઈ તેનું ID
+                                  );
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PlayerScreen(
+                                        entityList: state.entities,
+                                        entity: audio,
+                                        item: MediaItem(
+                                          isFavourite: audio.isFavorite,
+                                          id: audio.id,
+                                          path: file.path,
+                                          isNetwork: false,
+                                          type: 'audio',
+                                        ),
+                                      ),
+                                    ),
+                                  ).then((value) {
+                                    context.read<AudioBloc>().add(
+                                      LoadAudios(showLoading: false),
+                                    );
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.cardBackground,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      /// 🎵 Icon + Play overlay
+                                      Container(
+                                        height: 50,
+                                        width: 50,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          color: colors.blackColor.withOpacity(0.38),
+                                        ),
+                                        child: Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            AppImage(
+                                              src: AppSvg.musicUnselected,
+                                              height: 22,
+                                            ),
+                                            AppImage(
+                                              src:
+                                              GlobalPlayer().currentEntity ==
+                                                  audio
+                                                  ? AppSvg.playerPause
+                                                  : AppSvg.playerResume,
+                                              height: 18,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
 
-                            // ૨. પ્લેયરની ક્યુ સેટ કરો (આનાથી જૂનો ડેટા નીકળી જશે)
-                            GlobalPlayer().setQueue(audioList, index);
+                                      const SizedBox(width: 12),
 
-                            // ૩. હવે પ્લે ફંક્શન કોલ કરો
-                            GlobalPlayer().play(
-                              audio.relativePath!,
-                              type: 'audio',
-                              isFavourite: audio.isFavorite,
-                              id: audio.id,
-                              fromPlaylist: true,
-                            );
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PlayerScreen(
-                                  entityList: state.entities,
-                                  entity: audio,
-                                  item: MediaItem(
-                                    isFavourite: audio.isFavorite,
-                                    id: audio.id,
-                                    path: file.path,
-                                    isNetwork: false,
-                                    type: 'audio',
+                                      /// 🎶 Title + Duration
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            AppText(
+                                              file.path.split('/').last,
+                                              maxLines: 1,
+                                              // overflow: TextOverflow.ellipsis,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            const SizedBox(height: 6),
+                                            AppText(
+                                              formatDuration(audio.duration),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: colors.textFieldBorder,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(width: 6),
+
+                                      /// ⋮ Menu
+                                      PopupMenuButton<MediaMenuAction>(
+                                        elevation: 15,
+                                        color: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        shadowColor: Colors.black.withOpacity(0.60),
+                                        offset: Offset(0, 0),
+                                        // splashRadius: 15,
+                                        icon: AppImage(src: AppSvg.dropDownMenuDot),
+                                        menuPadding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        onSelected: (action) async {
+                                          switch (action) {
+                                            case MediaMenuAction.detail:
+                                              routeToDetailPage(context, audio);
+                                              break;
+                                            case MediaMenuAction.info:
+                                              showInfoDialog(context, audio);
+                                              break;
+                                            case MediaMenuAction.thumb:
+                                              showThumb(context, audio, 500);
+                                              break;
+                                            case MediaMenuAction.share:
+                                              shareItem(context, audio);
+                                              break;
+                                            case MediaMenuAction.delete:
+                                              deleteCurrentItem(context, audio);
+                                              break;
+                                            case MediaMenuAction.addToFavourite:
+                                              await _toggleFavourite(
+                                                context,
+                                                audio,
+                                                index,
+                                              );
+                                              break;
+                                            case MediaMenuAction.addToPlaylist:
+                                              final file = await audio.file;
+                                              addToPlaylist(
+                                                MediaItem(
+                                                  path: file!.path,
+                                                  isNetwork: false,
+                                                  type: audio.type == AssetType.audio
+                                                      ? "audio"
+                                                      : "video",
+                                                  id: audio.id,
+                                                  isFavourite: audio.isFavorite,
+                                                ),
+                                                context,
+                                              );
+                                              break;
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          _buildItem(
+                                            MediaMenuAction.addToFavourite,
+                                            audio.isFavorite ? 'removeToFavourite' : 'addToFavourite',
+                                          ),
+                                          const PopupMenuDivider(height: 0.5),
+                                          _buildItem(MediaMenuAction.delete, 'delete'),
+                                          const PopupMenuDivider(height: 0.5),
+                                          _buildItem(MediaMenuAction.share, 'share'),
+                                          const PopupMenuDivider(height: 0.5),
+                                          _buildItem(MediaMenuAction.detail, 'showDetail'),
+                                          const PopupMenuDivider(height: 0.5),
+                                          _buildItem(MediaMenuAction.addToPlaylist, 'addToPlaylist'),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ).then((value) {
-                              context.read<AudioBloc>().add(
-                                LoadAudios(showLoading: false),
-                              );
-                            });
+                            );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.cardBackground,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              children: [
-                                /// 🎵 Icon + Play overlay
-                                Container(
-                                  height: 50,
-                                  width: 50,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: colors.blackColor.withOpacity(0.38),
-                                  ),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      AppImage(
-                                        src: AppSvg.musicUnselected,
-                                        height: 22,
-                                      ),
-                                      AppImage(
-                                        src:
-                                        GlobalPlayer().currentPath ==
-                                            file.path
-                                            ? AppSvg.playerPause
-                                            : AppSvg.playerResume,
-                                        height: 18,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(width: 12),
-
-                                /// 🎶 Title + Duration
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      AppText(
-                                        file.path.split('/').last,
-                                        maxLines: 1,
-                                        // overflow: TextOverflow.ellipsis,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      AppText(
-                                        formatDuration(audio.duration),
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: colors.textFieldBorder,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                const SizedBox(width: 6),
-
-                                /// ⋮ Menu
-                                PopupMenuButton<MediaMenuAction>(
-                                  elevation: 15,
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  shadowColor: Colors.black.withOpacity(0.60),
-                                  offset: Offset(0, 0),
-                                  // splashRadius: 15,
-                                  icon: AppImage(src: AppSvg.dropDownMenuDot),
-                                  menuPadding: EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                  ),
-                                  onSelected: (action) async {
-                                    switch (action) {
-                                      case MediaMenuAction.detail:
-                                        routeToDetailPage(context, audio);
-                                        break;
-                                      case MediaMenuAction.info:
-                                        showInfoDialog(context, audio);
-                                        break;
-                                      case MediaMenuAction.thumb:
-                                        showThumb(context, audio, 500);
-                                        break;
-                                      case MediaMenuAction.share:
-                                        shareItem(context, audio);
-                                        break;
-                                      case MediaMenuAction.delete:
-                                        deleteCurrentItem(context, audio);
-                                        break;
-                                      case MediaMenuAction.addToFavourite:
-                                        await _toggleFavourite(
-                                          context,
-                                          audio,
-                                          index,
-                                        );
-                                        break;
-                                      case MediaMenuAction.addToPlaylist:
-                                        final file = await audio.file;
-                                        addToPlaylist(
-                                          MediaItem(
-                                            path: file!.path,
-                                            isNetwork: false,
-                                            type: audio.type == AssetType.audio
-                                                ? "audio"
-                                                : "video",
-                                            id: audio.id,
-                                            isFavourite: audio.isFavorite,
-                                          ),
-                                          context,
-                                        );
-                                        break;
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    _buildItem(
-                                      MediaMenuAction.addToFavourite,
-                                      audio.isFavorite ? 'removeToFavourite' : 'addToFavourite',
-                                    ),
-                                    const PopupMenuDivider(height: 0.5),
-                                    _buildItem(MediaMenuAction.delete, 'delete'),
-                                    const PopupMenuDivider(height: 0.5),
-                                    _buildItem(MediaMenuAction.share, 'share'),
-                                    const PopupMenuDivider(height: 0.5),
-                                    _buildItem(MediaMenuAction.detail, 'showDetail'),
-                                    const PopupMenuDivider(height: 0.5),
-                                    _buildItem(MediaMenuAction.addToPlaylist, 'addToPlaylist'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        ), // તમારી ઓડિયો લિસ્ટ આઈટમ
                       );
-                    },
-                  ), // તમારી ઓડિયો લિસ્ટ આઈટમ
+                    }
                 );
               },
             ),
@@ -457,7 +451,8 @@ class _AudioBodyState extends State<_AudioBody> {
       ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
-
+    final globalPlayer = Provider.of<GlobalPlayer>(context, listen: false);
+    final bool isCurrentlyFavorite = entity.isFavorite;
     final file = await entity.file;
     if (file == null) return;
 
@@ -485,7 +480,10 @@ class _AudioBodyState extends State<_AudioBody> {
         type: ToastType.success,
       );
     }
-
+    if (globalPlayer.currentEntity?.id == entity.id) {
+      // આ લાઈન પ્લેયરમાં પડેલી entity ને update કરશે અને notifyListeners() કોલ કરશે
+      await globalPlayer.refreshCurrentEntity();
+    }
     // 🔹 Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
@@ -503,7 +501,9 @@ class _AudioBodyState extends State<_AudioBody> {
         favorite: !isFavorite,
       );
     }
-
+    if (globalPlayer.currentEntity?.id == entity.id) {
+      await globalPlayer.refreshCurrentEntity();
+    }
     // 🔹 Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;

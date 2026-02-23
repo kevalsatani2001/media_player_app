@@ -39,146 +39,76 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen>
     with WidgetsBindingObserver {
-  final favBox = Hive.box('favourites');
-  final recentBox = Hive.box('recents');
+  // GlobalPlayer ની ઇન્સ્ટન્સ લો
   final GlobalPlayer player = GlobalPlayer();
-
-  MediaItem? currentItem;
-  bool isFav = false;
-  bool isLocked = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // ૧. પહેલા વેલ્યુ અસાઈન કરો
-    currentItem = widget.item;
-    isFav = Hive.box('favourites').containsKey(widget.item.path);
-
-    // ૨. જો પાથ અલગ હોય તો જ ક્યૂ સેટઅપ કરો
-    if (player.currentPath != widget.item.path && !widget.isPlaylist) {
-      _setupQueue();
-    }
+    // પ્લેયર સેટઅપ: જો નવું આઈટમ હોય તો જ પ્લે કરો
+    _setupInitialPlayer();
   }
 
-  Future<void> _setupQueue() async {
-    // ૧. જો અત્યારે જે પ્લે થાય છે તે જ આઈટમ હોય, તો પ્લેયરને રિસેટ ન કરો
-    if (player.currentPath == widget.item.path &&
-        (player.controller?.value.isInitialized ?? false)) {
+  Future<void> _setupInitialPlayer() async {
+    // જો તે જ આઈટમ અત્યારે વાગી રહી હોય, તો ફરીથી init કરવાની જરૂર નથી
+    if (player.currentMediaItem?.id == widget.entity.id) {
       return;
     }
 
-    // ૨. પ્લે કોલ કરો
-    await player.play(
-      widget.item.path,
-      type: widget.item.type,
-      id: widget.item.id,
-      isFavourite: widget.item.isFavourite,
-      fromPlaylist: widget.isPlaylist,
-    );
-    await player.loadQueueFromHive(widget.item.type);
-    // if (mounted) {
-    //   setState(() {
-    //     currentItem = widget.item;
-    //   });
-    // }
-  }
-
-  Future<List<MediaItem>> convertEntitiesToMediaItems(
-    List<AssetEntity> entities,
-  ) async {
-    List<MediaItem> items = [];
-    for (var entity in entities) {
-      final file = await entity.file;
-      if (file != null) {
-        final type = entity.type == AssetType.audio ? 'audio' : 'video';
-        items.add(
-          MediaItem(
-            isFavourite: entity.isFavorite,
-            id: entity.id,
-            path: file.path,
-            isNetwork: false,
-            type: type,
-          ),
-        );
-      }
+    if (widget.entityList != null && widget.entityList!.isNotEmpty) {
+      await player.initAndPlay(
+        entities: widget.entityList!,
+        selectedId: widget.entity.id,
+      );
     }
-    return items;
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // જો કંટ્રોલર ઇનિશિયલાઇઝ ન હોય તો કશું ના કરો
-    if (!_controllerInitialized) return;
-
     if (state == AppLifecycleState.paused) {
-      // જ્યારે એપ બેકગ્રાઉન્ડમાં જાય:
-      // માત્ર વીડિયો હોય તો જ પોઝ કરો.
-      // ઓડિયો માટે 'just_audio' કે 'video_player' નું 'allowBackgroundPlayback' કામ કરશે.
-      if (currentItem?.type == "video") {
+      if (player.currentType == "video") {
         player.pause();
       }
-    } else if (state == AppLifecycleState.resumed) {
-      // જ્યારે યુઝર એપમાં પાછો આવે:
-      // જો વીડિયો હતો, તો યુઝર તેને મેન્યુઅલી પ્લે કરી શકે અથવા ઓટો-રિઝ્યુમ કરી શકાય.
-      if (currentItem?.type == "video") {
-        // player.resume(); // જો ઓટો-પ્લે જોઈતું હોય તો
-      }
     }
   }
 
-  // @override
-  // void dispose() {
-  //   WidgetsBinding.instance.removeObserver(this);
-  //   // જ્યારે સ્ક્રીન બંધ થાય ત્યારે Wakelock બંધ કરવો જરૂરી છે
-  //   // WakelockPlus.disable();
-  //   super.dispose();
-  // }
-
-  bool get _controllerInitialized =>
-      player.controller != null && player.controller!.value.isInitialized;
-
+  // ટાઇટલ મેળવવા માટે સીધું પ્લેયરનો ડેટા વાપરો
   String getTitle() {
-    if (player.currentIndex != -1 &&
-        player.queue.isNotEmpty &&
-        player.currentIndex >= 0 &&
-        player.currentIndex < player.queue.length) {
-      return player.queue[player.currentIndex].path.split('/').last;
-    }
-    // જો ક્યૂ હજુ લોડ ન થઈ હોય, તો widget માંથી આવેલું નામ બતાવો
-    return widget.item.path.split('/').last;
+    final activeItem = player.currentMediaItem ?? widget.item;
+    return activeItem.path.split('/').last;
   }
-
-  bool get isAudio => currentItem?.type == "audio";
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
+
     return AnimatedBuilder(
-      animation: player,
+      animation: player, // પ્લેયરના દરેક ફેરફાર પર UI અપડેટ થશે
       builder: (context, _) {
+        // લાઈવ ડેટા
+        final activeItem = player.currentMediaItem ?? widget.item;
+        final bool isAudio = activeItem.type == "audio";
+
         return Scaffold(
           backgroundColor: colors.background,
           appBar: AppBar(
             title: AppText(
-              isAudio ? "audio" : currentItem?.path.split('/').last ?? '',
+              isAudio ? "audio" : getTitle(),
               fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
             leading: Padding(
               padding: const EdgeInsets.all(16),
               child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                 child: AppImage(
                   src: AppSvg.backArrowIcon,
                   height: 20,
@@ -188,62 +118,25 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
             centerTitle: true,
             actions: [
-              // IconButton(
-              //   icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
-              //   onPressed: () => setState(() => isLocked = true),
-              // ),
-              widget.entity != null && widget.entity!.type == AssetType.video
-                  ? Padding(
-                      padding: const EdgeInsets.only(right: 15),
-                      child: FavouriteButton(entity: widget.entity),
-                    )
-                  : SizedBox(),
-
-              // IconButton(
-              //   icon: const Icon(Icons.playlist_add),
-              //   onPressed: () {
-              //     print("currentItem is ===> ${currentItem!.toMap()}");
-              //     addToPlaylist(currentItem!, context);
-              //   },
-              // ),
+              // ફેવરિટ બટન: પ્લેયરની લાઈવ એન્ટિટી વાપરો
+              if ((player.currentEntity ?? widget.entity).typeInt == 2)
+                Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: FavouriteButton(
+                    entity: player.currentEntity ?? widget.entity,
+                  ),
+                ),
             ],
           ),
-
-          // AppBar(
-          //   title: Text(currentItem?.path.split('/').last ?? ''),
-          //   actions: [
-          //     IconButton(
-          //       icon: Icon(isLocked ? Icons.lock : Icons.lock_open),
-          //       onPressed: () => setState(() => isLocked = true),
-          //     ),
-          //     IconButton(
-          //       icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-          //       onPressed: _toggleFavourite,
-          //     ),
-          //     IconButton(
-          //       icon: const Icon(Icons.playlist_add),
-          //       onPressed: _addToPlaylist,
-          //     ),
-          //   ],
-          // ),
           body: Stack(
             children: [
-              // Fill the background with video or audio
               Positioned.fill(
                 child: isAudio
-                    ? (player.queue.isEmpty && player.currentPath == null)
-                          ? Center(
-                              child: CustomLoader(color: colors.whiteColor),
-                            ) // ડેટા લોડ થાય ત્યાં સુધી
-                          : _buildAudioPlayer()
-                    : (player.controller != null &&
-                          player.controller!.value.isInitialized)
-                    ? _buildVideoPlayer()
-                    : _buildVideoLoadingPlaceholder(),
+                    ? _buildAudioPlayer() // લોજિક આની અંદર બદલાશે
+                    : _buildVideoPlayer(),
               ),
-              // Add overlay widgets here, e.g., lock button
-              if (isLocked)
-                Positioned(
+              if (false) // isLocked લોજિક જો જોઈતું હોય તો
+                const Positioned(
                   top: 16,
                   right: 16,
                   child: Icon(Icons.lock, color: Colors.white),
@@ -258,39 +151,21 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget _buildAudioPlayer() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
-    // અહીં ચેક કરો: જો વિડિયો નથી, તો just_audio વાપરો
-    // જો ઓડિયો હોય તો CircularProgress કાઢી નાખો
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: colors.whiteColor,
-        // gradient: LinearGradient(
-        //   colors: [
-        //     colors.primary,
-        //     colors.primary.withOpacity(0.30),
-        //     colors.primary.withOpacity(0.20),
-        //   ],
-        //   begin: Alignment.topLeft,
-        //   end: Alignment.bottomRight,
-        // ),
-      ),
+      decoration: BoxDecoration(color: colors.whiteColor),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          // 1. Image/Icon UI (તમારું જે છે તે જ)
-          // --- આ કોડ તમારા _buildAudioPlayer માં રિપ્લેસ કરો ---
-
-          SizedBox(height: 70),
+          const SizedBox(height: 70),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
-            child: Container(
-              // અહી ધ્યાન આપો: હાઈટ ૩૨૦ + ૨૫ = ૩૪૫ કરી દીધી છે
+            child: SizedBox(
               height: 345,
               width: double.infinity,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // ૧. મુખ્ય શેપ (જે ૩૨૦ હાઈટનો જ રહેશે)
                   Container(
                     width: double.infinity,
                     height: 320,
@@ -307,9 +182,6 @@ class _PlayerScreenState extends State<PlayerScreen>
                       ),
                     ),
                   ),
-
-                  // ૨. ફેવરિટ બટન
-                  // હવે આપણે bottom: 0 આપીશું જેથી તે ૩૪૫ ની અંદર જ ગણાય
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -327,11 +199,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                             ),
                           ],
                         ),
-                        // બટન ની ફરતે થોડી મોટી પેડિંગ આપો જેથી ક્લિક એરિયા વધે
                         child: Padding(
                           padding: const EdgeInsets.all(8),
-                          child: FavouriteButton(entity: player.currentEntity ?? widget.entity,),
-                          // child: FavouriteButton(entity: widget.entity),
+                          child: FavouriteButton(
+                            key: ValueKey(
+                              player.currentEntity?.id ?? widget.entity.id,
+                            ),
+                            entity: player.currentEntity ?? widget.entity,
+                          ),
                         ),
                       ),
                     ),
@@ -340,10 +215,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             ),
           ),
-          // const SizedBox(height: 37), // ૬૨ માંથી ૨૫ બાદ કર્યા કારણ કે બટન હવે અંદર છે
           const SizedBox(height: 62),
-
-          // 2. Title
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: AppText(
@@ -352,16 +224,14 @@ class _PlayerScreenState extends State<PlayerScreen>
               maxLines: 2,
               fontWeight: FontWeight.w600,
               color: colors.grey1,
-              align:TextAlign.center
+              align: TextAlign.center,
             ),
           ),
-          Spacer(),
-
-          // 3. Slider (just_audio ના Stream સાથે - આનાથી ચોંટશે નહીં)
+          const Spacer(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: StreamBuilder<Duration>(
-              stream: player.audioPlayer.positionStream, // just_audio ની પોઝિશન
+              stream: player.audioPlayer.positionStream,
               builder: (context, snapshot) {
                 final position = snapshot.data ?? Duration.zero;
                 final duration = player.audioPlayer.duration ?? Duration.zero;
@@ -393,7 +263,6 @@ class _PlayerScreenState extends State<PlayerScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // 4. Controls & Time
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -405,16 +274,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
-                          onPressed: () async {
-                            await player.playPrevious();
-                            setState(() {
-                              currentItem = player.queue[player.currentIndex];
-                            });
-                          },
+                          onPressed: () => player.playPrevious(), // નવું લોજિક
                           child: AppImage(src: AppSvg.skipPrev),
                         ),
                         const SizedBox(width: 8),
-                        // Play/Pause Button
                         StreamBuilder<bool>(
                           stream: player.audioPlayer.playingStream,
                           builder: (context, snapshot) {
@@ -435,14 +298,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
-                          onPressed: () async {
-                            await player.playNext();
-                            if (mounted) {
-                              setState(() {
-                                currentItem = player.queue[player.currentIndex];
-                              });
-                            }
-                          },
+                          onPressed: () => player.playNext(), // નવું લોજિક
                           child: AppImage(src: AppSvg.skipNext),
                         ),
                         const SizedBox(width: 8),
@@ -466,14 +322,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildVideoPlayer() {
-    if (player.chewie == null || !player.controller!.value.isInitialized) {
+    // નવા પ્લેયરમાં videoController અને chewieController ના નામ છે
+    if (player.chewieController == null ||
+        player.videoController == null ||
+        !player.videoController!.value.isInitialized) {
       return _buildVideoLoadingPlaceholder();
     }
-    final controller = player.controller!;
-    final position = controller.value.position;
-    final duration = controller.value.duration;
-
-    return Chewie(controller: player.chewie!);
+    return Chewie(controller: player.chewieController!);
   }
 
   String _fmt(Duration d) {
@@ -483,136 +338,16 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _buildVideoLoadingPlaceholder() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            colors.primary,
-            colors.primary.withOpacity(0.30),
-            colors.primary.withOpacity(0.20),
-          ],
+          colors: [colors.primary, colors.primary.withOpacity(0.30)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // ઓડિયો પ્લેયર જેવો જ લુક આપવા માટે સેન્ટર આઈકોન
-          Container(
-            width: 220,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  height: 220,
-                  decoration: ShapeDecoration(
-                    shape: CustomShape(),
-                    color: Colors.black26, // વીડિયો માટે થોડો ડાર્ક લુક
-                  ),
-                  child: const Center(child: CustomLoader()),
-                ),
-                const Positioned(
-                  bottom: 20,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Icon(Icons.videocam, color: Colors.white, size: 40),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 40),
-
-          // વીડિયોનું નામ
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              widget.item.path.split('/').last,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          const AppText(
-            "initializingVideoPlayer",
-            fontSize: 14,
-            color: Colors.black54,
-          ),
-        ],
-      ),
+      child: const Center(child: CustomLoader()),
     );
   }
-}
-
-Widget buildMiniPlayer(BuildContext context) {
-  final player = GlobalPlayer();
-
-  return StreamBuilder<PlayerState>(
-    stream: player.audioPlayer.playerStateStream,
-    builder: (context, snapshot) {
-      if (player.currentPath == null || player.currentType != "audio") {
-        return const SizedBox.shrink();
-      }
-
-      return GestureDetector(
-        onTap: () {
-          // ક્લિક કરવા પર પ્લેયર સ્ક્રીન પર જવા માટેનું લોજિક
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PlayerScreen(
-                item: player.queue[player.currentIndex],
-                // અત્યારે જે પ્લે થાય છે તે આઈટમ
-                entity: player.currentEntity!,
-                // અત્યારનો એન્ટિટી ડેટા
-                index: player.currentIndex,
-                entityList: [], // જો જરૂર હોય તો આખું લિસ્ટ મોકલી શકાય
-              ),
-            ),
-          );
-        },
-        child: Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: Row(
-            children: [
-              // ગીતની વિગતો અને કંટ્રોલ્સ
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Icons.music_note, color: Colors.blue),
-              ),
-              Expanded(
-                child: Text(
-                  player.currentPath!.split('/').last,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  player.audioPlayer.playing ? Icons.pause : Icons.play_arrow,
-                ),
-                onPressed: () => player.audioPlayer.playing
-                    ? player.pause()
-                    : player.resume(),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }

@@ -1,3 +1,7 @@
+
+
+
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -74,88 +78,158 @@ class PlaylistScreen extends StatelessWidget {
           }
 
           return ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: 15),
             itemCount: playlists.length,
             itemBuilder: (_, index) {
               final playlist = playlists[index];
-              return AppTransition(
-                index: index,
-                child: ListTile(
-                  contentPadding: EdgeInsets.only(left: 15),
-                  title: Text(playlist.name),
-                  subtitle: Text('${playlist.items.length} items'),
-                  trailing: PopupMenuButton<PlaylistMenuAction>(
-                    elevation: 15,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    shadowColor: Colors.black.withOpacity(0.60),
-                    offset: Offset(0, 0),
-                    // splashRadius: 15,
-                    icon: AppImage(src: AppSvg.dropDownMenuDot),
-                    menuPadding: EdgeInsets.symmetric(horizontal: 10),
-                    onSelected: (action) {
-                      switch (action) {
-                        case PlaylistMenuAction.rename:
-                          _showRenameDialog(context, box, index, playlist.name);
-                          break;
-                        case PlaylistMenuAction.delete:
-                          _confirmDelete(context, box, index, playlist.name);
-                          break;
-                        case PlaylistMenuAction.share:
-                          _sharePlaylist(context, playlist);
-                          break;
-                      }
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7.5),
+                child: AppTransition(
+                  index: index,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PlaylistItemsScreen(
+                            name: playlist.name,
+                            items: playlist.items,
+                          ),
+                        ),
+                      );
                     },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: PlaylistMenuAction.rename,
-                        child: Center(
-                          child: AppText(
-                            'rename',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: colors.appBarTitleColor,
-                          ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      // height: 100,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          left: 10,
+                          top: 10,
+                          bottom: 10,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  // Row ના Thumbnail સેક્શનમાં
+                                  Container(
+                                      width: 80,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          color: colors.primary.withOpacity(0.1)
+                                      ),
+                                      clipBehavior: Clip.antiAlias,
+                                      child:
+                                      Icon(Icons.playlist_play, color: colors.primary, size: 30)),
+                                  SizedBox(width: 13),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      children: [
+                                        AppText(
+                                          playlist.name,
+                                          maxLines: 1,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        SizedBox(height: 7),
+                                        AppText(
+                                          "${playlist.items.length} ${context.tr("items")}",
+                                          maxLines: 1,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w400,
+                                          color: colors.textFieldBorder,
+                                        ),
+                                        SizedBox(height: 7),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 13),
+                                ],
+                              ),
+                            ),
+                            PopupMenuButton<PlaylistMenuAction>(
+                              elevation: 15,
+                              color: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              shadowColor: Colors.black.withOpacity(0.60),
+                              offset: Offset(0, 0),
+                              // splashRadius: 15,
+                              icon: AppImage(src: AppSvg.dropDownMenuDot),
+                              menuPadding: EdgeInsets.symmetric(horizontal: 10),
+                              onSelected: (action) {
+                                switch (action) {
+                                  case PlaylistMenuAction.rename:
+                                    _showRenameDialog(context, box, index, playlist.name);
+                                    break;
+                                  case PlaylistMenuAction.delete:
+                                    _confirmDelete(context, box, index, playlist.name);
+                                    break;
+                                  case PlaylistMenuAction.share:
+                                    _sharePlaylist(context, playlist);
+                                    break;
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: PlaylistMenuAction.rename,
+                                  child: Center(
+                                    child: AppText(
+                                      'rename',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuDivider(height: 0.5),
+                                PopupMenuItem(
+                                  value: PlaylistMenuAction.share,
+                                  child: Center(
+                                    child: AppText(
+                                      'share',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
+                                ),
+                                const PopupMenuDivider(height: 0.5),
+                                PopupMenuItem(
+                                  value: PlaylistMenuAction.delete,
+                                  child: Center(
+                                    child: AppText(
+                                      'delete',
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.appBarTitleColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                      const PopupMenuDivider(height: 0.5),
-                      PopupMenuItem(
-                        value: PlaylistMenuAction.share,
-                        child: Center(
-                          child: AppText(
-                            'share',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: colors.appBarTitleColor,
-                          ),
-                        ),
-                      ),
-                      const PopupMenuDivider(height: 0.5),
-                      PopupMenuItem(
-                        value: PlaylistMenuAction.delete,
-                        child: Center(
-                          child: AppText(
-                            'delete',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: colors.appBarTitleColor,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PlaylistItemsScreen(
-                          name: playlist.name,
-                          items: playlist.items,
-                        ),
-                      ),
-                    );
-                  },
+
+
+
+
+
+
+
+
                 ),
               );
             },
@@ -289,7 +363,7 @@ class PlaylistScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             AppText(
-              '"${context.tr('delete')} \"$name\" ${context.tr("permanently")}"',
+              '${context.tr('delete')} \"$name\" ${context.tr("permanently")}',
               fontSize: 17,
               fontWeight: FontWeight.w400,
               color: colors.dialogueSubTitle,
@@ -632,9 +706,32 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       });
 
       // ✅ SnackBar ની જગ્યાએ Toast
-      AppToast.show(context, "${context.tr("removedFromFavourites")}", type: ToastType.info);
+      AppToast.show(context, "${context.tr("removedFromPlaylist")}", type: ToastType.info);
     }
   }
+  /*
+     "removedFromPlaylist": "Removed from Playlist",
+"removedFromPlaylist_ar": "تم الحذف من قائمة التشغيل",
+"removedFromPlaylist_my": "ပလေးလစ်မှ ဖယ်ရှားပြီးပါပြီ",
+"removedFromPlaylist_fil": "Inalis sa Playlist",
+"removedFromPlaylist_fr": "Retiré de la liste de lecture",
+"removedFromPlaylist_de": "Aus der Playlist entfernt",
+"removedFromPlaylist_gu": "પ્લેલિસ્ટમાંથી દૂર કરવામાં આવ્યું",
+"removedFromPlaylist_hi": "प्लेलिस्ट से हटा दिया गया",
+"removedFromPlaylist_id": "Dihapus dari Daftar Putar",
+"removedFromPlaylist_it": "Rimosso dalla playlist",
+"removedFromPlaylist_ja": "プレイリストから削除されました",
+"removedFromPlaylist_ko": "재생목록에서 삭제됨",
+"removedFromPlaylist_ms": "Dialih keluar daripada Senarai Main",
+"removedFromPlaylist_mr": "प्लेलिस्ट मधून काढले",
+"removedFromPlaylist_fa": "از لیست پخش حذف شد",
+"removedFromPlaylist_pl": "Usunięto z playlisty",
+"removedFromPlaylist_pt": "Removido da lista de reprodução",
+"removedFromPlaylist_es": "Eliminado de la lista de reproducción",
+"removedFromPlaylist_sv": "Borttagen från spellistan",
+"removedFromPlaylist_ta": "பிளேலிஸ்ட்டிலிருந்து நீக்கப்பட்டது",
+"removedFromPlaylist_ur": "پلے لسٹ سے نکال دیا گیا"
+   */
 
   // Duration Helper
   Widget _buildDuration(MediaItem item, AppThemeColors colors) {
@@ -676,24 +773,24 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   void _handlePlay(BuildContext context, MediaItem item) {
+    // ૧. આઈટમનો ઈન્ડેક્સ શોધો
+    int index = widget.items.indexOf(item);
     final player = Provider.of<GlobalPlayer>(context, listen: false);
+
+    // પ્લેયરની ક્યુ (Queue) સેટ કરો
     player.queue = List.from(widget.items);
-    player.originalQueue = List.from(widget.items);
+    player.currentIndex = widget.items.indexOf(item);
 
-    player.play(
-      item.path,
-      type: item.type,
-      isFavourite: item.isFavourite ?? false,
-      id: item.id ?? "",
-      fromPlaylist: true,
-    );
-
+    // ૨. નેવિગેટ કરો
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => PlayerScreen(
           item: item,
+          index: index, // વર્તમાન ઈન્ડેક્સ
+          entityList: [], // જો તમારી પાસે AssetEntity લિસ્ટ હોય તો અહીં મોકલી શકાય, નહીંતર ખાલી રાખો
           isPlaylist: true,
+          // GlobalPlayer માં લિસ્ટ સેટ કરવા માટે આપણે PlayerScreen માં આ ડેટા વાપરીશું
           entity: AssetEntity(
             id: item.id,
             typeInt: item.type == "audio" ? 3 : 2,
@@ -735,3 +832,4 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 }
 
 enum PlaylistMenuAction { rename, delete, share }
+

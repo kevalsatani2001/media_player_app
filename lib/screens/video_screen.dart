@@ -1,3 +1,7 @@
+
+
+
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -248,60 +252,18 @@ class _VideoScreenState extends State<VideoScreen> {
           columnCount: 2, // અહીં ગ્રીડની કોલમ લખો
           child: GestureDetector(
             onTap: () async {
-              if (entity is AssetEntity) {
-                final file = await entity.file;
-                if (file == null || !file.existsSync()) return;
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    transitionDuration: const Duration(milliseconds: 300),
-                    reverseTransitionDuration: const Duration(
-                      milliseconds: 300,
-                    ),
-                    pageBuilder: (context, animation, secondaryAnimation) {
-                      return PlayerScreen(
-                        entity: entity,
-                        item: MediaItem(
-                          isFavourite: entity.isFavorite,
-                          id: entity.id,
-                          path: file.path,
-                          isNetwork: false,
-                          type: 'video',
-                        ),
-                      );
-                    },
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      final tween = Tween<Offset>(
-                        begin: const Offset(0, -1), // 👈 from TOP
-                        end: Offset.zero,
-                      ).chain(CurveTween(curve: Curves.easeOut));
+              final entity = entitiesToShow[index];
 
-                      return SlideTransition(
-                        position: animation.drive(tween),
-                        child: child,
-                      );
-                    },
-                  ),
-                );
-              } else if (entity is MediaItem) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PlayerScreen(
-                      item: entity,
-                      entity: AssetEntity(
-                        id: entity.id,
-                        typeInt: entity.type == "audio" ? 3 : 2,
-                        width: 200,
-                        height: 200,
-                        isFavorite: entity.isFavourite,
-                        title: entity.path.split("/").last,
-                        relativePath: entity.path,
-                      ),
-                    ),
-                  ),
-                );
+              if (entity is AssetEntity) {
+                // લિસ્ટમાં રહેલા બધા dynamic ડેટામાંથી માત્ર AssetEntity ફિલ્ટર કરો
+                List<AssetEntity> videoList = entitiesToShow
+                    .whereType<AssetEntity>()
+                    .toList();
+
+                // સાચો ઇન્ડેક્સ મેળવો (કારણ કે dynamic લિસ્ટમાં index અલગ હોઈ શકે)
+                int actualIndex = videoList.indexOf(entity);
+
+                _navigateToPlayer(context, videoList, actualIndex);
               }
             },
             child: Padding(
@@ -358,35 +320,7 @@ class _VideoScreenState extends State<VideoScreen> {
                             break;
                         }
                       },
-                      onTap: () async {
-                        print("vudio====${entity.typeInt}");
-                        final file = await entity.file;
-                        if (file == null || !file.existsSync()) return;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<FavouriteChangeBloc>(),
-                              child: PlayerScreen(
-                                entity: entity,
-                                item: MediaItem(
-                                  isFavourite: entity.isFavorite,
-                                  id: entity.id,
-                                  path: file.path,
-                                  isNetwork: false,
-                                  type: entity.type == AssetType.video
-                                      ? 'video'
-                                      : 'audio',
-                                ),
-                              ),
-                            ),
-                          ),
-                        ).then((value) {
-                          context.read<VideoBloc>().add(
-                            LoadVideosFromGallery(showLoading: false),
-                          );
-                        });
-                      },
+                      onTap: null,
                       entity: entity,
                       option: const ThumbnailOption(
                         size: ThumbnailSize.square(300),
@@ -471,27 +405,9 @@ class _VideoScreenState extends State<VideoScreen> {
             },
             onTap: () async {
               print("vudio====${entity.typeInt}");
-              final file = await entity.file;
-              if (file == null || !file.existsSync()) return;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PlayerScreen(
-                    entity: entity,
-                    item: MediaItem(
-                      isFavourite: entity.isFavorite,
-                      id: entity.id,
-                      path: file.path,
-                      isNetwork: false,
-                      type: entity.type == AssetType.video ? 'video' : 'audio',
-                    ),
-                  ),
-                ),
-              ).then((value) {
-                context.read<VideoBloc>().add(
-                  LoadVideosFromGallery(showLoading: false),
-                );
-              });
+              // final file = await entity.file;
+              // if (file == null || !file.existsSync()) return;
+              _navigateToPlayer(context, entitiesToShow.cast<AssetEntity>(), index);
             },
             isGrid: _isGridView,
             entity: entity,
@@ -614,4 +530,33 @@ class _VideoScreenState extends State<VideoScreen> {
 
     setState(() {});
   }
+
+  void _navigateToPlayer(BuildContext context, List<AssetEntity> allEntities, int currentIndex) async {
+    final entity = allEntities[currentIndex];
+    final file = await entity.file;
+
+    if (file == null || !file.existsSync()) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlayerScreen(
+          entity: entity,
+          item: MediaItem(
+            isFavourite: entity.isFavorite,
+            id: entity.id,
+            path: file.path,
+            isNetwork: false,
+            type: 'video',
+          ),
+          index: currentIndex,
+          entityList: allEntities, // આખી લિસ્ટ મોકલો જેથી Next/Prev ચાલે
+        ),
+      ),
+    ).then((value) {
+      // પ્લેયર માંથી પાછા આવ્યા પછી લિસ્ટ રિફ્રેશ કરવા માટે
+      context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+    });
+  }
 }
+

@@ -292,7 +292,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                     SizedBox(height: 7),
                                     AppText(
                                       item.type!="playlist"?item.path:
-                                      "${playlist!.items.length} items",
+                                      "${playlist!.items.length} ${context.tr("items")}",
                                       maxLines: 1,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w400,
