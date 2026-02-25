@@ -85,12 +85,9 @@ class MaterialControlsState extends State<MaterialControls>
 
   @override
   Widget build(BuildContext context) {
-    if (videoPlayerLatestValue.hasError) {
-      return chewieController.errorBuilder?.call(
-            context,
-            chewieController.videoPlayerController.value.errorDescription!,
-          ) ??
-          const Center(child: Icon(Icons.error, color: Colors.white, size: 42));
+    if (controller.value.hasError) {
+      return chewieController.errorBuilder?.call(context, controller.value.errorDescription!)
+          ?? const Center(child: Icon(Icons.error, color: Colors.white));
     }
 
     return MouseRegion(
@@ -112,7 +109,7 @@ class MaterialControlsState extends State<MaterialControls>
                 _chewieController?.bufferingBuilder?.call(context) ??
                     const Center(child: CustomLoader())
               else
-                // _buildHitArea(),
+              // _buildHitArea(),
                 _buildActionBar(),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -142,10 +139,10 @@ class MaterialControlsState extends State<MaterialControls>
   bool isDarkMode = true;
 
   void performControllOperation(
-    ControlType? type,
-    OptionItem option,
-    context,
-  ) async {
+      ControlType? type,
+      OptionItem option,
+      context,
+      ) async {
     switch (type) {
       case ControlType.info:
         option.onTap;
@@ -170,8 +167,8 @@ class MaterialControlsState extends State<MaterialControls>
         option.onTap;
         break;
       case ControlType.playbackSpeed:
-        // _onSpeedButtonTap;
-        // Navigator.pop(context);
+      // _onSpeedButtonTap;
+      // Navigator.pop(context);
         _onSpeedButtonTap();
         // _seekBackward;
         //_seekForward;
@@ -207,7 +204,7 @@ class MaterialControlsState extends State<MaterialControls>
         print("loop==>");
         break;
       default:
-        () {};
+            () {};
         break;
     }
   }
@@ -251,8 +248,11 @@ class MaterialControlsState extends State<MaterialControls>
 
   @override
   void dispose() {
+    _hideTimer?.cancel();
+    _initTimer?.cancel();
     _showAfterExpandCollapseTimer?.cancel();
-    _dispose();
+    _bufferingDisplayTimer?.cancel(); // આ નવું ઉમેર્યું
+    controller.removeListener(_updateState);
     super.dispose();
   }
 
@@ -269,14 +269,15 @@ class MaterialControlsState extends State<MaterialControls>
     _chewieController = ChewieController.of(context);
     controller = chewieController.videoPlayerController;
 
-    // Notifier ને અહીં ફરીથી મેળવો જેથી તે લેટેસ્ટ રહે
+    // videoPlayerLatestValue ને અહીં સેટ કરો જેથી build માં error ના આવે
+    videoPlayerLatestValue = controller.value;
+
     notifier = Provider.of<PlayerNotifier>(context, listen: false);
 
     if (oldController != chewieController) {
       _dispose();
       _initialize();
     }
-
     super.didChangeDependencies();
   }
 
@@ -371,7 +372,7 @@ class MaterialControlsState extends State<MaterialControls>
               builder: (context) => OptionsDialog(
                 options: _buildOptions(context),
                 cancelButtonText:
-                    chewieController.optionsTranslation?.cancelButtonText,
+                chewieController.optionsTranslation?.cancelButtonText,
               ),
             );
           }
@@ -708,7 +709,6 @@ class MaterialControlsState extends State<MaterialControls>
       ),
     );
   }
-
   Widget _buildHitArea() {
     return GestureDetector(
       onTap: () {
@@ -761,12 +761,12 @@ class MaterialControlsState extends State<MaterialControls>
                     backgroundColor: const Color(0XFF3D57F9),
                     iconColor: Colors.white,
                     isFinished:
-                        (videoPlayerLatestValue.position >=
+                    (videoPlayerLatestValue.position >=
                         videoPlayerLatestValue.duration),
                     isPlaying: controller.value.isPlaying,
                     show: !notifier.hideStuff,
                     onPressed:
-                        _playPause, // Fakt button par click karvathi play/pause thase
+                    _playPause, // Fakt button par click karvathi play/pause thase
                   ),
                 ),
               ),
@@ -908,7 +908,7 @@ class MaterialControlsState extends State<MaterialControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+            (chewieController.subtitle?.isNotEmpty ?? false);
     controller.addListener(_updateState);
 
     _updateState();
@@ -955,7 +955,7 @@ class MaterialControlsState extends State<MaterialControls>
       _showAfterExpandCollapseTimer?.cancel();
       _showAfterExpandCollapseTimer = Timer(
         const Duration(milliseconds: 300),
-        () {
+            () {
           if (mounted) {
             setState(() {
               cancelAndRestartTimer();
@@ -972,7 +972,7 @@ class MaterialControlsState extends State<MaterialControls>
 
     final bool isFinished =
         (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration) &&
-        videoPlayerLatestValue.duration.inSeconds > 0;
+            videoPlayerLatestValue.duration.inSeconds > 0;
 
     setState(() {
       if (controller.value.isPlaying) {
@@ -1077,7 +1077,7 @@ class MaterialControlsState extends State<MaterialControls>
           _startHideTimer();
         },
         colors:
-            chewieController.materialProgressColors ??
+        chewieController.materialProgressColors ??
             ChewieProgressColors(
               playedColor: Theme.of(context).colorScheme.secondary,
               handleColor: Theme.of(context).colorScheme.secondary,

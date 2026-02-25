@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
@@ -29,56 +30,67 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   String _query = '';
   List<MediaItem> _results = [];
+  Timer? _debounce;
 
-  void _performSearch(String query) {
+  void _performSearch(String query) async {
     if (query.isEmpty) {
+      if (!mounted) return; // ✅ ચેક ઉમેર્યો
       setState(() => _results = []);
       return;
     }
 
     final lowerQuery = query.toLowerCase();
-
     final videoBox = Hive.box('videos');
     final audioBox = Hive.box('audios');
     final playlistBox = Hive.box('playlists');
 
-    // ૧. બધા જ વીડિયો અને ઓડિયો મેળવો
-    final allMedia = [
-      ...videoBox.values.map(
-            (e) => MediaItem.fromMap(Map<String, dynamic>.from(e)),
-      ),
-      ...audioBox.values.map(
-            (e) => MediaItem.fromMap(Map<String, dynamic>.from(e)),
-      ),
+    List<MediaItem> searchTemp = [];
+
+    // Hive માંથી IDs મેળવો
+    final allIds = [
+      ...videoBox.values.where((v) => v is String && !v.startsWith('data')),
+      ...audioBox.values.where((v) => v is String && !v.startsWith('data')),
     ];
 
-    // ૨. ફિલ્ટર કરેલા મીડિયા આઈટમ્સ (વીડિયો/ઓડિયો)
-    final filteredMedia = allMedia.where((item) {
-      final fileName = item.path.split('/').last.toLowerCase();
-      return fileName.contains(lowerQuery);
-    }).toList();
+    for (var id in allIds) {
+      // જો યુઝર ટાઇપ કરવાનું ચાલુ રાખે અથવા સ્ક્રીન છોડી દે, તો જૂની પ્રોસેસ અટકાવો
+      if (!mounted) return;
 
-    // ૩. પ્લેલિસ્ટ ફિલ્ટર કરો (તમારા PlaylistModel મુજબ)
-    // જો પ્લેલિસ્ટનું નામ મેચ થાય, તો આપણે તેને એક સ્પેશિયલ MediaItem તરીકે સ્ટોર કરીશું
+      final entity = await AssetEntity.fromId(id as String);
+      if (entity != null) {
+        final file = await entity.file;
+        if (file != null) {
+          final fileName = file.path.split('/').last.toLowerCase();
+          if (fileName.contains(lowerQuery)) {
+            searchTemp.add(MediaItem(
+              id: entity.id,
+              path: file.path,
+              type: entity.type == AssetType.audio ? 'audio' : 'video',
+              isNetwork: false,
+              isFavourite: entity.isFavorite,
+            ));
+          }
+        }
+      }
+    }
+
     final filteredPlaylists = playlistBox.values
         .cast<PlaylistModel>()
         .where((pl) => pl.name.toLowerCase().contains(lowerQuery))
-        .map(
-          (pl) => MediaItem(
-        id: pl.name,
-        // પ્લેલિસ્ટનું નામ ID તરીકે
-        path: pl.name,
-        type: 'playlist',
-        // આ 'playlist' ટાઈપ આપણે ઓળખવા માટે વાપરીશું
-        isNetwork: false,
-        isFavourite: false,
-      ),
-    )
+        .map((pl) => MediaItem(
+      id: pl.name,
+      path: pl.name,
+      type: 'playlist',
+      isNetwork: false,
+      isFavourite: false,
+    ))
         .toList();
 
+    // ✅ ફાઈનલ સ્ટેટ અપડેટ કરતા પહેલા ખાસ ચેક કરો
+    if (!mounted) return;
+
     setState(() {
-      // વીડિયો, ઓડિયો અને પ્લેલિસ્ટ ત્રણેય રિઝલ્ટમાં દેખાશે
-      _results = [...filteredPlaylists, ...filteredMedia];
+      _results = [...filteredPlaylists, ...searchTemp];
     });
   }
 
@@ -151,7 +163,15 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               onChanged: (v) {
                 _query = v;
-                _performSearch(v);
+                setState(() {}); // ક્લોઝ આઈકન અપડેટ કરવા માટે
+
+                // જો પહેલેથી કોઈ ટાઈમર ચાલતું હોય તો તેને કેન્સલ કરો
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+                // નવું ટાઈમર સેટ કરો (દા.ત. 500 મિલિસેકન્ડ)
+                _debounce = Timer(const Duration(milliseconds: 500), () {
+                  _performSearch(v); // યુઝર ટાઇપ કરવાનું બંધ કરે તેના 0.5 સેકન્ડ પછી જ સર્ચ થશે
+                });
               },
             ),
           ),
@@ -379,6 +399,11 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
-
+  @override
+  void dispose() {
+    _debounce?.cancel(); // ટાઈમર બંધ કરો
+    _controller.dispose();
+    super.dispose();
+  }
 
 }

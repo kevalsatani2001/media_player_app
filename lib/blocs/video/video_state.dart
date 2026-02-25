@@ -59,7 +59,11 @@ abstract class VideoState {}
 
 class VideoInitial extends VideoState {}
 
-class VideoLoading extends VideoState {}
+class VideoLoading extends VideoState {
+  final List<AssetEntity> entities; // 🔴 આ પ્રોપર્ટી ઉમેરો
+
+  VideoLoading({this.entities = const []});
+}
 
 class VideoError extends VideoState {
   final String message;

@@ -9,23 +9,48 @@ class AdHelper {
   static String get appOpenId => 'ca-app-pub-3940256099942544/9257395923';
 
   // --- ૧. Banner Ad (વિજેટ તરીકે વાપરવા) ---
-  static Widget bannerAdWidget() {
+  static Widget bannerAdWidget({AdSize size = AdSize.banner}) {
     return StatefulBuilder(builder: (context, setState) {
       BannerAd banner = BannerAd(
         adUnitId: bannerId,
-        size: AdSize.banner,
+        size: size, // પાસ કરેલી સાઈઝ અહીં વપરાશે
         request: const AdRequest(),
         listener: BannerAdListener(
           onAdLoaded: (_) => setState(() {}),
-          onAdFailedToLoad: (ad, error) => ad.dispose(),
+          onAdFailedToLoad: (ad, error) {
+            debugPrint("Ad Load Error: $error");
+            ad.dispose();
+          },
         ),
       )..load();
-      return SizedBox(
+
+      return Container(
+        alignment: Alignment.center,
         width: banner.size.width.toDouble(),
         height: banner.size.height.toDouble(),
         child: AdWidget(ad: banner),
       );
     });
+  }
+
+
+  static Widget adaptiveBannerWidget(BuildContext context) {
+    return FutureBuilder<AdSize?>(
+      // આ મેથડ Future રિટર્ન કરે છે એટલે આપણે તેને 'future' માં નાખીશું
+      future: AdSize.getAnchoredAdaptiveBannerAdSize(
+        Orientation.portrait,
+        MediaQuery.of(context).size.width.truncate(),
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          // જો સાઈઝ મળી જાય, તો તે સાઈઝ સાથે બેનર બતાવો
+          return bannerAdWidget(size: snapshot.data!);
+        } else {
+          // જ્યાં સુધી સાઈઝ લોડ થાય, ત્યાં સુધી સ્ટાન્ડર્ડ બેનર બતાવો અથવા ખાલી જગ્યા
+          return bannerAdWidget(size: AdSize.banner);
+        }
+      },
+    );
   }
 
   // --- ૨. Interstitial Ad (આખા પેજની એડ) ---
@@ -74,49 +99,3 @@ class AdHelper {
     );
   }
 }
-/*
-<meta-data
-    android:name="com.google.android.gms.ads.APPLICATION_ID"
-    android:value="ca-app-pub-3940256099942544~3347511713"/> ```
-
-૨. **iOS (Info.plist):**
-```xml
-<key>GADApplicationIdentifier</key>
-<string>ca-app-pub-3940256099942544~1458002511</string>
- */
-
-/*
-૨. કેવી રીતે વાપરવું? (સૌથી સરળ રીત)
-તમારે હવે માત્ર નીચેની લાઇનો જ તમારા પેજમાં લખવાની છે:
-
-A. પેજમાં ક્યાંય પણ બેનર બતાવવા:
-Dart
-Column(
-  children: [
-    Expanded(child: YourUIContent()),
-    AdHelper.bannerAdWidget(), // બસ આટલું જ!
-  ],
-)
-B. બટન ક્લિક પર આખા પેજની એડ બતાવવા:
-Dart
-onTap: () {
-  AdHelper.showInterstitialAd();
-  // પછી નેક્સ્ટ પેજ પર જવાનું લોજિક
-}
-C. રિવોર્ડ એડ (દા.ત. કોઈ પ્રીમિયમ ફીચર ખોલવા):
-Dart
-onTap: () {
-  AdHelper.showRewardedAd(() {
-    print("User earned 10 coins!"); // યુઝરને અહીં પોઈન્ટ્સ આપો
-  });
-}
-D. એપ ઓપન થાય ત્યારે (Splash Screen પર):
-તમારા Splash Screen ના initState માં:
-
-Dart
-@override
-void initState() {
-  super.initState();
-  AdHelper.showAppOpenAd();
-}
- */

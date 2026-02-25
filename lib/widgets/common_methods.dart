@@ -13,13 +13,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/widgets/app_button.dart';
 import 'package:media_player/widgets/text_widget.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../blocs/video/video_bloc.dart';
 import '../blocs/video/video_event.dart';
 import '../screens/detail_screen.dart';
+import '../services/global_player.dart';
 import '../utils/app_colors.dart';
 import '../widgets/app_toast.dart';
 import 'custom_loader.dart';
+
 
 
 Future<void> deleteCurrentItem(BuildContext context, AssetEntity entity) async {
@@ -96,14 +99,23 @@ Future<void> deleteCurrentItem(BuildContext context, AssetEntity entity) async {
     AppToast.show(context, context.tr("failedToDeleteFile"), type: ToastType.error);
   }
 }
-String formatDuration(int totalSeconds) {
-  final hours = totalSeconds ~/ 3600;
-  final minutes = (totalSeconds % 3600) ~/ 60;
-  final seconds = totalSeconds % 60;
 
-  return '${hours.toString().padLeft(2, '0')}:'
-      '${minutes.toString().padLeft(2, '0')}:'
-      '${seconds.toString().padLeft(2, '0')}';
+String formatDuration(int secondsInput) {
+  if (secondsInput <= 0) return "00:00:00";
+
+  // AssetEntity.duration સીધું સેકન્ડમાં જ હોય છે,
+  // એટલે ~/ 1000 કરવાની જરૂર નથી.
+
+  final int hours = secondsInput ~/ 3600;
+  final int minutes = (secondsInput % 3600) ~/ 60;
+  final int seconds = secondsInput % 60;
+
+  if (hours > 0) {
+    return "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+  } else {
+    // જો કલાક ના હોય તો ફક્ત MM:SS બતાવવું હોય તો:
+    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+  }
 }
 Future<void> shareItem(BuildContext context, AssetEntity entity) async {
   try {
