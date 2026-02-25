@@ -140,7 +140,7 @@ void main() async {
   );
 }
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
-class MyApp extends StatefulWidget {
+class MyApp extends StatefulWidget with WidgetsBindingObserver{
   MyApp({super.key});
   static _MyAppState? of(BuildContext context) => context.findAncestorStateOfType<_MyAppState>();
 
@@ -150,6 +150,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   // final FlutterLocalization _localization = FlutterLocalization.instance;
+
+  @override
+  void didChangeAppLifeCycleState(AppLifecycleState state) {
+    if(state==AppLifecycleState.paused||state==AppLifecycleState.detached){
+      GlobalPlayer().savePlayerState();
+    }
+    // TODO: implement didChangeDependencies
+
+  }
 
   @override
   Widget build(BuildContext context) {

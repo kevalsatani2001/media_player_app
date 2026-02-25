@@ -9,34 +9,44 @@ class HomeCard extends StatelessWidget {
   final String icon;
   final String route;
   final int count;
-  Future<void> loadCounts;
+  // VoidCallback વાપરવું સૌથી બેસ્ટ છે રિફ્રેશ કરવા માટે
+  final VoidCallback? onBack;
 
-   HomeCard({
+  const HomeCard({
     super.key,
     required this.title,
     required this.icon,
     required this.route,
     required this.count,
-    required this.loadCounts,
+    this.onBack,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return InkWell(
-      onTap: () => Navigator.pushNamed(context, route),
+      // 🔴 અહીં ફેરફાર છે: .then() ઉમેર્યું
+      onTap: () {
+        Navigator.pushNamed(context, route)
+            .then((_) {
+          // જ્યારે યુઝર પાછો આવે ત્યારે આ ફંક્શન ચાલશે
+          if (onBack != null) {
+            onBack!();
+          }
+        });
+      },
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(11),
-          color: colors.cardBackground
+            borderRadius: BorderRadius.circular(11),
+            color: colors.cardBackground
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15,vertical: 19),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 19),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppImage(src: icon,height: 35,width: 35,),
+              AppImage(src: icon, height: 35, width: 35,),
               const SizedBox(height: 10),
               AppText(title, fontSize: 20, fontWeight: FontWeight.w500),
               AppText(
