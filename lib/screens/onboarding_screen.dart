@@ -1,15 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-
-import 'package:media_player/core/constants.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/app_button.dart';
-import 'package:media_player/widgets/image_widget.dart';
-import 'package:media_player/widgets/text_widget.dart';
-
-import '../services/ads_service.dart';
-import '../utils/app_colors.dart';
-import '../utils/app_string.dart';
+import '../utils/app_imports.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -47,31 +36,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     _pages = [
       {
-        'image':AppSvg.icOnboarding1,
+        'image': AppSvg.icOnboarding1,
         'title': context.tr("watchWithoutLimits"),
         'subtitle': context.tr("smoothPlayback"),
       },
       {
-        'image':AppSvg.icOnboarding2,
+        'image': AppSvg.icOnboarding2,
         'title': context.tr("yourUltimateMediaHub"),
-        // 'title': AppStrings.get(context, 'video'),
         'subtitle': context.tr("enjoyVideosMusic"),
       },
       {
-        'image':AppSvg.icOnboarding3,
+        'image': AppSvg.icOnboarding3,
         'title': context.tr("instantPlayback"),
-        // 'title': AppStrings.get(context, 'audio'),
         'subtitle': context.tr("enjoyUltraHDVideos"),
       },
       {
-        'image':AppSvg.icOnboarding4,
+        'image': AppSvg.icOnboarding4,
         'title': context.tr("wtachPlayEnjoy"),
-        // 'title': AppStrings.get(context, 'organize'),
         'subtitle': context.tr("smoothPlaybackForEvery"),
       },
     ];
     return WillPopScope(
-      onWillPop: () async{
+      onWillPop: () async {
         Navigator.pop(context);
         return false;
       },
@@ -99,29 +85,52 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     child: Column(
-                      // mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         SizedBox(
-                            height: 299,
-                            child: AppImage(src: page['image']!,fit: BoxFit.contain,)),
+                          height: 299,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 500),
+                            child: AppImage(
+                              key: ValueKey(page['image']),
+                              // àª•à«€ àª†àªªàªµàª¾àª¥à«€ àªàª¨àª¿àª®à«‡àª¶àª¨ àª¥àª¶à«‡
+                              src: page['image']!,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 34),
-                          child: AppText(
-                            page['title']!,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            align: TextAlign.center,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                            child: AppText(
+                              page['title']!,
+                              key: ValueKey(page['title']),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              align: TextAlign.center,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 11),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 58),
-                          child: AppText(
-                            page['subtitle']!,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            align: TextAlign.center,
-                            color: colors.textFieldBorder,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: AppText(
+                              page['subtitle']!,
+                              key: ValueKey(page['subtitle']),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              align: TextAlign.center,
+                              color: colors.textFieldBorder,
+                            ),
                           ),
                         ),
                       ],
@@ -134,13 +143,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               if (_currentPage != _pages.length - 1)
                 Align(
                   alignment: Alignment.topRight,
-                  child: TextButton(
-                    onPressed: _finishOnboarding,
-                    child: AppText('skip', color: colors.primary),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 300),
+                    opacity: _currentPage == _pages.length - 1 ? 0.0 : 1.0,
+                    child: TextButton(
+                      onPressed: _currentPage == _pages.length - 1
+                          ? null
+                          : _finishOnboarding,
+                      child: AppText('skip', color: colors.primary),
+                    ),
                   ),
                 ),
 
-              /// ---------------- DOTS + BUTTON ----------------
               /// ---------------- DOTS + BUTTON ----------------
               Padding(
                 padding: const EdgeInsets.only(top: 30),
@@ -155,7 +169,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _pages.length,
                               (i) => AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+                            curve: Curves.easeOutBack,
                             margin: const EdgeInsets.symmetric(horizontal: 4),
                             width: _currentPage == i ? 32 : 18,
                             height: 5,
@@ -169,26 +183,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
 
-                      const SizedBox(width: 20), // જગ્યા થોડી ઓછી કરી છે જેથી રિસ્પોન્સિવ રહે
+                      const SizedBox(width: 20),
 
-                      /// Next / Done Button
-                      // અહી ConstrainedBox અથવા ફક્ત width કાઢી નાખવાથી બટન ટેક્સ્ટ મુજબ સાઈઝ લેશે
+
                       ConstrainedBox(
                         constraints: const BoxConstraints(
-                          minWidth: 85, // ઓછામાં ઓછી આટલી વિડ્થ
+                          minWidth: 85, // àª“àª›àª¾àª®àª¾àª‚ àª“àª›à«€ àª†àªŸàª²à«€ àªµàª¿àª¡à«àª¥
                         ),
                         child: IntrinsicWidth(
                           child: AppButton(
-                            height: 40, // હાઈટ થોડી વધારી છે જેથી ગુજરાતી જેવા ફોન્ટ પ્રોપર સમાય
-                            // width: null, // જો તમારા વિજેટમાં width ઓપ્શનલ હોય તો null આપો અથવા કાઢી નાખો
-                            // padding: const EdgeInsets.symmetric(horizontal: 20), // સાઈડમાં જગ્યા આપો
+                            height: 40,
                             title: _currentPage == _pages.length - 1
-                                ? context.tr("done") // Localization વાપરવું
+                                ? context.tr("done")
                                 : context.tr("next"),
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             fontFamily: AppFontFamily.roboto,
                             borderRadius: 50,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: AppText(
+                                _currentPage == _pages.length - 1
+                                    ? context.tr("done")
+                                    : context.tr("next"),
+                                key: ValueKey(_currentPage),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
                             onTap: _nextPage,
                           ),
                         ),

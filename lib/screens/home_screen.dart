@@ -1,48 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:media_player/blocs/audio/audio_bloc.dart';
-import 'package:media_player/screens/search_screen.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/app_bar.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import 'package:media_player/screens/player_screen.dart';
-import '../blocs/count/count_bloc.dart';
-import '../blocs/count/count_event.dart';
-import '../blocs/count/count_state.dart';
-import '../blocs/home/home_tab_bloc.dart';
-import '../blocs/home/home_tab_event.dart';
-import '../blocs/home/home_tab_state.dart';
-import '../blocs/video/video_bloc.dart';
-import '../blocs/video/video_event.dart';
-import '../blocs/video/video_state.dart';
-import '../core/constants.dart';
-import '../main.dart';
-import '../models/media_item.dart';
-import '../utils/app_colors.dart';
-import '../widgets/add_to_playlist.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/common_methods.dart';
-import '../widgets/custom_loader.dart';
-import '../widgets/gallary_item_widget.dart';
-import '../widgets/home_card.dart';
-import '../widgets/image_item_widget.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/shimmer_effect.dart';
-import 'bottom_bar_screen.dart';
-import 'detail_screen.dart';
-import 'folder_screen.dart';
-import 'home_screen.dart';
-import 'mini_player.dart';
-
-import '../blocs/count/count_event.dart';
+import 'package:media_player/utils/app_imports.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -80,22 +37,22 @@ class _HomePageState extends State<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding નો ઉપયોગ કરવાથી ખાતરી થશે કે context તૈયાર છે
+    // WidgetsBinding àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°àªµàª¾àª¥à«€ àª–àª¾àª¤àª°à«€ àª¥àª¶à«‡ àª•à«‡ context àª¤à«ˆàª¯àª¾àª° àª›à«‡
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // 🔴 આ લાઇન ઉમેરો - એપ ખુલતાની સાથે જ કાઉન્ટિંગ શરૂ કરશે
+        // ðŸ”´ àª† àª²àª¾àª‡àª¨ àª‰àª®à«‡àª°à«‹ - àªàªª àª–à«àª²àª¤àª¾àª¨à«€ àª¸àª¾àª¥à«‡ àªœ àª•àª¾àª‰àª¨à«àªŸàª¿àª‚àª— àª¶àª°à«‚ àª•àª°àª¶à«‡
         context.read<HomeCountBloc>().add(LoadCounts());
         _loadFolders();
       }
     });
   }
 
-  // તમારી build મેથડમાં
+  // àª¤àª®àª¾àª°à«€ build àª®à«‡àª¥àª¡àª®àª¾àª‚
   @override
   Widget build(BuildContext context) {
-    // જો તમે MultiBlocProvider નથી વાપરતા તો અહીં BlocProvider મૂકો
+    // àªœà«‹ àª¤àª®à«‡ MultiBlocProvider àª¨àª¥à«€ àªµàª¾àªªàª°àª¤àª¾ àª¤à«‹ àª…àª¹à«€àª‚ BlocProvider àª®à«‚àª•à«‹
     return BlocProvider(
-      // 🔴 અહીં ઇવેન્ટ એડ કરવાથી ખાતરી થશે કે પ્રોવાઈડર બનતા જ કામ શરૂ થશે
+      // ðŸ”´ àª…àª¹à«€àª‚ àª‡àªµà«‡àª¨à«àªŸ àªàª¡ àª•àª°àªµàª¾àª¥à«€ àª–àª¾àª¤àª°à«€ àª¥àª¶à«‡ àª•à«‡ àªªà«àª°à«‹àªµàª¾àªˆàª¡àª° àª¬àª¨àª¤àª¾ àªœ àª•àª¾àª® àª¶àª°à«‚ àª¥àª¶à«‡
       create: (context) => HomeCountBloc()..add(LoadCounts()),
       child: BlocListener<HomeTabBloc, HomeTabState>(
         listener: (context, state) {
@@ -106,7 +63,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
-  // HomePage ના build મેથડની અંદર Column ની ઉપર આ રીતે મૂકો:
+  // HomePage àª¨àª¾ build àª®à«‡àª¥àª¡àª¨à«€ àª…àª‚àª¦àª° Column àª¨à«€ àª‰àªªàª° àª† àª°à«€àª¤à«‡ àª®à«‚àª•à«‹:
 
   Widget _buildHomePageWidget() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -124,14 +81,20 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     MaterialPageRoute(builder: (_) => const SearchScreen()),
                   );
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: colors.textFieldFill,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AppImage(src: AppSvg.searchIcon),
+                child: TweenAnimationBuilder(
+                  tween: Tween<double>(begin: 0.8, end: 1.0),
+                  duration: const Duration(milliseconds: 500),
+                  builder: (context, double val, child) =>
+                      Transform.scale(scale: val, child: child),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: colors.textFieldFill,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: AppImage(src: AppSvg.searchIcon),
+                    ),
                   ),
                 ),
               ),
@@ -147,26 +110,34 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     Row(
                       children: [
                         Expanded(
-                          child: HomeCard(
-                            title: "video",
-                            icon: AppSvg.videoIcon,
-                            route: "/video",
-                            count: state.videoCount,
-                            onBack: () =>
-                                context.read<HomeCountBloc>().add(LoadCounts()),
-                            // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                          child: AppTransition(
+                            index: 0,
+                            child: HomeCard(
+                              title: "video",
+                              icon: AppSvg.videoIcon,
+                              route: "/video",
+                              count: state.videoCount,
+                              onBack: () => context.read<HomeCountBloc>().add(
+                                LoadCounts(),
+                              ),
+                              // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                            ),
                           ),
                         ),
                         SizedBox(width: 16),
                         Expanded(
-                          child: HomeCard(
-                            title: "audio",
-                            icon: AppSvg.audioIcon,
-                            route: "/audio",
-                            count: state.audioCount,
-                            onBack: () =>
-                                context.read<HomeCountBloc>().add(LoadCounts()),
-                            // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                          child: AppTransition(
+                            index: 1,
+                            child: HomeCard(
+                              title: "audio",
+                              icon: AppSvg.audioIcon,
+                              route: "/audio",
+                              count: state.audioCount,
+                              onBack: () => context.read<HomeCountBloc>().add(
+                                LoadCounts(),
+                              ),
+                              // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                            ),
                           ),
                         ),
                       ],
@@ -175,26 +146,34 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     Row(
                       children: [
                         Expanded(
-                          child: HomeCard(
-                            title: "playlist",
-                            icon: AppSvg.playlistIcon,
-                            route: "/playlist",
-                            count: state.playlistCount,
-                            onBack: () =>
-                                context.read<HomeCountBloc>().add(LoadCounts()),
-                            // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                          child: AppTransition(
+                            index: 2,
+                            child: HomeCard(
+                              title: "playlist",
+                              icon: AppSvg.playlistIcon,
+                              route: "/playlist",
+                              count: state.playlistCount,
+                              onBack: () => context.read<HomeCountBloc>().add(
+                                LoadCounts(),
+                              ),
+                              // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                            ),
                           ),
                         ),
                         SizedBox(width: 16),
                         Expanded(
-                          child: HomeCard(
-                            title: "favourite",
-                            icon: AppSvg.favouriteIcon,
-                            route: "/favourite",
-                            count: state.favouriteCount,
-                            onBack: () =>
-                                context.read<HomeCountBloc>().add(LoadCounts()),
-                            // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                          child: AppTransition(
+                            index: 3,
+                            child: HomeCard(
+                              title: "favourite",
+                              icon: AppSvg.favouriteIcon,
+                              route: "/favourite",
+                              count: state.favouriteCount,
+                              onBack: () => context.read<HomeCountBloc>().add(
+                                LoadCounts(),
+                              ),
+                              // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                            ),
                           ),
                         ),
                       ],
@@ -234,16 +213,18 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               _buildTab(context, "folder", 1),
                             ],
                           ),
-                          // Row ની અંદર View All બટન વાળો ભાગ:
+                          // Row àª¨à«€ àª…àª‚àª¦àª° View All àª¬àªŸàª¨ àªµàª¾àª³à«‹ àª­àª¾àª—:
                           BlocBuilder<HomeTabBloc, HomeTabState>(
                             builder: (context, tabState) {
                               final isVideoTab = tabState.selectedIndex == 0;
                               final isFolderTab = tabState.selectedIndex == 1;
 
                               bool showButton = false;
-                              if (isVideoTab && state.videoCount > 6) { // જો 6 થી વધુ વિડિયો હોય
+                              if (isVideoTab && state.videoCount > 6) {
+                                // àªœà«‹ 6 àª¥à«€ àªµàª§à« àªµàª¿àª¡àª¿àª¯à«‹ àª¹à«‹àª¯
                                 showButton = true;
-                              } else if (isFolderTab && folderList.length > 4) { // જો 4 થી વધુ ફોલ્ડર હોય
+                              } else if (isFolderTab && folderList.length > 4) {
+                                // àªœà«‹ 4 àª¥à«€ àªµàª§à« àª«à«‹àª²à«àª¡àª° àª¹à«‹àª¯
                                 showButton = true;
                               }
 
@@ -252,15 +233,33 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               return GestureDetector(
                                 onTap: isVideoTab
                                     ? () {
-                                  Navigator.pushNamed(context, "/video").then((value) {
-                                    context.read<HomeCountBloc>().add(LoadCounts());
-                                    context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+                                  Navigator.pushNamed(
+                                    context,
+                                    "/video",
+                                  ).then((value) {
+                                    context.read<HomeCountBloc>().add(
+                                      LoadCounts(),
+                                    );
+                                    context.read<VideoBloc>().add(
+                                      LoadVideosFromGallery(
+                                        showLoading: false,
+                                      ),
+                                    );
                                   });
                                 }
                                     : () {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const FolderScreen()));
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                      const FolderScreen(),
+                                    ),
+                                  );
                                 },
-                                child: AppText("viewAll", color: colors.primary),
+                                child: AppText(
+                                  "viewAll",
+                                  color: colors.primary,
+                                ),
                               );
                             },
                           ),
@@ -268,17 +267,39 @@ class _HomePageState extends State<HomePage> with RouteAware {
                       ),
                     ),
                     // Tab Content
+                    // Tab Content àªµàª¾àª³à«‹ àª­àª¾àª— àª¶à«‹àª§à«‹ àª…àª¨à«‡ àª† àª®à«àªœàª¬ àª…àªªàª¡à«‡àªŸ àª•àª°à«‹:
                     Padding(
                       padding: const EdgeInsets.all(0),
                       child: BlocBuilder<HomeTabBloc, HomeTabState>(
                         builder: (context, state) {
-                          if (state.selectedIndex == 0) {
-                            return SingleChildScrollView(
+                          return AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            switchInCurve: Curves.easeIn,
+                            switchOutCurve: Curves.easeOut,
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.05),
+                                    // àª¥à«‹àª¡à«àª‚ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª†àªµàª¶à«‡
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: state.selectedIndex == 0
+                                ? Container(
+                              key: const ValueKey(0),
                               child: _buildVideoSection(),
-                            );
-                          } else {
-                            return _buildFolderSection();
-                          }
+                            )
+                                : Container(
+                              key: const ValueKey(1),
+                              child: _buildFolderSection(),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -325,9 +346,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
               ),
               const SizedBox(height: 2),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.linear,
                 height: 3,
-                width: isActive ? 30 : 0,
+                width: isActive ? 35 : 0,
+                // àª¥à«‹àª¡à«€ àªªàª¹à«‹àª³àª¾àªˆ àªµàª§àª¾àª°à«€
                 decoration: BoxDecoration(
                   color: colors.primary,
                   borderRadius: BorderRadius.circular(2),
@@ -356,7 +379,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
         if (state is VideoLoaded) {
           final entities = state.entities;
 
-
           if (entities.isEmpty) {
             return AppText("noVideosFound", color: colors.whiteColor);
           }
@@ -366,11 +388,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
           return ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: entities.length>6?6:entities.length,
+            itemCount: entities.length > 6 ? 6 : entities.length,
             itemBuilder: (context, index) {
               final entity = entities[index];
               return AppTransition(
-                index: index,
+                index: index + 5,
                 child: ImageItemWidget(
                   onMenuSelected: (action) async {
                     switch (action) {
@@ -450,7 +472,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                   option: const ThumbnailOption(
                     size: ThumbnailSize.square(300),
                   ),
-                ), // તમારી ઓડિયો લિસ્ટ આઈટમ
+                ), // àª¤àª®àª¾àª°à«€ àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®
               );
             },
           );
@@ -474,7 +496,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
     final key = file.path;
 
-    // 🔹 Update Hive
+    // ðŸ”¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -497,7 +519,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // 🔹 Update system favourite
+    // ðŸ”¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -515,11 +537,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // 🔹 Reload entity
+    // ðŸ”¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // 🔹 Update UI list
+    // ðŸ”¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     context.read<HomeCountBloc>().add(LoadCounts());
@@ -536,7 +558,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: folderList.length>4?4:folderList.length,
+      itemCount: folderList.length > 4 ? 4 : folderList.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
@@ -546,12 +568,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
       itemBuilder: (context, index) {
         final item = folderList[index];
         return AppTransition(
-          index: index,
-          columnCount: 3, // અહીં ગ્રીડની કોલમ લખો
+          index: index + 5,
+          columnCount: 2, // àª…àª¹à«€àª‚ àª—à«àª°à«€àª¡àª¨à«€ àª•à«‹àª²àª® àª²àª–à«‹
           child: GalleryItemWidget(
             path: item,
             setState: setState,
-          ), // તમારો વીડિયો કે ફોટો વિજેટ
+          ), // àª¤àª®àª¾àª°à«‹ àªµà«€àª¡àª¿àª¯à«‹ àª•à«‡ àª«à«‹àªŸà«‹ àªµàª¿àªœà«‡àªŸ
         );
       },
     );
@@ -581,7 +603,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
     );
 
-    if (!mounted) return; // ✅ VERY IMPORTANT
+    if (!mounted) return; // âœ… VERY IMPORTANT
 
     setState(() {
       folderList = galleryList;
@@ -665,13 +687,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
             type: 'video',
           ),
           index: currentIndex,
-          entityList: allEntities, // આખી લિસ્ટ મોકલો જેથી Next/Prev ચાલે
+          entityList: allEntities, // àª†àª–à«€ àª²àª¿àª¸à«àªŸ àª®à«‹àª•àª²à«‹ àªœà«‡àª¥à«€ Next/Prev àªšàª¾àª²à«‡
         ),
       ),
     ).then((value) {
-      // પ્લેયર માંથી પાછા આવ્યા પછી લિસ્ટ રિફ્રેશ કરવા માટે
+      // àªªà«àª²à«‡àª¯àª° àª®àª¾àª‚àª¥à«€ àªªàª¾àª›àª¾ àª†àªµà«àª¯àª¾ àªªàª›à«€ àª²àª¿àª¸à«àªŸ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
       context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     });
   }
 }
-

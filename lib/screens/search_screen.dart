@@ -1,23 +1,4 @@
-import 'dart:async';
-import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:media_player/core/constants.dart';
-import 'package:media_player/screens/playlist_screen.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/image_item_widget.dart';
-import 'package:media_player/widgets/image_widget.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
-import '../models/media_item.dart';
-import '../models/playlist_model.dart';
-import '../utils/app_colors.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/common_methods.dart';
-import 'home_screen.dart';
-import 'player_screen.dart';
+import '../utils/app_imports.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -34,7 +15,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _performSearch(String query) async {
     if (query.isEmpty) {
-      if (!mounted) return; // ✅ ચેક ઉમેર્યો
+      if (!mounted) return;
       setState(() => _results = []);
       return;
     }
@@ -46,14 +27,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
     List<MediaItem> searchTemp = [];
 
-    // Hive માંથી IDs મેળવો
     final allIds = [
       ...videoBox.values.where((v) => v is String && !v.startsWith('data')),
       ...audioBox.values.where((v) => v is String && !v.startsWith('data')),
     ];
 
     for (var id in allIds) {
-      // જો યુઝર ટાઇપ કરવાનું ચાલુ રાખે અથવા સ્ક્રીન છોડી દે, તો જૂની પ્રોસેસ અટકાવો
       if (!mounted) return;
 
       final entity = await AssetEntity.fromId(id as String);
@@ -62,13 +41,15 @@ class _SearchScreenState extends State<SearchScreen> {
         if (file != null) {
           final fileName = file.path.split('/').last.toLowerCase();
           if (fileName.contains(lowerQuery)) {
-            searchTemp.add(MediaItem(
-              id: entity.id,
-              path: file.path,
-              type: entity.type == AssetType.audio ? 'audio' : 'video',
-              isNetwork: false,
-              isFavourite: entity.isFavorite,
-            ));
+            searchTemp.add(
+              MediaItem(
+                id: entity.id,
+                path: file.path,
+                type: entity.type == AssetType.audio ? 'audio' : 'video',
+                isNetwork: false,
+                isFavourite: entity.isFavorite,
+              ),
+            );
           }
         }
       }
@@ -77,16 +58,17 @@ class _SearchScreenState extends State<SearchScreen> {
     final filteredPlaylists = playlistBox.values
         .cast<PlaylistModel>()
         .where((pl) => pl.name.toLowerCase().contains(lowerQuery))
-        .map((pl) => MediaItem(
-      id: pl.name,
-      path: pl.name,
-      type: 'playlist',
-      isNetwork: false,
-      isFavourite: false,
-    ))
+        .map(
+          (pl) => MediaItem(
+        id: pl.name,
+        path: pl.name,
+        type: 'playlist',
+        isNetwork: false,
+        isFavourite: false,
+      ),
+    )
         .toList();
 
-    // ✅ ફાઈનલ સ્ટેટ અપડેટ કરતા પહેલા ખાસ ચેક કરો
     if (!mounted) return;
 
     setState(() {
@@ -115,8 +97,6 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: _controller,
               autofocus: true,
               decoration: InputDecoration(
-                // suffixIconConstraints: BoxConstraints(minWidth: 32,maxWidth: 32,minHeight:
-                // 32,maxHeight: 32),
                 fillColor: colors.textFieldFill,
                 filled: true,
                 hintText: context.tr("searchAnything"),
@@ -163,14 +143,12 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               onChanged: (v) {
                 _query = v;
-                setState(() {}); // ક્લોઝ આઈકન અપડેટ કરવા માટે
+                setState(() {});
 
-                // જો પહેલેથી કોઈ ટાઈમર ચાલતું હોય તો તેને કેન્સલ કરો
                 if (_debounce?.isActive ?? false) _debounce!.cancel();
 
-                // નવું ટાઈમર સેટ કરો (દા.ત. 500 મિલિસેકન્ડ)
                 _debounce = Timer(const Duration(milliseconds: 500), () {
-                  _performSearch(v); // યુઝર ટાઇપ કરવાનું બંધ કરે તેના 0.5 સેકન્ડ પછી જ સર્ચ થશે
+                  _performSearch(v);
                 });
               },
             ),
@@ -214,7 +192,6 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: GestureDetector(
                       onTap: () async {
                         if (item.type == 'playlist') {
-                          // પ્લેલિસ્ટ લોજિક...
                           final playlistBox = Hive.box('playlists');
                           playlist = playlistBox.values
                               .cast<PlaylistModel>()
@@ -230,15 +207,16 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           );
                         } else {
-                          // ફાઈલ ચેકિંગ
                           final file = File(item.path);
                           if (!await file.exists()) {
-                            // ✅ ફાઈલ ન મળે તો Error Toast
-                            AppToast.show(context, context.tr("fileNotFoundOrDeleted"), type: ToastType.error);
+                            AppToast.show(
+                              context,
+                              context.tr("fileNotFoundOrDeleted"),
+                              type: ToastType.error,
+                            );
                             return;
                           }
 
-                          // જો ફાઈલ હોય તો પ્લેયર સ્ક્રીન પર જાઓ
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -263,7 +241,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           color: colors.cardBackground,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        // height: 100,
+
                         child: Padding(
                           padding: const EdgeInsets.only(
                             left: 10,
@@ -272,7 +250,6 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                           child: Row(
                             children: [
-                              // Row ના Thumbnail સેક્શનમાં
                               Container(
                                 width: 80,
                                 height: 60,
@@ -284,14 +261,20 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 clipBehavior: Clip.antiAlias,
                                 child: item.type == 'playlist'
-                                    ? Icon(Icons.playlist_play, color: colors.primary, size: 30)
+                                    ? Icon(
+                                  Icons.playlist_play,
+                                  color: colors.primary,
+                                  size: 30,
+                                )
                                     : (item.type == 'audio'
-                                    ? videoPlaceholder(isAudio: true) // ઓડિયો હોય તો ડાયરેક્ટ પ્લેસહોલ્ડર
+                                    ? videoPlaceholder(
+                                  isAudio: true,
+                                )
                                     : assetAntityImage(
                                   AssetEntity(
                                     relativePath: item.path,
                                     id: item.id!,
-                                    typeInt: 2, // ફક્ત વીડિયો માટે જ ૨ આપો
+                                    typeInt: 2,
                                     width: 80,
                                     height: 80,
                                   ),
@@ -311,15 +294,16 @@ class _SearchScreenState extends State<SearchScreen> {
                                     ),
                                     SizedBox(height: 7),
                                     AppText(
-                                      item.type!="playlist"?item.path:
-                                      "${playlist!.items.length} ${context.tr("items")}",
+                                      item.type != "playlist"
+                                          ? item.path
+                                          : "${playlist!.items.length} ${context.tr("items")}",
                                       maxLines: 1,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w400,
                                       color: colors.textFieldBorder,
                                     ),
                                     SizedBox(height: 7),
-                                    if(item.type!="playlist")
+                                    if (item.type != "playlist")
                                       Row(
                                         children: [
                                           AppText(
@@ -327,7 +311,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                               AssetEntity(
                                                 relativePath: item.path,
                                                 id: item.id!,
-                                                typeInt: item.type == 'audio'
+                                                typeInt:
+                                                item.type == 'audio'
                                                     ? 3
                                                     : 2,
                                                 width: 80,
@@ -337,14 +322,16 @@ class _SearchScreenState extends State<SearchScreen> {
                                             maxLines: 2,
                                             fontSize: 10,
                                             fontWeight: FontWeight.w500,
-                                            color: colors.appBarTitleColor,
+                                            color:
+                                            colors.appBarTitleColor,
                                           ),
                                           SizedBox(width: 10),
                                           FutureBuilder<File?>(
                                             future: AssetEntity(
                                               relativePath: item.path,
                                               id: item.id!,
-                                              typeInt: item.type == 'audio'
+                                              typeInt:
+                                              item.type == 'audio'
                                                   ? 3
                                                   : 2,
                                               width: 80,
@@ -361,21 +348,26 @@ class _SearchScreenState extends State<SearchScreen> {
                                               final file = snapshot.data!;
 
                                               if (!file.existsSync()) {
-                                                return  AppText(
+                                                return AppText(
                                                   'unavailable',
                                                   fontSize: 11,
-                                                  color:Colors.redAccent,
+                                                  color: Colors.redAccent,
                                                 );
                                               }
 
-                                              final bytes = file.lengthSync();
+                                              final bytes = file
+                                                  .lengthSync();
 
                                               return AppText(
-                                                formatSize(bytes,context),
+                                                formatSize(
+                                                  bytes,
+                                                  context,
+                                                ),
                                                 fontSize: 10,
-                                                fontWeight: FontWeight.w500,
-                                                color:
-                                                colors.appBarTitleColor,
+                                                fontWeight:
+                                                FontWeight.w500,
+                                                color: colors
+                                                    .appBarTitleColor,
                                               );
                                             },
                                           ),
@@ -399,11 +391,11 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
     );
   }
+
   @override
   void dispose() {
-    _debounce?.cancel(); // ટાઈમર બંધ કરો
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
-
 }

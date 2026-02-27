@@ -1,13 +1,4 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
-
-import '../core/constants.dart';
-import '../utils/app_colors.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/gallary_item_widget.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/text_widget.dart';
+import '../utils/app_imports.dart';
 
 class FolderScreen extends StatefulWidget {
   const FolderScreen({super.key});
@@ -18,7 +9,7 @@ class FolderScreen extends StatefulWidget {
 
 class _FolderScreenState extends State<FolderScreen> {
   List<AssetPathEntity> folderList = <AssetPathEntity>[];
-  bool _isLoading = true; // લોડિંગ સ્ટેટ ઉમેર્યું
+  bool _isLoading = true; // àª²à«‹àª¡àª¿àª‚àª— àª¸à«àªŸà«‡àªŸ àª‰àª®à«‡àª°à«àª¯à«àª‚
 
   @override
   void initState() {
@@ -34,8 +25,9 @@ class _FolderScreenState extends State<FolderScreen> {
       return;
     }
 
-    final List<AssetPathEntity> galleryList = await PhotoManager.getAssetPathList(
-      type: RequestType.common, // Audio + Video બંને માટે
+    final List<AssetPathEntity> galleryList =
+    await PhotoManager.getAssetPathList(
+      type: RequestType.common, // Audio + Video àª¬àª‚àª¨à«‡ àª®àª¾àªŸà«‡
       filterOption: FilterOptionGroup(),
     );
 
@@ -43,7 +35,7 @@ class _FolderScreenState extends State<FolderScreen> {
 
     setState(() {
       folderList = galleryList;
-      _isLoading = false; // લોડિંગ પૂરું થયું
+      _isLoading = false; // àª²à«‹àª¡àª¿àª‚àª— àªªà«‚àª°à«àª‚ àª¥àª¯à«àª‚
     });
   }
 
@@ -57,39 +49,34 @@ class _FolderScreenState extends State<FolderScreen> {
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: AppImage(
-              src: AppSvg.backArrowIcon,
-              height: 20,
-              width: 20,
-            ),
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
           ),
         ),
         centerTitle: true,
         title: AppText("folder", fontSize: 20, fontWeight: FontWeight.w500),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // લોડિંગ સમયે લોડર બતાવો
+          ? const Center(
+        child: CircularProgressIndicator(),
+      ) // àª²à«‹àª¡àª¿àª‚àª— àª¸àª®àª¯à«‡ àª²à«‹àª¡àª° àª¬àª¤àª¾àªµà«‹
           : folderList.isEmpty
           ? Center(child: AppText("noFoldersFound", color: colors.whiteColor))
           : SafeArea(
         child: GridView.builder(
           padding: const EdgeInsets.all(15),
-          // physics હવે કાઢી નાખ્યું છે જેથી સ્ક્રોલિંગ થાય
+          // physics àª¹àªµà«‡ àª•àª¾àª¢à«€ àª¨àª¾àª–à«àª¯à«àª‚ àª›à«‡ àªœà«‡àª¥à«€ àª¸à«àª•à«àª°à«‹àª²àª¿àª‚àª— àª¥àª¾àª¯
           itemCount: folderList.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 15,
-            childAspectRatio: 1.0, // ચોરસ રાખવા માટે 1.0 બેસ્ટ છે
+            childAspectRatio: 1.0, // àªšà«‹àª°àª¸ àª°àª¾àª–àªµàª¾ àª®àª¾àªŸà«‡ 1.0 àª¬à«‡àª¸à«àªŸ àª›à«‡
           ),
           itemBuilder: (context, index) {
             final item = folderList[index];
             return AppTransition(
               index: index,
-              child: GalleryItemWidget(
-                path: item,
-                setState: setState,
-              ),
+              child: GalleryItemWidget(path: item, setState: setState),
             );
           },
         ),

@@ -1,17 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/image_widget.dart';
-import 'package:media_player/widgets/text_widget.dart';
-
-import '../blocs/local/local_bloc.dart';
-import '../blocs/local/local_event.dart';
-import '../core/constants.dart';
-import '../services/hive_service.dart';
-import '../utils/app_colors.dart';
-import '../utils/app_string.dart';
-import '../widgets/app_toast.dart';
+import '../utils/app_imports.dart';
 
 class LanguageScreen extends StatefulWidget {
   bool isSettingPage;
@@ -37,19 +24,14 @@ class _LanguageScreenState extends State<LanguageScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLangCode = HiveService.languageCode ?? 'en';
+    _selectedLangCode = HiveService.languageCode;
   }
-
 
   @override
   Widget build(BuildContext context) {
     final Box settingsBox = Hive.box('settings');
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    final loc = AppStrings(Localizations.localeOf(context));
     return Scaffold(
-      // appBar: CommonAppBar(
-      //   title: AppStrings.get(context, 'chooseLanguage'),
-      // ),
       body: Column(
         children: [
           _buildHeader(context, colors),
@@ -61,12 +43,13 @@ class _LanguageScreenState extends State<LanguageScreen> {
   }
 
   /// Header Section
-  /// Header Section (Preview Logic સાથે)
+  /// Header Section (Preview Logic àª¸àª¾àª¥à«‡)
   Widget _buildHeader(BuildContext context, AppThemeColors colors) {
-    // સિલેક્ટ કરેલી ભાષા મુજબ લખાણ મેળવો (Preview)
     final previewStrings = AppStrings.translations[_selectedLangCode];
     final title = previewStrings?['chooseLanguage'] ?? "Choose Language";
-    final subTitle = previewStrings?['selectPreferredLanguage'] ?? "Select your preferred language";
+    final subTitle =
+        previewStrings?['selectPreferredLanguage'] ??
+            "Select your preferred language";
 
     return Container(
       padding: const EdgeInsets.only(top: 50, left: 16, right: 16),
@@ -77,7 +60,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
           Expanded(
             child: Row(
               children: [
-                if(widget.isSettingPage)...[
+                if (widget.isSettingPage) ...[
                   Padding(
                     padding: const EdgeInsets.all(0),
                     child: GestureDetector(
@@ -89,24 +72,32 @@ class _LanguageScreenState extends State<LanguageScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 15,)
+                  SizedBox(width: 15),
                 ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AppText(
-                        title, // પ્રિવ્યૂ ટાઇટલ
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: AppText(
+                          title,
+                          key: ValueKey(title),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 20,
+                        ),
                       ),
                       const SizedBox(height: 5),
-                      AppText(
-                        subTitle, // પ્રિવ્યૂ સબટાઈટલ
-                        fontWeight: FontWeight.w400,
-                        fontSize: 13,
-                        maxLines: 2,
-                        color: colors.subTextColor.withOpacity(0.50),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: AppText(
+                          subTitle,
+                          key: ValueKey(subTitle),
+                          fontWeight: FontWeight.w400,
+                          fontSize: 13,
+                          maxLines: 2,
+                          color: colors.subTextColor.withOpacity(0.50),
+                        ),
                       ),
                     ],
                   ),
@@ -119,21 +110,34 @@ class _LanguageScreenState extends State<LanguageScreen> {
             onTap: _selectedLangCode == null
                 ? null
                 : () {
-              // --- અહીં આખી એપ માટે સેવ થશે ---
+              // --- àª…àª¹à«€àª‚ àª†àª–à«€ àªàªª àª®àª¾àªŸà«‡ àª¸à«‡àªµ àª¥àª¶à«‡ ---
               HiveService.languageCode = _selectedLangCode!;
-              context.read<LocaleBloc>().add(ChangeLocale(Locale(_selectedLangCode!)));
+              context.read<LocaleBloc>().add(
+                ChangeLocale(Locale(_selectedLangCode!)),
+              );
 
-              // ✅ સેવ થયા પછી ટોસ્ટ
-              AppToast.show(context, "${context.tr("languageSaved")}", type: ToastType.success);
+              // âœ… àª¸à«‡àªµ àª¥àª¯àª¾ àªªàª›à«€ àªŸà«‹àª¸à«àªŸ
+              AppToast.show(
+                context,
+                "${context.tr("languageSaved")}",
+                type: ToastType.success,
+              );
 
               !widget.isSettingPage
                   ? Navigator.pushReplacementNamed(context, '/onboarding')
                   : Navigator.pop(context);
             },
-            child: AppImage(
-              src: _selectedLangCode == null
-                  ? AppSvg.doneUnSelect
-                  : AppSvg.doneSelect,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return ScaleTransition(scale: animation, child: child);
+              },
+              child: AppImage(
+                key: ValueKey(_selectedLangCode),
+                src: _selectedLangCode == null
+                    ? AppSvg.doneUnSelect
+                    : AppSvg.doneSelect,
+              ),
             ),
           ),
         ],
@@ -143,53 +147,87 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
   /// Language List
   Widget _buildLanguageList(Box settingsBox, AppThemeColors colors) {
+    final langCodes = AppStrings.translations.keys
+        .toList();
+
     return Expanded(
-      child: ListView(
+      child: ListView.builder(
         padding: const EdgeInsets.only(left: 15, right: 15, bottom: 10),
-        children: AppStrings.translations.keys.map((langCode) {
+        itemCount: langCodes.length,
+        itemBuilder: (context, index) {
+          final langCode = langCodes[index];
           final langName =
               AppStrings.translations[langCode]?['language'] ?? langCode;
           final langNameEnglish =
               AppStrings.translations[langCode]?['languageName'] ?? '';
+          final isSelected = _selectedLangCode == langCode;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7.5),
-            child: GestureDetector(
-              onTap: () => _onLanguageSelect(langCode, settingsBox),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.cardBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _selectedLangCode == langCode
-                        ? colors.primary
-                        : colors.textFieldBorder,
+          // --- Entrance Animation ---
+          return TweenAnimationBuilder(
+            duration: Duration(milliseconds: 400 + (index * 80)),
+            tween: Tween<double>(begin: 0, end: 1),
+            curve: Curves.easeOutCubic,
+            builder: (context, double value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 7.5),
+              child: GestureDetector(
+                onTap: () => _onLanguageSelect(langCode, settingsBox),
+                // --- Selection Animation ---
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? colors.primary.withOpacity(0.05)
+                        : colors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      width: isSelected ? 1.5 : 1.0,
+                      color: isSelected
+                          ? colors.primary
+                          : colors.textFieldBorder,
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 15,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppText(
-                      '$langName ($langNameEnglish)',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textFieldBorder,
-                    ),
-                    AppImage(
-                      src: _selectedLangCode == langCode
-                          ? AppSvg.radioSelect
-                          : AppSvg.radioUnSelect,
-                    ),
-                  ],
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 15,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText(
+                        '$langName ($langNameEnglish)',
+                        fontSize: 15,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? colors.primary
+                            : colors.textFieldBorder,
+                      ),
+                      AnimatedScale(
+                        scale: isSelected ? 1.1 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: AppImage(
+                          src: isSelected
+                              ? AppSvg.radioSelect
+                              : AppSvg.radioUnSelect,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           );
-        }).toList(),
+        },
       ),
     );
   }
@@ -197,10 +235,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
   void _onLanguageSelect(String langCode, Box settingsBox) {
     setState(() {
       _selectedLangCode = langCode;
-      // અહીં Bloc Call નથી કરવાનો, એટલે આખી એપમાં ચેન્જ નહીં થાય
-    });
 
-    // યુઝરને ખબર પડે કે સિલેક્ટ થયું છે એના માટે નાનો ટોસ્ટ (Optional)
-    // AppToast.show(context, "Preview changed", type: ToastType.info);
+    });
   }
 }

@@ -1,21 +1,4 @@
-import 'dart:async';
-import 'package:chewie/chewie.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-import '../core/constants.dart';
-import '../models/media_item.dart';
-import '../services/global_player.dart';
-import '../utils/app_colors.dart';
-import '../widgets/custom_loader.dart';
-import '../widgets/customa_shape.dart';
-import '../widgets/favourite_button.dart';
-import '../widgets/image_widget.dart';
+import '../utils/app_imports.dart';
 
 class PlayerScreen extends StatefulWidget {
   final MediaItem item;
@@ -39,7 +22,7 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen>
     with WidgetsBindingObserver {
-  // GlobalPlayer ની ઇન્સ્ટન્સ લો
+  // GlobalPlayer àª¨à«€ àª‡àª¨à«àª¸à«àªŸàª¨à«àª¸ àª²à«‹
   final GlobalPlayer player = GlobalPlayer();
 
   @override
@@ -47,38 +30,26 @@ class _PlayerScreenState extends State<PlayerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // પ્લેયર સેટઅપ: જો નવું આઈટમ હોય તો જ પ્લે કરો
+    // Player Setup: Play only if it's a new item
     _setupInitialPlayer();
   }
 
-  // Future<void> _setupInitialPlayer() async {
-  //   // જો તે જ આઈટમ અત્યારે વાગી રહી હોય, તો ફરીથી init કરવાની જરૂર નથી
-  //   if (player.currentMediaItem?.id == widget.entity.id) {
-  //     return;
-  //   }
-  //
-  //   if (widget.entityList != null && widget.entityList!.isNotEmpty) {
-  //     await player.initAndPlay(
-  //       entities: widget.entityList!,
-  //       selectedId: widget.entity.id,
-  //     );
-  //   }
-  // }
-
   Future<void> _setupInitialPlayer() async {
-    // ૧. જો તે જ આઈટમ અત્યારે વાગી રહી હોય, તો ફરીથી લોડ ન કરો
+    // 1. If the same item is already playing, do not reload it
     if (player.currentEntity?.id == widget.entity.id) {
       return;
     }
 
-    // ૨. પ્લેલિસ્ટ માટે લિસ્ટ પાસ કરો
+    // 2. Pass list for playlist functionality
     if (widget.entityList != null && widget.entityList!.isNotEmpty) {
+      print("type is ======   1  ${player.currentType}");
       await player.initAndPlay(
         entities: widget.entityList!,
         selectedId: widget.entity.id,
       );
     } else {
-      // જો સિંગલ આઈટમ હોય તો પણ તેને લિસ્ટ તરીકે મોકલો
+      // Even for a single item, send it as a list
+      print("type is ======   2  ${player.currentType}");
       await player.initAndPlay(
         entities: [widget.entity],
         selectedId: widget.entity.id,
@@ -101,7 +72,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
-  // ટાઇટલ મેળવવા માટે સીધું પ્લેયરનો ડેટા વાપરો
+  // Get title directly using player data
   String getTitle() {
     final activeItem = player.currentMediaItem ?? widget.item;
     return activeItem.path.split('/').last;
@@ -112,9 +83,9 @@ class _PlayerScreenState extends State<PlayerScreen>
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return AnimatedBuilder(
-      animation: player, // પ્લેયરના દરેક ફેરફાર પર UI અપડેટ થશે
+      animation: player, // UI updates on every player state change
       builder: (context, _) {
-        // લાઈવ ડેટા
+        // Live data fetching
         final activeItem = player.currentMediaItem ?? widget.item;
         final bool isAudio = activeItem.type == "audio";
 
@@ -139,7 +110,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
             centerTitle: true,
             actions: [
-              // ફેવરિટ બટન: પ્લેયરની લાઈવ એન્ટિટી વાપરો
+              // Favorite Button: Use live entity from player
               if ((player.currentEntity ?? widget.entity).typeInt == 2)
                 Padding(
                   padding: const EdgeInsets.only(right: 15),
@@ -153,15 +124,9 @@ class _PlayerScreenState extends State<PlayerScreen>
             children: [
               Positioned.fill(
                 child: isAudio
-                    ? _buildAudioPlayer() // લોજિક આની અંદર બદલાશે
+                    ? _buildAudioPlayer() // àª²à«‹àªœàª¿àª• àª†àª¨à«€ àª…àª‚àª¦àª° àª¬àª¦àª²àª¾àª¶à«‡
                     : _buildVideoPlayer(),
               ),
-              if (false) // isLocked લોજિક જો જોઈતું હોય તો
-                const Positioned(
-                  top: 16,
-                  right: 16,
-                  child: Icon(Icons.lock, color: Colors.white),
-                ),
             ],
           ),
         );
@@ -196,8 +161,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(23),
-                      child:
-                      AppImage(
+                      child: AppImage(
                         src: AppSvg.musicSelected,
                         fit: BoxFit.cover,
                         color: colors.primary,
@@ -296,7 +260,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
-                          onPressed: () => player.playPrevious(), // નવું લોજિક
+                          onPressed: () => player.playPrevious(),
                           child: AppImage(src: AppSvg.skipPrev),
                         ),
                         const SizedBox(width: 8),
@@ -320,7 +284,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
-                          onPressed: () => player.playNext(), // નવું લોજિક
+                          onPressed: () => player.playNext(),
                           child: AppImage(src: AppSvg.skipNext),
                         ),
                         const SizedBox(width: 8),
@@ -344,7 +308,6 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildVideoPlayer() {
-    // નવા પ્લેયરમાં videoController અને chewieController ના નામ છે
     if (player.chewieController == null ||
         player.videoController == null ||
         !player.videoController!.value.isInitialized) {

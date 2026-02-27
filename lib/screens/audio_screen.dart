@@ -1,40 +1,6 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:hive/hive.dart';
-import 'package:media_player/screens/mini_player.dart';
-import 'package:media_player/screens/search_screen.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../blocs/audio/audio_bloc.dart';
-import '../core/constants.dart';
-import '../models/media_item.dart';
-import '../models/media_item.dart' as my;
-import '../services/global_player.dart';
-import '../utils/app_colors.dart';
-import '../widgets/add_to_playlist.dart';
-import '../widgets/app_bar.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/common_methods.dart';
-import '../widgets/custom_loader.dart';
-import '../widgets/image_item_widget.dart';
-import '../widgets/image_widget.dart';
-import 'bottom_bar_screen.dart';
-import 'detail_screen.dart';
-import 'home_screen.dart';
-
-// import 'mini_player.dart';
-import 'player_screen.dart';
+import '../utils/app_imports.dart';
 
 class AudioScreen extends StatefulWidget {
   bool isComeHomeScreen;
@@ -76,92 +42,102 @@ class _AudioScreenState extends State<AudioScreen> {
       create: (_) => AudioBloc(box)..add(LoadAudios()),
       child: widget.isComeHomeScreen
           ? Scaffold(
-              appBar: AppBar(
-                leading: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: AppImage(
-                      src: AppSvg.backArrowIcon,
-                      height: 20,
-                      width: 20,
-                    ),
-                  ),
-                ),
-                centerTitle: true,
-                title: AppText(
-                  "audio",
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-
-                actions: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      );
-                    },
-                    child: Container(
-                      height: 24,
-                      width: 24,
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: AppImage(
-                          src: "assets/svg_icon/search_icon.svg",
-                          height: 24,
-                          width: 24,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 15),
-                ],
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(
+                src: AppSvg.backArrowIcon,
+                height: 20,
+                width: 20,
               ),
-              body: Column(
-                children: [
-                  Expanded(child: _AudioBody()),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SmartMiniPlayer(),
-                  ),
-                ],
-              ),
-              // floatingActionButton: FloatingActionButton(
-              //   onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
-              //   child: const Icon(Icons.refresh),
-              // ),
-            )
-          : Column(
-              children: [
-                CommonAppBar(
-                  title: "videMusicPlayer",
-                  subTitle: "mediaPlayer",
-                  actionWidget: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: colors.textFieldFill,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: AppImage(src: AppSvg.searchIcon),
-                      ),
-                    ),
-                  ),
-                ),
-                Divider(color: colors.dividerColor),
-                Expanded(child: _AudioBody()),
-                SmartMiniPlayer(),
-              ],
             ),
+          ),
+          centerTitle: true,
+          title: AppText(
+            "audio",
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
+              child: TweenAnimationBuilder(
+                tween: Tween<double>(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 500),
+                builder: (context, double val, child) =>
+                    Transform.scale(scale: val, child: child),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AppImage(src: AppSvg.searchIcon),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 15),
+          ],
+        ),
+        body: Column(
+          children: [
+            Expanded(child: _AudioBody()),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SmartMiniPlayer(),
+            ),
+          ],
+        ),
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
+        //   child: const Icon(Icons.refresh),
+        // ),
+      )
+          : Column(
+        children: [
+          CommonAppBar(
+            title: "videMusicPlayer",
+            subTitle: "mediaPlayer",
+            actionWidget: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
+              child: TweenAnimationBuilder(
+                tween: Tween<double>(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 500),
+                builder: (context, double val, child) =>
+                    Transform.scale(scale: val, child: child),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AppImage(src: AppSvg.searchIcon),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Divider(color: colors.dividerColor),
+          Expanded(child: _AudioBody()),
+          SmartMiniPlayer(),
+        ],
+      ),
     );
   }
 }
@@ -173,13 +149,13 @@ class _AudioBody extends StatefulWidget {
   State<_AudioBody> createState() => _AudioBodyState();
 }
 
-// 1. wantKeepAlive માટે Mixin અને Override જરૂરી છે
+// 1. wantKeepAlive àª®àª¾àªŸà«‡ Mixin àª…àª¨à«‡ Override àªœàª°à«‚àª°à«€ àª›à«‡
 class _AudioBodyState extends State<_AudioBody>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  bool get wantKeepAlive => true; // આ પેજને મેમરીમાં જીવંત રાખશે
+  bool get wantKeepAlive => true; // àª† àªªà«‡àªœàª¨à«‡ àª®à«‡àª®àª°à«€àª®àª¾àª‚ àªœà«€àªµàª‚àª¤ àª°àª¾àª–àª¶à«‡
 
   @override
   void initState() {
@@ -200,17 +176,18 @@ class _AudioBodyState extends State<_AudioBody>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // AutomaticKeepAlive માટે આ જરૂરી છે
+    super.build(context); // AutomaticKeepAlive àª®àª¾àªŸà«‡ àª† àªœàª°à«‚àª°à«€ àª›à«‡
     return BlocBuilder<AudioBloc, AudioState>(
-      // _AudioBody ના build માં આ રીતે ફેરફાર કરો
+      // _AudioBody àª¨àª¾ build àª®àª¾àª‚ àª† àª°à«€àª¤à«‡ àª«à«‡àª°àª«àª¾àª° àª•àª°à«‹
       builder: (context, state) {
         List<AssetEntity> entities = [];
 
         if (state is AudioLoading) {
-          entities = state.entities; // હવે એરર નહીં આવે
-          if (entities.isEmpty) return Center(child: CustomLoader());
+          entities = state.entities; // àª¹àªµà«‡ àªàª°àª° àª¨àª¹à«€àª‚ àª†àªµà«‡
+          // if (entities.isEmpty)
+          return Center(child: CustomLoader());
         } else if (state is AudioLoaded) {
-          entities = state.entities; // હવે એરર નહીં આવે
+          entities = state.entities; // àª¹àªµà«‡ àªàª°àª° àª¨àª¹à«€àª‚ àª†àªµà«‡
         } else if (state is AudioError) {
           return Center(child: Text(state.message));
         } else {
@@ -222,7 +199,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // ડુપ્લીકેટ કોડ ઘટાડવા માટે અલગ ફંક્શન
+  // àª¡à«àªªà«àª²à«€àª•à«‡àªŸ àª•à«‹àª¡ àª˜àªŸàª¾àª¡àªµàª¾ àª®àª¾àªŸà«‡ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
   Widget _buildAudioList(List<AssetEntity> entities) {
     return AnimationLimiter(
       child: ListView.builder(
@@ -256,7 +233,11 @@ class _AudioBodyState extends State<_AudioBody>
                       child: GestureDetector(
                         onTap: () => _handleOnTap(entities, audio, file),
                         child: Container(
-                          padding: const EdgeInsets.only(top: 10,left: 10,bottom: 10),
+                          padding: const EdgeInsets.only(
+                            top: 10,
+                            left: 10,
+                            bottom: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: colors.cardBackground,
                             borderRadius: BorderRadius.circular(10),
@@ -289,9 +270,10 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // પ્લેયર હેન્ડલર
+  // àªªà«àª²à«‡àª¯àª° àª¹à«‡àª¨à«àª¡àª²àª°
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
-    GlobalPlayer().initAndPlay(entities: entities, selectedId: audio.id);
+    // GlobalPlayer().initAndPlay(entities: entities, selectedId: audio.id);
+    print("type===> ${audio.type}");
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -312,12 +294,12 @@ class _AudioBodyState extends State<_AudioBody>
     });
   }
 
-  // લિસ્ટ આઈટમનું આઈકન
+  // àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®àª¨à«àª‚ àª†àªˆàª•àª¨
   Widget _buildLeadingIcon(
-    AssetEntity audio,
-    AppThemeColors colors,
-    bool isPlaying,
-  ) {
+      AssetEntity audio,
+      AppThemeColors colors,
+      bool isPlaying,
+      ) {
     return Container(
       height: 50,
       width: 50,
@@ -341,12 +323,12 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // ટાઈટલ અને સમય
+  // àªŸàª¾àªˆàªŸàª² àª…àª¨à«‡ àª¸àª®àª¯
   Widget _buildTitleAndDuration(
-    AssetEntity audio,
-    File file,
-    AppThemeColors colors,
-  ) {
+      AssetEntity audio,
+      File file,
+      AppThemeColors colors,
+      ) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +350,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // મેનુ બટન
+  // àª®à«‡àª¨à« àª¬àªŸàª¨
   Widget _buildPopupMenu(AssetEntity audio, int index) {
     return PopupMenuButton<MediaMenuAction>(
       elevation: 15,
@@ -380,7 +362,7 @@ class _AudioBodyState extends State<_AudioBody>
       icon: AppImage(src: AppSvg.dropDownMenuDot),
       menuPadding: EdgeInsets.symmetric(horizontal: 10),
       onSelected: (action) => handleMenuAction(context, audio, action, index),
-      // common_methods માં હોવું જોઈએ
+      // common_methods àª®àª¾àª‚ àª¹à«‹àªµà«àª‚ àªœà«‹àªˆàª
       itemBuilder: (context) => [
         _buildPopupItem(
           MediaMenuAction.addToFavourite,
@@ -399,9 +381,9 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   PopupMenuItem<MediaMenuAction> _buildPopupItem(
-    MediaMenuAction action,
-    String title,
-  ) {
+      MediaMenuAction action,
+      String title,
+      ) {
     return PopupMenuItem(
       value: action,
       child: Center(child: AppText(title, fontSize: 12)),
@@ -409,11 +391,11 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   void handleMenuAction(
-    BuildContext context,
-    AssetEntity audio,
-    MediaMenuAction action,
-    int index,
-  ) async {
+      BuildContext context,
+      AssetEntity audio,
+      MediaMenuAction action,
+      int index,
+      ) async {
     switch (action) {
       case MediaMenuAction.detail:
         routeToDetailPage(context, audio);
@@ -452,10 +434,10 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   Future<void> _toggleFavourite(
-    BuildContext context,
-    AssetEntity entity,
-    int index,
-  ) async {
+      BuildContext context,
+      AssetEntity entity,
+      int index,
+      ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -464,7 +446,7 @@ class _AudioBodyState extends State<_AudioBody>
 
     final key = file.path;
 
-    // 🔹 Update Hive
+    // ðŸ”¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -487,7 +469,7 @@ class _AudioBodyState extends State<_AudioBody>
       );
     }
 
-    // 🔹 Update system favourite
+    // ðŸ”¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -505,16 +487,16 @@ class _AudioBodyState extends State<_AudioBody>
       );
     }
 
-    // 🔹 Reload entity
+    // ðŸ”¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
-
-    // 🔹 Update UI list
+    if (GlobalPlayer().currentEntity?.id == entity.id) {
+      await GlobalPlayer().refreshCurrentEntity();
+    }
+    // ðŸ”¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<AudioBloc>().add(LoadAudios(showLoading: false));
 
     setState(() {});
   }
 }
-
-

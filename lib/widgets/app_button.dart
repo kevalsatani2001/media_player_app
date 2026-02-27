@@ -25,8 +25,9 @@ class AppButton extends StatelessWidget {
   final AppFontFamily fontFamily;
   final double? letterSpacing;
   final double? textHeight;
+  Widget? child;
 
-  const AppButton({
+   AppButton({
     super.key,
     required this.title,
     required this.onTap,
@@ -44,6 +45,7 @@ class AppButton extends StatelessWidget {
     this.fontFamily = AppFontFamily.inter,
     this.letterSpacing,
     this.textHeight,
+    this.child
   });
 
   @override
@@ -73,7 +75,7 @@ class AppButton extends StatelessWidget {
             color: Colors.white,
           ),
         )
-            : Center(
+            :child?? Center(
               child: AppText(
                         title,
                         fontSize: fontSize ?? 14,

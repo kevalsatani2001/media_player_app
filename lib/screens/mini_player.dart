@@ -1,21 +1,6 @@
-import 'dart:async';
 import 'dart:ui' as ui;
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:media_player/core/constants.dart';
-import 'package:media_player/screens/player_screen.dart';
-import 'package:media_player/widgets/favourite_button.dart';
-import 'package:media_player/widgets/image_widget.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:video_player/video_player.dart';
-import '../blocs/audio/audio_bloc.dart';
-import '../models/media_item.dart';
-import '../services/global_player.dart';
-import '../widgets/common_methods.dart';
+
+import '../utils/app_imports.dart';
 
 class SmartMiniPlayer extends StatefulWidget {
   const SmartMiniPlayer({super.key});
@@ -31,10 +16,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   @override
   void initState() {
     super.initState();
-    // વીડિયો પોઝિશન અપડેટ કરવા માટે ટાઈમર
     player.restoreLastSession();
     _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      // જો પ્લેયર ક્લોઝ થઈ ગયો હોય (-1), તો કાંઈ જ ન કરો
       if (player.currentIndex == -1) return;
 
       if (player.currentType == "video" &&
@@ -44,19 +27,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       }
     });
   }
-
-  /*
-  @override
-void initState() {
-  super.initState();
-  // પ્લેયરને છેલ્લી પોઝિશનથી લોડ કરવા માટે
-  player.restoreLastSession();
-
-  _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-    // તમારો જૂનો ટાઈમર કોડ...
-  });
-}
-   */
 
   @override
   void dispose() {
@@ -71,33 +41,34 @@ void initState() {
 
     return SafeArea(
       child: AnimatedBuilder(
-          animation: player,
-          builder: (context, child) {
-            // આ શરત સૌથી મહત્વની છે
-            if (player.currentIndex == -1 ||player.currentMediaItem == null || player.currentEntity == null) {
+        animation: player,
+        builder: (context, child) {
+          if (player.currentIndex == -1 ||
+              player.currentMediaItem == null ||
+              player.currentEntity == null) {
+            return const SizedBox.shrink();
+          }
+
+          if (player.currentType == "video") {
+            if (player.videoController == null ||
+                !player.videoController!.value.isInitialized) {
               return const SizedBox.shrink();
             }
-
-            // વીડિયો પ્લેયર માટેની શરત
-            if (player.currentType == "video") {
-              if (player.videoController == null || !player.videoController!.value.isInitialized) {
-                return const SizedBox.shrink();
-              }
-              return _buildVideoMiniPlayer(
-                size: size,
-                isSmall: isSmallScreen,
-                // ID અને Favourite સ્ટેટ સાથેની કી
-                key: ValueKey('video_${player.currentEntity!.id}'),
-              );
-            } else {
-              // ઓડિયો પ્લેયર
-              return _buildAudioMiniPlayer(
-                key: ValueKey('audio_${player.currentEntity!.id}'),
-                size: size,
-                isSmall: isSmallScreen,
-              );
-            }
+            return _buildVideoMiniPlayer(
+              size: size,
+              isSmall: isSmallScreen,
+              // ID àª…àª¨à«‡ Favourite àª¸à«àªŸà«‡àªŸ àª¸àª¾àª¥à«‡àª¨à«€ àª•à«€
+              key: ValueKey('video_${player.currentEntity!.id}'),
+            );
+          } else {
+            // àª“àª¡àª¿àª¯à«‹ àªªà«àª²à«‡àª¯àª°
+            return _buildAudioMiniPlayer(
+              key: ValueKey('audio_${player.currentEntity!.id}'),
+              size: size,
+              isSmall: isSmallScreen,
+            );
           }
+        },
       ),
     );
   }
@@ -107,7 +78,6 @@ void initState() {
     required bool isSmall,
     Key? key,
   }) {
-    final item = player.currentMediaItem!;
     return _wrapper(
       key: key,
       isAudio: true,
@@ -131,18 +101,16 @@ void initState() {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _titleText(),
-                      AppText(
-                        "playingFromLocal",
-                        fontSize: isSmall ? 10 : 12,
-                      ),
+                      AppText("playingFromLocal", fontSize: isSmall ? 10 : 12),
                     ],
                   ),
                 ),
-                // ફેવરિટ બટન: લાઈવ એન્ટિટી વાપરો
-                if(player.currentEntity!=null)
+                if (player.currentEntity != null)
                   FavouriteButton(
-                    key: ValueKey('${player.currentEntity?.id}_${player.currentEntity?.isFavorite}'),
-                    entity: player.currentEntity!, // GlobalPlayer માંથી એન્ટિટી લો
+                    key: ValueKey(
+                      '${player.currentEntity?.id}_${player.currentEntity?.isFavorite}',
+                    ),
+                    entity: player.currentEntity!,
                   ),
                 _closeButton(Colors.black),
               ],
@@ -191,70 +159,60 @@ void initState() {
     );
   }
 
-
-// --- ઓડિયો પ્રોગ્રેસ બાર (int position/duration નો ઉપયોગ કરીને) ---
   Widget _audioProgressBar() {
-    // અહીં આપણે AnimatedBuilder વાપરી શકીએ અથવા StreamBuilder
-    // જો તમે player.position (int) ને AnimatedBuilder સાથે સિંક કર્યું હોય તો:
-
-
     return StreamBuilder<Duration>(
-        stream: player.audioPlayer.positionStream,
-        builder: (context, snapshot) {
-          final int positionMs = snapshot.data?.inMilliseconds ?? 0; // Fix Line 170
-          final int durationMs = player.audioPlayer.duration?.inMilliseconds ?? 0; // Fix Line 171
+      stream: player.audioPlayer.positionStream,
+      builder: (context, snapshot) {
+        final int positionMs = snapshot.data?.inMilliseconds ?? 0;
+        final int durationMs = player.audioPlayer.duration?.inMilliseconds ?? 0;
 
-          double progress = 0.0;
-          if (durationMs > 0) {
-            progress = (positionMs / durationMs).clamp(0.0, 1.0);
-          }
-          return GestureDetector(
-            onHorizontalDragUpdate: (details) {
-              final box = context.findRenderObject() as RenderBox;
-              final localOffset = box.globalToLocal(details.globalPosition);
-              final double relativeProgress = (localOffset.dx / box.size.width).clamp(0.0, 1.0);
-
-              // int મિલીસેકન્ડમાં કન્વર્ટ કરીને સીક (Seek) કરો
-              final int newPosMs = (durationMs * relativeProgress).toInt();
-              player.audioPlayer.seek(Duration(milliseconds: newPosMs));
-            },
-            child: Container(
-              width: double.infinity,
-              height: 30,
-              color: Colors.transparent,
-              child: CustomPaint(painter: CurveProgressPainter(progress)),
-            ),
-          );
+        double progress = 0.0;
+        if (durationMs > 0) {
+          progress = (positionMs / durationMs).clamp(0.0, 1.0);
         }
+        return GestureDetector(
+          onHorizontalDragUpdate: (details) {
+            final box = context.findRenderObject() as RenderBox;
+            final localOffset = box.globalToLocal(details.globalPosition);
+            final double relativeProgress = (localOffset.dx / box.size.width)
+                .clamp(0.0, 1.0);
+
+            final int newPosMs = (durationMs * relativeProgress).toInt();
+            player.audioPlayer.seek(Duration(milliseconds: newPosMs));
+          },
+          child: Container(
+            width: double.infinity,
+            height: 30,
+            color: Colors.transparent,
+            child: CustomPaint(painter: CurveProgressPainter(progress)),
+          ),
+        );
+      },
     );
   }
 
-// --- વીડિયો મિની પ્લેયર (int position/duration નો ઉપયોગ કરીને) ---
   Widget _buildVideoMiniPlayer({
     required Size size,
     required bool isSmall,
     Key? key,
   }) {
-    // માત્ર initialized જ નહીં, પણ controller નલ ન હોવો જોઈએ તે પણ ચેક કરો
     if (player.videoController == null ||
         !player.videoController!.value.isInitialized ||
         player.currentType != "video") {
       return const SizedBox.shrink();
     }
 
-    // ValueListenableBuilder વીડિયો સ્મૂધ રાખવા માટે જરૂરી છે
     return ValueListenableBuilder(
       valueListenable: player.videoController!,
       builder: (context, VideoPlayerValue value, child) {
-        // અહીં ખાતરી કરો કે controller નલ નથી
         final controller = player.videoController;
         if (controller == null || !controller.value.isInitialized) {
           return const SizedBox.shrink();
         }
         if (value.hasError) return const SizedBox.shrink();
-        // અહીં પણ આપણે player.position/duration (int) વાપરી શકીએ
-        final int pos = value.position.inMilliseconds; // .inMilliseconds ઉમેરો
-        final int dur = value.duration.inMilliseconds; // .inMilliseconds ઉમેરો
+
+        final int pos = value.position.inMilliseconds;
+        final int dur = value.duration.inMilliseconds;
 
         double progress = 0.0;
         if (dur > 0) {
@@ -269,7 +227,8 @@ void initState() {
             child: Row(
               children: [
                 SizedBox(
-                  width: 120, height: 70,
+                  width: 120,
+                  height: 70,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: FittedBox(
@@ -277,8 +236,10 @@ void initState() {
                       child: SizedBox(
                         width: value.size.width,
                         height: value.size.height,
-                        child: VideoPlayer(player.videoController!,
-                          key: ValueKey(player.videoController.hashCode),),
+                        child: VideoPlayer(
+                          player.videoController!,
+                          key: ValueKey(player.videoController.hashCode),
+                        ),
                       ),
                     ),
                   ),
@@ -291,14 +252,17 @@ void initState() {
                     children: [
                       Text(
                         player.currentMediaItem?.path.split('/').last ?? "",
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: LinearProgressIndicator(
-                          value: progress, // int માંથી ગણેલ લાઈવ પ્રોગ્રેસ
+                          value: progress,
                           backgroundColor: Colors.white24,
                           color: Colors.redAccent,
                           minHeight: 6,
@@ -306,8 +270,11 @@ void initState() {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "${_formatDuration(pos)} / ${_formatDuration(dur)}", // સીધું int પાસ કરો
-                        style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        "${_formatDuration(pos)} / ${_formatDuration(dur)}",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -315,22 +282,38 @@ void initState() {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.replay_10, color: Colors.white, size: 22),
+                      icon: const Icon(
+                        Icons.replay_10,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                       onPressed: () {
-                        player.videoController!.seekTo(Duration(milliseconds: pos - 10000));
+                        player.videoController!.seekTo(
+                          Duration(milliseconds: pos - 10000),
+                        );
                       },
                     ),
                     IconButton(
                       icon: Icon(
-                        value.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                        color: Colors.white, size: 35,
+                        value.isPlaying
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_filled,
+                        color: Colors.white,
+                        size: 35,
                       ),
-                      onPressed: () => value.isPlaying ? player.pause() : player.resume(),
+                      onPressed: () =>
+                      value.isPlaying ? player.pause() : player.resume(),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.forward_10, color: Colors.white, size: 22),
+                      icon: const Icon(
+                        Icons.forward_10,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                       onPressed: () {
-                        player.videoController!.seekTo(Duration(milliseconds: pos + 10000));
+                        player.videoController!.seekTo(
+                          Duration(milliseconds: pos + 10000),
+                        );
                       },
                     ),
                   ],
@@ -353,10 +336,10 @@ void initState() {
           context,
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
-              entity: player.currentEntity!, // લાઈવ એન્ટિટી મોકલો
+              entity: player.currentEntity!,
               item: item,
               index: player.currentIndex,
-              entityList: const [], // જરૂર હોય તો આખું લિસ્ટ મોકલી શકાય
+              entityList: const [],
             ),
           ),
         );
@@ -385,14 +368,20 @@ void initState() {
   Widget _titleText({Color color = Colors.black}) {
     final path = player.currentMediaItem?.path;
     final String fileName = path != null ? path.split('/').last : "noMedia";
-    return AppText(fileName, maxLines: 2, color: color, fontWeight: FontWeight.w700);
+    return AppText(
+      fileName,
+      maxLines: 2,
+      color: color,
+      fontWeight: FontWeight.w700,
+    );
   }
 
   Widget _playPauseButton(Color color) {
     return CupertinoButton(
       child: AppImage(
         src: player.isPlaying ? AppSvg.pauseVid : AppSvg.playVid,
-        height: 45, width: 45,
+        height: 45,
+        width: 45,
       ),
       onPressed: () => player.isPlaying ? player.pause() : player.resume(),
     );
@@ -402,10 +391,7 @@ void initState() {
     return IconButton(
       icon: AppImage(src: AppSvg.closeIcon),
       onPressed: () {
-        // ૧. પહેલા પ્લેયર બંધ કરો
         player.stopAndClose();
-
-        // ૨. મેન્યુઅલી આ વિજેટને હાઈડ કરવા માટે
         if (mounted) {
           setState(() {});
         }
@@ -416,19 +402,16 @@ void initState() {
   String _formatDuration(int ms) {
     if (ms < 0) ms = 0;
 
-    // મિલીસેકન્ડને સેકન્ડમાં ફેરવો (આ સૌથી મહત્વનું છે)
     int totalSeconds = ms ~/ 1000;
 
     final int hours = totalSeconds ~/ 3600;
     final int minutes = (totalSeconds % 3600) ~/ 60;
     final int seconds = totalSeconds % 60;
 
-    // padLeft(2, '0') એ ખાતરી કરશે કે જો આંકડો એક ડિજિટનો હોય તો આગળ '0' લાગે
     return "${hours.toString().padLeft(2, '0')}:"
         "${minutes.toString().padLeft(2, '0')}:"
         "${seconds.toString().padLeft(2, '0')}";
   }
-
 }
 
 class CurveProgressPainter extends CustomPainter {
@@ -450,8 +433,6 @@ class CurveProgressPainter extends CustomPainter {
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
 
-    // આ એક કર્વ (Arc) દોરશે.
-    // -1.2 થી 1.2 સુધીની વેલ્યુથી તે ઉપરની તરફ વળેલો દેખાશે.
     Path path = Path();
     path.moveTo(0, size.height);
     path.quadraticBezierTo(
@@ -463,7 +444,6 @@ class CurveProgressPainter extends CustomPainter {
 
     canvas.drawPath(path, backgroundPaint);
 
-    // પ્રોગ્રેસ મુજબ લાઈન દોરવા માટે
     ui.PathMetrics pathMetrics = path.computeMetrics();
     for (ui.PathMetric pathMetric in pathMetrics) {
       canvas.drawPath(
@@ -481,21 +461,10 @@ class NativeClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     Path path = Path();
-
-    // ૧. શરૂઆત નીચે ડાબી બાજુથી (Bottom Left)
     path.moveTo(0, size.height);
-
-    // ૨. ઉપર ડાબી બાજુ સુધી લાઈન દોરો, પણ થોડી જગ્યા છોડો (દા.ત. 50px)
     path.lineTo(0, 48);
-
-    // ૩. ઉપરની બાજુ કર્વ દોરો
-    // size.width / 2 એ સેન્ટર છે અને બીજો 0 એ સૌથી ઉપરનો પોઈન્ટ (Peak) છે
     path.quadraticBezierTo(size.width / 2, 0, size.width, 48);
-
-    // ૪. જમણી બાજુ નીચે સુધી લાઈન
     path.lineTo(size.width, size.height);
-
-    // ૫. પાથ બંધ કરો
     path.close();
 
     return path;

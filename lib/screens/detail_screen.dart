@@ -1,16 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:media_player/widgets/app_bar.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
-import '../core/constants.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/text_widget.dart';
-import 'bottom_bar_screen.dart';
+
+import '../utils/app_imports.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({super.key, required this.entity});
@@ -158,8 +148,8 @@ Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
               GestureDetector(
                 child: _buildInfoItem('id', entity.id),
                 onLongPress: () {
-                  Clipboard.setData(ClipboardData(text: entity.id));
-                  Fluttertoast.showToast(msg: 'The id already copied.');
+                  // Clipboard.setData(ClipboardData(text: entity.id));
+                  // Fluttertoast.showToast(msg: 'The id already copied.');
                 },
               ),
               _buildInfoItem('create', entity.createDateTime.toString()),

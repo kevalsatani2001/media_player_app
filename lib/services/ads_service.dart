@@ -1,101 +1,113 @@
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdHelper {
-  // Test IDs (લાઈવ કરતી વખતે તમારા રિયલ આઈડી અહીં નાખવા)
+  // --- Ad Unit IDs (Replace with real IDs for production) ---
   static String get bannerId => 'ca-app-pub-3940256099942544/6300978111';
   static String get interstitialId => 'ca-app-pub-3940256099942544/1033173712';
   static String get rewardedId => 'ca-app-pub-3940256099942544/5224354917';
   static String get appOpenId => 'ca-app-pub-3940256099942544/9257395923';
 
-  // --- ૧. Banner Ad (વિજેટ તરીકે વાપરવા) ---
+  // --- 1. Banner Ad Widget ---
   static Widget bannerAdWidget({AdSize size = AdSize.banner}) {
-    return StatefulBuilder(builder: (context, setState) {
-      BannerAd banner = BannerAd(
-        adUnitId: bannerId,
-        size: size, // પાસ કરેલી સાઈઝ અહીં વપરાશે
-        request: const AdRequest(),
-        listener: BannerAdListener(
-          onAdLoaded: (_) => setState(() {}),
-          onAdFailedToLoad: (ad, error) {
-            debugPrint("Ad Load Error: $error");
-            ad.dispose();
-          },
-        ),
-      )..load();
+    return StatefulBuilder(
+      builder: (context, setState) {
+        final BannerAd banner = BannerAd(
+          adUnitId: bannerId,
+          size: size,
+          request: const AdRequest(),
+          listener: BannerAdListener(
+            onAdLoaded: (_) => setState(() {}),
+            onAdFailedToLoad: (ad, error) {
+              debugPrint("Banner Ad failed to load: $error");
+              ad.dispose();
+            },
+          ),
+        )..load();
 
-      return Container(
-        alignment: Alignment.center,
-        width: banner.size.width.toDouble(),
-        height: banner.size.height.toDouble(),
-        child: AdWidget(ad: banner),
-      );
-    });
+        return Container(
+          alignment: Alignment.center,
+          width: banner.size.width.toDouble(),
+          height: banner.size.height.toDouble(),
+          child: AdWidget(ad: banner),
+        );
+      },
+    );
   }
 
-
+  // --- 2. Adaptive Banner Ad ---
   static Widget adaptiveBannerWidget(BuildContext context) {
     return FutureBuilder<AdSize?>(
-      // આ મેથડ Future રિટર્ન કરે છે એટલે આપણે તેને 'future' માં નાખીશું
       future: AdSize.getAnchoredAdaptiveBannerAdSize(
         Orientation.portrait,
         MediaQuery.of(context).size.width.truncate(),
       ),
       builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          // જો સાઈઝ મળી જાય, તો તે સાઈઝ સાથે બેનર બતાવો
+        if (snapshot.hasData && snapshot.data != null) {
           return bannerAdWidget(size: snapshot.data!);
         } else {
-          // જ્યાં સુધી સાઈઝ લોડ થાય, ત્યાં સુધી સ્ટાન્ડર્ડ બેનર બતાવો અથવા ખાલી જગ્યા
+          // Fallback to standard banner while loading
           return bannerAdWidget(size: AdSize.banner);
         }
       },
     );
   }
 
-  // --- ૨. Interstitial Ad (આખા પેજની એડ) ---
+  // --- 3. Interstitial Ad (Full Screen) ---
   static void showInterstitialAd() {
     InterstitialAd.load(
       adUnitId: interstitialId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) => ad.show(),
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+            onAdFailedToShowFullScreenContent: (ad, error) => ad.dispose(),
+          );
+          ad.show();
+        },
         onAdFailedToLoad: (error) => debugPrint("Interstitial Error: $error"),
       ),
     );
   }
 
-  // --- ૩. Rewarded Ad (વિડિયો એડ - જેમાં કંઈક રિવોર્ડ આપવાનો હોય) ---
-  static void showRewardedAd(Function onRewardEarned) {
+  // --- 4. Rewarded Ad ---
+  static void showRewardedAd(VoidCallback onRewardEarned) {
     RewardedAd.load(
       adUnitId: rewardedId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          ad.show(onUserEarnedReward: (ad, reward) {
-            onRewardEarned(); // યુઝરને રિવોર્ડ આપવા માટે આ ફંક્શન કોલ થશે
-          });
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+            onAdFailedToShowFullScreenContent: (ad, error) => ad.dispose(),
+          );
+          ad.show(
+            onUserEarnedReward: (ad, reward) {
+              onRewardEarned();
+            },
+          );
         },
-        onAdFailedToLoad: (error) => debugPrint("Rewarded Error: $error"),
+        onAdFailedToLoad: (error) => debugPrint("Rewarded Ad Error: $error"),
       ),
     );
   }
 
-  // --- ૪. App Open Ad (એપ ઓપન થાય ત્યારે) ---
+  // --- 5. App Open Ad ---
   static void showAppOpenAd() {
     AppOpenAd.load(
       adUnitId: appOpenId,
       request: const AdRequest(),
       adLoadCallback: AppOpenAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint("AppOpenAd loaded successfully");
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+            onAdFailedToShowFullScreenContent: (ad, error) => ad.dispose(),
+          );
           ad.show();
         },
-        onAdFailedToLoad: (error) {
-          debugPrint("AppOpenAd failed to load: $error");
-        },
+        onAdFailedToLoad: (error) => debugPrint("App Open Ad Error: $error"),
       ),
-      // અહીંથી orientation પેરામીટર કાઢી નાખ્યો છે
     );
   }
 }

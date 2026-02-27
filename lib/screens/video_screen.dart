@@ -1,34 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
-
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
-import 'package:media_player/screens/search_screen.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import '../blocs/favourite_change/favourite_change_bloc.dart';
-import '../blocs/video/video_bloc.dart';
-import '../blocs/video/video_event.dart';
-import '../blocs/video/video_state.dart';
-import '../core/constants.dart';
-import '../models/media_item.dart';
-import '../utils/app_colors.dart';
-import '../widgets/add_to_playlist.dart';
-import '../widgets/app_bar.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/common_methods.dart';
-import '../widgets/custom_loader.dart';
-import '../widgets/image_item_widget.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/shimmer_effect.dart';
-import '../widgets/text_widget.dart';
-import 'detail_screen.dart';
-import 'mini_player.dart';
-import 'player_screen.dart';
+import '../utils/app_imports.dart';
 
 class VideoScreen extends StatefulWidget {
   bool isComeHomeScreen;
@@ -42,7 +13,6 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   String _searchQuery = '';
   bool _isGridView = true;
-  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -53,10 +23,8 @@ class _VideoScreenState extends State<VideoScreen> {
 
   void _onScroll() {
     if (_scrollController.position.extentAfter < 500) {
-      // થોડું વહેલું લોડ કરો જેથી યુઝરને વેટ ન કરવો પડે
       final state = context.read<VideoBloc>().state;
       if (state is VideoLoaded && state.hasMore) {
-        // અહીં વારંવાર કોલ ન થાય તે માટે Bloc જ હેન્ડલ કરશે
         context.read<VideoBloc>().add(LoadMoreVideos());
       }
     }
@@ -197,7 +165,6 @@ class _VideoScreenState extends State<VideoScreen> {
         }
 
         if (state is VideoLoaded) {
-          // ફિલ્ટર કરેલું લિસ્ટ
           final entitiesToShow = _searchQuery.isEmpty
               ? state.entities
               : state.entities.where((e) {
@@ -211,17 +178,41 @@ class _VideoScreenState extends State<VideoScreen> {
             return const Center(child: AppText("noResultFound"));
           }
 
-          return _isGridView
-              ? _buildGridView(entitiesToShow, state.hasMore)
-              : _buildListView(entitiesToShow, state.hasMore);
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.0, 0.02), // àª¸àª¹à«‡àªœ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª†àªµàª¶à«‡
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: _isGridView
+                ? _buildGridView(
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('grid'),
+            )
+                : _buildListView(
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('list'),
+            ),
+          );
         }
         return const SizedBox();
       },
     );
   }
 
-  _buildGridView(List<dynamic> entitiesToShow, bool hasMore) {
+  _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
     return GridView.builder(
+      key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(15),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -233,7 +224,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // ✅ FIRST CHECK LOADER
+        // âœ… FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Center(child: CustomLoader());
         }
@@ -241,22 +232,20 @@ class _VideoScreenState extends State<VideoScreen> {
         final entity = entitiesToShow[index];
 
         return AppTransition(
-          index: index,
-          columnCount: 2, // અહીં ગ્રીડની કોલમ લખો
+          index: index % 10,
+          columnCount: 2,
           child: GestureDetector(
             onTap: () async {
               final entity = entitiesToShow[index];
 
               if (entity is AssetEntity) {
-                // લિસ્ટમાં રહેલા બધા dynamic ડેટામાંથી માત્ર AssetEntity ફિલ્ટર કરો
                 List<AssetEntity> videoList = entitiesToShow
                     .whereType<AssetEntity>()
                     .toList();
 
-                // સાચો ઇન્ડેક્સ મેળવો (કારણ કે dynamic લિસ્ટમાં index અલગ હોઈ શકે)
                 int actualIndex = videoList.indexOf(entity);
 
-                _navigateToPlayer(context, videoList, actualIndex);
+                _navigateToPlayer(context, videoList, actualIndex, entity);
               }
             },
             child: Padding(
@@ -338,13 +327,14 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-  _buildListView(List<dynamic> entitiesToShow, bool hasMore) {
+  _buildListView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
     return ListView.builder(
+      key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // ✅ FIRST CHECK LOADER
+        // âœ… FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Padding(
             padding: EdgeInsets.all(0),
@@ -354,7 +344,7 @@ class _VideoScreenState extends State<VideoScreen> {
         final entity = entitiesToShow[index];
 
         return AppTransition(
-          index: index,
+          index: index % 10,
           child: ImageItemWidget(
             onMenuSelected: (action) async {
               switch (action) {
@@ -404,6 +394,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 context,
                 entitiesToShow.cast<AssetEntity>(),
                 index,
+                entity,
               );
             },
             isGrid: _isGridView,
@@ -476,7 +467,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     final key = file.path;
 
-    // 🔹 Update Hive
+    // ðŸ”¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -499,7 +490,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // 🔹 Update system favourite
+    // ðŸ”¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -517,11 +508,11 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // 🔹 Reload entity
+    // ðŸ”¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // 🔹 Update UI list
+    // ðŸ”¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
 
@@ -532,30 +523,51 @@ class _VideoScreenState extends State<VideoScreen> {
       BuildContext context,
       List<AssetEntity> allEntities,
       int currentIndex,
+      AssetEntity video,
       ) async {
-    final entity = allEntities[currentIndex];
-    final file = await entity.file;
+    // GlobalPlayer().initAndPlay(entities: allEntities, selectedId: video.id);
+    // final entity = allEntities[currentIndex];
+    final file = await video.file;
 
     if (file == null || !file.existsSync()) return;
+
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (_) => PlayerScreen(
+    //       entity: entity,
+    //       item: MediaItem(
+    //         isFavourite: entity.isFavorite,
+    //         id: entity.id,
+    //         path: file.path,
+    //         isNetwork: false,
+    //         type: 'video',
+    //       ),
+    //       // index: currentIndex,
+    //       entityList: allEntities, // àª†àª–à«€ àª²àª¿àª¸à«àªŸ àª®à«‹àª•àª²à«‹ àªœà«‡àª¥à«€ Next/Prev àªšàª¾àª²à«‡
+    //     ),
+    //   ),
+    // ).then((value) {
+    //   // àªªà«àª²à«‡àª¯àª° àª®àª¾àª‚àª¥à«€ àªªàª¾àª›àª¾ àª†àªµà«àª¯àª¾ àªªàª›à«€ àª²àª¿àª¸à«àªŸ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+    //   context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+    // });
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => PlayerScreen(
-          entity: entity,
+          entityList: allEntities,
+          entity: video,
           item: MediaItem(
-            isFavourite: entity.isFavorite,
-            id: entity.id,
+            isFavourite: video.isFavorite,
+            id: video.id,
             path: file.path,
             isNetwork: false,
             type: 'video',
           ),
-          index: currentIndex,
-          entityList: allEntities, // આખી લિસ્ટ મોકલો જેથી Next/Prev ચાલે
         ),
       ),
-    ).then((value) {
-      // પ્લેયર માંથી પાછા આવ્યા પછી લિસ્ટ રિફ્રેશ કરવા માટે
+    ).then((_) {
       context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     });
   }

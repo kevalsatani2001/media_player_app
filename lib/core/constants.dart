@@ -1,97 +1,122 @@
 class AppSvg {
-  static const String _base = 'assets/svg_icon';
-  static const String _basePng = 'assets/png_photo';
+  // Base paths for different asset types
+  static const String _svgPath = 'assets/svg_icon';
+  static const String _pngPath = 'assets/png_photo';
 
-  static const String appBarIcon = '$_base/app_bar_icon.svg';
-  static const String appLogo = '$_base/app_logo.svg';
+  // ===========================================================================
+  // GENERAL & APP BRANDING
+  // ===========================================================================
+  static const String appLogo = '$_svgPath/app_logo.svg';
+  static const String appBarIcon = '$_svgPath/app_bar_icon.svg';
+  static const String backArrowIcon = '$_svgPath/back_arrow_icon.svg';
+  static const String rightArrow = '$_svgPath/right_arrow_icon.svg';
+  static const String closeIcon = '$_svgPath/close_icon.svg';
+  static const String dropDownMenuDot = '$_svgPath/drop_down_menu_dot.svg';
 
-  static const String audioIcon = '$_base/audio_icon.svg';
-  static const String backArrowIcon = '$_base/back_arrow_icon.svg';
-  static const String dropDownMenuDot = '$_base/drop_down_menu_dot.svg';
+  // ===========================================================================
+  // BOTTOM NAVIGATION & TABS
+  // ===========================================================================
+  static const String homeSelected = '$_svgPath/home_selected_icon.svg';
+  static const String homeUnselected = '$_svgPath/home_icon_unselected.svg';
 
-  static const String favouriteIcon = '$_base/favourite_icon.svg';
-  static const String unlikeIcon = '$_base/unlike_icon.svg';
-  static const String likeIcon = '$_base/like_icon.svg';
+  static const String musicSelected = '$_svgPath/music_selected_icon.svg';
+  static const String musicUnselected = '$_svgPath/music_icon_unselected.svg';
 
-  static const String gridIcon = '$_base/grid_icon.svg';
-  static const String listIcon = '$_base/list_icon.svg';
+  static const String videoSelected = '$_svgPath/video_icon_selected.svg';
+  static const String videoUnselected = '$_svgPath/video_icon_unselected.svg';
+  static const String videoIcon =
+      '$_svgPath/video_icon.svg'; // General video icon
 
-  static const String homeSelected = '$_base/home_selected_icon.svg';
-  static const String homeUnselected = '$_base/home_icon_unselected.svg';
+  static const String settingSelected = '$_svgPath/setting_selected_icon.svg';
+  static const String settingUnselected =
+      '$_svgPath/setting_unselected_icon.svg';
 
-  static const String musicSelected = '$_base/music_selected_icon.svg';
-  static const String musicUnselected = '$_base/music_icon_unselected.svg';
+  // ===========================================================================
+  // MEDIA ACTIONS & STATES (Like/Fav/Done)
+  // ===========================================================================
+  static const String audioIcon = '$_svgPath/audio_icon.svg';
+  static const String folderIcon = '$_svgPath/folder_icon.svg';
+  static const String playlistIcon = '$_svgPath/play_list_icon.svg';
 
-  static const String playlistIcon = '$_base/play_list_icon.svg';
+  static const String favouriteIcon = '$_svgPath/favourite_icon.svg';
+  static const String unlikeIcon = '$_svgPath/unlike_icon.svg';
+  static const String likeIcon = '$_svgPath/like_icon.svg';
 
-  static const String folderIcon = '$_base/folder_icon.svg';
+  static const String gridIcon = '$_svgPath/grid_icon.svg';
+  static const String listIcon = '$_svgPath/list_icon.svg';
 
-  static const String searchIcon = '$_base/search_icon.svg';
-  static const String searchIconBorder = '$_base/search_icon_with_border.svg';
-  static const String closeIcon = '$_base/close_icon.svg';
+  static const String doneSelect = '$_svgPath/done_icon_selected.svg';
+  static const String doneUnSelect = '$_svgPath/done_icon.svg';
 
-  static const String settingSelected = '$_base/setting_selected_icon.svg';
-  static const String settingUnselected = '$_base/setting_unselected_icon.svg';
+  static const String radioSelect = '$_svgPath/radio_icon_selected.svg';
+  static const String radioUnSelect = '$_svgPath/radio_icon_unselected.svg';
 
-  static const String videoIcon = '$_base/video_icon.svg';
-  static const String videoUnselected = '$_base/video_icon_unselected.svg';
-  static const String videoSelected = '$_base/video_icon_selected.svg';
+  // ===========================================================================
+  // SEARCH FUNCTIONALITY
+  // ===========================================================================
+  static const String searchIcon = '$_svgPath/search_icon.svg';
+  static const String searchIconBorder =
+      '$_svgPath/search_icon_with_border.svg';
 
-  static const String doneUnSelect = '$_base/done_icon.svg';
-  static const String doneSelect = '$_base/done_icon_selected.svg';
+  // ===========================================================================
+  // PLAYER CONTROLS (Audio & Video)
+  // ===========================================================================
+  static const String playVid = '$_svgPath/ic_playvid.svg';
+  static const String pauseVid = '$_svgPath/ic_vid_pause.svg';
+  static const String skipNext = '$_svgPath/ic_skip_next.svg';
+  static const String skipPrev = '$_svgPath/ic_skip_prev.svg';
 
-  static const String radioSelect = '$_base/radio_icon_selected.svg';
-  static const String radioUnSelect = '$_base/radio_icon_unselected.svg';
+  static const String playerPause =
+      '$_svgPath/player_pause.svg'; // Alternate pause
+  static const String playerResume =
+      '$_svgPath/player_resume.svg'; // Alternate play
 
+  static const String ic10Next = '$_svgPath/ic_10_sec_next.svg';
+  static const String ic10Prev = '$_svgPath/ic_10_sec_prev.svg';
 
-  static const String playerPause = '$_base/player_pause.svg';
-  static const String playerResume = '$_base/player_resume.svg';
+  static const String icVolumeOn = '$_svgPath/ic_volumeon.svg';
+  static const String icVolumeOff = '$_svgPath/ic_volumeoff.svg';
 
+  static const String icShuffle = '$_svgPath/ic_shuffle.svg';
+  static const String icLoop = '$_svgPath/ic_loop.svg';
+  static const String icRotation = '$_svgPath/rotation_icon.svg';
 
-  static const String appThemeIcon = '$_base/app_theme_icon.svg';
-  static const String languageIcon = '$_base/language_icon.svg';
-  static const String shareAppIcon = '$_base/share_app_icon.svg';
-  static const String rateAppIcon = '$_base/rate_app_icon.svg';
-  static const String privacyPolicyIcon = '$_base/privacy_policy_icon.svg';
+  static const String icOn = '$_svgPath/ic_on.svg';
+  static const String icOff = '$_svgPath/ic_off.svg';
 
+  static const String ic2x = '$_svgPath/ic_2x.svg';
+  static const String ic3x = '$_svgPath/ic_3x.svg';
 
-  static const String rightArrow = '$_base/right_arrow_icon.svg';
+  static const String icBigScreen = '$_svgPath/ic_bigscreen.svg';
+  static const String icMiniScreen = '$_svgPath/ic_miniscreen.svg';
 
+  // ===========================================================================
+  // SETTINGS & INFO
+  // ===========================================================================
+  static const String appThemeIcon = '$_svgPath/app_theme_icon.svg';
+  static const String languageIcon = '$_svgPath/language_icon.svg';
+  static const String shareAppIcon = '$_svgPath/share_app_icon.svg';
+  static const String rateAppIcon = '$_svgPath/rate_app_icon.svg';
+  static const String privacyPolicyIcon = '$_svgPath/privacy_policy_icon.svg';
+  static const String icInfo = '$_svgPath/ic_info.svg';
+  static const String icDarkMode = '$_svgPath/ic_darkmode.svg';
 
-  static const String starFill = '$_base/start_fill.svg';
-  static const String startEmpty = '$_base/ic_dstar.svg';
-  static const String starHalf = '$_base/star_fill_half.svg';
-  static const String starHalfHalf = '$_base/star_fill_double_half.svg';
+  // ===========================================================================
+  // RATINGS & ONBOARDING
+  // ===========================================================================
+  static const String starFill =
+      '$_svgPath/start_fill.svg'; // Keep filename as is if correct
+  static const String startEmpty = '$_svgPath/ic_dstar.svg';
+  static const String starHalf = '$_svgPath/star_fill_half.svg';
+  static const String starHalfHalf = '$_svgPath/star_fill_double_half.svg';
 
-  static const String playVid = '$_base/ic_playvid.svg';
-  static const String pauseVid = '$_base/ic_vid_pause.svg';
-  static const String skipNext = '$_base/ic_skip_next.svg';
-  static const String skipPrev = '$_base/ic_skip_prev.svg';
+  static const String icOnboarding1 = '$_svgPath/onboarding_1.svg';
+  static const String icOnboarding2 = '$_svgPath/onboarding_2.svg';
+  static const String icOnboarding3 = '$_svgPath/onboarding_3.svg';
+  static const String icOnboarding4 = '$_svgPath/onboarding_4.svg';
 
-  ////////////////////// controls////////////////////////////
-  static const String ic2x = '$_base/ic_2x.svg';
-  static const String ic3x = '$_base/ic_3x.svg';
-  static const String icBigScreen = '$_base/ic_bigscreen.svg';
-  static const String icDarkMode = '$_base/ic_darkmode.svg';
-  static const String icInfo = '$_base/ic_info.svg';
-  static const String icLoop = '$_base/ic_loop.svg';
-  static const String icMiniScreen = '$_base/ic_miniscreen.svg';
-  static const String icOff = '$_base/ic_off.svg';
-  static const String icOn = '$_base/ic_on.svg';
-  static const String icShuffle = '$_base/ic_shuffle.svg';
-  static const String icVolumeOff = '$_base/ic_volumeoff.svg';
-  static const String icVolumeOn = '$_base/ic_volumeon.svg';
-  static const String icRotation = '$_base/rotation_icon.svg';
-  static const String ic10Prev = '$_base/ic_10_sec_prev.svg';
-  static const String ic10Next = '$_base/ic_10_sec_next.svg';
-
-  static const String icOnboarding1 = '$_base/onboarding_1.svg';
-  static const String icOnboarding2 = '$_base/onboarding_2.svg';
-  static const String icOnboarding3 = '$_base/onboarding_3.svg';
-  static const String icOnboarding4 = '$_base/onboarding_4.svg';
-
-
-
-  ////////////////////////////////////////////// png /////////////////////////////
-  static const String introBackground = '$_basePng/intro_background.png';
+  // ===========================================================================
+  // PNG ASSETS (Photos/Backgrounds)
+  // ===========================================================================
+  static const String introBackground = '$_pngPath/intro_background.png';
 }

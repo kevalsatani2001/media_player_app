@@ -1,26 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:media_player/widgets/custom_loader.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
-import 'package:photo_manager/platform_utils.dart';
-import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
-import '../core/constants.dart';
-import '../utils/app_colors.dart';
-import '../widgets/add_to_playlist.dart';
-import '../widgets/image_item_widget.dart';
-import '../models/media_item.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/text_widget.dart';
-import 'detail_screen.dart';
-import 'player_screen.dart';
-import 'bottom_bar_screen.dart';
+
+import '../utils/app_imports.dart';
 
 class GalleryContentListPage extends StatefulWidget {
   const GalleryContentListPage({super.key, required this.path});
@@ -79,19 +59,11 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
             padding: const EdgeInsets.all(16),
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: AppImage(
-                src: AppSvg.backArrowIcon,
-                height: 20,
-                width: 20,
-              ),
+              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
             ),
           ),
           centerTitle: true,
-          title: AppText(
-            path.name,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-          ),
+          title: AppText(path.name, fontSize: 20, fontWeight: FontWeight.w500),
         ),
         body: buildRefreshIndicator(context),
       ),
@@ -281,7 +253,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
 
     final key = file.path;
 
-    // 🔹 Update Hive
+    // ðŸ”¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
     } else {
@@ -308,11 +280,11 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       );
     }
 
-    // 🔹 Reload entity
+    // ðŸ”¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // 🔹 Update UI list
+    // ðŸ”¹ Update UI list
     readPathProvider(context).list[index] = newEntity;
     setState(() {});
   }
@@ -323,7 +295,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
         title: const AppText('deleteTheAsset'),
         actions: <Widget>[
           TextButton(
-            child: const AppText('delete', color: Colors.red,),
+            child: const AppText('delete', color: Colors.red),
             onPressed: () async {
               readPathProvider(context).delete(entity);
               await _onRefresh(context);
@@ -367,7 +339,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
                 child: Container(
                   color: Colors.white,
                   padding: const EdgeInsets.all(20),
-                  child: CustomLoader()
+                  child: CustomLoader(),
                 ),
               );
             }
