@@ -10,6 +10,23 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      "yourMediaYourPrivacy": "1. Your Media, Your Privacy",
+      "yourMediaYourPrivacyContent":
+          "This app only plays files (Videos and Music) that are already on your phone. We do not look at your private photos or other personal documents.",
+      "offlineExperience": "2. Offline Experience",
+      "offlineExperienceContent":
+          "All your created Playlists and Favorites are saved directly on your device. We do not upload your files or data to any website or server.",
+      "noPersonalTracking": "3. No Personal Tracking",
+      "noPersonalTrackingContent":
+          "We don't ask for your name, email, or phone number. You can use all features of this app without ever creating an account.",
+      "whyPermissions": "4. Why we need Permissions?",
+      "whyPermissionsContent":
+          "We ask for 'Storage Permission' only so the app can find your music and videos to play them. Without this, the app won't be able to show your files.",
+      "securePrivate": "5. Secure & Private",
+      "securePrivateContent":
+          "Since everything is stored on your phone, your data is completely private. If you delete the app, your created playlists within the app will also be removed.",
+      "appVersion": "Version",
+      "allRightsReserved": "All Rights Reserved",
       "viewAll": "View all",
       "removedFromPlaylist": "Removed from Playlist",
       'home': 'Home',
@@ -156,6 +173,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "Add some videos or audio to see them here!",
     },
     'ar': {
+      "yourMediaYourPrivacy": "١. وسائطك، خصوصيتك",
+      "yourMediaYourPrivacyContent":
+          "يشغل هذا التطبيق فقط الملفات (الفيديوهات والموسيقى) الموجودة بالفعل على هاتفك. نحن لا نطلع على صورك الخاصة أو مستنداتك الشخصية الأخرى.",
+      "offlineExperience": "٢. تجربة بدون إنترنت",
+      "offlineExperienceContent":
+          "يتم حفظ جميع قوائم التشغيل والمفضلات التي أنشأتها مباشرة على جهازك. نحن لا نرفع ملفاتك أو بياناتك إلى أي موقع ويب أو خادم.",
+      "noPersonalTracking": "٣. لا تتبع شخصي",
+      "noPersonalTrackingContent":
+          "نحن لا نطلب اسمك أو بريدك الإلكتروني أو رقم هاتفك. يمكنك استخدام جميع ميزات هذا التطبيق دون إنشاء حساب.",
+      "whyPermissions": "٤. لماذا نحتاج إلى أذونات؟",
+      "whyPermissionsContent":
+          "نطلب 'إذن التخزين' فقط حتى يتمكن التطبيق من العثور على الموسيقى والفيديوهات وتشغيلها. بدون ذلك، لن يتمكن التطبيق من عرض ملفاتك.",
+      "securePrivate": "٥. آمن وخصوصي",
+      "securePrivateContent":
+          "بما أن كل شيء مخزن على هاتفك، فإن بياناتك خاصة تمامًا. إذا قمت بحذف التطبيق، فسيتم أيضًا حذف قوائم التشغيل التي أنشأتها داخل التطبيق.",
+      "appVersion": "الإصدار",
+      "allRightsReserved": "جميع الحقوق محفوظة",
       "viewAll": "عرض الكل",
       "removedFromPlaylist": "تم الحذف من قائمة التشغيل",
       'home': 'الرئيسية',
@@ -297,6 +331,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "أضف بعض الفيديوهات أو الصوتيات لتظهر هنا!",
     },
     'my': {
+      "yourMediaYourPrivacy": "၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
+      "yourMediaYourPrivacyContent":
+          "ဤအက်ပ်သည် သင့်ဖုန်းထဲတွင် ရှိပြီးသားဖိုင်များ (ဗီဒီယိုနှင့် သီချင်း) ကိုသာ ဖွင့်ပေးပါသည်။ သင်၏ ကိုယ်ပိုင်ဓာတ်ပုံများနှင့် အခြားကိုယ်ရေးကိုယ်တာ စာရွက်စာတမ်းများကို ကျွန်ုပ်တို့ မကြည့်ရှုပါ။",
+      "offlineExperience": "၂။ အော့ဖ်လိုင်းအသုံးပြုမှု",
+      "offlineExperienceContent":
+          "သင်ဖန်တီးထားသော ပလေးလစ်များနှင့် အကြိုက်ဆုံးများကို သင့်စက်ထဲတွင် တိုက်ရိုက်သိမ်းဆည်းထားပါသည်။ သင်၏ဖိုင်များ သို့မဟုတ် ဒေတာများကို မည်သည့်ဝဘ်ဆိုက် သို့မဟုတ် ဆာဗာသို့မှ တင်မည်မဟုတ်ပါ။",
+      "noPersonalTracking": "၃။ ကိုယ်ရေးကိုယ်တာ ခြေရာခံခြင်းမရှိပါ",
+      "noPersonalTrackingContent":
+          "သင့်အမည်၊ အီးမေးလ် သို့မဟုတ် ဖုန်းနံပါတ်တို့ကို ကျွန်ုပ်တို့ မတောင်းဆိုပါ။ အကောင့်ဖွင့်ရန်မလိုဘဲ ဤအက်ပ်၏ လုပ်ဆောင်ချက်အားလုံးကို အသုံးပြုနိုင်ပါသည်။",
+      "whyPermissions": "၄။ ကျွန်ုပ်တို့ အဘယ်ကြောင့် ခွင့်ပြုချက်လိုအပ်သနည်း။",
+      "whyPermissionsContent":
+          "အက်ပ်က သင့်သီချင်းနှင့် ဗီဒီယိုများကို ရှာဖွေဖွင့်နိုင်ရန် 'Storage Permission' ကိုသာ တောင်းဆိုခြင်းဖြစ်သည်။ ဤခွင့်ပြုချက်မရှိလျှင် အက်ပ်က သင့်ဖိုင်များကို ပြသနိုင်မည်မဟုတ်ပါ။",
+      "securePrivate": "၅။ လုံခြုံစိတ်ချရပြီး သီးသန့်ဖြစ်ခြင်း",
+      "securePrivateContent":
+          "အရာအားလုံးကို သင့်ဖုန်းပေါ်တွင်သာ သိမ်းဆည်းထားသောကြောင့် သင့်ဒေတာသည် လုံးဝသီးသန့်ဖြစ်သည်။ အကယ်၍ သင်သည် အက်ပ်ကို ဖျက်လိုက်ပါက၊ အက်ပ်အတွင်း သင်ဖန်တီးထားသော ပလေးလစ်များလည်း ပျက်သွားမည်ဖြစ်သည်။",
+      "appVersion": "ဗားရှင်း",
+      "allRightsReserved": "မူပိုင်ခွင့်အားလုံး လက်ဝယ်ရှိသည်",
       "viewAll": "အားလုံးကြည့်ရန်",
       "removedFromPlaylist": "ပလေးလစ်မှ ဖယ်ရှားပြီးပါပြီ",
       'home': 'ပင်မစာမျက်နှာ',
@@ -443,6 +494,23 @@ class AppStrings {
           "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
     },
     'fil': {
+      "yourMediaYourPrivacy": "1. Iyong Media, Iyong Privacy",
+      "yourMediaYourPrivacyContent":
+          "Pinapatugtog lamang ng app na ito ang mga file (Video at Musika) na nasa iyong telepono na. Hindi namin tinitingnan ang iyong mga pribadong larawan o iba pang personal na dokumento.",
+      "offlineExperience": "2. Offline na Karanasan",
+      "offlineExperienceContent":
+          "Ang lahat ng iyong ginawang Playlist at Paborito ay direktang nakaimbak sa iyong device. Hindi namin ina-upload ang iyong mga file o data sa anumang website o server.",
+      "noPersonalTracking": "3. Walang Personal na Pagsubaybay",
+      "noPersonalTrackingContent":
+          "Hindi namin hinihingi ang iyong pangalan, email, o numero ng telepono. Magagamit mo ang lahat ng feature ng app na ito nang hindi gumagawa ng account.",
+      "whyPermissions": "4. Bakit kailangan namin ng mga Permisyon?",
+      "whyPermissionsContent":
+          "Hinihingi namin ang 'Storage Permission' para lamang mahanap ng app ang iyong musika at mga video para patugtugin ang mga ito. Kung wala ito, hindi maipapakita ng app ang iyong mga file.",
+      "securePrivate": "5. Ligtas at Pribado",
+      "securePrivateContent":
+          "Dahil ang lahat ay nakaimbak sa iyong telepono, ang iyong data ay ganap na pribado. Kung tatanggalin mo ang app, mabubura rin ang iyong mga playlist na ginawa sa loob ng app.",
+      "appVersion": "Bersyon",
+      "allRightsReserved": "All Rights Reserved",
       "viewAll": "Tingnan lahat",
       "removedFromPlaylist": "Inalis sa Playlist",
       'home': 'Home',
@@ -589,6 +657,23 @@ class AppStrings {
           "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
     },
     'fr': {
+      "yourMediaYourPrivacy": "1. Vos Médias, Votre Vie Privée",
+      "yourMediaYourPrivacyContent":
+          "Cette application ne lit que les fichiers (Vidéos et Musique) déjà présents sur votre téléphone. Nous ne consultons pas vos photos privées ou autres documents personnels.",
+      "offlineExperience": "2. Expérience Hors Ligne",
+      "offlineExperienceContent":
+          "Toutes vos listes de lecture et vos favoris sont enregistrés directement sur votre appareil. Nous ne téléchargeons pas vos fichiers ou données sur un site Web ou un serveur.",
+      "noPersonalTracking": "3. Pas de Suivi Personnel",
+      "noPersonalTrackingContent":
+          "Nous ne demandons ni votre nom, ni votre e-mail, ni votre numéro de téléphone. Vous pouvez utiliser toutes les fonctionnalités de cette application sans jamais créer de compte.",
+      "whyPermissions": "4. Pourquoi avons-nous besoin de permissions ?",
+      "whyPermissionsContent":
+          "Nous demandons la 'Permission de Stockage' uniquement pour que l'application puisse trouver votre musique et vos vidéos afin de les lire. Sans cela, l'application ne pourra pas afficher vos fichiers.",
+      "securePrivate": "5. Sécurisé et Privé",
+      "securePrivateContent":
+          "Comme tout est stocké sur votre téléphone, vos données sont totalement privées. Si vous supprimez l'application, vos listes de lecture créées dans l'application seront également supprimées.",
+      "appVersion": "Version",
+      "allRightsReserved": "Tous droits réservés",
       "viewAll": "Voir tout",
       "removedFromPlaylist": "Retiré de la liste de lecture",
       'home': 'Accueil',
@@ -734,6 +819,23 @@ class AppStrings {
           "Ajoutez des vidéos ou du son pour les voir ici !",
     },
     'de': {
+      "yourMediaYourPrivacy": "1. Ihre Medien, Ihre Privatsphäre",
+      "yourMediaYourPrivacyContent":
+          "Diese App spielt nur Dateien (Videos und Musik) ab, die sich bereits auf Ihrem Telefon befinden. Wir sehen uns keine privaten Fotos oder andere persönliche Dokumente an.",
+      "offlineExperience": "2. Offline-Erfahrung",
+      "offlineExperienceContent":
+          "Alle von Ihnen erstellten Playlists und Favoriten werden direkt auf Ihrem Gerät gespeichert. Wir laden Ihre Dateien oder Daten nicht auf Websites oder Server hoch.",
+      "noPersonalTracking": "3. Kein persönliches Tracking",
+      "noPersonalTrackingContent":
+          "Wir fragen nicht nach Ihrem Namen, Ihrer E-Mail-Adresse oder Ihrer Telefonnummer. Sie können alle Funktionen dieser App nutzen, ohne jemals ein Konto zu erstellen.",
+      "whyPermissions": "4. Warum benötigen wir Berechtigungen?",
+      "whyPermissionsContent":
+          "Wir bitten nur um die 'Speicherberechtigung', damit die App Ihre Musik und Videos finden und abspielen kann. Ohne diese Berechtigung kann die App Ihre Dateien nicht anzeigen.",
+      "securePrivate": "5. Sicher und privat",
+      "securePrivateContent":
+          "Da alles auf Ihrem Telefon gespeichert ist, sind Ihre Daten absolut privat. Wenn Sie die App löschen, werden auch die in der App erstellten Playlists entfernt.",
+      "appVersion": "Version",
+      "allRightsReserved": "Alle Rechte vorbehalten",
       "viewAll": "Alle ansehen",
       "removedFromPlaylist": "Aus der Playlist entfernt",
       'home': 'Startseite',
@@ -880,6 +982,23 @@ class AppStrings {
           "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
     },
     'gu': {
+      "yourMediaYourPrivacy": "૧. તમારું મીડિયા, તમારી ગોપનીયતા",
+      "yourMediaYourPrivacyContent":
+          "આ એપ ફક્ત તમારા ફોનમાં પહેલેથી જ હોય તેવા ફાઇલો (વીડિયો અને મ્યુઝિક) વગાડે છે. અમે તમારા ખાનગી ફોટા કે અન્ય વ્યક્તિગત દસ્તાવેજો જોતા નથી.",
+      "offlineExperience": "૨. ઓફલાઇન અનુભવ",
+      "offlineExperienceContent":
+          "તમારી બધી બનાવેલી પ્લેલિસ્ટ્સ અને ફેવરિટ્સ સીધા તમારા ઉપકરણ પર સેવ થાય છે. અમે તમારી ફાઇલો અથવા ડેટા કોઈ પણ વેબસાઇટ કે સર્વર પર અપલોડ કરતા નથી.",
+      "noPersonalTracking": "૩. કોઈ વ્યક્તિગત ટ્રેકિંગ નથી",
+      "noPersonalTrackingContent":
+          "અમે તમારું નામ, ઇમેઇલ કે ફોન નંબર માંગતા નથી. તમે એકાઉન્ટ બનાવ્યા વગર આ એપની તમામ સુવિધાઓનો ઉપયોગ કરી શકો છો.",
+      "whyPermissions": "૪. અમને પરવાનગીની જરૂર કેમ છે?",
+      "whyPermissionsContent":
+          "અમે ફક્ત 'સ્ટોરેજ પરમિશન' માંગીએ છીએ જેથી એપ તમારા મ્યુઝિક અને વીડિયો શોધી શકે અને વગાડી શકે. આના વગર, એપ તમારી ફાઇલો બતાવી શકશે નહીં.",
+      "securePrivate": "૫. સુરક્ષિત અને ખાનગી",
+      "securePrivateContent":
+          "બધું તમારા ફોન પર સ્ટોર હોવાથી, તમારો ડેટા સંપૂર્ણપણે ખાનગી છે. જો તમે એપ ડિલીટ કરો છો, તો એપમાં બનાવેલી તમારી પ્લેલિસ્ટ્સ પણ નીકળી જશે.",
+      "appVersion": "સંસ્કરણ",
+      "allRightsReserved": "સર્વાધિકાર સુરક્ષિત",
       "viewAll": "બધું જુઓ",
       "removedFromPlaylist": "પ્લેલિસ્ટમાંથી દૂર કરવામાં આવ્યું",
       'home': 'હોમ',
@@ -1025,6 +1144,23 @@ class AppStrings {
           "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
     },
     'hi': {
+      "yourMediaYourPrivacy": "१. आपका मीडिया, आपकी गोपनीयता",
+      "yourMediaYourPrivacyContent":
+          "यह ऐप केवल उन्हीं फाइलों (वीडियो और संगीत) को चलाता है जो पहले से ही आपके फोन पर हैं। हम आपकी निजी तस्वीरों या अन्य व्यक्तिगत दस्तावेजों को नहीं देखते हैं।",
+      "offlineExperience": "२. ऑफलाइन अनुभव",
+      "offlineExperienceContent":
+          "आपकी सभी बनाई गई प्लेलिस्ट और पसंदीदा सीधे आपके डिवाइस पर सहेजे जाते हैं। हम आपकी फ़ाइलों या डेटा को किसी भी वेबसाइट या सर्वर पर अपलोड नहीं करते हैं।",
+      "noPersonalTracking": "३. कोई व्यक्तिगत ट्रैकिंग नहीं",
+      "noPersonalTrackingContent":
+          "हम आपका नाम, ईमेल या फोन नंबर नहीं मांगते हैं। आप बिना खाता बनाए इस ऐप की सभी सुविधाओं का उपयोग कर सकते हैं।",
+      "whyPermissions": "४. हमें अनुमति की आवश्यकता क्यों है?",
+      "whyPermissionsContent":
+          "हम केवल 'स्टोरेज अनुमति' मांगते हैं ताकि ऐप आपके संगीत और वीडियो को ढूंढ सके और उन्हें चला सके। इसके बिना, ऐप आपकी फ़ाइलें नहीं दिखा पाएगा।",
+      "securePrivate": "५. सुरक्षित और निजी",
+      "securePrivateContent":
+          "चूंकि सब कुछ आपके फोन पर संग्रहीत है, इसलिए आपका डेटा पूरी तरह से निजी है। यदि आप ऐप को हटा देते हैं, तो ऐप के भीतर आपकी बनाई गई प्लेलिस्ट भी हटा दी जाएगी।",
+      "appVersion": "संस्करण",
+      "allRightsReserved": "सर्वाधिकार सुरक्षित",
       "viewAll": "सभी देखें",
       "removedFromPlaylist": "प्लेलिस्ट से हटा दिया गया",
       'home': 'होम',
@@ -1170,6 +1306,23 @@ class AppStrings {
           "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
     },
     'id': {
+      "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
+      "yourMediaYourPrivacyContent":
+          "Aplikasi ini hanya memutar file (Video dan Musik) yang sudah ada di ponsel Anda. Kami tidak melihat foto pribadi atau dokumen pribadi lainnya.",
+      "offlineExperience": "2. Pengalaman Offline",
+      "offlineExperienceContent":
+          "Semua Daftar Putar dan Favorit yang Anda buat disimpan langsung di perangkat Anda. Kami tidak mengunggah file atau data Anda ke situs web atau server mana pun.",
+      "noPersonalTracking": "3. Tanpa Pelacakan Pribadi",
+      "noPersonalTrackingContent":
+          "Kami tidak meminta nama, email, atau nomor telepon Anda. Anda dapat menggunakan semua fitur aplikasi ini tanpa perlu membuat akun.",
+      "whyPermissions": "4. Mengapa kami membutuhkan Izin?",
+      "whyPermissionsContent":
+          "Kami meminta 'Izin Penyimpanan' hanya agar aplikasi dapat menemukan musik dan video Anda untuk diputar. Tanpa izin ini, aplikasi tidak akan dapat menampilkan file Anda.",
+      "securePrivate": "5. Aman & Pribadi",
+      "securePrivateContent":
+          "Karena semuanya disimpan di ponsel Anda, data Anda sepenuhnya pribadi. Jika Anda menghapus aplikasi, daftar putar yang Anda buat di dalam aplikasi juga akan dihapus.",
+      "appVersion": "Versi",
+      "allRightsReserved": "Hak Cipta Dilindungi",
       "viewAll": "Lihat semua",
       "removedFromPlaylist": "Dihapus dari Daftar Putar",
       'home': 'Beranda',
@@ -1316,6 +1469,23 @@ class AppStrings {
           "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
     },
     'it': {
+      "yourMediaYourPrivacy": "1. I Tuoi Media, La Tua Privacy",
+      "yourMediaYourPrivacyContent":
+          "Questa app riproduce solo i file (Video e Musica) che sono già sul tuo telefono. Non guardiamo le tue foto private o altri documenti personali.",
+      "offlineExperience": "2. Esperienza Offline",
+      "offlineExperienceContent":
+          "Tutte le tue playlist e i tuoi preferiti creati sono salvati direttamente sul tuo dispositivo. Non carichiamo i tuoi file o dati su alcun sito web o server.",
+      "noPersonalTracking": "3. Nessun Tracciamento Personale",
+      "noPersonalTrackingContent":
+          "Non chiediamo il tuo nome, email o numero di telefono. Puoi usare tutte le funzioni di questa app senza mai creare un account.",
+      "whyPermissions": "4. Perché abbiamo bisogno dei permessi?",
+      "whyPermissionsContent":
+          "Chiediamo il 'Permesso di Archiviazione' solo affinché l'app possa trovare la tua musica e i tuoi video per riprodurli. Senza questo, l'app non potrà mostrare i tuoi file.",
+      "securePrivate": "5. Sicuro e Privato",
+      "securePrivateContent":
+          "Poiché tutto è memorizzato sul tuo telefono, i tuoi dati sono completamente privati. Se elimini l'app, verranno rimosse anche le playlist create all'interno dell'app.",
+      "appVersion": "Versione",
+      "allRightsReserved": "Tutti i diritti riservati",
       "viewAll": "Visualizza tutto",
       "removedFromPlaylist": "Rimosso dalla playlist",
       'home': 'Home',
@@ -1462,6 +1632,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "Aggiungi video o audio per vederli qui!",
     },
     'ja': {
+      "yourMediaYourPrivacy": "1. あなたのメディア、あなたのプライバシー",
+      "yourMediaYourPrivacyContent":
+          "このアプリは、すでに携帯電話にあるファイル（ビデオと音楽）のみを再生します。お客様のプライベートな写真やその他の個人的なドキュメントを閲覧することはありません。",
+      "offlineExperience": "2. オフライン体験",
+      "offlineExperienceContent":
+          "作成したすべてのプレイリストとお気に入りは、デバイスに直接保存されます。お客様のファイルやデータをウェブサイトやサーバーにアップロードすることはありません。",
+      "noPersonalTracking": "3. 個人情報の追跡なし",
+      "noPersonalTrackingContent":
+          "名前、メールアドレス、電話番号を尋ねることはありません。アカウントを作成することなく、このアプリのすべての機能を使用できます。",
+      "whyPermissions": "4. 権限が必要な理由",
+      "whyPermissionsContent":
+          "アプリが音楽やビデオを見つけて再生できるように、「ストレージ権限」のみをリクエストします。これがなければ、アプリはファイルを表示できません。",
+      "securePrivate": "5. 安全でプライベート",
+      "securePrivateContent":
+          "すべてが携帯電話に保存されるため、データは完全にプライベートです。アプリを削除すると、アプリ内で作成したプレイリストも削除されます。",
+      "appVersion": "バージョン",
+      "allRightsReserved": "無断複写・転載を禁じます",
       "viewAll": "すべて表示",
       "removedFromPlaylist": "プレイリストから削除されました",
       'home': 'ホーム',
@@ -1602,6 +1789,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "ビデオやオーディオを追加してここに表示しましょう！",
     },
     'ko': {
+      "yourMediaYourPrivacy": "1. 귀하의 미디어, 귀하의 개인정보",
+      "yourMediaYourPrivacyContent":
+          "이 앱은 휴대폰에 이미 있는 파일(동영상 및 음악)만 재생합니다. 귀하의 개인 사진이나 기타 개인 문서를 열람하지 않습니다.",
+      "offlineExperience": "2. 오프라인 환경",
+      "offlineExperienceContent":
+          "사용자가 만든 모든 재생 목록과 즐겨찾기는 장치에 직접 저장됩니다. 당사는 귀하의 파일이나 데이터를 어떠한 웹사이트나 서버에도 업로드하지 않습니다.",
+      "noPersonalTracking": "3. 개인 추적 없음",
+      "noPersonalTrackingContent":
+          "이름, 이메일 또는 전화번호를 요구하지 않습니다. 계정을 만들지 않고도 이 앱의 모든 기능을 사용할 수 있습니다.",
+      "whyPermissions": "4. 권한이 필요한 이유는 무엇인가요?",
+      "whyPermissionsContent":
+          "앱이 음악과 동영상을 찾아 재생할 수 있도록 '저장소 권한'만 요청합니다. 이 권한이 없으면 앱에서 파일을 표시할 수 없습니다.",
+      "securePrivate": "5. 안전 및 보안",
+      "securePrivateContent":
+          "모든 것이 휴대폰에 저장되므로 데이터는 완전히 비공개입니다. 앱을 삭제하면 앱 내에서 만든 재생 목록도 삭제됩니다.",
+      "appVersion": "버전",
+      "allRightsReserved": "모든 권리 보유",
       "viewAll": "모두 보기",
       "removedFromPlaylist": "재생목록에서 삭제됨",
       'home': '홈',
@@ -1742,6 +1946,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "여기에 표시할 비디오나 오디오를 추가하세요!",
     },
     'ms': {
+      "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
+      "yourMediaYourPrivacyContent":
+          "Aplikasi ini hanya memainkan fail (Video dan Muzik) yang sudah ada dalam telefon anda. Kami tidak melihat foto peribadi atau dokumen peribadi anda yang lain.",
+      "offlineExperience": "2. Pengalaman Luar Talian",
+      "offlineExperienceContent":
+          "Semua Senarai Main dan Kegemaran yang anda buat disimpan terus pada peranti anda. Kami tidak memuat naik fail atau data anda ke mana-mana tapak web atau pelayan.",
+      "noPersonalTracking": "3. Tiada Penjejakan Peribadi",
+      "noPersonalTrackingContent":
+          "Kami tidak meminta nama, e-mel atau nombor telefon anda. Anda boleh menggunakan semua ciri aplikasi ini tanpa perlu membuat akaun.",
+      "whyPermissions": "4. Mengapa kami memerlukan Kebenaran?",
+      "whyPermissionsContent":
+          "Kami meminta 'Kebenaran Storan' hanya supaya aplikasi dapat mencari muzik dan video anda untuk dimainkan. Tanpa ini, aplikasi tidak akan dapat menunjukkan fail anda.",
+      "securePrivate": "5. Selamat & Peribadi",
+      "securePrivateContent":
+          "Oleh kerana semuanya disimpan dalam telefon anda, data anda adalah sulit sepenuhnya. Jika anda memadamkan aplikasi, senarai main yang anda buat dalam aplikasi juga akan dikeluarkan.",
+      "appVersion": "Versi",
+      "allRightsReserved": "Hak Cipta Terpelihara",
       "viewAll": "Lihat semua",
       "removedFromPlaylist": "Dialih keluar daripada Senarai Main",
       'home': 'Laman Utama',
@@ -1888,6 +2109,23 @@ class AppStrings {
           "Tambah beberapa video atau audio untuk melihatnya di sini!",
     },
     'mr': {
+      "yourMediaYourPrivacy": "१. तुमचे मीडिया, तुमची गोपनीयता",
+      "yourMediaYourPrivacyContent":
+          "हे ॲप फक्त तुमच्या फोनवर आधीपासून असलेल्या फायली (व्हिडिओ आणि संगीत) प्ले करते. आम्ही तुमचे खाजगी फोटो किंवा इतर वैयक्तिक दस्तऐवज पाहत नाही.",
+      "offlineExperience": "२. ऑफलाइन अनुभव",
+      "offlineExperienceContent":
+          "तुमच्या सर्व तयार केलेल्या प्लेलिस्ट आणि आवडी थेट तुमच्या डिव्हाइसवर जतन केल्या जातात. आम्ही तुमच्या फायली किंवा डेटा कोणत्याही वेबसाइट किंवा सर्व्हरवर अपलोड करत नाही.",
+      "noPersonalTracking": "३. कोणतीही वैयक्तिक ट्रॅकिंग नाही",
+      "noPersonalTrackingContent":
+          "आम्ही तुमचे नाव, ईमेल किंवा फोन नंबर मागत नाही. तुम्ही खाते न तयार करता या ॲपची सर्व वैशिष्ट्ये वापरू शकता.",
+      "whyPermissions": "४. आम्हाला परवानगीची गरज का आहे?",
+      "whyPermissionsContent":
+          "आम्ही फक्त 'स्टोरेज परवानगी' मागतो जेणेकरून ॲप तुमचे संगीत आणि व्हिडिओ शोधू शकेल आणि ते प्ले करू शकेल. याशिवाय, ॲप तुमच्या फायली दाखवू शकणार नाही.",
+      "securePrivate": "५. सुरक्षित आणि खाजगी",
+      "securePrivateContent":
+          "सर्व काही तुमच्या फोनवर स्टोअर असल्यामुळे, तुमचा डेटा पूर्णपणे खाजगी आहे. तुम्ही ॲप हटवल्यास, ॲपमध्ये तयार केलेल्या तुमच्या प्लेलिस्ट देखील काढून टाकल्या जातील.",
+      "appVersion": "आवृत्ती",
+      "allRightsReserved": "सर्व हक्क राखीव",
       "viewAll": "सर्व पहा",
       "removedFromPlaylist": "प्लेलिस्ट मधून काढले",
       'home': 'मुख्यपृष्ठ',
@@ -2033,6 +2271,23 @@ class AppStrings {
           "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
     },
     'fa': {
+      "yourMediaYourPrivacy": "۱. رسانه شما، حریم خصوصی شما",
+      "yourMediaYourPrivacyContent":
+          "این برنامه فقط فایل‌هایی (ویدیو و موسیقی) را پخش می‌کند که از قبل در گوشی شما هستند. ما به عکس‌های خصوصی یا سایر اسناد شخصی شما نگاه نمی‌کنیم.",
+      "offlineExperience": "۲. تجربه آفلاین",
+      "offlineExperienceContent":
+          "تمام لیست‌های پخش و موارد دلخواه ایجاد شده شما مستقیماً در دستگاهتان ذخیره می‌شوند. ما فایل‌ها یا داده‌های شما را در هیچ وب‌سایت یا سروری آپلود نمی‌کنیم.",
+      "noPersonalTracking": "۳. بدون ردیابی شخصی",
+      "noPersonalTrackingContent":
+          "ما نام، ایمیل یا شماره تلفن شما را نمی‌خواهیم. شما می‌توانید بدون ایجاد حساب کاربری از تمام امکانات این برنامه استفاده کنید.",
+      "whyPermissions": "۴. چرا به مجوز نیاز داریم؟",
+      "whyPermissionsContent":
+          "ما فقط «مجوز دسترسی به حافظه» را می‌خواهیم تا برنامه بتواند موسیقی و ویدیوهای شما را پیدا و پخش کند. بدون این مجوز، برنامه نمی‌تواند فایل‌های شما را نشان دهد.",
+      "securePrivate": "۵. امن و خصوصی",
+      "securePrivateContent":
+          "از آنجایی که همه چیز در گوشی شما ذخیره می‌شود، داده‌های شما کاملاً خصوصی است. اگر برنامه را حذف کنید، لیست‌های پخش ایجاد شده شما در برنامه نیز حذف خواهند شد.",
+      "appVersion": "نسخه",
+      "allRightsReserved": "تمامی حقوق محفوظ است",
       "viewAll": "مشاهده همه",
       "removedFromPlaylist": "از لیست پخش حذف شد",
       'home': 'خانه',
@@ -2178,6 +2433,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "تعدادی ویدیو یا صدا اضافه کنید تا اینجا ببینید!",
     },
     'pl': {
+      "yourMediaYourPrivacy": "1. Twoje multimedia, Twoja prywatność",
+      "yourMediaYourPrivacyContent":
+          "Ta aplikacja odtwarza tylko pliki (filmy i muzykę), które są już w telefonie. Nie przeglądamy Twoich prywatnych zdjęć ani innych osobistych dokumentów.",
+      "offlineExperience": "2. Działanie offline",
+      "offlineExperienceContent":
+          "Wszystkie utworzone playlisty i ulubione są zapisywane bezpośrednio na urządzeniu. Nie przesyłamy Twoich plików ani danych na żadną stronę internetową ani serwer.",
+      "noPersonalTracking": "3. Brak śledzenia osobistego",
+      "noPersonalTrackingContent":
+          "Nie pytamy o imię, e-mail ani numer telefonu. Możesz korzystać ze wszystkich funkcji tej aplikacji bez tworzenia konta.",
+      "whyPermissions": "4. Dlaczego potrzebujemy uprawnień?",
+      "whyPermissionsContent":
+          "Prosimy o „Uprawnienie do pamięci” tylko po to, aby aplikacja mogła znaleźć Twoją muzykę i filmy, aby je odtworzyć. Bez tego aplikacja nie będzie mogła wyświetlić Twoich plików.",
+      "securePrivate": "5. Bezpieczeństwo i prywatność",
+      "securePrivateContent":
+          "Ponieważ wszystko jest przechowywane w telefonie, Twoje dane są całkowicie prywatne. Jeśli usuniesz aplikację, Twoje playlisty utworzone w aplikacji również zostaną usunięte.",
+      "appVersion": "Wersja",
+      "allRightsReserved": "Wszelkie prawa zastrzeżone",
       "viewAll": "Pokaż wszystko",
       "removedFromPlaylist": "Usunięto z playlisty",
       'home': 'Strona główna',
@@ -2321,6 +2593,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "Dodaj wideo lub dźwięk, aby zobaczyć je tutaj!",
     },
     'pt': {
+      "yourMediaYourPrivacy": "1. Sua Mídia, Sua Privacidade",
+      "yourMediaYourPrivacyContent":
+          "Este aplicativo apenas reproduz arquivos (vídeos e músicas) que já estão no seu telefone. Não acessamos suas fotos privadas ou outros documentos pessoais.",
+      "offlineExperience": "2. Experiência Offline",
+      "offlineExperienceContent":
+          "Todas as suas listas de reprodução e favoritos criados são salvos diretamente no seu dispositivo. No enviamos seus arquivos ou dados para nenhum site ou servidor.",
+      "noPersonalTracking": "3. Sem Rastreamento Pessoal",
+      "noPersonalTrackingContent":
+          "Não solicitamos seu nome, e-mail ou número de telefone. Você pode usar todos os recursos deste aplicativo sem precisar criar uma conta.",
+      "whyPermissions": "4. Por que precisamos de permissões?",
+      "whyPermissionsContent":
+          "Pedimos 'Permissão de Armazenamento' apenas para que o aplicativo possa encontrar suas músicas e vídeos para reproduzi-los. Sem isso, o aplicativo não conseguirá mostrar seus arquivos.",
+      "securePrivate": "5. Seguro e Privado",
+      "securePrivateContent":
+          "Como tudo está armazenado no seu telefone, seus dados são completamente privados. Se você excluir o aplicativo, suas listas de reprodução criadas dentro do aplicativo também serão removidas.",
+      "appVersion": "Versão",
+      "allRightsReserved": "Todos os direitos reservados",
       "viewAll": "Ver tudo",
       "removedFromPlaylist": "Removido da lista de reprodução",
       'home': 'Início',
@@ -2468,6 +2757,23 @@ class AppStrings {
           "Adicione alguns vídeos ou áudio para os ver aqui!",
     },
     'es': {
+      "yourMediaYourPrivacy": "1. Tus medios, tu privacidad",
+      "yourMediaYourPrivacyContent":
+          "Esta aplicación solo reproduce archivos (videos y música) que ya están en tu teléfono. No miramos tus fotos privadas ni otros documentos personales.",
+      "offlineExperience": "2. Experiencia sin conexión",
+      "offlineExperienceContent":
+          "Todas tus listas de reproducción y favoritos creados se guardan directamente en tu dispositivo. No subimos tus archivos o datos a ningún sitio web o servidor.",
+      "noPersonalTracking": "3. Sin seguimiento personal",
+      "noPersonalTrackingContent":
+          "No solicitamos tu nombre, correo electrónico ni número de teléfono. Puedes usar todas las funciones de esta aplicación sin tener que crear una cuenta.",
+      "whyPermissions": "4. ¿Por qué necesitamos permisos?",
+      "whyPermissionsContent":
+          "Pedimos 'Permiso de almacenamiento' solo para que la aplicación pueda encontrar tu música y videos para reproducirlos. Sin esto, la aplicación no podrá mostrar tus archivos.",
+      "securePrivate": "5. Seguro y privado",
+      "securePrivateContent":
+          "Como todo está guardado en tu teléfono, tus datos son completamente privados. Si eliminas la aplicación, tus listas de reproducción creadas dentro de la aplicación también se eliminarán.",
+      "appVersion": "Versión",
+      "allRightsReserved": "Todos los derechos reservados",
       "viewAll": "Ver todo",
       "removedFromPlaylist": "Eliminado de la lista de reproducción",
       'home': 'Inicio',
@@ -2615,6 +2921,23 @@ class AppStrings {
           "¡Agrega algunos videos o audio para verlos aquí!",
     },
     'sv': {
+      "yourMediaYourPrivacy": "1. Din media, din integritet",
+      "yourMediaYourPrivacyContent":
+          "Den här appen spelar bara filer (videor och musik) som redan finns på din telefon. Vi tittar inte på dina privata foton eller andra personliga dokument.",
+      "offlineExperience": "2. Offlineupplevelse",
+      "offlineExperienceContent":
+          "Alla dina skapade spellistor och favoriter sparas direkt på din enhet. Vi laddar inte upp dina filer eller data till någon webbplats eller server.",
+      "noPersonalTracking": "3. Ingen personlig spårning",
+      "noPersonalTrackingContent":
+          "Vi ber inte om ditt namn, e-postadress eller telefonnummer. Du kan använda alla funktioner i den här appen utan att någonsin skapa ett konto.",
+      "whyPermissions": "4. Varför behöver vi behörigheter?",
+      "whyPermissionsContent":
+          "Vi ber om 'Lagringsbehörighet' endast för att appen ska kunna hitta din musik och dina videor för att spela upp dem. Utan detta kommer appen inte att kunna visa dina filer.",
+      "securePrivate": "5. Säkert och privat",
+      "securePrivateContent":
+          "Eftersom allt lagras på din telefon är din data helt privat. Om du tar bort appen kommer dina skapade spellistor i appen också att tas bort.",
+      "appVersion": "Version",
+      "allRightsReserved": "Alla rättigheter förbehållna",
       "viewAll": "Visa alla",
       "removedFromPlaylist": "Borttagen från spellistan",
       'home': 'Hem',
@@ -2759,6 +3082,23 @@ class AppStrings {
       "addSomeVideosOrAudio": "Lägg till videor eller ljud för att se dem här!",
     },
     'ta': {
+      "yourMediaYourPrivacy": "1. உங்கள் மீடியா, உங்கள் தனியுரிமை",
+      "yourMediaYourPrivacyContent":
+          "இந்த ஆப் உங்கள் போனில் ஏற்கனவே உள்ள கோப்புகளை (வீடியோக்கள் மற்றும் இசை) மட்டுமே இயக்குகிறது. உங்கள் தனிப்பட்ட புகைப்படங்கள் அல்லது பிற தனிப்பட்ட ஆவணங்களை நாங்கள் பார்ப்பதில்லை.",
+      "offlineExperience": "2. ஆஃப்லைன் அனுபவம்",
+      "offlineExperienceContent":
+          "நீங்கள் உருவாக்கிய அனைத்து பிளேலிஸ்ட்டுகளும் விருப்பமானவைகளும் நேரடியாக உங்கள் சாதனத்தில் சேமிக்கப்படும். உங்கள் கோப்புகளை அல்லது தரவை நாங்கள் எந்த இணையதளத்திற்கும் அல்லது சர்வருக்கும் பதிவேற்றுவதில்லை.",
+      "noPersonalTracking": "3. தனிப்பட்ட கண்காணிப்பு இல்லை",
+      "noPersonalTrackingContent":
+          "உங்கள் பெயர், மின்னஞ்சல் அல்லது தொலைபேசி எண்ணை நாங்கள் கேட்பதில்லை. கணக்கை உருவாக்காமலேயே இந்த ஆப்-இன் அனைத்து அம்சங்களையும் நீங்கள் பயன்படுத்தலாம்.",
+      "whyPermissions": "4. அனுமதி ஏன் தேவை?",
+      "whyPermissionsContent":
+          "உங்கள் இசை மற்றும் வீடியோக்களை ஆப் கண்டறிந்து இயக்குவதற்காக மட்டுமே நாங்கள் 'ஸ்டோரேજ அனுமதி' கேட்கிறோம். இது இல்லாமல், ஆப்-ஆல் உங்கள் கோப்புகளைக் காட்ட முடியாது.",
+      "securePrivate": "5. பாதுகாப்பானது & தனிப்பட்டது",
+      "securePrivateContent":
+          "அனைத்தும் உங்கள் போனில் சேமிக்கப்படுவதால், உங்கள் தரவு முற்றிலும் தனிப்பட்டது. நீங்கள் ஆப்பை நீக்கினால், ஆப்பிற்குள் நீங்கள் உருவாக்கிய பிளேலிஸ்ட்டுகளும் நீக்கப்படும்.",
+      "appVersion": "பதிப்பு",
+      "allRightsReserved": "அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை",
       "viewAll": "அனைத்தையும் பார்க்கவும்",
       "removedFromPlaylist": "பிளேலிஸ்ட்டிலிருந்து நீக்கப்பட்டது",
       'home': 'முகப்பு',
@@ -2905,6 +3245,23 @@ class AppStrings {
           "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
     },
     'ur': {
+      "yourMediaYourPrivacy": "١. آپ کا میڈیا، آپ کی رازداری",
+      "yourMediaYourPrivacyContent":
+          "یہ ایپ صرف ان فائلوں (ویڈیوز اور موسیقی) کو چلاتی ہے جو پہلے سے آپ کے فون پر موجود ہیں۔ ہم آپ کی نجی تصاویر یا دیگر ذاتی دستاویزات کو نہیں دیکھتے۔",
+      "offlineExperience": "٢. آف لائن تجربہ",
+      "offlineExperienceContent":
+          "آپ کی تمام تخلیق کردہ پلے لسٹس اور پسندیدہ براہ راست آپ کے آلے پر محفوظ ہوتے ہیں۔ ہم آپ کی فائلیں یا ڈیٹا کسی ویب سائٹ یا سرور پر اپ لوڈ نہیں کرتے۔",
+      "noPersonalTracking": "٣. کوئی ذاتی ٹریکنگ نہیں",
+      "noPersonalTrackingContent":
+          "ہم آپ کا نام، ای میل، یا فون نمبر نہیں مانگتے۔ آپ اکاؤنٹ بنائے بغیر اس ایپ کی تمام خصوصیات استعمال کر سکتے ہیں۔",
+      "whyPermissions": "٤. ہمیں اجازت کی ضرورت کیوں ہے؟",
+      "whyPermissionsContent":
+          "ہم صرف 'اسٹوریج کی اجازت' مانگتے ہیں تاکہ ایپ آپ کی موسیقی اور ویڈیوز تلاش کر کے انہیں چلا سکے۔ اس کے بغیر، ایپ آپ کی فائلیں نہیں دکھ سکے گی۔",
+      "securePrivate": "٥. محفوظ اور نجی",
+      "securePrivateContent":
+          "چونکہ سب کچھ آپ کے فون پر محفوظ ہے، اس لیے آپ کا ڈیٹا مکمل طور پر نجی ہے۔ اگر آپ ایپ کو ڈیلیٹ کر دیتے ہیں، تو ایپ کے اندر بنائی گئی پلے لسٹس بھی ختم ہو جائیں گی۔",
+      "appVersion": "ورژن",
+      "allRightsReserved": "جملہ حقوق محفوظ ہیں",
       "viewAll": "سب دیکھیں",
       "removedFromPlaylist": "پلے لسٹ سے نکال دیا گیا",
       'home': 'ہوم',

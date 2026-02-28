@@ -1,3 +1,5 @@
+import 'package:media_player/screens/privacy_policy_screen.dart';
+
 import '../utils/app_imports.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -123,7 +125,16 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                   Divider(color: colors.dividerColor),
                   _buildSettingTab(
-                        () {},
+                        () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  PrivacyPolicyScreen(),
+                            ),
+                          );
+
+                        },
                     "privacyPolicy",
                     AppSvg.privacyPolicyIcon,
                     4,
