@@ -71,7 +71,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       final int totalCount = await mainPath.assetCountAsync;
       final List<AssetEntity> latestEntities = await mainPath.getAssetListRange(
         start: 0,
-        end: 50, // શરૂઆતના ૫૦ ગીતો
+        end: 20, // શરૂઆતના ૫૦ ગીતો
       );
 
       // ૪. Hive અપડેટ કરો

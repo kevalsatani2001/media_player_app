@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:chewie/src/chewie_player.dart';
 import 'package:chewie/src/helpers/adaptive_controls.dart';
 import 'package:chewie/src/notifiers/index.dart';
@@ -7,103 +9,28 @@ import 'package:video_player/video_player.dart';
 
 import '../widgets/custom_loader.dart';
 
+// PlayerWithControls.dart
+
+// ... બાકીના ઈમ્પોર્ટસ
+
 class PlayerWithControls extends StatelessWidget {
   const PlayerWithControls({super.key});
 
   @override
   Widget build(BuildContext context) {
     final ChewieController chewieController = ChewieController.of(context);
-    if (chewieController.videoPlayerController.value.isInitialized == false) {
-      return const Center(child: CustomLoader());
-    }
-    double calculateAspectRatio(BuildContext context) {
-      final size = MediaQuery.of(context).size;
-      final width = size.width;
-      final height = size.height;
+    final controller = chewieController.videoPlayerController;
 
-      return width > height ? width / height : height / width;
-    }
-
-    Widget buildControls(
-        BuildContext context,
-        ChewieController chewieController,
-        ) {
-      return chewieController.showControls
-          ? chewieController.customControls ?? const AdaptiveControls()
-          : const SizedBox();
-    }
-
-    Widget buildPlayerWithControls(
-        ChewieController chewieController,
-        BuildContext context,
-        ) {
-      final playerNotifier = context.read<PlayerNotifier>();
-
-      // 1. પહેલા માત્ર વિડિયો લેયર બનાવો જેને આપણે ઝૂમ કરવો છે
-      Widget videoWidget = Center(
-        child: AspectRatio(
-          aspectRatio: chewieController.aspectRatio ??
-              chewieController.videoPlayerController.value.aspectRatio,
-          child: VideoPlayer(
-            chewieController.videoPlayerController,
-            key: ValueKey(chewieController.videoPlayerController.hashCode),
-          ),
-        ),
-      );
-
-      // 2. જો Zoom એનેબલ હોય, તો માત્ર વિડિયો વિજેટને જ InteractiveViewer માં લપેટો
-      if (chewieController.zoomAndPan || chewieController.transformationController != null) {
-        videoWidget = InteractiveViewer(
-          transformationController: chewieController.transformationController,
-          maxScale: chewieController.maxScale,
-          panEnabled: chewieController.zoomAndPan,
-          scaleEnabled: chewieController.zoomAndPan,
-          onInteractionUpdate: chewieController.zoomAndPan
-              ? (_) => playerNotifier.hideStuff = true
-              : null,
-          onInteractionEnd: chewieController.zoomAndPan
-              ? (_) => playerNotifier.hideStuff = false
-              : null,
-          child: videoWidget, // માત્ર વિડિયો ઝૂમ થશે
-        );
+    // વીડિયો પૂરો થાય ત્યારે પોપ કરવા માટેનું ફંક્શન
+    void handleVideoEnd(VideoPlayerValue value) {
+      if (value.isInitialized && value.position >= value.duration && value.duration != Duration.zero) {
+        // Build મેથડ ચાલતી હોય ત્યારે સીધું Pop ના કરી શકાય, એટલે microtask વાપરવું
+        Future.microtask(() {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        });
       }
-
-      // 3. હવે મેઈન સ્ટેક બનાવો જ્યાં કંટ્રોલ્સ ઝૂમની બહાર હશે
-      return Stack(
-        children: [
-          if (chewieController.placeholder != null) chewieController.placeholder!,
-
-          // ઝૂમ થતો વિડિયો (સૌથી નીચેનું લેયર)
-          videoWidget,
-
-          if (chewieController.overlay != null) chewieController.overlay!,
-
-          // કંટ્રોલ્સની પાછળનું બ્લેક બેકગ્રાઉન્ડ (જ્યારે કંટ્રોલ્સ દેખાય ત્યારે)
-          if (Theme.of(context).platform != TargetPlatform.iOS)
-            Consumer<PlayerNotifier>(
-              builder: (context, notifier, child) => Visibility(
-                visible: !notifier.hideStuff,
-                child: AnimatedOpacity(
-                  opacity: notifier.hideStuff ? 0.0 : 0.8,
-                  duration: const Duration(milliseconds: 250),
-                  child: const DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.black54),
-                    child: SizedBox.expand(),
-                  ),
-                ),
-              ),
-            ),
-
-          // કંટ્રોલ્સ લેયર (ઝૂમની બહાર હોવાથી આઈકોન સ્થિર રહેશે)
-          if (!chewieController.isFullScreen)
-            buildControls(context, chewieController)
-          else
-            SafeArea(
-              bottom: false,
-              child: buildControls(context, chewieController),
-            ),
-        ],
-      );
     }
 
     return LayoutBuilder(
@@ -112,13 +39,74 @@ class PlayerWithControls extends StatelessWidget {
           child: SizedBox(
             height: constraints.maxHeight,
             width: constraints.maxWidth,
-            child: AspectRatio(
-              aspectRatio: calculateAspectRatio(context),
-              child: buildPlayerWithControls(chewieController, context),
+            child: ValueListenableBuilder(
+              // અહીં hashCode વાપરવાથી જ્યારે કંટ્રોલર બદલાશે ત્યારે નવો બિલ્ડર બનશે
+              key: ValueKey(controller.hashCode),
+              valueListenable: controller,
+              builder: (context, VideoPlayerValue value, child) {
+
+                // ૧. જો કંટ્રોલર dispose થઈ ગયું હોય તો અહીં જ અટકી જાવ
+                // (ValueListenableBuilder કેટલીકવાર જૂની વેલ્યુ મોકલે છે)
+
+                // ૨. વીડિયો પૂરો થયો છે કે નહીં તે ચેક કરો
+                handleVideoEnd(value);
+
+                if (!value.isInitialized) {
+                  return const Center(child: CustomLoader());
+                }
+
+                return AspectRatio(
+                  aspectRatio: value.aspectRatio,
+                  child: buildPlayerWithControls(chewieController, context),
+                );
+              },
             ),
           ),
         );
       },
     );
+  }
+
+  // buildPlayerWithControls ફંક્શનને થોડું સાફ (Clean) કરીએ
+  Widget buildPlayerWithControls(ChewieController chewieController, BuildContext context) {
+    final videoKey = ValueKey(chewieController.videoPlayerController.hashCode);
+
+    return Stack(
+      children: [
+        // ડાયનેમિક બેકગ્રાઉન્ડ
+        Positioned.fill(
+          child: ClipRect(
+            child: ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+              child: Transform.scale(
+                scale: 1.5,
+                child: VideoPlayer(chewieController.videoPlayerController, key: videoKey),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(child: Container(color: Colors.black.withOpacity(0.4))),
+
+        // મેઈન પ્લેયર
+        Center(
+          child: AspectRatio(
+            aspectRatio: chewieController.videoPlayerController.value.aspectRatio,
+            child: VideoPlayer(chewieController.videoPlayerController, key: videoKey),
+          ),
+        ),
+
+        // કંટ્રોલ્સ
+        if (!chewieController.isFullScreen)
+          _buildControls(context, chewieController)
+        else
+          SafeArea(child: _buildControls(context, chewieController)),
+      ],
+    );
+  }
+
+  Widget _buildControls(BuildContext context, ChewieController chewieController) {
+    return chewieController.showControls
+        ? chewieController.customControls ?? const AdaptiveControls()
+        : const SizedBox();
   }
 }

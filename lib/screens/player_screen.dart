@@ -22,7 +22,7 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen>
     with WidgetsBindingObserver {
-  // GlobalPlayer àª¨à«€ àª‡àª¨à«àª¸à«àªŸàª¨à«àª¸ àª²à«‹
+  // GlobalPlayer Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ²Ã Â«â€¹
   final GlobalPlayer player = GlobalPlayer();
 
   @override
@@ -30,8 +30,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Player Setup: Play only if it's a new item
-    _setupInitialPlayer();
+    // àª† àª«à«‡àª°àª«àª¾àª° àª•àª°à«‹:
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupInitialPlayer();
+    });
   }
 
   Future<void> _setupInitialPlayer() async {
@@ -86,11 +88,10 @@ class _PlayerScreenState extends State<PlayerScreen>
       animation: player, // UI updates on every player state change
       builder: (context, _) {
         // Live data fetching
-        final activeItem = player.currentMediaItem ?? widget.item;
-        final bool isAudio = activeItem.type == "audio";
+        final currentType = player.currentType ?? (widget.entity.typeInt == 3 ? "audio" : "video");
+        final bool isAudio = currentType == "audio";
 
         return Scaffold(
-          backgroundColor: colors.background,
           appBar: AppBar(
             title: AppText(
               isAudio ? "audio" : getTitle(),
@@ -100,7 +101,15 @@ class _PlayerScreenState extends State<PlayerScreen>
             leading: Padding(
               padding: const EdgeInsets.all(16),
               child: GestureDetector(
-                onTap: () => Navigator.pop(context),
+                onTap: () {
+                  // if ((player.currentEntity ?? widget.entity).typeInt == 2){
+                  //   player.stopAndClose();
+                  //   if (mounted) {
+                  //     setState(() {});
+                  //   }
+                  // }
+                  Navigator.pop(context);
+                },
                 child: AppImage(
                   src: AppSvg.backArrowIcon,
                   height: 20,
@@ -124,8 +133,15 @@ class _PlayerScreenState extends State<PlayerScreen>
             children: [
               Positioned.fill(
                 child: isAudio
-                    ? _buildAudioPlayer() // àª²à«‹àªœàª¿àª• àª†àª¨à«€ àª…àª‚àª¦àª° àª¬àª¦àª²àª¾àª¶à«‡
-                    : _buildVideoPlayer(),
+                    ? _buildAudioPlayer()
+                    : // Hero વિજેટમાં ટેગ આ રીતે રાખો
+                Hero(
+                  tag: 'player_${widget.entity.id}', // ટાઇપ કાઢી નાખો, માત્ર ID રાખો
+                  child: Material(
+                    color: Colors.transparent, // Material ને ટ્રાન્સપરન્ટ રાખો
+                    child: _buildVideoPlayer(),
+                  ),
+                ),
               ),
             ],
           ),
@@ -313,7 +329,18 @@ class _PlayerScreenState extends State<PlayerScreen>
         !player.videoController!.value.isInitialized) {
       return _buildVideoLoadingPlaceholder();
     }
-    return Chewie(controller: player.chewieController!);
+
+    // અસાઇન કરેલા કંટ્રોલર માટે ચેક
+    if (player.chewieController != null &&
+        player.chewieController!.videoPlayerController.value.isInitialized) {
+      return Chewie(
+        // અહીં UniqueKey() કાઢી નાખો અને ValueKey વાપરો
+        key: ValueKey(player.currentEntity?.id ?? "default_video"),
+        controller: player.chewieController!,
+      );
+    } else {
+      return const CustomLoader();
+    }
   }
 
   String _fmt(Duration d) {

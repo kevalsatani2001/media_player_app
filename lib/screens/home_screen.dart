@@ -58,7 +58,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
         listener: (context, state) {
           context.read<HomeCountBloc>().add(LoadCounts());
         },
-        child: _buildHomePageWidget(),
+        child: Stack(
+          children: [
+            _buildHomePageWidget(),
+            const SmartMiniPlayer(),
+          ],
+        ),
       ),
     );
   }

@@ -27,6 +27,13 @@ class GlobalPlayer extends ChangeNotifier {
   bool isShuffle = false;
   bool _isLoading = false;
 
+  Offset miniPlayerPosition = const Offset(20, 500); // Default position
+
+  void updatePosition(Offset newPos) {
+    miniPlayerPosition = newPos;
+    notifyListeners();
+  }
+
   // à«§. Just Audio àª¨àª¾ àª‡àªµà«‡àª¨à«àªŸà«àª¸ àª¸àª¾àª‚àª­àª³à«‹ (UI àª…àªªàª¡à«‡àªŸ àª®àª¾àªŸà«‡)
   void _listenToJustAudioEvents() {
     audioPlayer.currentIndexStream.listen((index) {
@@ -279,6 +286,11 @@ class GlobalPlayer extends ChangeNotifier {
 
   // à«­. àª¨à«‡àª•à«àª¸à«àªŸ/àªªà«àª°àª¿àªµàª¿àª¯àª¸ àª•àª‚àªŸà«àª°à«‹àª²
   Future<void> playNext() async {
+    if(currentType=="video"){
+      // dispose();
+      Navigator.pop;
+      return;
+    }
     if (queue.isEmpty) return;
     int nextIndex = (currentIndex + 1) % queue.length;
     await _playMediaAtIndex(nextIndex);

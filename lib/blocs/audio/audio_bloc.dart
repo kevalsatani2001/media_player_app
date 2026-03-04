@@ -39,7 +39,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
         final List<AssetEntity> latestEntities = await mainPath
             .getAssetListRange(
           start: 0,
-          end: 50, // શરૂઆતના ૫૦ ગીતો
+          end: 20, // શરૂઆતના ૫૦ ગીતો
         );
 
         // ૪. Hive અપડેટ કરો
@@ -89,7 +89,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
       final totalCount = await path.assetCountAsync;
 
       // જ્યારે લિસ્ટ લોડ કરો ત્યારે ફક્ત ૧ કે ૨૦ આઈટમ લો (Pagination માટે)
-      final entities = await path.getAssetListPaged(page: 0, size: 10);
+      final entities = await path.getAssetListPaged(page: 0, size: 20);
 
       // 🔴 હોમ સ્ક્રીન માટે Hive માં ડમી ડેટા ભરો (ફક્ત કાઉન્ટ માટે)
       final audioBox = Hive.box('audios');
@@ -126,7 +126,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
 
     final newEntities = await currentState.path.getAssetListPaged(
       page: nextPage,
-      size: 10,
+      size: 20,
     );
 
     final allEntities = [...currentState.entities, ...newEntities];

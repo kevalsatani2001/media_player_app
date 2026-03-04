@@ -27,11 +27,16 @@ class _SettingScreenState extends State<SettingScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return Column(
+    return Stack(
       children: [
-        CommonAppBar(title: "videMusicPlayer", subTitle: "mediaPlayer"),
-        Divider(color: colors.dividerColor),
-        Expanded(child: _buildSettingsTab()),
+        Column(
+          children: [
+            CommonAppBar(title: "videMusicPlayer", subTitle: "mediaPlayer"),
+            Divider(color: colors.dividerColor),
+            Expanded(child: _buildSettingsTab()),
+          ],
+        ),
+        const SmartMiniPlayer(),
       ],
     );
   }
@@ -66,7 +71,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   BlocBuilder<LocaleBloc, LocaleState>(
                     builder: (context, localeState) {
                       return _buildSettingTab(
-                            () {
+                        () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -103,7 +108,7 @@ class _SettingScreenState extends State<SettingScreen> {
               child: Column(
                 children: [
                   _buildSettingTab(
-                        () {
+                    () {
                       shareApp();
                     },
                     "shareTheApp",
@@ -112,7 +117,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                   Divider(color: colors.dividerColor),
                   _buildSettingTab(
-                        () {
+                    () {
                       showDialog(
                         context: context,
                         barrierDismissible: true,
@@ -125,16 +130,14 @@ class _SettingScreenState extends State<SettingScreen> {
                   ),
                   Divider(color: colors.dividerColor),
                   _buildSettingTab(
-                        () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  PrivacyPolicyScreen(),
-                            ),
-                          );
-
-                        },
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PrivacyPolicyScreen(),
+                        ),
+                      );
+                    },
                     "privacyPolicy",
                     AppSvg.privacyPolicyIcon,
                     4,
@@ -280,9 +283,9 @@ class _SettingScreenState extends State<SettingScreen> {
       path: 'your-email@example.com',
       queryParameters: {
         'subject':
-        '${context.tr('appFeedback')} - $rating ${context.tr('stars')}',
+            '${context.tr('appFeedback')} - $rating ${context.tr('stars')}',
         'body':
-        '${context.tr("hiIGave")} $rating ${context.tr('stars')}. ${context.tr("hereIsMyFeedback")}\n\n',
+            '${context.tr("hiIGave")} $rating ${context.tr('stars')}. ${context.tr("hereIsMyFeedback")}\n\n',
       },
     );
     if (await canLaunchUrl(emailLaunchUri)) {
@@ -300,11 +303,11 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Widget _buildSettingTab(
-      void Function()? onTap,
-      String title,
-      String icon,
-      int index,
-      ) {
+    void Function()? onTap,
+    String title,
+    String icon,
+    int index,
+  ) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return TweenAnimationBuilder(
@@ -441,8 +444,9 @@ class _ThemeScreenState extends State<ThemeScreen> {
               child: AppImage(
                 src: _tempSelectedTheme == HiveService.themeMode
                     ? AppSvg
-                    .doneUnSelect // àªœà«‹ àª•àª‚àªˆ àª¬àª¦àª²àª¾àª¯à«àª‚ àª¨àª¾ àª¹à«‹àª¯
-                    : AppSvg.doneSelect, // àªœà«‹ àª¬àª¦àª²àª¾àª¯à«àª‚ àª¹à«‹àª¯
+                          .doneUnSelect // àªœà«‹ àª•àª‚àªˆ àª¬àª¦àª²àª¾àª¯à«àª‚ àª¨àª¾ àª¹à«‹àª¯
+                    : AppSvg.doneSelect,
+                // àªœà«‹ àª¬àª¦àª²àª¾àª¯à«àª‚ àª¹à«‹àª¯
                 height: 30,
                 width: 30,
               ),
@@ -485,12 +489,12 @@ class _ThemeScreenState extends State<ThemeScreen> {
   }
 
   Widget _buildOption(
-      String title,
-      String sub,
-      String code,
-      IconData icon,
-      AppThemeColors colors,
-      ) {
+    String title,
+    String sub,
+    String code,
+    IconData icon,
+    AppThemeColors colors,
+  ) {
     bool isSelected = _tempSelectedTheme == code;
 
     return Padding(
@@ -546,11 +550,11 @@ class _ThemeScreenState extends State<ThemeScreen> {
                 ),
                 child: isSelected
                     ? Center(
-                  child: CircleAvatar(
-                    radius: 5,
-                    backgroundColor: colors.primary,
-                  ),
-                )
+                        child: CircleAvatar(
+                          radius: 5,
+                          backgroundColor: colors.primary,
+                        ),
+                      )
                     : null,
               ),
             ],
@@ -560,14 +564,6 @@ class _ThemeScreenState extends State<ThemeScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
 
 //
 // /////////////////////////////////////////////// 26/02/26 ///////////////////////////////////

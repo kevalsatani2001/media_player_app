@@ -1,5 +1,3 @@
-
-
 import '../utils/app_imports.dart';
 
 class AudioScreen extends StatefulWidget {
@@ -89,53 +87,67 @@ class _AudioScreenState extends State<AudioScreen> {
             SizedBox(width: 15),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(child: _AudioBody()),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: SmartMiniPlayer(),
-            ),
-          ],
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(child: _AudioBody()),
+                ],
+              ),
+              const SmartMiniPlayer(),
+            ],
+          ),
         ),
+
+
+
+
         // floatingActionButton: FloatingActionButton(
         //   onPressed: () => context.read<AudioBloc>().add(LoadAudios()),
         //   child: const Icon(Icons.refresh),
         // ),
       )
-          : Column(
+          : Stack(
+        // àª†àª–àª¾ àªªà«‡àªœàª¨à«‡ Stack àª®àª¾àª‚ àª®à«‚àª•à«‹
         children: [
-          CommonAppBar(
-            title: "videMusicPlayer",
-            subTitle: "mediaPlayer",
-            actionWidget: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SearchScreen()),
-                );
-              },
-              child: TweenAnimationBuilder(
-                tween: Tween<double>(begin: 0.8, end: 1.0),
-                duration: const Duration(milliseconds: 500),
-                builder: (context, double val, child) =>
-                    Transform.scale(scale: val, child: child),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: colors.textFieldFill,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AppImage(src: AppSvg.searchIcon),
+          Column(
+            children: [
+              CommonAppBar(
+                title: "videMusicPlayer",
+                subTitle: "mediaPlayer",
+                actionWidget: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SearchScreen(),
+                      ),
+                    );
+                  },
+                  child: TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0.8, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    builder: (context, double val, child) =>
+                        Transform.scale(scale: val, child: child),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: colors.textFieldFill,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: AppImage(src: AppSvg.searchIcon),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              Divider(color: colors.dividerColor),
+              Expanded(child: _AudioBody()),
+            ],
           ),
-          Divider(color: colors.dividerColor),
-          Expanded(child: _AudioBody()),
-          SmartMiniPlayer(),
+          const SmartMiniPlayer(),
         ],
       ),
     );
@@ -149,13 +161,13 @@ class _AudioBody extends StatefulWidget {
   State<_AudioBody> createState() => _AudioBodyState();
 }
 
-// 1. wantKeepAlive àª®àª¾àªŸà«‡ Mixin àª…àª¨à«‡ Override àªœàª°à«‚àª°à«€ àª›à«‡
+// 1. wantKeepAlive Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Mixin Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Override Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã Â«â‚¬ Ã Âªâ€ºÃ Â«â€¡
 class _AudioBodyState extends State<_AudioBody>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
 
   @override
-  bool get wantKeepAlive => true; // àª† àªªà«‡àªœàª¨à«‡ àª®à«‡àª®àª°à«€àª®àª¾àª‚ àªœà«€àªµàª‚àª¤ àª°àª¾àª–àª¶à«‡
+  bool get wantKeepAlive => true; // Ã Âªâ€  Ã ÂªÂªÃ Â«â€¡Ã ÂªÅ“Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ®Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÅ“Ã Â«â‚¬Ã ÂªÂµÃ Âªâ€šÃ ÂªÂ¤ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂ¶Ã Â«â€¡
 
   @override
   void initState() {
@@ -176,18 +188,22 @@ class _AudioBodyState extends State<_AudioBody>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // AutomaticKeepAlive àª®àª¾àªŸà«‡ àª† àªœàª°à«‚àª°à«€ àª›à«‡
+    super.build(
+      context,
+    ); // AutomaticKeepAlive Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã Âªâ€  Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã Â«â‚¬ Ã Âªâ€ºÃ Â«â€¡
     return BlocBuilder<AudioBloc, AudioState>(
-      // _AudioBody àª¨àª¾ build àª®àª¾àª‚ àª† àª°à«€àª¤à«‡ àª«à«‡àª°àª«àª¾àª° àª•àª°à«‹
+      // _AudioBody Ã ÂªÂ¨Ã ÂªÂ¾ build Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂ°Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       builder: (context, state) {
         List<AssetEntity> entities = [];
 
         if (state is AudioLoading) {
-          entities = state.entities; // àª¹àªµà«‡ àªàª°àª° àª¨àª¹à«€àª‚ àª†àªµà«‡
+          entities =
+              state.entities; // Ã ÂªÂ¹Ã ÂªÂµÃ Â«â€¡ Ã ÂªÂÃ ÂªÂ°Ã ÂªÂ° Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Âªâ€ Ã ÂªÂµÃ Â«â€¡
           // if (entities.isEmpty)
           return Center(child: CustomLoader());
         } else if (state is AudioLoaded) {
-          entities = state.entities; // àª¹àªµà«‡ àªàª°àª° àª¨àª¹à«€àª‚ àª†àªµà«‡
+          entities =
+              state.entities; // Ã ÂªÂ¹Ã ÂªÂµÃ Â«â€¡ Ã ÂªÂÃ ÂªÂ°Ã ÂªÂ° Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Âªâ€ Ã ÂªÂµÃ Â«â€¡
         } else if (state is AudioError) {
           return Center(child: Text(state.message));
         } else {
@@ -199,7 +215,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // àª¡à«àªªà«àª²à«€àª•à«‡àªŸ àª•à«‹àª¡ àª˜àªŸàª¾àª¡àªµàª¾ àª®àª¾àªŸà«‡ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
+  // Ã ÂªÂ¡Ã Â«ÂÃ ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â‚¬Ã Âªâ€¢Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªËœÃ ÂªÅ¸Ã ÂªÂ¾Ã ÂªÂ¡Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã Âªâ€¦Ã ÂªÂ²Ã Âªâ€” Ã ÂªÂ«Ã Âªâ€šÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¶Ã ÂªÂ¨
   Widget _buildAudioList(List<AssetEntity> entities) {
     return AnimationLimiter(
       child: ListView.builder(
@@ -270,7 +286,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // àªªà«àª²à«‡àª¯àª° àª¹à«‡àª¨à«àª¡àª²àª°
+  // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ¹Ã Â«â€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ²Ã ÂªÂ°
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
     // GlobalPlayer().initAndPlay(entities: entities, selectedId: audio.id);
     print("type===> ${audio.type}");
@@ -294,7 +310,7 @@ class _AudioBodyState extends State<_AudioBody>
     });
   }
 
-  // àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®àª¨à«àª‚ àª†àªˆàª•àª¨
+  // Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã Âªâ€ Ã ÂªË†Ã Âªâ€¢Ã ÂªÂ¨
   Widget _buildLeadingIcon(
       AssetEntity audio,
       AppThemeColors colors,
@@ -323,7 +339,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // àªŸàª¾àªˆàªŸàª² àª…àª¨à«‡ àª¸àª®àª¯
+  // Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ² Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¯
   Widget _buildTitleAndDuration(
       AssetEntity audio,
       File file,
@@ -350,7 +366,7 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  // àª®à«‡àª¨à« àª¬àªŸàª¨
+  // Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¨Ã Â«Â Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨
   Widget _buildPopupMenu(AssetEntity audio, int index) {
     return PopupMenuButton<MediaMenuAction>(
       elevation: 15,
@@ -362,7 +378,7 @@ class _AudioBodyState extends State<_AudioBody>
       icon: AppImage(src: AppSvg.dropDownMenuDot),
       menuPadding: EdgeInsets.symmetric(horizontal: 10),
       onSelected: (action) => handleMenuAction(context, audio, action, index),
-      // common_methods àª®àª¾àª‚ àª¹à«‹àªµà«àª‚ àªœà«‹àªˆàª
+      // common_methods Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂµÃ Â«ÂÃ Âªâ€š Ã ÂªÅ“Ã Â«â€¹Ã ÂªË†Ã ÂªÂ
       itemBuilder: (context) => [
         _buildPopupItem(
           MediaMenuAction.addToFavourite,
@@ -446,7 +462,7 @@ class _AudioBodyState extends State<_AudioBody>
 
     final key = file.path;
 
-    // ðŸ”¹ Update Hive
+    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -469,7 +485,7 @@ class _AudioBodyState extends State<_AudioBody>
       );
     }
 
-    // ðŸ”¹ Update system favourite
+    // Ã°Å¸â€Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -487,13 +503,13 @@ class _AudioBodyState extends State<_AudioBody>
       );
     }
 
-    // ðŸ”¹ Reload entity
+    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
     if (GlobalPlayer().currentEntity?.id == entity.id) {
       await GlobalPlayer().refreshCurrentEntity();
     }
-    // ðŸ”¹ Update UI list
+    // Ã°Å¸â€Â¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<AudioBloc>().add(LoadAudios(showLoading: false));
 

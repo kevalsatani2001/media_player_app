@@ -35,6 +35,7 @@ class _VideoScreenState extends State<VideoScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+  final GlobalPlayer player = GlobalPlayer();
 
   @override
   Widget build(BuildContext context) {
@@ -106,45 +107,45 @@ class _VideoScreenState extends State<VideoScreen> {
               SizedBox(width: 15),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(child: _buildVideoPage()),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: SmartMiniPlayer(),
-              ),
-            ],
+          body: SafeArea(
+            child: Stack(
+              children: [
+                _buildVideoPage(),
+                const SmartMiniPlayer(),
+              ],
+            ),
           ),
         ),
       );
+
     else
-      return Column(
+      return Stack( // àª†àª–àª¾ àªªà«‡àªœàª¨à«‡ Stack àª®àª¾àª‚ àª®à«‚àª•à«‹
         children: [
-          CommonAppBar(
-            title: "videMusicPlayer",
-            subTitle: "mediaPlayer",
-            actionWidget: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: colors.textFieldFill,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isGridView = !_isGridView;
-                    });
-                  },
-                  child: AppImage(
-                    src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+          Column(
+            children: [
+              CommonAppBar(
+                title: "videMusicPlayer",
+                subTitle: "mediaPlayer",
+                actionWidget: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isGridView = !_isGridView),
+                      child: AppImage(
+                        src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              Expanded(child: _buildVideoPage()),
+            ],
           ),
-          Expanded(child: _buildVideoPage()),
-          Align(alignment: Alignment.bottomCenter, child: SmartMiniPlayer()),
+          const SmartMiniPlayer(),
         ],
       );
   }
@@ -185,7 +186,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.02), // àª¸àª¹à«‡àªœ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª†àªµàª¶à«‡
+                    begin: const Offset(0.0, 0.02), // Ã ÂªÂ¸Ã ÂªÂ¹Ã Â«â€¡Ã ÂªÅ“ Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ° Ã Âªâ€ Ã ÂªÂµÃ ÂªÂ¶Ã Â«â€¡
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -224,7 +225,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // âœ… FIRST CHECK LOADER
+        // Ã¢Å“â€¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Center(child: CustomLoader());
         }
@@ -334,7 +335,7 @@ class _VideoScreenState extends State<VideoScreen> {
       padding: const EdgeInsets.all(4),
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // âœ… FIRST CHECK LOADER
+        // Ã¢Å“â€¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Padding(
             padding: EdgeInsets.all(0),
@@ -467,7 +468,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     final key = file.path;
 
-    // ðŸ”¹ Update Hive
+    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -490,7 +491,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ðŸ”¹ Update system favourite
+    // Ã°Å¸â€Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -508,11 +509,11 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ðŸ”¹ Reload entity
+    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // ðŸ”¹ Update UI list
+    // Ã°Å¸â€Â¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
 
@@ -544,11 +545,11 @@ class _VideoScreenState extends State<VideoScreen> {
     //         type: 'video',
     //       ),
     //       // index: currentIndex,
-    //       entityList: allEntities, // àª†àª–à«€ àª²àª¿àª¸à«àªŸ àª®à«‹àª•àª²à«‹ àªœà«‡àª¥à«€ Next/Prev àªšàª¾àª²à«‡
+    //       entityList: allEntities, // Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Next/Prev Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«â€¡
     //     ),
     //   ),
     // ).then((value) {
-    //   // àªªà«àª²à«‡àª¯àª° àª®àª¾àª‚àª¥à«€ àªªàª¾àª›àª¾ àª†àªµà«àª¯àª¾ àªªàª›à«€ àª²àª¿àª¸à«àªŸ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+    //   // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
     //   context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     // });
 

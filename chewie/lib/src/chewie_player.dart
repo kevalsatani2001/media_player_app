@@ -52,16 +52,56 @@ class ChewieState extends State<Chewie> {
   void initState() {
     super.initState();
     widget.controller.addListener(listener);
+    // VideoPlayerController માટે લિસનર (વીડિયો પૂરો થયો કે નહીં તે જોવા)
+    widget.controller.videoPlayerController.addListener(videoPlayerListener);
     notifier = PlayerNotifier.init();
   }
 
   @override
   void dispose() {
     widget.controller.removeListener(listener);
+    widget.controller.videoPlayerController.removeListener(videoPlayerListener);
     notifier.dispose();
     super.dispose();
   }
+// વીડિયોની પોઝિશન અને કમ્પ્લીશન ચેક કરવા માટે
+  void videoPlayerListener() {
+    final vpc = widget.controller.videoPlayerController;
 
+    // જો વીડિયો પૂરો થાય અને ફૂલ સ્ક્રીન મોડ ચાલુ હોય
+    if (vpc.value.position >= vpc.value.duration &&
+        vpc.value.duration != Duration.zero &&
+        !vpc.value.isLooping &&
+        _isFullScreen) {
+
+      debugPrint("==> video done ===");
+
+      // આ મેથડ કોલ કરવાથી ChewieController નો લિસનર ટ્રિગર થશે
+      widget.controller.exitFullScreen();
+    }
+  }
+
+// ફૂલ સ્ક્રીન સ્ટેટ મેનેજ કરવા માટે
+  Future<void> listener() async {
+    // ૧. જો ફૂલ સ્ક્રીનમાં એન્ટર થવું હોય
+    if (isControllerFullScreen && !_isFullScreen) {
+      _wasPlayingBeforeFullScreen =
+          widget.controller.videoPlayerController.value.isPlaying;
+      _resumeAppliedInFullScreen = false;
+      _isFullScreen = isControllerFullScreen;
+      await _pushFullScreenWidget(context);
+    }
+    // ૨. જો ફૂલ સ્ક્રીનમાંથી બહાર નીકળવું હોય (Button દ્વારા અથવા ઓટોમેટિક)
+    else if (!isControllerFullScreen && _isFullScreen) {
+      _isFullScreen = false;
+      if (mounted) {
+        Navigator.of(
+          context,
+          rootNavigator: widget.controller.useRootNavigator,
+        ).pop();
+      }
+    }
+  }
   @override
   void didUpdateWidget(Chewie oldWidget) {
     if (oldWidget.controller != widget.controller) {
@@ -74,23 +114,52 @@ class ChewieState extends State<Chewie> {
   }
 
   // chewie_player.dart માં listener મેથડ
-  Future<void> listener() async {
-    if (isControllerFullScreen && !_isFullScreen) {
-      _wasPlayingBeforeFullScreen =
-          widget.controller.videoPlayerController.value.isPlaying;
-      _resumeAppliedInFullScreen = false;
-      _isFullScreen = isControllerFullScreen;
-      await _pushFullScreenWidget(context);
-    } else if (!isControllerFullScreen && _isFullScreen) { // અહીં ચેક ઉમેરો
-      _isFullScreen = false;
-      if (mounted) {
-        Navigator.of(
-          context,
-          rootNavigator: widget.controller.useRootNavigator,
-        ).pop();
-      }
-    }
-  }
+  // chewie_player.dart માં listener મેથડ
+//   Future<void> listener() async {
+//     final vpc = widget.controller.videoPlayerController;
+// if(vpc.value.isCompleted){
+//   print("==> complete the video ===");
+//   _isFullScreen = false;
+//   if (mounted) {
+//     Navigator.of(
+//       context,
+//       rootNavigator: widget.controller.useRootNavigator,
+//     ).pop();
+//   }
+//   return;
+// }
+//     // ૧. જો ફૂલ સ્ક્રીન મોડ ઓન હોય અને વીડિયો પૂરો થઈ જાય (Finished),
+//     // તો ઓટોમેટિક એક્ઝિટ કરો.
+//     if (_isFullScreen &&
+//         !vpc.value.isLooping && // જો લૂપિંગ ચાલુ ન હોય તો જ
+//         vpc.value.position >= vpc.value.duration &&
+//         vpc.value.position > Duration.zero) {
+//
+//       widget.controller.exitFullScreen();
+//     }
+//
+//
+//     // ૨. ફૂલ સ્ક્રીનમાં એન્ટર થવા માટેનો જુનો લોજિક
+//     if (isControllerFullScreen && !_isFullScreen) {
+//       _wasPlayingBeforeFullScreen =
+//           widget.controller.videoPlayerController.value.isPlaying;
+//       _resumeAppliedInFullScreen = false;
+//       _isFullScreen = isControllerFullScreen;
+//       await _pushFullScreenWidget(context);
+//     }
+//     // ૩. ફૂલ સ્ક્રીનમાંથી બહાર નીકળવા માટેનો જુનો લોજિક
+//     else if (!isControllerFullScreen && _isFullScreen) {
+//       _isFullScreen = false;
+//       if (mounted) {
+//         Navigator.of(
+//           context,
+//           rootNavigator: widget.controller.useRootNavigator,
+//         ).pop();
+//       }
+//     }
+//   }
+
+
 
   @override
   Widget build(BuildContext context) {
