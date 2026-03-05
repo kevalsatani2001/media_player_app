@@ -10,6 +10,7 @@ class FavouriteScreen extends StatefulWidget {
 class _FavouriteScreenState extends State<FavouriteScreen> {
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     final box = Hive.box('favourites');
 
     return BlocProvider(
@@ -20,7 +21,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             padding: const EdgeInsets.all(16),
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+              child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20,color: colors.blackColor,),
             ),
           ),
           centerTitle: true,
@@ -87,12 +88,10 @@ class _FavouriteGrid extends StatelessWidget {
 
         return GestureDetector(
           onTap: () {
-            // à«§. àª²àª¿àª¸à«àªŸàª®àª¾àª‚àª¥à«€ àª®àª¾àª¤à«àª° AssetEntity àª«àª¿àª²à«àªŸàª° àª•àª°à«‹
             final List<AssetEntity> validEntities = entities
                 .whereType<AssetEntity>()
                 .toList();
 
-            // à«¨. àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
             final int actualIndex = validEntities.indexOf(
               entities[index] as AssetEntity,
             );
@@ -134,7 +133,7 @@ class _FavouriteGrid extends StatelessWidget {
             id: entity.id,
             path: file.path,
             isNetwork: false,
-            // àª…àª¹à«€àª‚ entity.type àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°àªµà«‹ àªµàª§à« àª¸à«àª°àª•à«àª·àª¿àª¤ àª›à«‡
+            // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š entity.type Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«â€¹ Ã ÂªÂµÃ ÂªÂ§Ã Â«Â Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ°Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ·Ã ÂªÂ¿Ã ÂªÂ¤ Ã Âªâ€ºÃ Â«â€¡
             type: entity.type == AssetType.audio ? "audio" : "video",
           ),
           index: currentIndex,
@@ -142,7 +141,7 @@ class _FavouriteGrid extends StatelessWidget {
         ),
       ),
     ).then((value) {
-      // àªªàª¾àª›àª¾ àª†àªµà«àª¯àª¾ àªªàª›à«€ àª«à«‡àªµàª°àª¿àªŸ àª²àª¿àª¸à«àªŸ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+      // Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂµÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ¸ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
       context.read<FavouriteBloc>().add(LoadFavourite());
     });
   }

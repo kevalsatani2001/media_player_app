@@ -1,7 +1,7 @@
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/models/player_data.dart';
 import 'package:media_player/utils/app_imports.dart';
-
+Offset position = Offset.zero;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
@@ -74,6 +74,20 @@ class MyApp extends StatefulWidget with WidgetsBindingObserver {
 
 class _MyAppState extends State<MyApp> {
   // final FlutterLocalization _localization = FlutterLocalization.instance;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = MediaQuery.of(context).size;
+      setState(() {
+        // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ 150x120 Ã Âªâ€ºÃ Â«â€¡, Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+        position = Offset(size.width - 170, size.height - 250);
+      });
+    });
+  }
 
   @override
   void didChangeAppLifeCycleState(AppLifecycleState state) {

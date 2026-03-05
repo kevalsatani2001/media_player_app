@@ -54,6 +54,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 onTap: () => Navigator.pop(context),
                 child: AppImage(
                   src: AppSvg.backArrowIcon,
+                  color: colors.blackColor,
                   height: 20,
                   width: 20,
                 ),
@@ -79,6 +80,7 @@ class _VideoScreenState extends State<VideoScreen> {
                       src: "assets/svg_icon/search_icon.svg",
                       height: 24,
                       width: 24,
+                      color: colors.blackColor,
                     ),
                   ),
                 ),
@@ -102,15 +104,23 @@ class _VideoScreenState extends State<VideoScreen> {
                 },
                 child: AppImage(
                   src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                  color: colors.blackColor,
                 ),
               ),
               SizedBox(width: 15),
             ],
           ),
           body: SafeArea(
-            child: Stack(
+            child:  GlobalPlayer().currentType == "video"
+                ?Stack(
               children: [
                 _buildVideoPage(),
+                const SmartMiniPlayer(),
+              ],
+            ):
+            Column(
+              children: [
+                Expanded(child: _buildVideoPage()),
                 const SmartMiniPlayer(),
               ],
             ),
@@ -119,7 +129,8 @@ class _VideoScreenState extends State<VideoScreen> {
       );
 
     else
-      return Stack( // àª†àª–àª¾ àªªà«‡àªœàª¨à«‡ Stack àª®àª¾àª‚ àª®à«‚àª•à«‹
+      return GlobalPlayer().currentType == "video"?
+      Stack(
         children: [
           Column(
             children: [
@@ -145,6 +156,32 @@ class _VideoScreenState extends State<VideoScreen> {
               Expanded(child: _buildVideoPage()),
             ],
           ),
+          const SmartMiniPlayer(),
+        ],
+      ):Column(
+        children: [
+          CommonAppBar(
+            title: "videMusicPlayer",
+            subTitle: "mediaPlayer",
+            actionWidget: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: colors.textFieldFill,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: GestureDetector(
+                  onTap: () => setState(() => _isGridView = !_isGridView),
+                  child: AppImage(
+                    src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                    color: colors.blackColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Divider(color: colors.dividerColor),
+          Expanded(child: _buildVideoPage()),
           const SmartMiniPlayer(),
         ],
       );
@@ -186,7 +223,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.02), // Ã ÂªÂ¸Ã ÂªÂ¹Ã Â«â€¡Ã ÂªÅ“ Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ° Ã Âªâ€ Ã ÂªÂµÃ ÂªÂ¶Ã Â«â€¡
+                    begin: const Offset(0.0, 0.02), // Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…â€œ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -225,7 +262,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // Ã¢Å“â€¦ FIRST CHECK LOADER
+        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Center(child: CustomLoader());
         }
@@ -335,7 +372,7 @@ class _VideoScreenState extends State<VideoScreen> {
       padding: const EdgeInsets.all(4),
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // Ã¢Å“â€¦ FIRST CHECK LOADER
+        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Padding(
             padding: EdgeInsets.all(0),
@@ -459,7 +496,8 @@ class _VideoScreenState extends State<VideoScreen> {
       BuildContext context,
       AssetEntity entity,
       int index,
-      ) async {
+      ) async
+  {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -468,7 +506,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     final key = file.path;
 
-    // Ã°Å¸â€Â¹ Update Hive
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -491,7 +529,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // Ã°Å¸â€Â¹ Update system favourite
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -509,12 +547,10 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // Ã°Å¸â€Â¹ Reload entity
+    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // Ã°Å¸â€Â¹ Update UI list
-    // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
 
     setState(() {});
@@ -545,11 +581,11 @@ class _VideoScreenState extends State<VideoScreen> {
     //         type: 'video',
     //       ),
     //       // index: currentIndex,
-    //       entityList: allEntities, // Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Next/Prev Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«â€¡
+    //       entityList: allEntities, // Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Next/Prev Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡
     //     ),
     //   ),
     // ).then((value) {
-    //   // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+    //   // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡
     //   context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     // });
 

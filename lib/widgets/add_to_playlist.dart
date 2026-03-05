@@ -15,20 +15,20 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
   final playlistBox = Hive.box('playlists');
 
   String newPlaylistName = '';
-  dynamic selectedPlaylistIndex; // સિલેક્ટ થયેલ પ્લેલિસ્ટ ઇન્ડેક્સ રાખવા માટે
+  dynamic selectedPlaylistIndex; // àª¸àª¿àª²à«‡àª•à«àªŸ àª¥àª¯à«‡àª² àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª°àª¾àª–àªµàª¾ àª®àª¾àªŸà«‡
 
   showDialog(
     context: context,
     barrierDismissible: true,
     builder: (context) {
-      // StatefulBuilder જરૂરી છે જેથી ડ્રોપડાઉન સિલેક્શન વખતે UI અપડેટ થાય
+      // StatefulBuilder àªœàª°à«‚àª°à«€ àª›à«‡ àªœà«‡àª¥à«€ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ àª¸àª¿àª²à«‡àª•à«àª¶àª¨ àªµàª–àª¤à«‡ UI àª…àªªàª¡à«‡àªŸ àª¥àª¾àª¯
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            backgroundColor: colors.cardBackground,
+            backgroundColor: colors.dropdownBg,
             title: AppText(
               "addToPlaylist",
               fontSize: 18,
@@ -41,7 +41,7 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- પ્લેલિસ્ટ ડ્રોપડાઉન ---
+                  // --- àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ ---
                   if (playlistBox.isNotEmpty) ...[
                     AppText(
                       "selectExistingPlaylist",
@@ -71,8 +71,8 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                         final playlist = playlistBox.getAt(index)!;
                         return DropdownMenuItem(
                           alignment: AlignmentDirectional.centerStart,
-                          // મેનૂને ડાબી બાજુથી શરૂ કરશે
-                          // મેનૂ આખું ડાયલોગ રોકી ન લે તે માટે તમે મેક્સ હાઈટ પણ આપી શકો
+                          // àª®à«‡àª¨à«‚àª¨à«‡ àª¡àª¾àª¬à«€ àª¬àª¾àªœà«àª¥à«€ àª¶àª°à«‚ àª•àª°àª¶à«‡
+                          // àª®à«‡àª¨à«‚ àª†àª–à«àª‚ àª¡àª¾àª¯àª²à«‹àª— àª°à«‹àª•à«€ àª¨ àª²à«‡ àª¤à«‡ àª®àª¾àªŸà«‡ àª¤àª®à«‡ àª®à«‡àª•à«àª¸ àª¹àª¾àªˆàªŸ àªªàª£ àª†àªªà«€ àª¶àª•à«‹
                           value: index,
                           child: Text(
                             playlist.name,
@@ -88,7 +88,7 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                     const SizedBox(height: 10),
                   ],
 
-                  // --- નવું પ્લેલિસ્ટ બનાવવાનું ફિલ્ડ ---
+                  // --- àª¨àªµà«àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµàªµàª¾àª¨à«àª‚ àª«àª¿àª²à«àª¡ ---
                   AppText(
                     "orCreateNew",
                     fontSize: 14,
@@ -129,10 +129,10 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                       child: AppButton(
                         title: "add",
                         backgroundColor: colors.primary,
-                        textColor: colors.whiteColor,
+                        textColor: Colors.white,
 
                         onTap: () {
-                          // ૧. જો ડ્રોપડાઉનમાંથી સિલેક્ટ કર્યું હોય
+                          // à«§. àªœà«‹ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨àª®àª¾àª‚àª¥à«€ àª¸àª¿àª²à«‡àª•à«àªŸ àª•àª°à«àª¯à«àª‚ àª¹à«‹àª¯
                           if (selectedPlaylistIndex != null) {
                             final playlist = playlistBox.getAt(
                               selectedPlaylistIndex,
@@ -161,11 +161,11 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                               );
                             }
                           }
-                          // ૨. જો નવું નામ લખ્યું હોય
+                          // à«¨. àªœà«‹ àª¨àªµà«àª‚ àª¨àª¾àª® àª²àª–à«àª¯à«àª‚ àª¹à«‹àª¯
                           else if (newPlaylistName.trim().isNotEmpty) {
                             final name = newPlaylistName.trim();
 
-                            // 🔍 અહીં ચેક કરો કે આ નામનું પ્લેલિસ્ટ પહેલેથી છે કે નહીં
+                            // ðŸ” àª…àª¹à«€àª‚ àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àª† àª¨àª¾àª®àª¨à«àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àªªàª¹à«‡àª²à«‡àª¥à«€ àª›à«‡ àª•à«‡ àª¨àª¹à«€àª‚
                             bool exists = playlistBox.values.any(
                                   (element) =>
                               element.name.toLowerCase() ==
@@ -173,14 +173,14 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
                             );
 
                             if (exists) {
-                              // ⚠️ જો નામ પહેલેથી હોય તો એરર બતાવો
+                              // âš ï¸ àªœà«‹ àª¨àª¾àª® àªªàª¹à«‡àª²à«‡àª¥à«€ àª¹à«‹àª¯ àª¤à«‹ àªàª°àª° àª¬àª¤àª¾àªµà«‹
                               AppToast.show(
                                 context,
                                 "${context.tr("playlist")} '$name' ${context.tr("alreadyExists")}",
                                 type: ToastType.error,
                               );
                             } else {
-                              // ✅ જો નવું હોય તો જ બનાવો
+                              // âœ… àªœà«‹ àª¨àªµà«àª‚ àª¹à«‹àª¯ àª¤à«‹ àªœ àª¬àª¨àª¾àªµà«‹
                               final newPlaylist = PlaylistModel(
                                 name: name,
                                 items: [currentItem],
@@ -215,7 +215,7 @@ void addToPlaylist(MediaItem currentItem, BuildContext context) {
   );
 }
 
-// સ્નેકબાર માટે હેલ્પર મેથડ
+// àª¸à«àª¨à«‡àª•àª¬àª¾àª° àª®àª¾àªŸà«‡ àª¹à«‡àª²à«àªªàª° àª®à«‡àª¥àª¡
 void _showSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }

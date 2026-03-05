@@ -15,6 +15,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color text;
   final Color subTextColor;
   final Color textFieldFill;
+  final Color dropdownBg;
   final Color textFieldBorder;
   final Color cardBackground;
   final Color appBarTitleColor;
@@ -25,6 +26,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
   final Color lightThemePrimary;
   final Color secondaryText;
   final Color grey1;
+  final Color videoGridBgColor;
+  final Color audioGridBgColor;
+  final Color smartPlayerBg;
   // final Color cardBorder;
 
   const AppThemeColors({
@@ -40,6 +44,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.hintText,
     required this.text,
     required this.textFieldFill,
+    required this.dropdownBg,
     required this.textFieldBorder,
     required this.subTextColor,
     required this.cardBackground,
@@ -51,6 +56,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.lightThemePrimary,
     required this.secondaryText,
     required this.grey1,
+    required this.videoGridBgColor,
+    required this.audioGridBgColor,
+    required this.smartPlayerBg,
   });
 
   @override
@@ -67,6 +75,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? hintText,
     Color? text,
     Color? textFieldFill,
+    Color? dropdownBg,
     Color? textFieldBorder,
     Color? subTextColor,
     Color? cardBackground,
@@ -78,6 +87,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? lightThemePrimary,
     Color? secondaryText,
     Color? grey1,
+    Color? videoGridBgColor,
+    Color? audioGridBgColor,
+    Color? smartPlayerBg,
   }) {
     return AppThemeColors(
       background: background ?? this.background,
@@ -92,6 +104,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       hintText: primary ?? this.hintText,
       text: primary ?? this.text,
       textFieldFill: textFieldFill ?? this.textFieldFill,
+      dropdownBg: dropdownBg ?? this.dropdownBg,
       textFieldBorder: textFieldBorder ?? this.textFieldBorder,
       subTextColor: subTextColor ?? this.subTextColor,
       cardBackground: cardBackground ?? this.cardBackground,
@@ -103,6 +116,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       lightThemePrimary: lightThemePrimary ?? this.lightThemePrimary,
       secondaryText: secondaryText ?? this.secondaryText,
       grey1: grey1 ?? this.grey1,
+      videoGridBgColor: videoGridBgColor ?? this.videoGridBgColor,
+      audioGridBgColor: audioGridBgColor ?? this.audioGridBgColor,
+      smartPlayerBg: smartPlayerBg ?? this.smartPlayerBg,
     );
   }
 
@@ -123,6 +139,7 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       hintText: Color.lerp(hintText, other.hintText, t)!,
       text: Color.lerp(text, other.text, t)!,
       textFieldFill: Color.lerp(textFieldFill, other.textFieldFill, t)!,
+      dropdownBg: Color.lerp(dropdownBg, other.dropdownBg, t)!,
       textFieldBorder: Color.lerp(textFieldBorder, other.textFieldBorder, t)!,
       subTextColor: Color.lerp(subTextColor, other.subTextColor, t)!,
       cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
@@ -134,6 +151,9 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       lightThemePrimary: Color.lerp(lightThemePrimary, other.lightThemePrimary, t)!,
       secondaryText: Color.lerp(secondaryText, other.secondaryText, t)!,
       grey1: Color.lerp(grey1, other.grey1, t)!,
+      videoGridBgColor: Color.lerp(videoGridBgColor, other.videoGridBgColor, t)!,
+      audioGridBgColor: Color.lerp(audioGridBgColor, other.audioGridBgColor, t)!,
+      smartPlayerBg: Color.lerp(smartPlayerBg, other.smartPlayerBg, t)!,
     );
   }
 }
@@ -148,7 +168,7 @@ class AppTheme {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      extensions: const [
+      extensions:  [
         AppThemeColors(
           background: Color(0xFFF5F5F5),
           surface: Colors.white,
@@ -162,6 +182,7 @@ class AppTheme {
           hintText: Color(0XFF3D57F9),
           text: Color(0XFF3D57F9),
           textFieldFill: Color(0XFFF6F6F6),
+          dropdownBg: Color(0XFFF6F6F6),
           textFieldBorder: Color(0XFFAAAAAA),
           subTextColor: Color(0XFF111723),
           cardBackground: Color(0XFFFAFAFA),
@@ -173,6 +194,9 @@ class AppTheme {
           lightThemePrimary: Color(0XFF297AFC),
           secondaryText: Color(0XFF5C5C5C),
           grey1: Color(0XFF333333),
+          videoGridBgColor: Color(0XFFF6F6F6),
+          audioGridBgColor: Color(0XFFF6F6F6),
+          smartPlayerBg: Color(0xFFE0E0E0),
         ),
       ],
     );
@@ -187,7 +211,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      extensions: const [
+      extensions:  [
         AppThemeColors(
           background: Color(0xFF121212),
           surface: Color(0xFF1E1E1E),
@@ -200,18 +224,22 @@ class AppTheme {
           primary2: Color(0XFF9570FF),
           hintText: Color(0XFF3D57F9),
           text: Color(0XFF3D57F9),
-          textFieldFill: Color(0XFFF6F6F6),
+          textFieldFill: Colors.white.withOpacity(0.20),
+          dropdownBg: Color(0xFF2C2C2C),
+          videoGridBgColor:  Color(0xFF000000),
+          audioGridBgColor: Color(0xFF2C2C2C),
           textFieldBorder: Color(0XFFAAAAAA),
-          subTextColor: Color(0XFF111723),
-          cardBackground: Color(0XFFFAFAFA),
-          appBarTitleColor: Color(0XFF222222),
+          subTextColor: Color(0xFFE1E3E8),
+          cardBackground: Color(0xFF000000),
+          appBarTitleColor: Color(0XFFFFFFFF),
           blackColor: Color(0XFFFFFFFF),
           whiteColor: Color(0XFF000000),
           dialogueSubTitle: Color(0XFF999999),
           dividerColor: Color(0XFFE0E0E0),
           lightThemePrimary: Color(0XFF297AFC),
-          secondaryText: Color(0XFF5C5C5C),
-          grey1: Color(0XFF333333),
+          secondaryText: Color(0xFF9E9E9E),
+          grey1: Color(0xFFE0E0E0),
+          smartPlayerBg: Color(0xFF1E1E1E),
         ),
       ],
     );

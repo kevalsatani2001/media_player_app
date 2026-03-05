@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../core/constants.dart';
 import '../services/playlist_service.dart';
+import '../utils/app_colors.dart';
 import '../widgets/image_widget.dart';
 
 
@@ -33,7 +34,7 @@ class _FavouriteButtonState extends State<FavouriteButton> {
     final file = await widget.entity.file;
     if (file == null) return;
 
-    // જો વિજેટ હજી સ્ક્રીન પર હોય (mounted હોય), તો જ setState કરવું
+    // àªœà«‹ àªµàª¿àªœà«‡àªŸ àª¹àªœà«€ àª¸à«àª•à«àª°à«€àª¨ àªªàª° àª¹à«‹àª¯ (mounted àª¹à«‹àª¯), àª¤à«‹ àªœ setState àª•àª°àªµà«àª‚
     if (mounted) {
       setState(() {
         favState = favBox.containsKey(file.path);
@@ -49,7 +50,7 @@ class _FavouriteButtonState extends State<FavouriteButton> {
     final playlistService = PlaylistService();
     final newFavState = await playlistService.toggleFavourite(widget.entity);
 
-    // અહીં પણ mounted ચેક કરવું જરૂરી છે
+    // àª…àª¹à«€àª‚ àªªàª£ mounted àªšà«‡àª• àª•àª°àªµà«àª‚ àªœàª°à«‚àª°à«€ àª›à«‡
     if (mounted) {
       setState(() {
         favState = newFavState;
@@ -59,6 +60,7 @@ class _FavouriteButtonState extends State<FavouriteButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return ValueListenableBuilder(
       valueListenable: favBox.listenable(),
       builder: (context, Box box, _) {
@@ -68,6 +70,7 @@ class _FavouriteButtonState extends State<FavouriteButton> {
             src: favState ? AppSvg.likeIcon : AppSvg.unlikeIcon,
             height: 20,
             width: 20,
+            color: favState ?null:colors.blackColor,
           ),
         );
 

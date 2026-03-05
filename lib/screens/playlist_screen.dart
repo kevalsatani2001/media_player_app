@@ -14,6 +14,7 @@ import '../models/playlist_model.dart';
 import '../services/global_player.dart';
 import '../services/playlist_service.dart';
 import '../utils/app_colors.dart';
+import '../utils/app_imports.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/app_transition.dart';
@@ -39,7 +40,7 @@ class PlaylistScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20,color: colors.blackColor,),
           ),
         ),
         title: AppText("playlist", fontSize: 20, fontWeight: FontWeight.w500),
@@ -57,7 +58,7 @@ class PlaylistScreen extends StatelessWidget {
               .cast<PlaylistModel>()
               .toList();
 
-          // 2. કન્સોલમાં દરેક પ્લેલિસ્ટ અને તેના આઈટમ્સ પ્રિન્ટ કરવા માટે
+          // 2. àª•àª¨à«àª¸à«‹àª²àª®àª¾àª‚ àª¦àª°à«‡àª• àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª…àª¨à«‡ àª¤à«‡àª¨àª¾ àª†àªˆàªŸàª®à«àª¸ àªªà«àª°àª¿àª¨à«àªŸ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
           for (var playlist in playlists) {
             print("--- Playlist: ${playlist.name} ---");
             print("--- Playlist: ${playlists} ---");
@@ -112,7 +113,7 @@ class PlaylistScreen extends StatelessWidget {
                             Expanded(
                               child: Row(
                                 children: [
-                                  // Row ના Thumbnail સેક્શનમાં
+                                  // Row àª¨àª¾ Thumbnail àª¸à«‡àª•à«àª¶àª¨àª®àª¾àª‚
                                   Container(
                                       width: 80,
                                       height: 60,
@@ -153,14 +154,14 @@ class PlaylistScreen extends StatelessWidget {
                             ),
                             PopupMenuButton<PlaylistMenuAction>(
                               elevation: 15,
-                              color: Colors.white,
+                              color: colors.dropdownBg,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               shadowColor: Colors.black.withOpacity(0.60),
                               offset: Offset(0, 0),
                               // splashRadius: 15,
-                              icon: AppImage(src: AppSvg.dropDownMenuDot),
+                              icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor,),
                               menuPadding: EdgeInsets.symmetric(horizontal: 10),
                               onSelected: (action) {
                                 switch (action) {
@@ -257,9 +258,9 @@ class PlaylistScreen extends StatelessWidget {
           bottom: 20,
           top: 40,
         ),
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.dropdownBg,
         title: AppText(
-          'Rename Playlist',
+          'renamePlaylist',
           fontSize: 18,
           fontWeight: FontWeight.w500,
           color: colors.appBarTitleColor,
@@ -282,7 +283,7 @@ class PlaylistScreen extends StatelessWidget {
                 Expanded(
                   child: AppButton(
                     title: "cancel",
-                    textColor: colors.whiteColor,
+                    textColor: Colors.white,
                     fontWeight: FontWeight.w500,
                     fontSize: 17,
                     backgroundColor: colors.primary,
@@ -313,7 +314,7 @@ class PlaylistScreen extends StatelessWidget {
                         playlist.name = newName;
                         playlist.save();
                         Navigator.pop(context);
-                        // ✅ Success Toast
+                        // âœ… Success Toast
                         AppToast.show(
                           context,
                           "${context.tr("playlistRenamedTo")} $newName",
@@ -412,12 +413,12 @@ class PlaylistScreen extends StatelessWidget {
     final List<XFile> files = [];
 
     for (final item in playlist.items) {
-      // પહેલા ડાયરેક્ટ પાથથી ચેક કરો
+      // àªªàª¹à«‡àª²àª¾ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àªªàª¾àª¥àª¥à«€ àªšà«‡àª• àª•àª°à«‹
       final file = File(item.path);
       if (item.path.isNotEmpty && file.existsSync()) {
         files.add(XFile(item.path));
       } else {
-        // જો પાથ ના મળે તો AssetEntity થી ફાઈલ મેળવો
+        // àªœà«‹ àªªàª¾àª¥ àª¨àª¾ àª®àª³à«‡ àª¤à«‹ AssetEntity àª¥à«€ àª«àª¾àªˆàª² àª®à«‡àª³àªµà«‹
         final entity = AssetEntity(
           id: item.id,
           typeInt: item.type == "audio" ? 3 : 2,
@@ -435,7 +436,7 @@ class PlaylistScreen extends StatelessWidget {
       AppToast.show(context, "${context.tr("noShareableFilesFound")}", type: ToastType.error);
       return;
     }
-    // WhatsApp લિમિટ માટે max 10 ફાઈલ
+    // WhatsApp àª²àª¿àª®àª¿àªŸ àª®àª¾àªŸà«‡ max 10 àª«àª¾àªˆàª²
     final shareableFiles = files.length > 10 ? files.sublist(0, 10) : files;
 
     await Share.shareXFiles(
@@ -461,12 +462,12 @@ class PlaylistItemsScreen extends StatefulWidget {
 
 class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   late List<MediaItem> currentItems;
-  bool favState = false; // લોકલ લિસ્ટ
+  bool favState = false; // àª²à«‹àª•àª² àª²àª¿àª¸à«àªŸ
 
   @override
   void initState() {
     super.initState();
-    // શરૂઆતમાં પ્રોપ્સમાંથી આવતા આઈટમ્સ કોપી કરો
+    // àª¶àª°à«‚àª†àª¤àª®àª¾àª‚ àªªà«àª°à«‹àªªà«àª¸àª®àª¾àª‚àª¥à«€ àª†àªµàª¤àª¾ àª†àªˆàªŸàª®à«àª¸ àª•à«‹àªªà«€ àª•àª°à«‹
     currentItems = List.from(widget.items);
   }
 
@@ -475,34 +476,56 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return Scaffold(
-      backgroundColor: colors.background,
       appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20,color: colors.blackColor,),
           ),
         ),
         title: AppText(widget.name, fontSize: 18, fontWeight: FontWeight.w600),
       ),
       body: widget.items.isEmpty
           ? const Center(child: AppText("playlistEmpty", fontSize: 16))
-          : ListView.builder(
-        itemCount: widget.items.length,
-        padding: const EdgeInsets.only(top: 10),
-        itemBuilder: (_, i) {
-          final item = widget.items[i];
-          return AppTransition(
-            index: i,
-            child: _buildMediaCard(context, item, colors, i),
-          );
-        },
+          : GlobalPlayer().currentType == "video"
+          ?Stack(
+        children: [
+          ListView.builder(
+            itemCount: widget.items.length,
+            padding: const EdgeInsets.only(top: 10),
+            itemBuilder: (_, i) {
+              final item = widget.items[i];
+              return AppTransition(
+                index: i,
+                child: _buildMediaCard(context, item, colors, i),
+              );
+            },
+          ),
+          const SmartMiniPlayer(),
+        ],
+      ):
+      Column(
+        children: [
+          Expanded(child: ListView.builder(
+            itemCount: widget.items.length,
+            padding: const EdgeInsets.only(top: 10),
+            itemBuilder: (_, i) {
+              final item = widget.items[i];
+              return AppTransition(
+                index: i,
+                child: _buildMediaCard(context, item, colors, i),
+              );
+            },
+          ),),
+          const SmartMiniPlayer(),
+        ],
       ),
+
     );
   }
 
-  // સર્ચ સ્ક્રીન જેવું જ કાર્ડ વિજેટ
+  // àª¸àª°à«àªš àª¸à«àª•à«àª°à«€àª¨ àªœà«‡àªµà«àª‚ àªœ àª•àª¾àª°à«àª¡ àªµàª¿àªœà«‡àªŸ
   Widget _buildMediaCard(
       BuildContext context,
       MediaItem item,
@@ -521,9 +544,9 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
-              // આ મુખ્ય રો છે
+              // àª† àª®à«àª–à«àª¯ àª°à«‹ àª›à«‡
               children: [
-                // ૧. Thumbnail Image (ફિક્સ વિડ્થ)
+                // à«§. Thumbnail Image (àª«àª¿àª•à«àª¸ àªµàª¿àª¡à«àª¥)
                 Container(
                   width: 80,
                   height: 60,
@@ -542,11 +565,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                 ),
                 const SizedBox(width: 13),
 
-                // ૨. Details (Expanded જેથી તે બાકીની વધેલી જગ્યા જ રોકે)
+                // à«¨. Details (Expanded àªœà«‡àª¥à«€ àª¤à«‡ àª¬àª¾àª•à«€àª¨à«€ àªµàª§à«‡àª²à«€ àªœàª—à«àª¯àª¾ àªœ àª°à«‹àª•à«‡)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min, // જરૂરી છે
+                    mainAxisSize: MainAxisSize.min, // àªœàª°à«‚àª°à«€ àª›à«‡
                     children: [
                       AppText(
                         item.path.split('/').last,
@@ -575,14 +598,14 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                   ),
                 ),
 
-                // ૩. PopupMenuButton (પોતાની જરૂર મુજબની જગ્યા લેશે)
+                // à«©. PopupMenuButton (àªªà«‹àª¤àª¾àª¨à«€ àªœàª°à«‚àª° àª®à«àªœàª¬àª¨à«€ àªœàª—à«àª¯àª¾ àª²à«‡àª¶à«‡)
                 PopupMenuButton<MediaMenuAction>(
                   elevation: 15,
-                  color: Colors.white,
+                  color: colors.dropdownBg,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  icon: AppImage(src: AppSvg.dropDownMenuDot),
+                  icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor),
                   onSelected: (action) async {
                     AssetEntity entity = AssetEntity(
                       id: item.id,
@@ -659,7 +682,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       currentItems[index].isFavourite = newFavState;
     });
 
-    // ✅ Toast Feedback
+    // âœ… Toast Feedback
     AppToast.show(
       context,
       newFavState ? "${context.tr("addedToFavourite")}" : "${context.tr("removedFromFavourites")}",
@@ -701,43 +724,20 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         currentItems.removeAt(index);
       });
 
-      // ✅ SnackBar ની જગ્યાએ Toast
+      // âœ… SnackBar àª¨à«€ àªœàª—à«àª¯àª¾àª Toast
       AppToast.show(context, "${context.tr("removedFromPlaylist")}", type: ToastType.info);
     }
   }
-  /*
-     "removedFromPlaylist": "Removed from Playlist",
-"removedFromPlaylist_ar": "تم الحذف من قائمة التشغيل",
-"removedFromPlaylist_my": "ပလေးလစ်မှ ဖယ်ရှားပြီးပါပြီ",
-"removedFromPlaylist_fil": "Inalis sa Playlist",
-"removedFromPlaylist_fr": "Retiré de la liste de lecture",
-"removedFromPlaylist_de": "Aus der Playlist entfernt",
-"removedFromPlaylist_gu": "પ્લેલિસ્ટમાંથી દૂર કરવામાં આવ્યું",
-"removedFromPlaylist_hi": "प्लेलिस्ट से हटा दिया गया",
-"removedFromPlaylist_id": "Dihapus dari Daftar Putar",
-"removedFromPlaylist_it": "Rimosso dalla playlist",
-"removedFromPlaylist_ja": "プレイリストから削除されました",
-"removedFromPlaylist_ko": "재생목록에서 삭제됨",
-"removedFromPlaylist_ms": "Dialih keluar daripada Senarai Main",
-"removedFromPlaylist_mr": "प्लेलिस्ट मधून काढले",
-"removedFromPlaylist_fa": "از لیست پخش حذف شد",
-"removedFromPlaylist_pl": "Usunięto z playlisty",
-"removedFromPlaylist_pt": "Removido da lista de reprodução",
-"removedFromPlaylist_es": "Eliminado de la lista de reproducción",
-"removedFromPlaylist_sv": "Borttagen från spellistan",
-"removedFromPlaylist_ta": "பிளேலிஸ்ட்டிலிருந்து நீக்கப்பட்டது",
-"removedFromPlaylist_ur": "پلے لسٹ سے نکال دیا گیا"
-   */
 
   // Duration Helper
   Widget _buildDuration(MediaItem item, AppThemeColors colors) {
     return FutureBuilder<AssetEntity?>(
-      future: AssetEntity.fromId(item.id), // ID પરથી આખી એન્ટિટી લોડ કરો
+      future: AssetEntity.fromId(item.id), // ID àªªàª°àª¥à«€ àª†àª–à«€ àªàª¨à«àªŸàª¿àªŸà«€ àª²à«‹àª¡ àª•àª°à«‹
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const AppText("00:00", fontSize: 10);
 
         final entity = snapshot.data!;
-        // અહીં ડ્યુરેશન સેકન્ડમાં મળે છે
+        // àª…àª¹à«€àª‚ àª¡à«àª¯à«àª°à«‡àª¶àª¨ àª¸à«‡àª•àª¨à«àª¡àª®àª¾àª‚ àª®àª³à«‡ àª›à«‡
         return AppText(
           formatDuration(entity.duration),
           fontSize: 10,
@@ -772,16 +772,16 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   void _handlePlay(BuildContext context, MediaItem item) {
-    // ૧. આઈટમનો ઈન્ડેક્સ શોધો
+    // à«§. àª†àªˆàªŸàª®àª¨à«‹ àªˆàª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
     int index = widget.items.indexOf(item);
     final player = Provider.of<GlobalPlayer>(context, listen: false);
 
-    // ૨. MediaItem ના લિસ્ટને AssetEntity ના લિસ્ટમાં કન્વર્ટ કરો
+    // à«¨. MediaItem àª¨àª¾ àª²àª¿àª¸à«àªŸàª¨à«‡ AssetEntity àª¨àª¾ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª•àª¨à«àªµàª°à«àªŸ àª•àª°à«‹
     List<AssetEntity> entityList = widget.items.map((media) {
       return AssetEntity(
         id: media.id,
-        // type મુજબ typeInt સેટ કરો (Video: 1, Audio: 2/3, Image: 1)
-        // સામાન્ય રીતે photo_manager માં: Image = 1, Video = 2, Audio = 3
+        // type àª®à«àªœàª¬ typeInt àª¸à«‡àªŸ àª•àª°à«‹ (Video: 1, Audio: 2/3, Image: 1)
+        // àª¸àª¾àª®àª¾àª¨à«àª¯ àª°à«€àª¤à«‡ photo_manager àª®àª¾àª‚: Image = 1, Video = 2, Audio = 3
         typeInt: media.type == "video" ? 2 : (media.type == "audio" ? 3 : 1),
         width: 0,
         height: 0,
@@ -790,23 +790,23 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       );
     }).toList();
 
-    // ૩. પ્લેયરની ક્યુ (Queue) અને ઇન્ડેક્સ સેટ કરો
+    // à«©. àªªà«àª²à«‡àª¯àª°àª¨à«€ àª•à«àª¯à« (Queue) àª…àª¨à«‡ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¸à«‡àªŸ àª•àª°à«‹
     // player.queue = entityList;
     player.currentIndex = index;
 
     print("Playing Item ID: ${item.id}");
     print("Total Items in Queue: ${entityList.length}");
 
-    // ૪. નેવિગેટ કરો
+    // à«ª. àª¨à«‡àªµàª¿àª—à«‡àªŸ àª•àª°à«‹
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => PlayerScreen(
           item: item,
           index: index,
-          entityList: entityList, // તૈયાર કરેલું લિસ્ટ અહીં મોકલો
+          entityList: entityList, // àª¤à«ˆàª¯àª¾àª° àª•àª°à«‡àª²à«àª‚ àª²àª¿àª¸à«àªŸ àª…àª¹à«€àª‚ àª®à«‹àª•àª²à«‹
           isPlaylist: true,
-          entity: entityList[index], // વર્તમાન એન્ટિટી
+          entity: entityList[index], // àªµàª°à«àª¤àª®àª¾àª¨ àªàª¨à«àªŸàª¿àªŸà«€
         ),
       ),
     );
@@ -821,7 +821,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     );
   }
 
-  // PlaylistItemsScreen ની અંદર આ નવી મેથડ ઉમેરો/સુધારો
+  // PlaylistItemsScreen àª¨à«€ àª…àª‚àª¦àª° àª† àª¨àªµà«€ àª®à«‡àª¥àª¡ àª‰àª®à«‡àª°à«‹/àª¸à«àª§àª¾àª°à«‹
   Future<void> _shareSingleItem(AssetEntity entity) async {
     try {
       final File? file = await entity.file;

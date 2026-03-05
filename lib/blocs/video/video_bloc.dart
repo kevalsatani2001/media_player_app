@@ -57,7 +57,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
         if (entity != null) cachedEntities.add(entity);
       }
       // ૨. તરત જ Loading સ્ટેટમાં જૂનો ડેટા બતાવો (સ્ક્રીન ખાલી નહીં થાય)
-      emit(VideoLoading(entities: cachedEntities));
+      // emit(VideoLoading(entities: cachedEntities));
     } else if (event.showLoading!) {
       emit(VideoLoading());
     }

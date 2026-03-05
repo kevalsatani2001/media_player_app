@@ -37,38 +37,42 @@ class _HomePageState extends State<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°àªµàª¾àª¥à«€ àª–àª¾àª¤àª°à«€ àª¥àª¶à«‡ àª•à«‡ context àª¤à«ˆàª¯àª¾àª° àª›à«‡
+    // WidgetsBinding Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¤Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡ Ã Âªâ€¢Ã Â«â€¡ context Ã ÂªÂ¤Ã Â«Ë†Ã ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€ºÃ Â«â€¡
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // ðŸ”´ àª† àª²àª¾àª‡àª¨ àª‰àª®à«‡àª°à«‹ - àªàªª àª–à«àª²àª¤àª¾àª¨à«€ àª¸àª¾àª¥à«‡ àªœ àª•àª¾àª‰àª¨à«àªŸàª¿àª‚àª— àª¶àª°à«‚ àª•àª°àª¶à«‡
+        // Ã°Å¸â€Â´ Ã Âªâ€  Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹ - Ã ÂªÂÃ ÂªÂª Ã Âªâ€“Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÅ“ Ã Âªâ€¢Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€” Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
         context.read<HomeCountBloc>().add(LoadCounts());
         _loadFolders();
       }
     });
   }
 
-  // àª¤àª®àª¾àª°à«€ build àª®à«‡àª¥àª¡àª®àª¾àª‚
+  // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ build Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¥Ã ÂªÂ¡Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š
   @override
   Widget build(BuildContext context) {
-    // àªœà«‹ àª¤àª®à«‡ MultiBlocProvider àª¨àª¥à«€ àªµàª¾àªªàª°àª¤àª¾ àª¤à«‹ àª…àª¹à«€àª‚ BlocProvider àª®à«‚àª•à«‹
     return BlocProvider(
-      // ðŸ”´ àª…àª¹à«€àª‚ àª‡àªµà«‡àª¨à«àªŸ àªàª¡ àª•àª°àªµàª¾àª¥à«€ àª–àª¾àª¤àª°à«€ àª¥àª¶à«‡ àª•à«‡ àªªà«àª°à«‹àªµàª¾àªˆàª¡àª° àª¬àª¨àª¤àª¾ àªœ àª•àª¾àª® àª¶àª°à«‚ àª¥àª¶à«‡
       create: (context) => HomeCountBloc()..add(LoadCounts()),
       child: BlocListener<HomeTabBloc, HomeTabState>(
         listener: (context, state) {
           context.read<HomeCountBloc>().add(LoadCounts());
         },
-        child: Stack(
+        child: GlobalPlayer().currentType == "video"
+            ? Stack(
           children: [
             _buildHomePageWidget(),
+            if (GlobalPlayer().currentType == "video")
+              const SmartMiniPlayer(),
+          ],
+        )
+            : Column(
+          children: [
+            Expanded(child: _buildHomePageWidget()),
             const SmartMiniPlayer(),
           ],
         ),
       ),
     );
   }
-
-  // HomePage àª¨àª¾ build àª®à«‡àª¥àª¡àª¨à«€ àª…àª‚àª¦àª° Column àª¨à«€ àª‰àªªàª° àª† àª°à«€àª¤à«‡ àª®à«‚àª•à«‹:
 
   Widget _buildHomePageWidget() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -98,7 +102,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8),
-                      child: AppImage(src: AppSvg.searchIcon),
+                      child: AppImage(
+                        src: AppSvg.searchIcon,
+                        color: colors.blackColor,
+                      ),
                     ),
                   ),
                 ),
@@ -218,7 +225,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               _buildTab(context, "folder", 1),
                             ],
                           ),
-                          // Row àª¨à«€ àª…àª‚àª¦àª° View All àª¬àªŸàª¨ àªµàª¾àª³à«‹ àª­àª¾àª—:
+                          // Row Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° View All Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã Â«â€¹ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€”:
                           BlocBuilder<HomeTabBloc, HomeTabState>(
                             builder: (context, tabState) {
                               final isVideoTab = tabState.selectedIndex == 0;
@@ -226,10 +233,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
                               bool showButton = false;
                               if (isVideoTab && state.videoCount > 6) {
-                                // àªœà«‹ 6 àª¥à«€ àªµàª§à« àªµàª¿àª¡àª¿àª¯à«‹ àª¹à«‹àª¯
                                 showButton = true;
                               } else if (isFolderTab && folderList.length > 4) {
-                                // àªœà«‹ 4 àª¥à«€ àªµàª§à« àª«à«‹àª²à«àª¡àª° àª¹à«‹àª¯
                                 showButton = true;
                               }
 
@@ -272,7 +277,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                       ),
                     ),
                     // Tab Content
-                    // Tab Content àªµàª¾àª³à«‹ àª­àª¾àª— àª¶à«‹àª§à«‹ àª…àª¨à«‡ àª† àª®à«àªœàª¬ àª…àªªàª¡à«‡àªŸ àª•àª°à«‹:
+                    // Tab Content Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã Â«â€¹ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€” Ã ÂªÂ¶Ã Â«â€¹Ã ÂªÂ§Ã Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã Âªâ€  Ã ÂªÂ®Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¬ Ã Âªâ€¦Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹:
                     Padding(
                       padding: const EdgeInsets.all(0),
                       child: BlocBuilder<HomeTabBloc, HomeTabState>(
@@ -288,7 +293,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                                 child: SlideTransition(
                                   position: Tween<Offset>(
                                     begin: const Offset(0.0, 0.05),
-                                    // àª¥à«‹àª¡à«àª‚ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª†àªµàª¶à«‡
+                                    // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ° Ã Âªâ€ Ã ÂªÂµÃ ÂªÂ¶Ã Â«â€¡
                                     end: Offset.zero,
                                   ).animate(animation),
                                   child: child,
@@ -355,7 +360,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 curve: Curves.linear,
                 height: 3,
                 width: isActive ? 35 : 0,
-                // àª¥à«‹àª¡à«€ àªªàª¹à«‹àª³àª¾àªˆ àªµàª§àª¾àª°à«€
+                // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¹Ã ÂªÂ³Ã ÂªÂ¾Ã ÂªË† Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬
                 decoration: BoxDecoration(
                   color: colors.primary,
                   borderRadius: BorderRadius.circular(2),
@@ -477,7 +482,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                   option: const ThumbnailOption(
                     size: ThumbnailSize.square(300),
                   ),
-                ), // àª¤àª®àª¾àª°à«€ àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®
+                ), // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ®
               );
             },
           );
@@ -501,7 +506,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
     final key = file.path;
 
-    // ðŸ”¹ Update Hive
+    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -524,7 +529,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // ðŸ”¹ Update system favourite
+    // Ã°Å¸â€Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -542,11 +547,11 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // ðŸ”¹ Reload entity
+    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // ðŸ”¹ Update UI list
+    // Ã°Å¸â€Â¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     context.read<HomeCountBloc>().add(LoadCounts());
@@ -574,11 +579,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
         final item = folderList[index];
         return AppTransition(
           index: index + 5,
-          columnCount: 2, // àª…àª¹à«€àª‚ àª—à«àª°à«€àª¡àª¨à«€ àª•à«‹àª²àª® àª²àª–à«‹
+          columnCount: 2,
+          // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ²Ã ÂªÂ® Ã ÂªÂ²Ã Âªâ€“Ã Â«â€¹
           child: GalleryItemWidget(
             path: item,
             setState: setState,
-          ), // àª¤àª®àª¾àª°à«‹ àªµà«€àª¡àª¿àª¯à«‹ àª•à«‡ àª«à«‹àªŸà«‹ àªµàª¿àªœà«‡àªŸ
+          ), // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€¢Ã Â«â€¡ Ã ÂªÂ«Ã Â«â€¹Ã ÂªÅ¸Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸
         );
       },
     );
@@ -608,7 +614,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
     );
 
-    if (!mounted) return; // âœ… VERY IMPORTANT
+    if (!mounted) return; // Ã¢Å“â€¦ VERY IMPORTANT
 
     setState(() {
       folderList = galleryList;
@@ -692,11 +698,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
             type: 'video',
           ),
           index: currentIndex,
-          entityList: allEntities, // àª†àª–à«€ àª²àª¿àª¸à«àªŸ àª®à«‹àª•àª²à«‹ àªœà«‡àª¥à«€ Next/Prev àªšàª¾àª²à«‡
+          entityList:
+          allEntities, // Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Next/Prev Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«â€¡
         ),
       ),
     ).then((value) {
-      // àªªà«àª²à«‡àª¯àª° àª®àª¾àª‚àª¥à«€ àªªàª¾àª›àª¾ àª†àªµà«àª¯àª¾ àªªàª›à«€ àª²àª¿àª¸à«àªŸ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+      // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
       context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     });
   }

@@ -22,7 +22,6 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen>
     with WidgetsBindingObserver {
-  // GlobalPlayer Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ²Ã Â«â€¹
   final GlobalPlayer player = GlobalPlayer();
 
   @override
@@ -30,7 +29,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // àª† àª«à«‡àª°àª«àª¾àª° àª•àª°à«‹:
+    // Ã Âªâ€  Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂ°Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹:
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupInitialPlayer();
     });
@@ -114,6 +113,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   src: AppSvg.backArrowIcon,
                   height: 20,
                   width: 20,
+                  color: colors.blackColor,
                 ),
               ),
             ),
@@ -134,11 +134,11 @@ class _PlayerScreenState extends State<PlayerScreen>
               Positioned.fill(
                 child: isAudio
                     ? _buildAudioPlayer()
-                    : // Hero વિજેટમાં ટેગ આ રીતે રાખો
+                    : // Hero àªµàª¿àªœà«‡àªŸàª®àª¾àª‚ àªŸà«‡àª— àª† àª°à«€àª¤à«‡ àª°àª¾àª–à«‹
                 Hero(
-                  tag: 'player_${widget.entity.id}', // ટાઇપ કાઢી નાખો, માત્ર ID રાખો
+                  tag: 'player_${widget.entity.id}', // àªŸàª¾àª‡àªª àª•àª¾àª¢à«€ àª¨àª¾àª–à«‹, àª®àª¾àª¤à«àª° ID àª°àª¾àª–à«‹
                   child: Material(
-                    color: Colors.transparent, // Material ને ટ્રાન્સપરન્ટ રાખો
+                    color: Colors.transparent, // Material àª¨à«‡ àªŸà«àª°àª¾àª¨à«àª¸àªªàª°àª¨à«àªŸ àª°àª¾àª–à«‹
                     child: _buildVideoPlayer(),
                   ),
                 ),
@@ -155,7 +155,6 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: colors.whiteColor),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
@@ -173,7 +172,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     height: 320,
                     decoration: ShapeDecoration(
                       shape: CustomShape(),
-                      color: colors.background,
+                      color: colors.dropdownBg,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(23),
@@ -248,6 +247,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         inactiveTrackColor: colors.textFieldBorder,
                       ),
                       child: Slider(
+                        padding: EdgeInsets.symmetric(horizontal: 0,vertical: 12),
                         min: 0,
                         max: duration.inMilliseconds.toDouble().clamp(
                           1,
@@ -277,7 +277,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playPrevious(),
-                          child: AppImage(src: AppSvg.skipPrev),
+                          child: AppImage(src: AppSvg.skipPrev,color: colors.blackColor,),
                         ),
                         const SizedBox(width: 8),
                         StreamBuilder<bool>(
@@ -301,7 +301,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playNext(),
-                          child: AppImage(src: AppSvg.skipNext),
+                          child: AppImage(src: AppSvg.skipNext,color: colors.blackColor,),
                         ),
                         const SizedBox(width: 8),
                         AppText(
@@ -330,11 +330,11 @@ class _PlayerScreenState extends State<PlayerScreen>
       return _buildVideoLoadingPlaceholder();
     }
 
-    // અસાઇન કરેલા કંટ્રોલર માટે ચેક
+    // àª…àª¸àª¾àª‡àª¨ àª•àª°à«‡àª²àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª° àª®àª¾àªŸà«‡ àªšà«‡àª•
     if (player.chewieController != null &&
         player.chewieController!.videoPlayerController.value.isInitialized) {
       return Chewie(
-        // અહીં UniqueKey() કાઢી નાખો અને ValueKey વાપરો
+        // àª…àª¹à«€àª‚ UniqueKey() àª•àª¾àª¢à«€ àª¨àª¾àª–à«‹ àª…àª¨à«‡ ValueKey àªµàª¾àªªàª°à«‹
         key: ValueKey(player.currentEntity?.id ?? "default_video"),
         controller: player.chewieController!,
       );

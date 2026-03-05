@@ -1,5 +1,3 @@
-
-
 import '../utils/app_imports.dart';
 
 class DetailPage extends StatefulWidget {
@@ -17,21 +15,25 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return Scaffold(
-      appBar:
-
-      AppBar(
+      appBar: AppBar(
         leading: Padding(
           padding: const EdgeInsets.all(16),
           child: GestureDetector(
             onTap: () {
               Navigator.pop(context);
             },
-            child: AppImage(src: AppSvg.backArrowIcon, height: 20, width: 20),
+            child: AppImage(
+              src: AppSvg.backArrowIcon,
+              height: 20,
+              width: 20,
+              color: colors.blackColor,
+            ),
           ),
         ),
-        title:  AppText(
-          widget.entity.title??"",
+        title: AppText(
+          widget.entity.title ?? "",
           fontSize: 20,
           fontWeight: FontWeight.w500,
         ),
@@ -130,6 +132,7 @@ class _DetailPageState extends State<DetailPage> {
 }
 
 Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
+  final colors = Theme.of(context).extension<AppThemeColors>()!;
   final LatLng? latlng = await entity.latlngAsync();
   final double? lat = latlng?.latitude ?? entity.latitude;
   final double? lng = latlng?.longitude ?? entity.longitude;
@@ -138,10 +141,13 @@ Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
     child: Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: colors.whiteColor,
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
         child: Material(
-          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          color: colors.dropdownBg,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -156,13 +162,16 @@ Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
               _buildInfoItem('modified', entity.modifiedDateTime.toString()),
               _buildInfoItem('orientation', entity.orientation.toString()),
               _buildInfoItem('size', entity.size.toString()),
-              _buildInfoItem('orientatedSize', entity.orientatedSize.toString()),
+              _buildInfoItem(
+                'orientationSize',
+                entity.orientatedSize.toString(),
+              ),
               _buildInfoItem('duration', entity.videoDuration.toString()),
               _buildInfoItemAsync('title', entity.titleAsync),
               // _buildInfoItem('lat', lat.toString()),
               // _buildInfoItem('lng', lng.toString()),
-              _buildInfoItem('is favorite', entity.isFavorite.toString()),
-              _buildInfoItem('relative path', entity.relativePath ?? 'null'),
+              // _buildInfoItem('is favorite', entity.isFavorite.toString()),
+              _buildInfoItem('relativePath', entity.relativePath ?? 'null'),
               _buildInfoItemAsync('mimeType', entity.mimeTypeAsync),
             ],
           ),
@@ -185,12 +194,14 @@ Widget _buildInfoItem(String title, String? info) {
           width: 90,
           child: Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: AppText(title,fontWeight: FontWeight.w500,),
+            child: AppText(title, fontWeight: FontWeight.w500),
           ),
         ),
-        AppText(":",fontWeight: FontWeight.w500,),
-        SizedBox(width: 20,),
-        Expanded(child: AppText((info ?? 'null').padLeft(0),align: TextAlign.left,),),
+        AppText(":", fontWeight: FontWeight.w500),
+        SizedBox(width: 20),
+        Expanded(
+          child: AppText((info ?? 'null').padLeft(0), align: TextAlign.left),
+        ),
       ],
     ),
   );

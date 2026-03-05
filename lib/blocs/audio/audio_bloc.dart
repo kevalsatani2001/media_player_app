@@ -23,7 +23,7 @@ class AudioBloc extends Bloc<AudioEvent, AudioState> {
           if (entity != null) cachedEntities.add(entity);
         }
         // ૨. તરત જ Loading સ્ટેટમાં જૂનો ડેટા બતાવો (સ્ક્રીન ખાલી નહીં થાય)
-        emit(AudioLoading(entities: cachedEntities));
+        // emit(AudioLoading(entities: cachedEntities));
       } else if (event.showLoading!) {
         emit(AudioLoading());
       }

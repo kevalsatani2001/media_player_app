@@ -10,6 +10,7 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      "renamePlaylist": "Rename Playlist",
       "yourMediaYourPrivacy": "1. Your Media, Your Privacy",
       "yourMediaYourPrivacyContent":
           "This app only plays files (Videos and Music) that are already on your phone. We do not look at your private photos or other personal documents.",
@@ -173,6 +174,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "Add some videos or audio to see them here!",
     },
     'ar': {
+      "renamePlaylist": "إعادة تسمية قائمة التشغيل",
       "yourMediaYourPrivacy": "١. وسائطك، خصوصيتك",
       "yourMediaYourPrivacyContent":
           "يشغل هذا التطبيق فقط الملفات (الفيديوهات والموسيقى) الموجودة بالفعل على هاتفك. نحن لا نطلع على صورك الخاصة أو مستنداتك الشخصية الأخرى.",
@@ -331,6 +333,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "أضف بعض الفيديوهات أو الصوتيات لتظهر هنا!",
     },
     'my': {
+      "renamePlaylist": "ပလေးလစ်အမည်ပြောင်းရန်",
       "yourMediaYourPrivacy": "၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
       "yourMediaYourPrivacyContent":
           "ဤအက်ပ်သည် သင့်ဖုန်းထဲတွင် ရှိပြီးသားဖိုင်များ (ဗီဒီယိုနှင့် သီချင်း) ကိုသာ ဖွင့်ပေးပါသည်။ သင်၏ ကိုယ်ပိုင်ဓာတ်ပုံများနှင့် အခြားကိုယ်ရေးကိုယ်တာ စာရွက်စာတမ်းများကို ကျွန်ုပ်တို့ မကြည့်ရှုပါ။",
@@ -494,6 +497,7 @@ class AppStrings {
           "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
     },
     'fil': {
+      "renamePlaylist": "Palitan ang pangalan ng Playlist",
       "yourMediaYourPrivacy": "1. Iyong Media, Iyong Privacy",
       "yourMediaYourPrivacyContent":
           "Pinapatugtog lamang ng app na ito ang mga file (Video at Musika) na nasa iyong telepono na. Hindi namin tinitingnan ang iyong mga pribadong larawan o iba pang personal na dokumento.",
@@ -657,6 +661,7 @@ class AppStrings {
           "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
     },
     'fr': {
+      "renamePlaylist": "Renommer la liste de lecture",
       "yourMediaYourPrivacy": "1. Vos Médias, Votre Vie Privée",
       "yourMediaYourPrivacyContent":
           "Cette application ne lit que les fichiers (Vidéos et Musique) déjà présents sur votre téléphone. Nous ne consultons pas vos photos privées ou autres documents personnels.",
@@ -819,6 +824,7 @@ class AppStrings {
           "Ajoutez des vidéos ou du son pour les voir ici !",
     },
     'de': {
+      "renamePlaylist": "Playlist umbenennen",
       "yourMediaYourPrivacy": "1. Ihre Medien, Ihre Privatsphäre",
       "yourMediaYourPrivacyContent":
           "Diese App spielt nur Dateien (Videos und Musik) ab, die sich bereits auf Ihrem Telefon befinden. Wir sehen uns keine privaten Fotos oder andere persönliche Dokumente an.",
@@ -982,6 +988,7 @@ class AppStrings {
           "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
     },
     'gu': {
+      "renamePlaylist": "પ્લેલિસ્ટનું નામ બદલો",
       "yourMediaYourPrivacy": "૧. તમારું મીડિયા, તમારી ગોપનીયતા",
       "yourMediaYourPrivacyContent":
           "આ એપ ફક્ત તમારા ફોનમાં પહેલેથી જ હોય તેવા ફાઇલો (વીડિયો અને મ્યુઝિક) વગાડે છે. અમે તમારા ખાનગી ફોટા કે અન્ય વ્યક્તિગત દસ્તાવેજો જોતા નથી.",
@@ -1144,6 +1151,7 @@ class AppStrings {
           "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
     },
     'hi': {
+      "renamePlaylist": "प्लेलिस्ट का नाम बदलें",
       "yourMediaYourPrivacy": "१. आपका मीडिया, आपकी गोपनीयता",
       "yourMediaYourPrivacyContent":
           "यह ऐप केवल उन्हीं फाइलों (वीडियो और संगीत) को चलाता है जो पहले से ही आपके फोन पर हैं। हम आपकी निजी तस्वीरों या अन्य व्यक्तिगत दस्तावेजों को नहीं देखते हैं।",
@@ -1306,6 +1314,7 @@ class AppStrings {
           "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
     },
     'id': {
+      "renamePlaylist": "Ubah Nama Daftar Putar",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
           "Aplikasi ini hanya memutar file (Video dan Musik) yang sudah ada di ponsel Anda. Kami tidak melihat foto pribadi atau dokumen pribadi lainnya.",
@@ -1469,6 +1478,7 @@ class AppStrings {
           "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
     },
     'it': {
+      "renamePlaylist": "Rinomina playlist",
       "yourMediaYourPrivacy": "1. I Tuoi Media, La Tua Privacy",
       "yourMediaYourPrivacyContent":
           "Questa app riproduce solo i file (Video e Musica) che sono già sul tuo telefono. Non guardiamo le tue foto private o altri documenti personali.",
@@ -1632,6 +1642,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "Aggiungi video o audio per vederli qui!",
     },
     'ja': {
+      "renamePlaylist": "プレイリスト名を変更",
       "yourMediaYourPrivacy": "1. あなたのメディア、あなたのプライバシー",
       "yourMediaYourPrivacyContent":
           "このアプリは、すでに携帯電話にあるファイル（ビデオと音楽）のみを再生します。お客様のプライベートな写真やその他の個人的なドキュメントを閲覧することはありません。",
@@ -1789,6 +1800,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "ビデオやオーディオを追加してここに表示しましょう！",
     },
     'ko': {
+      "renamePlaylist": "재생목록 이름 바꾸기",
       "yourMediaYourPrivacy": "1. 귀하의 미디어, 귀하의 개인정보",
       "yourMediaYourPrivacyContent":
           "이 앱은 휴대폰에 이미 있는 파일(동영상 및 음악)만 재생합니다. 귀하의 개인 사진이나 기타 개인 문서를 열람하지 않습니다.",
@@ -1946,6 +1958,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "여기에 표시할 비디오나 오디오를 추가하세요!",
     },
     'ms': {
+      "renamePlaylist": "Namakan semula Senarai Main",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
           "Aplikasi ini hanya memainkan fail (Video dan Muzik) yang sudah ada dalam telefon anda. Kami tidak melihat foto peribadi atau dokumen peribadi anda yang lain.",
@@ -2109,6 +2122,7 @@ class AppStrings {
           "Tambah beberapa video atau audio untuk melihatnya di sini!",
     },
     'mr': {
+      "renamePlaylist": "प्लेलिस्टचे नाव बदला",
       "yourMediaYourPrivacy": "१. तुमचे मीडिया, तुमची गोपनीयता",
       "yourMediaYourPrivacyContent":
           "हे ॲप फक्त तुमच्या फोनवर आधीपासून असलेल्या फायली (व्हिडिओ आणि संगीत) प्ले करते. आम्ही तुमचे खाजगी फोटो किंवा इतर वैयक्तिक दस्तऐवज पाहत नाही.",
@@ -2271,6 +2285,7 @@ class AppStrings {
           "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
     },
     'fa': {
+      "renamePlaylist": "تغییر نام لیست پخش",
       "yourMediaYourPrivacy": "۱. رسانه شما، حریم خصوصی شما",
       "yourMediaYourPrivacyContent":
           "این برنامه فقط فایل‌هایی (ویدیو و موسیقی) را پخش می‌کند که از قبل در گوشی شما هستند. ما به عکس‌های خصوصی یا سایر اسناد شخصی شما نگاه نمی‌کنیم.",
@@ -2433,6 +2448,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "تعدادی ویدیو یا صدا اضافه کنید تا اینجا ببینید!",
     },
     'pl': {
+      "renamePlaylist": "Zmień nazwę playlisty",
       "yourMediaYourPrivacy": "1. Twoje multimedia, Twoja prywatność",
       "yourMediaYourPrivacyContent":
           "Ta aplikacja odtwarza tylko pliki (filmy i muzykę), które są już w telefonie. Nie przeglądamy Twoich prywatnych zdjęć ani innych osobistych dokumentów.",
@@ -2593,6 +2609,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "Dodaj wideo lub dźwięk, aby zobaczyć je tutaj!",
     },
     'pt': {
+      "renamePlaylist": "Renomear Playlist",
       "yourMediaYourPrivacy": "1. Sua Mídia, Sua Privacidade",
       "yourMediaYourPrivacyContent":
           "Este aplicativo apenas reproduz arquivos (vídeos e músicas) que já estão no seu telefone. Não acessamos suas fotos privadas ou outros documentos pessoais.",
@@ -2757,6 +2774,7 @@ class AppStrings {
           "Adicione alguns vídeos ou áudio para os ver aqui!",
     },
     'es': {
+      "renamePlaylist": "Cambiar nombre de la lista",
       "yourMediaYourPrivacy": "1. Tus medios, tu privacidad",
       "yourMediaYourPrivacyContent":
           "Esta aplicación solo reproduce archivos (videos y música) que ya están en tu teléfono. No miramos tus fotos privadas ni otros documentos personales.",
@@ -2921,6 +2939,7 @@ class AppStrings {
           "¡Agrega algunos videos o audio para verlos aquí!",
     },
     'sv': {
+      "renamePlaylist": "Byt namn på spellista",
       "yourMediaYourPrivacy": "1. Din media, din integritet",
       "yourMediaYourPrivacyContent":
           "Den här appen spelar bara filer (videor och musik) som redan finns på din telefon. Vi tittar inte på dina privata foton eller andra personliga dokument.",
@@ -3082,6 +3101,7 @@ class AppStrings {
       "addSomeVideosOrAudio": "Lägg till videor eller ljud för att se dem här!",
     },
     'ta': {
+      "renamePlaylist": "பிளேலிஸ்ட்டை மறுபெயரிடு",
       "yourMediaYourPrivacy": "1. உங்கள் மீடியா, உங்கள் தனியுரிமை",
       "yourMediaYourPrivacyContent":
           "இந்த ஆப் உங்கள் போனில் ஏற்கனவே உள்ள கோப்புகளை (வீடியோக்கள் மற்றும் இசை) மட்டுமே இயக்குகிறது. உங்கள் தனிப்பட்ட புகைப்படங்கள் அல்லது பிற தனிப்பட்ட ஆவணங்களை நாங்கள் பார்ப்பதில்லை.",
@@ -3245,6 +3265,7 @@ class AppStrings {
           "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
     },
     'ur': {
+      "renamePlaylist": "پلے لسٹ کا نام تبدیل کریں",
       "yourMediaYourPrivacy": "١. آپ کا میڈیا، آپ کی رازداری",
       "yourMediaYourPrivacyContent":
           "یہ ایپ صرف ان فائلوں (ویڈیوز اور موسیقی) کو چلاتی ہے جو پہلے سے آپ کے فون پر موجود ہیں۔ ہم آپ کی نجی تصاویر یا دیگر ذاتی دستاویزات کو نہیں دیکھتے۔",

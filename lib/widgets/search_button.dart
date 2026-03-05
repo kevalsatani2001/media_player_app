@@ -1,14 +1,11 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-
-import '../screens/search_screen.dart';
-import 'image_widget.dart';
+import '../utils/app_imports.dart';
 
 class SearchButton extends StatelessWidget {
   SearchButton({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -25,6 +22,7 @@ class SearchButton extends StatelessWidget {
             src: "assets/svg_icon/search_icon.svg",
             height: 24,
             width: 24,
+            color: colors.blackColor,
           ),
         ),
       ),

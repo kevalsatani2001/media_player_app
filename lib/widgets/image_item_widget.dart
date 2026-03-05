@@ -52,7 +52,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: colors.textFieldFill,
+            color: colors.videoGridBgColor,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +73,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                           width: double.infinity,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            color: colors.whiteColor,
+                            color: colors.audioGridBgColor,
                           ),
                           child: Center(child: Icon(Icons.audiotrack, size: 30))),
                     ),
@@ -84,7 +84,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                           padding: const EdgeInsets.all(15),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: colors.whiteColor,
+                              color: colors.blackColor,
                               shape: BoxShape.circle,
                             ),
                             height: 20,
@@ -122,50 +122,50 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                           ),
                           SizedBox(height: 8),
                           // if (widget.entity is AssetEntity) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                AppText(
-                                  formatDuration(widget.entity.duration),
-                                  maxLines: 2,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  color: colors.textFieldBorder,
-                                ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              AppText(
+                                formatDuration(widget.entity.duration),
+                                maxLines: 2,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textFieldBorder,
+                              ),
 
-                                SizedBox(width: 0),
+                              SizedBox(width: 0),
 
-                                FutureBuilder<File?>(
-                                  future: widget.entity.file,
-                                  builder: (context, snapshot) {
-                                    if (!snapshot.hasData ||
-                                        snapshot.data == null) {
-                                      return const SizedBox(height: 14);
-                                    }
+                              FutureBuilder<File?>(
+                                future: widget.entity.file,
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData ||
+                                      snapshot.data == null) {
+                                    return const SizedBox(height: 14);
+                                  }
 
-                                    final file = snapshot.data!;
+                                  final file = snapshot.data!;
 
-                                    if (!file.existsSync()) {
-                                      return AppText(
-                                        'unavailable',
-                                        fontSize: 11,
-                                        color:Colors.redAccent,
-                                      );
-                                    }
-
-                                    final bytes = file.lengthSync();
-
+                                  if (!file.existsSync()) {
                                     return AppText(
-                                      formatSize(bytes,context),
-                                      maxLines: 2,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.textFieldBorder,
+                                      'unavailable',
+                                      fontSize: 11,
+                                      color:Colors.redAccent,
                                     );
-                                  },
-                                ),
-                              ],
-                            ),
+                                  }
+
+                                  final bytes = file.lengthSync();
+
+                                  return AppText(
+                                    formatSize(bytes,context),
+                                    maxLines: 2,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: colors.textFieldBorder,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                           // ],
                         ],
                       ),
@@ -207,7 +207,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 clipBehavior: Clip.antiAlias,
-                // 🔑 important
+                // ðŸ”‘ important
                 child: AssetEntityImage(
                   entity,
                   thumbnailSize: const ThumbnailSize(160, 120),
@@ -300,7 +300,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: colors.textFieldFill,
+        color: colors.videoGridBgColor,
       ),
       child: Padding(
         padding: const EdgeInsets.all(0),
@@ -399,9 +399,9 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
 
                                   if (!file.existsSync()) {
                                     return  AppText(
-                                     'unavailable',
+                                      'unavailable',
                                       fontSize: 11,
-                                        color:Colors.redAccent,
+                                      color:Colors.redAccent,
                                     );
                                   }
 
@@ -442,12 +442,12 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return PopupMenuButton<MediaMenuAction>(
       elevation: 15,
-      color: Colors.white,
+      color: colors.dropdownBg,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       shadowColor: Colors.black.withOpacity(0.60),
       offset: Offset(0, 0),
       // splashRadius: 15,
-      icon: AppImage(src: AppSvg.dropDownMenuDot),
+      icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor,),
       menuPadding: EdgeInsets.symmetric(horizontal: 10),
 
       onSelected: (action) => widget.onMenuSelected?.call(action),
@@ -522,8 +522,8 @@ Widget videoPlaceholder({bool? isAudio = false}) {
 }
 
 Widget? assetAntityImage(AssetEntity entity) {
-  // ૧. જો ટાઇપ ઓડિયો (3) હોય, તો ડાયરેક્ટ પ્લેસહોલ્ડર જ રિટર્ન કરો
-  // કારણ કે ઓડિયોમાંથી થંબનેલ કાઢવાનો ઓપરેશન સપોર્ટેડ નથી.
+  // à«§. àªœà«‹ àªŸàª¾àª‡àªª àª“àª¡àª¿àª¯à«‹ (3) àª¹à«‹àª¯, àª¤à«‹ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àªªà«àª²à«‡àª¸àª¹à«‹àª²à«àª¡àª° àªœ àª°àª¿àªŸàª°à«àª¨ àª•àª°à«‹
+  // àª•àª¾àª°àª£ àª•à«‡ àª“àª¡àª¿àª¯à«‹àª®àª¾àª‚àª¥à«€ àª¥àª‚àª¬àª¨à«‡àª² àª•àª¾àª¢àªµàª¾àª¨à«‹ àª“àªªàª°à«‡àª¶àª¨ àª¸àªªà«‹àª°à«àªŸà«‡àª¡ àª¨àª¥à«€.
   if (entity.typeInt == 3 || entity.type == AssetType.audio) {
     return videoPlaceholder(isAudio: true);
   }
@@ -541,7 +541,7 @@ Widget? assetAntityImage(AssetEntity entity) {
         return videoPlaceholder(isAudio: false);
       }
 
-      // ૨. ફક્ત વીડિયો કે ઈમેજ માટે જ AssetEntityImage વાપરવું
+      // à«¨. àª«àª•à«àª¤ àªµà«€àª¡àª¿àª¯à«‹ àª•à«‡ àªˆàª®à«‡àªœ àª®àª¾àªŸà«‡ àªœ AssetEntityImage àªµàª¾àªªàª°àªµà«àª‚
       return AssetEntityImage(
         entity,
         width: double.infinity,

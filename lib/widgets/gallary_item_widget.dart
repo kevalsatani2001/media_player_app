@@ -68,7 +68,7 @@ class GalleryItemWidget extends StatelessWidget {
           : SizedBox(),
       child: Container(
         decoration: BoxDecoration(
-          color: colors.textFieldFill,
+          color: colors.cardBackground,
           borderRadius: BorderRadius.circular(15.92),
         ),
         child: Padding(

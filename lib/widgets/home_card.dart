@@ -9,7 +9,7 @@ class HomeCard extends StatelessWidget {
   final String icon;
   final String route;
   final int count;
-  // VoidCallback વાપરવું સૌથી બેસ્ટ છે રિફ્રેશ કરવા માટે
+  // VoidCallback àªµàª¾àªªàª°àªµà«àª‚ àª¸à«Œàª¥à«€ àª¬à«‡àª¸à«àªŸ àª›à«‡ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
   final VoidCallback? onBack;
 
   const HomeCard({
@@ -25,11 +25,11 @@ class HomeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return InkWell(
-      // 🔴 અહીં ફેરફાર છે: .then() ઉમેર્યું
+      // ðŸ”´ àª…àª¹à«€àª‚ àª«à«‡àª°àª«àª¾àª° àª›à«‡: .then() àª‰àª®à«‡àª°à«àª¯à«àª‚
       onTap: () {
         Navigator.pushNamed(context, route)
             .then((_) {
-          // જ્યારે યુઝર પાછો આવે ત્યારે આ ફંક્શન ચાલશે
+          // àªœà«àª¯àª¾àª°à«‡ àª¯à«àªàª° àªªàª¾àª›à«‹ àª†àªµà«‡ àª¤à«àª¯àª¾àª°à«‡ àª† àª«àª‚àª•à«àª¶àª¨ àªšàª¾àª²àª¶à«‡
           if (onBack != null) {
             onBack!();
           }
