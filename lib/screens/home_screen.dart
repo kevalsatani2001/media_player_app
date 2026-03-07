@@ -1,3 +1,5 @@
+
+
 import 'dart:ui' as ui;
 import 'package:media_player/utils/app_imports.dart';
 
@@ -37,17 +39,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
-    // WidgetsBinding Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¤Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡ Ã Âªâ€¢Ã Â«â€¡ context Ã ÂªÂ¤Ã Â«Ë†Ã ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€ºÃ Â«â€¡
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        // Ã°Å¸â€Â´ Ã Âªâ€  Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹ - Ã ÂªÂÃ ÂªÂª Ã Âªâ€“Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÅ“ Ã Âªâ€¢Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€” Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
         context.read<HomeCountBloc>().add(LoadCounts());
         _loadFolders();
       }
     });
   }
 
-  // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ build Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¥Ã ÂªÂ¡Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š
+// HomePage build method ma aa mujab logic rakho:
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -56,18 +56,27 @@ class _HomePageState extends State<HomePage> with RouteAware {
         listener: (context, state) {
           context.read<HomeCountBloc>().add(LoadCounts());
         },
-        child: GlobalPlayer().currentType == "video"
-            ? Stack(
+        child: Stack( // ðŸŸ¢ Humesha Stack j rakho
           children: [
-            _buildHomePageWidget(),
-            if (GlobalPlayer().currentType == "video")
-              const SmartMiniPlayer(),
-          ],
-        )
-            : Column(
-          children: [
-            Expanded(child: _buildHomePageWidget()),
-            const SmartMiniPlayer(),
+            Column(
+              children: [
+                Expanded(child: _buildHomePageWidget()),
+                // Audio chaltu hoy to niche space khali karva mate niche no part:
+                // AnimatedBuilder(
+                //   animation: GlobalPlayer(),
+                //   builder: (context, _) {
+                //     final player = GlobalPlayer();
+                //     // Fakt Audio hoy tyare j Column ma space add karo
+                //     if (player.currentType == "audio" && player.currentIndex != -1) {
+                //       return SizedBox(height: 10);
+                //     }
+                //     return const SizedBox.shrink();
+                //   },
+                // ),
+              ],
+            ),
+            // ðŸŸ¢ Player humesha Stack na child tarike j raheshe
+            const SmartMiniPlayer(forceMiniMode: true),
           ],
         ),
       ),
@@ -184,30 +193,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               onBack: () => context.read<HomeCountBloc>().add(
                                 LoadCounts(),
                               ),
-                              // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    // GridView.count(
-                    //   shrinkWrap: true,
-                    //   physics: const NeverScrollableScrollPhysics(),
-                    //   crossAxisCount: 2,
-                    //   crossAxisSpacing: 16,
-                    //   mainAxisSpacing: 16,
-                    //   padding: const EdgeInsets.all(12),
-                    //   children: const [
-                    //
-                    //
-                    //     HomeCard(
-                    //       title: "Recent",
-                    //       icon: AppSvg.audioIcon,
-                    //       route: "/recent",
-                    //     ),
-                    //   ],
-                    // ),
-                    // Custom Tab Bar
+
                     Padding(
                       padding: const EdgeInsets.only(
                         left: 0,
@@ -225,7 +216,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               _buildTab(context, "folder", 1),
                             ],
                           ),
-                          // Row Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° View All Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã Â«â€¹ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€”:
                           BlocBuilder<HomeTabBloc, HomeTabState>(
                             builder: (context, tabState) {
                               final isVideoTab = tabState.selectedIndex == 0;
@@ -276,8 +266,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         ],
                       ),
                     ),
-                    // Tab Content
-                    // Tab Content Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã Â«â€¹ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€” Ã ÂªÂ¶Ã Â«â€¹Ã ÂªÂ§Ã Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã Âªâ€  Ã ÂªÂ®Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¬ Ã Âªâ€¦Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹:
                     Padding(
                       padding: const EdgeInsets.all(0),
                       child: BlocBuilder<HomeTabBloc, HomeTabState>(
@@ -293,7 +281,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
                                 child: SlideTransition(
                                   position: Tween<Offset>(
                                     begin: const Offset(0.0, 0.05),
-                                    // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ° Ã Âªâ€ Ã ÂªÂµÃ ÂªÂ¶Ã Â«â€¡
                                     end: Offset.zero,
                                   ).animate(animation),
                                   child: child,
@@ -360,7 +347,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 curve: Curves.linear,
                 height: 3,
                 width: isActive ? 35 : 0,
-                // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¹Ã ÂªÂ³Ã ÂªÂ¾Ã ÂªË† Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬
                 decoration: BoxDecoration(
                   color: colors.primary,
                   borderRadius: BorderRadius.circular(2),
@@ -452,37 +438,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
                       entities.cast<AssetEntity>(),
                       index,
                     );
-                    // print("vudio====${entity.typeInt}");
-                    // final file = await entity.file;
-                    // if (file == null || !file.existsSync()) return;
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => PlayerScreen(
-                    //       entity: entity,
-                    //       item: MediaItem(
-                    //         isFavourite: entity.isFavorite,
-                    //         id: entity.id,
-                    //         path: file.path,
-                    //         isNetwork: false,
-                    //         type: entity.type == AssetType.video
-                    //             ? 'video'
-                    //             : 'audio',
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ).then((value) {
-                    //   context.read<VideoBloc>().add(
-                    //     LoadVideosFromGallery(showLoading: false),
-                    //   );
-                    // });
                   },
                   isGrid: false,
                   entity: entity,
                   option: const ThumbnailOption(
                     size: ThumbnailSize.square(300),
                   ),
-                ), // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ®
+                ),
               );
             },
           );
@@ -506,7 +468,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
     final key = file.path;
 
-    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -529,7 +490,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // Ã°Å¸â€Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -547,11 +507,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
       );
     }
 
-    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // Ã°Å¸â€Â¹ Update UI list
     // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     context.read<HomeCountBloc>().add(LoadCounts());
@@ -580,12 +538,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
         return AppTransition(
           index: index + 5,
           columnCount: 2,
-          // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ²Ã ÂªÂ® Ã ÂªÂ²Ã Âªâ€“Ã Â«â€¹
           child: GalleryItemWidget(
             path: item,
             setState: setState,
-          ), // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€¢Ã Â«â€¡ Ã ÂªÂ«Ã Â«â€¹Ã ÂªÅ¸Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸
-        );
+          ),   );
       },
     );
   }
@@ -614,7 +570,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
     );
 
-    if (!mounted) return; // Ã¢Å“â€¦ VERY IMPORTANT
+    if (!mounted) return; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ VERY IMPORTANT
 
     setState(() {
       folderList = galleryList;
@@ -699,11 +655,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
           ),
           index: currentIndex,
           entityList:
-          allEntities, // Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Next/Prev Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«â€¡
+          allEntities,
         ),
       ),
     ).then((value) {
-      // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
       context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     });
   }

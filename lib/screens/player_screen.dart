@@ -29,7 +29,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Ã Âªâ€  Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂ°Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹:
+    // Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹:
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupInitialPlayer();
     });
@@ -87,7 +87,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       animation: player, // UI updates on every player state change
       builder: (context, _) {
         // Live data fetching
-        final currentType = player.currentType ?? (widget.entity.typeInt == 3 ? "audio" : "video");
+        final currentType =
+            player.currentType ??
+            (widget.entity.typeInt == 3 ? "audio" : "video");
         final bool isAudio = currentType == "audio";
 
         return Scaffold(
@@ -134,14 +136,16 @@ class _PlayerScreenState extends State<PlayerScreen>
               Positioned.fill(
                 child: isAudio
                     ? _buildAudioPlayer()
-                    : // Hero àªµàª¿àªœà«‡àªŸàª®àª¾àª‚ àªŸà«‡àª— àª† àª°à«€àª¤à«‡ àª°àª¾àª–à«‹
-                Hero(
-                  tag: 'player_${widget.entity.id}', // àªŸàª¾àª‡àªª àª•àª¾àª¢à«€ àª¨àª¾àª–à«‹, àª®àª¾àª¤à«àª° ID àª°àª¾àª–à«‹
-                  child: Material(
-                    color: Colors.transparent, // Material àª¨à«‡ àªŸà«àª°àª¾àª¨à«àª¸àªªàª°àª¨à«àªŸ àª°àª¾àª–à«‹
-                    child: _buildVideoPlayer(),
-                  ),
-                ),
+                    : // Hero Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÅ¸Ã Â«â€¡Ã Âªâ€” Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+                      Hero(
+                        tag: 'player_${widget.entity.id}',
+                        // Ã ÂªÅ¸Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂª Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¢Ã Â«â‚¬ Ã ÂªÂ¨Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹, Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ° ID Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+                        child: Material(
+                          color: Colors.transparent,
+                          // Material Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+                          child: _buildVideoPlayer(),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -247,7 +251,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         inactiveTrackColor: colors.textFieldBorder,
                       ),
                       child: Slider(
-                        padding: EdgeInsets.symmetric(horizontal: 0,vertical: 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 12,
+                        ),
                         min: 0,
                         max: duration.inMilliseconds.toDouble().clamp(
                           1,
@@ -277,7 +284,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playPrevious(),
-                          child: AppImage(src: AppSvg.skipPrev,color: colors.blackColor,),
+                          child: AppImage(
+                            src: AppSvg.skipPrev,
+                            color: colors.blackColor,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         StreamBuilder<bool>(
@@ -294,14 +304,17 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 width: 61,
                               ),
                               onPressed: () =>
-                              isPlaying ? player.pause() : player.resume(),
+                                  isPlaying ? player.pause() : player.resume(),
                             );
                           },
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playNext(),
-                          child: AppImage(src: AppSvg.skipNext,color: colors.blackColor,),
+                          child: AppImage(
+                            src: AppSvg.skipNext,
+                            color: colors.blackColor,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         AppText(
@@ -330,11 +343,11 @@ class _PlayerScreenState extends State<PlayerScreen>
       return _buildVideoLoadingPlaceholder();
     }
 
-    // àª…àª¸àª¾àª‡àª¨ àª•àª°à«‡àª²àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª° àª®àª¾àªŸà«‡ àªšà«‡àª•
+    // Ã Âªâ€¦Ã ÂªÂ¸Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã Âªâ€¢Ã Âªâ€šÃ ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â€¹Ã ÂªÂ²Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢
     if (player.chewieController != null &&
         player.chewieController!.videoPlayerController.value.isInitialized) {
       return Chewie(
-        // àª…àª¹à«€àª‚ UniqueKey() àª•àª¾àª¢à«€ àª¨àª¾àª–à«‹ àª…àª¨à«‡ ValueKey àªµàª¾àªªàª°à«‹
+        // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š UniqueKey() Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¢Ã Â«â‚¬ Ã ÂªÂ¨Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ ValueKey Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂªÃ ÂªÂ°Ã Â«â€¹
         key: ValueKey(player.currentEntity?.id ?? "default_video"),
         controller: player.chewieController!,
       );

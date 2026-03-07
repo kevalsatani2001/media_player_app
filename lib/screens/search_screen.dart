@@ -393,9 +393,8 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
 
-            // àªœà«‹ àª•à«€àª¬à«‹àª°à«àª¡ àª–à«àª²à«àª²à«àª‚ àª¹à«‹àª¯ àª…àª¨à«‡ àªµà«€àª¡àª¿àª¯à«‹ àªšàª¾àª²àª¤à«‹ àª¹à«‹àª¯, àª¤à«‹ àª›à«àªªàª¾àªµà«€ àª¦à«‹
             if (!(isKeyboardOpen && GlobalPlayer().currentType == "video"))
-              const SmartMiniPlayer(),
+              const SmartMiniPlayer(forceMiniMode: true,),
           ],
         )
     );

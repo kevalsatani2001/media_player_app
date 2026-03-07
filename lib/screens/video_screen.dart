@@ -1,3 +1,6 @@
+
+
+
 import 'dart:ui' as ui;
 import '../utils/app_imports.dart';
 
@@ -19,6 +22,7 @@ class _VideoScreenState extends State<VideoScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+
   }
 
   void _onScroll() {
@@ -111,17 +115,14 @@ class _VideoScreenState extends State<VideoScreen> {
             ],
           ),
           body: SafeArea(
-            child:  GlobalPlayer().currentType == "video"
-                ?Stack(
+            child:   Stack(
               children: [
-                _buildVideoPage(),
-                const SmartMiniPlayer(),
-              ],
-            ):
-            Column(
-              children: [
-                Expanded(child: _buildVideoPage()),
-                const SmartMiniPlayer(),
+                Column(
+                  children: [
+                    Expanded(child: _buildVideoPage()),
+                  ],
+                ),
+                SmartMiniPlayer(forceMiniMode: true) // Aa widget potani rite handle karshe
               ],
             ),
           ),
@@ -129,8 +130,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
 
     else
-      return GlobalPlayer().currentType == "video"?
-      Stack(
+      return Stack(
         children: [
           Column(
             children: [
@@ -148,41 +148,18 @@ class _VideoScreenState extends State<VideoScreen> {
                       onTap: () => setState(() => _isGridView = !_isGridView),
                       child: AppImage(
                         src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                        color: colors.blackColor,
                       ),
                     ),
                   ),
                 ),
               ),
+              Divider(color: colors.dividerColor),
               Expanded(child: _buildVideoPage()),
+              // Audio chaltu hoy to niche space khali karva mate:
             ],
           ),
-          const SmartMiniPlayer(),
-        ],
-      ):Column(
-        children: [
-          CommonAppBar(
-            title: "videMusicPlayer",
-            subTitle: "mediaPlayer",
-            actionWidget: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: colors.textFieldFill,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () => setState(() => _isGridView = !_isGridView),
-                  child: AppImage(
-                    src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
-                    color: colors.blackColor,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Divider(color: colors.dividerColor),
-          Expanded(child: _buildVideoPage()),
-          const SmartMiniPlayer(),
+          SmartMiniPlayer(forceMiniMode: true)
         ],
       );
   }
@@ -223,7 +200,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.02), // Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…â€œ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+                    begin: const Offset(0.0, 0.02), // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â° ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¶ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -262,7 +239,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIRST CHECK LOADER
+        // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Center(child: CustomLoader());
         }
@@ -372,7 +349,7 @@ class _VideoScreenState extends State<VideoScreen> {
       padding: const EdgeInsets.all(4),
       itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ FIRST CHECK LOADER
+        // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ FIRST CHECK LOADER
         if (index >= entitiesToShow.length) {
           return const Padding(
             padding: EdgeInsets.all(0),
@@ -506,7 +483,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
     final key = file.path;
 
-    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Update Hive
+    // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -529,7 +506,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Update system favourite
+    // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¹ Update system favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -547,7 +524,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¹ Reload entity
+    // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
@@ -581,11 +558,11 @@ class _VideoScreenState extends State<VideoScreen> {
     //         type: 'video',
     //       ),
     //       // index: currentIndex,
-    //       entityList: allEntities, // Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Next/Prev Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+    //       entityList: allEntities, // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Next/Prev ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡
     //     ),
     //   ),
     // ).then((value) {
-    //   // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+    //   // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â° ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â«ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¶ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡
     //   context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     // });
 

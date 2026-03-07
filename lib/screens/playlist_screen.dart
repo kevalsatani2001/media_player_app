@@ -1,29 +1,6 @@
-import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/search_button.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
-import '../core/constants.dart';
-import '../models/media_item.dart';
-import '../models/playlist_model.dart';
-import '../services/global_player.dart';
-import '../services/playlist_service.dart';
-import '../utils/app_colors.dart';
+
 import '../utils/app_imports.dart';
-import '../widgets/app_button.dart';
-import '../widgets/app_toast.dart';
-import '../widgets/app_transition.dart';
-import '../widgets/common_methods.dart';
-import '../widgets/image_item_widget.dart';
-import '../widgets/image_widget.dart';
-import '../widgets/text_widget.dart';
-import 'detail_screen.dart';
-import 'player_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
   const PlaylistScreen({super.key});
@@ -51,187 +28,191 @@ class PlaylistScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ValueListenableBuilder(
-        valueListenable: box.listenable(),
-        builder: (_, Box box, __) {
-          final List<PlaylistModel> playlists = box.values
-              .cast<PlaylistModel>()
-              .toList();
+      body: Stack(
+        children: [
+          ValueListenableBuilder(
+            valueListenable: box.listenable(),
+            builder: (_, Box box, __) {
+              final List<PlaylistModel> playlists = box.values
+                  .cast<PlaylistModel>()
+                  .toList();
 
-          // 2. àª•àª¨à«àª¸à«‹àª²àª®àª¾àª‚ àª¦àª°à«‡àª• àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª…àª¨à«‡ àª¤à«‡àª¨àª¾ àª†àªˆàªŸàª®à«àª¸ àªªà«àª°àª¿àª¨à«àªŸ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
-          for (var playlist in playlists) {
-            print("--- Playlist: ${playlist.name} ---");
-            print("--- Playlist: ${playlists} ---");
-            print("Total items: ${playlist.items.length}");
+              for (var playlist in playlists) {
+                print("--- Playlist: ${playlist.name} ---");
+                print("--- Playlist: ${playlists} ---");
+                print("Total items: ${playlist.items.length}");
 
-            for (var item in playlist.items) {
-              print(
-                "Item ID: ${item.id}, Path: ${item.path}, Type: ${item.type}--- -------${item.isFavourite}",
-              );
-            }
-          }
-          if (playlists.isEmpty) {
-            return const Center(child: AppText("noPlaylistsFound"));
-          }
+                for (var item in playlist.items) {
+                  print(
+                    "Item ID: ${item.id}, Path: ${item.path}, Type: ${item.type}--- -------${item.isFavourite}",
+                  );
+                }
+              }
+              if (playlists.isEmpty) {
+                return const Center(child: AppText("noPlaylistsFound"));
+              }
 
-          return ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 15),
-            itemCount: playlists.length,
-            itemBuilder: (_, index) {
-              final playlist = playlists[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 7.5),
-                child: AppTransition(
-                  index: index,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlaylistItemsScreen(
-                            name: playlist.name,
-                            items: playlist.items,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      // height: 100,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 10,
-                          top: 10,
-                          bottom: 10,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  // Row àª¨àª¾ Thumbnail àª¸à«‡àª•à«àª¶àª¨àª®àª¾àª‚
-                                  Container(
-                                      width: 80,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(8),
-                                          color: colors.primary.withOpacity(0.1)
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child:
-                                      Icon(Icons.playlist_play, color: colors.primary, size: 30)),
-                                  SizedBox(width: 13),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                      children: [
-                                        AppText(
-                                          playlist.name,
-                                          maxLines: 1,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        SizedBox(height: 7),
-                                        AppText(
-                                          "${playlist.items.length} ${context.tr("items")}",
-                                          maxLines: 1,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w400,
-                                          color: colors.textFieldBorder,
-                                        ),
-                                        SizedBox(height: 7),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(width: 13),
-                                ],
+              return ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 15),
+                itemCount: playlists.length,
+                itemBuilder: (_, index) {
+                  final playlist = playlists[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 7.5),
+                    child: AppTransition(
+                      index: index,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PlaylistItemsScreen(
+                                name: playlist.name,
+                                items: playlist.items,
                               ),
                             ),
-                            PopupMenuButton<PlaylistMenuAction>(
-                              elevation: 15,
-                              color: colors.dropdownBg,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              shadowColor: Colors.black.withOpacity(0.60),
-                              offset: Offset(0, 0),
-                              // splashRadius: 15,
-                              icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor,),
-                              menuPadding: EdgeInsets.symmetric(horizontal: 10),
-                              onSelected: (action) {
-                                switch (action) {
-                                  case PlaylistMenuAction.rename:
-                                    _showRenameDialog(context, box, index, playlist.name);
-                                    break;
-                                  case PlaylistMenuAction.delete:
-                                    _confirmDelete(context, box, index, playlist.name);
-                                    break;
-                                  case PlaylistMenuAction.share:
-                                    _sharePlaylist(context, playlist);
-                                    break;
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  value: PlaylistMenuAction.rename,
-                                  child: Center(
-                                    child: AppText(
-                                      'rename',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.appBarTitleColor,
-                                    ),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colors.cardBackground,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          // height: 100,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 10,
+                              top: 10,
+                              bottom: 10,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      // Row Ã ÂªÂ¨Ã ÂªÂ¾ Thumbnail Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¶Ã ÂªÂ¨Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š
+                                      Container(
+                                          width: 80,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(8),
+                                              color: colors.primary.withOpacity(0.1)
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child:
+                                          Icon(Icons.playlist_play, color: colors.primary, size: 30)),
+                                      SizedBox(width: 13),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          children: [
+                                            AppText(
+                                              playlist.name,
+                                              maxLines: 1,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            SizedBox(height: 7),
+                                            AppText(
+                                              "${playlist.items.length} ${context.tr("items")}",
+                                              maxLines: 1,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w400,
+                                              color: colors.textFieldBorder,
+                                            ),
+                                            SizedBox(height: 7),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(width: 13),
+                                    ],
                                   ),
                                 ),
-                                const PopupMenuDivider(height: 0.5),
-                                PopupMenuItem(
-                                  value: PlaylistMenuAction.share,
-                                  child: Center(
-                                    child: AppText(
-                                      'share',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.appBarTitleColor,
-                                    ),
+                                PopupMenuButton<PlaylistMenuAction>(
+                                  elevation: 15,
+                                  color: colors.dropdownBg,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                ),
-                                const PopupMenuDivider(height: 0.5),
-                                PopupMenuItem(
-                                  value: PlaylistMenuAction.delete,
-                                  child: Center(
-                                    child: AppText(
-                                      'delete',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.appBarTitleColor,
+                                  shadowColor: Colors.black.withOpacity(0.60),
+                                  offset: Offset(0, 0),
+                                  // splashRadius: 15,
+                                  icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor,),
+                                  menuPadding: EdgeInsets.symmetric(horizontal: 10),
+                                  onSelected: (action) {
+                                    switch (action) {
+                                      case PlaylistMenuAction.rename:
+                                        _showRenameDialog(context, box, index, playlist.name);
+                                        break;
+                                      case PlaylistMenuAction.delete:
+                                        _confirmDelete(context, box, index, playlist.name);
+                                        break;
+                                      case PlaylistMenuAction.share:
+                                        _sharePlaylist(context, playlist);
+                                        break;
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: PlaylistMenuAction.rename,
+                                      child: Center(
+                                        child: AppText(
+                                          'rename',
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: colors.appBarTitleColor,
+                                        ),
+                                      ),
                                     ),
-                                  ),
+                                    const PopupMenuDivider(height: 0.5),
+                                    PopupMenuItem(
+                                      value: PlaylistMenuAction.share,
+                                      child: Center(
+                                        child: AppText(
+                                          'share',
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: colors.appBarTitleColor,
+                                        ),
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(height: 0.5),
+                                    PopupMenuItem(
+                                      value: PlaylistMenuAction.delete,
+                                      child: Center(
+                                        child: AppText(
+                                          'delete',
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: colors.appBarTitleColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
+
+
+
+
+
+
+
+
                     ),
-                  ),
-
-
-
-
-
-
-
-
-                ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+          const SmartMiniPlayer(forceMiniMode: true),
+        ],
       ),
     );
   }
@@ -314,7 +295,7 @@ class PlaylistScreen extends StatelessWidget {
                         playlist.name = newName;
                         playlist.save();
                         Navigator.pop(context);
-                        // âœ… Success Toast
+                        // Ã¢Å“â€¦ Success Toast
                         AppToast.show(
                           context,
                           "${context.tr("playlistRenamedTo")} $newName",
@@ -413,12 +394,12 @@ class PlaylistScreen extends StatelessWidget {
     final List<XFile> files = [];
 
     for (final item in playlist.items) {
-      // àªªàª¹à«‡àª²àª¾ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àªªàª¾àª¥àª¥à«€ àªšà«‡àª• àª•àª°à«‹
+      // Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ°Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       final file = File(item.path);
       if (item.path.isNotEmpty && file.existsSync()) {
         files.add(XFile(item.path));
       } else {
-        // àªœà«‹ àªªàª¾àª¥ àª¨àª¾ àª®àª³à«‡ àª¤à«‹ AssetEntity àª¥à«€ àª«àª¾àªˆàª² àª®à«‡àª³àªµà«‹
+        // Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥ Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ³Ã Â«â€¡ Ã ÂªÂ¤Ã Â«â€¹ AssetEntity Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ² Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ³Ã ÂªÂµÃ Â«â€¹
         final entity = AssetEntity(
           id: item.id,
           typeInt: item.type == "audio" ? 3 : 2,
@@ -436,7 +417,7 @@ class PlaylistScreen extends StatelessWidget {
       AppToast.show(context, "${context.tr("noShareableFilesFound")}", type: ToastType.error);
       return;
     }
-    // WhatsApp àª²àª¿àª®àª¿àªŸ àª®àª¾àªŸà«‡ max 10 àª«àª¾àªˆàª²
+    // WhatsApp Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ®Ã ÂªÂ¿Ã ÂªÅ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ max 10 Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ²
     final shareableFiles = files.length > 10 ? files.sublist(0, 10) : files;
 
     await Share.shareXFiles(
@@ -462,12 +443,11 @@ class PlaylistItemsScreen extends StatefulWidget {
 
 class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   late List<MediaItem> currentItems;
-  bool favState = false; // àª²à«‹àª•àª² àª²àª¿àª¸à«àªŸ
+  bool favState = false; // Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ² Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸
 
   @override
   void initState() {
     super.initState();
-    // àª¶àª°à«‚àª†àª¤àª®àª¾àª‚ àªªà«àª°à«‹àªªà«àª¸àª®àª¾àª‚àª¥à«€ àª†àªµàª¤àª¾ àª†àªˆàªŸàª®à«àª¸ àª•à«‹àªªà«€ àª•àª°à«‹
     currentItems = List.from(widget.items);
   }
 
@@ -502,7 +482,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
               );
             },
           ),
-          const SmartMiniPlayer(),
+          const SmartMiniPlayer(forceMiniMode: true),
         ],
       ):
       Column(
@@ -518,14 +498,14 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
               );
             },
           ),),
-          const SmartMiniPlayer(),
+          const SmartMiniPlayer(forceMiniMode: true),
         ],
       ),
 
     );
   }
 
-  // àª¸àª°à«àªš àª¸à«àª•à«àª°à«€àª¨ àªœà«‡àªµà«àª‚ àªœ àª•àª¾àª°à«àª¡ àªµàª¿àªœà«‡àªŸ
+  // Ã ÂªÂ¸Ã ÂªÂ°Ã Â«ÂÃ ÂªÅ¡ Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«ÂÃ Âªâ€š Ã ÂªÅ“ Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÂ¡ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸
   Widget _buildMediaCard(
       BuildContext context,
       MediaItem item,
@@ -544,9 +524,9 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
-              // àª† àª®à«àª–à«àª¯ àª°à«‹ àª›à«‡
+              // Ã Âªâ€  Ã ÂªÂ®Ã Â«ÂÃ Âªâ€“Ã Â«ÂÃ ÂªÂ¯ Ã ÂªÂ°Ã Â«â€¹ Ã Âªâ€ºÃ Â«â€¡
               children: [
-                // à«§. Thumbnail Image (àª«àª¿àª•à«àª¸ àªµàª¿àª¡à«àª¥)
+                // Ã Â«Â§. Thumbnail Image (Ã ÂªÂ«Ã ÂªÂ¿Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã Â«ÂÃ ÂªÂ¥)
                 Container(
                   width: 80,
                   height: 60,
@@ -565,11 +545,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                 ),
                 const SizedBox(width: 13),
 
-                // à«¨. Details (Expanded àªœà«‡àª¥à«€ àª¤à«‡ àª¬àª¾àª•à«€àª¨à«€ àªµàª§à«‡àª²à«€ àªœàª—à«àª¯àª¾ àªœ àª°à«‹àª•à«‡)
+                // Ã Â«Â¨. Details (Expanded Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¾Ã Âªâ€¢Ã Â«â‚¬Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂµÃ ÂªÂ§Ã Â«â€¡Ã ÂªÂ²Ã Â«â‚¬ Ã ÂªÅ“Ã Âªâ€”Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÅ“ Ã ÂªÂ°Ã Â«â€¹Ã Âªâ€¢Ã Â«â€¡)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min, // àªœàª°à«‚àª°à«€ àª›à«‡
+                    mainAxisSize: MainAxisSize.min, // Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã Â«â‚¬ Ã Âªâ€ºÃ Â«â€¡
                     children: [
                       AppText(
                         item.path.split('/').last,
@@ -598,7 +578,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                   ),
                 ),
 
-                // à«©. PopupMenuButton (àªªà«‹àª¤àª¾àª¨à«€ àªœàª°à«‚àª° àª®à«àªœàª¬àª¨à«€ àªœàª—à«àª¯àª¾ àª²à«‡àª¶à«‡)
+                // Ã Â«Â©. PopupMenuButton (Ã ÂªÂªÃ Â«â€¹Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ° Ã ÂªÂ®Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¬Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÅ“Ã Âªâ€”Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂ²Ã Â«â€¡Ã ÂªÂ¶Ã Â«â€¡)
                 PopupMenuButton<MediaMenuAction>(
                   elevation: 15,
                   color: colors.dropdownBg,
@@ -682,7 +662,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       currentItems[index].isFavourite = newFavState;
     });
 
-    // âœ… Toast Feedback
+    // Ã¢Å“â€¦ Toast Feedback
     AppToast.show(
       context,
       newFavState ? "${context.tr("addedToFavourite")}" : "${context.tr("removedFromFavourites")}",
@@ -724,7 +704,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         currentItems.removeAt(index);
       });
 
-      // âœ… SnackBar àª¨à«€ àªœàª—à«àª¯àª¾àª Toast
+      // Ã¢Å“â€¦ SnackBar Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÅ“Ã Âªâ€”Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ Toast
       AppToast.show(context, "${context.tr("removedFromPlaylist")}", type: ToastType.info);
     }
   }
@@ -732,12 +712,12 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   // Duration Helper
   Widget _buildDuration(MediaItem item, AppThemeColors colors) {
     return FutureBuilder<AssetEntity?>(
-      future: AssetEntity.fromId(item.id), // ID àªªàª°àª¥à«€ àª†àª–à«€ àªàª¨à«àªŸàª¿àªŸà«€ àª²à«‹àª¡ àª•àª°à«‹
+      future: AssetEntity.fromId(item.id), // ID Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¿Ã ÂªÅ¸Ã Â«â‚¬ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const AppText("00:00", fontSize: 10);
 
         final entity = snapshot.data!;
-        // àª…àª¹à«€àª‚ àª¡à«àª¯à«àª°à«‡àª¶àª¨ àª¸à«‡àª•àª¨à«àª¡àª®àª¾àª‚ àª®àª³à«‡ àª›à«‡
+        // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ¡Ã Â«ÂÃ ÂªÂ¯Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¨ Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ®Ã ÂªÂ³Ã Â«â€¡ Ã Âªâ€ºÃ Â«â€¡
         return AppText(
           formatDuration(entity.duration),
           fontSize: 10,
@@ -772,16 +752,16 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   void _handlePlay(BuildContext context, MediaItem item) {
-    // à«§. àª†àªˆàªŸàª®àª¨à«‹ àªˆàª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
+    // Ã Â«Â§. Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¨Ã Â«â€¹ Ã ÂªË†Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ¶Ã Â«â€¹Ã ÂªÂ§Ã Â«â€¹
     int index = widget.items.indexOf(item);
     final player = Provider.of<GlobalPlayer>(context, listen: false);
 
-    // à«¨. MediaItem àª¨àª¾ àª²àª¿àª¸à«àªŸàª¨à«‡ AssetEntity àª¨àª¾ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª•àª¨à«àªµàª°à«àªŸ àª•àª°à«‹
+    // Ã Â«Â¨. MediaItem Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¨Ã Â«â€¡ AssetEntity Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂµÃ ÂªÂ°Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     List<AssetEntity> entityList = widget.items.map((media) {
       return AssetEntity(
         id: media.id,
-        // type àª®à«àªœàª¬ typeInt àª¸à«‡àªŸ àª•àª°à«‹ (Video: 1, Audio: 2/3, Image: 1)
-        // àª¸àª¾àª®àª¾àª¨à«àª¯ àª°à«€àª¤à«‡ photo_manager àª®àª¾àª‚: Image = 1, Video = 2, Audio = 3
+        // type Ã ÂªÂ®Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¬ typeInt Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹ (Video: 1, Audio: 2/3, Image: 1)
+        // Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¯ Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ photo_manager Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š: Image = 1, Video = 2, Audio = 3
         typeInt: media.type == "video" ? 2 : (media.type == "audio" ? 3 : 1),
         width: 0,
         height: 0,
@@ -790,23 +770,23 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       );
     }).toList();
 
-    // à«©. àªªà«àª²à«‡àª¯àª°àª¨à«€ àª•à«àª¯à« (Queue) àª…àª¨à«‡ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¸à«‡àªŸ àª•àª°à«‹
+    // Ã Â«Â©. Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¯Ã Â«Â (Queue) Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     // player.queue = entityList;
     player.currentIndex = index;
 
     print("Playing Item ID: ${item.id}");
     print("Total Items in Queue: ${entityList.length}");
 
-    // à«ª. àª¨à«‡àªµàª¿àª—à«‡àªŸ àª•àª°à«‹
+    // Ã Â«Âª. Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂµÃ ÂªÂ¿Ã Âªâ€”Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => PlayerScreen(
           item: item,
           index: index,
-          entityList: entityList, // àª¤à«ˆàª¯àª¾àª° àª•àª°à«‡àª²à«àª‚ àª²àª¿àª¸à«àªŸ àª…àª¹à«€àª‚ àª®à«‹àª•àª²à«‹
+          entityList: entityList, // Ã ÂªÂ¤Ã Â«Ë†Ã ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¡Ã ÂªÂ²Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹
           isPlaylist: true,
-          entity: entityList[index], // àªµàª°à«àª¤àª®àª¾àª¨ àªàª¨à«àªŸàª¿àªŸà«€
+          entity: entityList[index], // Ã ÂªÂµÃ ÂªÂ°Ã Â«ÂÃ ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¨ Ã ÂªÂÃ ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¿Ã ÂªÅ¸Ã Â«â‚¬
         ),
       ),
     );
@@ -821,7 +801,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     );
   }
 
-  // PlaylistItemsScreen àª¨à«€ àª…àª‚àª¦àª° àª† àª¨àªµà«€ àª®à«‡àª¥àª¡ àª‰àª®à«‡àª°à«‹/àª¸à«àª§àª¾àª°à«‹
+  // PlaylistItemsScreen Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° Ã Âªâ€  Ã ÂªÂ¨Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¥Ã ÂªÂ¡ Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹/Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹
   Future<void> _shareSingleItem(AssetEntity entity) async {
     try {
       final File? file = await entity.file;

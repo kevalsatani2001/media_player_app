@@ -1,3 +1,6 @@
+
+
+
 import 'dart:ui' as ui;
 
 import '../utils/app_imports.dart';
@@ -5,25 +8,31 @@ import '../utils/app_imports.dart';
 // Offset position = Offset.zero;
 
 class SmartMiniPlayer extends StatefulWidget {
-  const SmartMiniPlayer({super.key});
+  final bool forceMiniMode; // Aa option pass karva mate
+
+  const SmartMiniPlayer({
+    super.key,
+    this.forceMiniMode = false, // Default false, etle ke bottom bar dekhase
+  });
 
   @override
   State<SmartMiniPlayer> createState() => _SmartMiniPlayerState();
 }
-
 class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   final GlobalPlayer player = GlobalPlayer();
   Timer? _timer;
+  bool isAudioMiniMode = false;
 
   @override
   void initState() {
     super.initState();
     player.restoreLastSession();
 
+
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   final size = MediaQuery.of(context).size;
     //   setState(() {
-    //     // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ 150x120 Ã Âªâ€ºÃ Â«â€¡, Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+    //     // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â 150x120 Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
     //     position = Offset(size.width - 170, size.height - 250);
     //   });
     // });
@@ -39,17 +48,41 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Fakt ek j var initialize karva mate jyare app start thay
+    if (!isPositionInitialized) {
+      final size = MediaQuery.of(context).size;
+      final bool isVideo = player.currentType == "video";
+
+      // Type mujab width ane height
+      final double pWidth = isVideo ? 150.0 : 210.0;
+      final double pHeight = isVideo ? 100.0 : 70.0;
+      const double margin = 16.0;
+
+      setState(() {
+        // Right-Bottom corner starting position (Video/Audio banne mate alag calculate thase)
+        position = Offset(
+            size.width - pWidth - margin,
+            size.height - pHeight - 150 // Bottom bar thi thodu upar
+        );
+        isPositionInitialized = true;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
 
-  // SmartMiniPlayer.dart ના build માં આ રીતે બદલો:
+  // SmartMiniPlayer.dart àª¨àª¾ build àª®àª¾àª‚ àª† àª°à«€àª¤à«‡ àª¬àª¦àª²à«‹:
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // નોંધ: isVideo ને builder ની અંદર લેવું જોઈએ જેથી તે લેટેસ્ટ સ્ટેટ પકડે
 
     return AnimatedBuilder(
       animation: player,
@@ -57,83 +90,312 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         if (player.currentIndex == -1) return const SizedBox.shrink();
 
         final bool isVideo = player.currentType == "video";
-        final bool isSmall = size.width < 360;
+        final double pWidth = isVideo ? 150.0 : 210.0;
+        const double margin = 16.0;
 
-        // ૧. ValueKey ઉમેરવાથી પ્લેયર જ્યારે ઓડિયો/વિડિયોમાં બદલાય ત્યારે આખું વિજેટ રિફ્રેશ થશે.
-        // ૨. Key માં ID પણ ઉમેર્યો છે જેથી નવો ઓડિયો પ્લે થાય તો પણ રિફ્રેશ થાય.
-        Widget playerBody = GestureDetector(
-          key: ValueKey('${player.currentType}_${player.currentEntity?.id}'),
-          onPanUpdate: isVideo ? _updatePosition : null,
-          onPanEnd: isVideo ? (details) => _snapToClosestCorner(size) : null,
-          child: Hero(
-            tag: 'player_hero_tag',
-            child: Material(
-              type: MaterialType.transparency,
-              child: isVideo
-                  ? (player.videoController != null && player.videoController!.value.isInitialized
-                  ? _buildVideoMiniPlayer(size: size, isSmall: isSmall)
-                  : Container(
-                  width: 150,
-                  height: 100,
-                  color: Colors.black,
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2))
-              ))
-                  : _buildAudioMiniPlayer(size: size, isSmall: isSmall),
-            ),
-          ),
-        );
+        // ðŸŸ¢ Logic: Jo user type change kare (Video -> Audio) ane width vadhe,
+        // to automatic check kari ne screen ni andar push karo
+        if (isPositionInitialized && (position.dx + pWidth > size.width)) {
+          Future.delayed(Duration.zero, () {
+            if (mounted) {
+              setState(() {
+                position = Offset(size.width - pWidth - margin, position.dy);
+              });
+            }
+          });
+        }
 
-        if (isVideo) {
-          return Positioned(
-            left: position.dx,
-            top: position.dy,
-            child: playerBody,
+        final bool isFloating = isVideo || widget.forceMiniMode;
+
+        if (isFloating) {
+          return Stack(
+            children: [
+              Positioned(
+                left: position.dx,
+                top: position.dy,
+                child: _buildPlayerBody(size, isFloating),
+              ),
+            ],
           );
         } else {
-          // ઓડિયો વખતે રિફ્રેશનો ઇસ્યુ ટાળવા માટે તેને એક કન્ટેનરમાં લપેટો
-          // જે Column માં બરાબર દેખાય
-          return Container(
-            width: size.width,
-            child: playerBody,
+          return Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildPlayerBody(size, isFloating),
           );
         }
       },
     );
   }
 
-  void _updatePosition(DragUpdateDetails details) {
-    final size = MediaQuery.of(context).size;
-    final padding = MediaQuery.of(context).padding;
+  Widget _buildPlayerBody(Size size, bool isFloating) {
+    final bool isVideo = player.currentType == "video";
 
-    setState(() {
-      double newX = position.dx + details.delta.dx;
-      double newY = position.dy + details.delta.dy;
-
-      const double pWidth = 150.0;
-      const double pHeight = 120.0;
-
-      position = Offset(
-        newX.clamp(0.0, size.width - pWidth),
-        newY.clamp(padding.top, size.height - 250),
-      );
-    });
+    return GestureDetector(
+      onPanUpdate: isFloating ? _updatePosition : null,
+      onPanEnd: isFloating ? (details) => _snapToClosestCorner(size) : null,
+      child: Hero(
+        tag: 'player_hero_${player.currentType}',
+        child: Material(
+          type: MaterialType.transparency,
+          child: isVideo
+              ? _buildVideoMiniPlayer(size: size, isSmall: size.width < 360)
+              : (widget.forceMiniMode
+              ? _buildAudioFloatingPlayer(size: size) // Chotu Floating Audio
+              : _buildAudioMiniPlayer(size: size, isSmall: size.width < 360)), // Full Bottom Audio
+        ),
+      ),
+    );
   }
 
+  Widget _buildAudioFloatingPlayer({required Size size}) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+
+    return GestureDetector(
+      onTap: () {
+        if (player.currentMediaItem == null) return;
+        Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerScreen(
+          entity: player.currentEntity!,
+          item: player.currentMediaItem!,
+          index: player.currentIndex,
+          entityList: const [],
+        )));
+      },
+      child: Container(
+        width: 210,
+        height: 70, // Ekdum sleek height
+        decoration: BoxDecoration(
+          color: colors.secondaryText, // Dark Premium Look (Tame tamara colors mujab badli shako)
+          borderRadius: BorderRadius.circular(12), // Capsule Shape
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blueAccent.withOpacity(0.3),
+              blurRadius: 20,
+              spreadRadius: -5,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Subtle Glow Background
+            Positioned(
+              left: 10,
+              child: Container(
+                width: 45,
+                height: 45,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blueAccent.withOpacity(0.5),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 2. Main Content Row
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Row(
+                children: [
+                  // Music Disc (Rotating feel)
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const CircleAvatar(
+                      radius: 22,
+                      backgroundColor: Color(0xFF2A2A2A),
+                      child: Icon(Icons.music_note_rounded, color: Colors.blueAccent, size: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
+                  // Text and Controls
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          player.currentMediaItem?.path.split('/').last ?? "Unknown",
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _smallIconBtn(Icons.skip_previous_rounded, () => player.playPrevious()),
+                            const SizedBox(width: 8),
+                            _playPauseFloating(), // Blue Glow Play Button
+                            const SizedBox(width: 8),
+                            _smallIconBtn(Icons.skip_next_rounded, () => player.playNext()),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Favorite and Close (Compact)
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => player.stopAndClose(),
+                        child: const Icon(Icons.close_rounded, size: 16, color: Colors.white54),
+                      ),
+                      const SizedBox(height: 10),
+                      if (player.currentEntity != null)
+                        SizedBox(
+                          height: 16, width: 16,
+                          child: FittedBox(child: FavouriteButton(entity: player.currentEntity!)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ),
+            ),
+            // 3. Futuristic Progress Line (Bottom Edge)
+            Positioned(
+              bottom: 12,
+              right: 50,
+              left: 65,
+              child: StreamBuilder<Duration>(
+                stream: player.audioPlayer.positionStream,
+                builder: (context, snapshot) {
+                  final pos = snapshot.data?.inMilliseconds ?? 0;
+                  final dur = player.audioPlayer.duration?.inMilliseconds ?? 1;
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: (pos / dur).clamp(0.0, 1.0),
+                      backgroundColor: Colors.white10,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                      minHeight: 1.5,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _playPauseFloating() {
+    return GestureDetector(
+      onTap: () => player.isPlaying ? player.pause() : player.resume(),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: const BoxDecoration(
+          color: Colors.blueAccent,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          player.isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+          size: 16,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _smallIconBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(icon, size: 18, color: Colors.white70),
+    );
+  }
+
+// Helper for smaller buttons
+  Widget _miniControlBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(icon, size: 24, color: Colors.black87),
+    );
+  }
+
+  Widget _playPauseButtonSmall() {
+    // GlobalPlayer mathi state lese
+    return CupertinoButton(
+      padding: EdgeInsets.zero, // Extra padding kadhi nakva mate
+      child: AppImage(
+        src: player.isPlaying ? AppSvg.pauseVid : AppSvg.playVid,
+        height: 30,
+        width: 30,
+      ),
+      onPressed: () => player.isPlaying ? player.pause() : player.resume(),
+    );
+  }
+  Widget _audioProgressBarSmall() {
+    return StreamBuilder<Duration>(
+      stream: player.audioPlayer.positionStream,
+      builder: (context, snapshot) {
+        final pos = snapshot.data?.inMilliseconds ?? 0;
+        final dur = player.audioPlayer.duration?.inMilliseconds ?? 1;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: LinearProgressIndicator(
+            value: (pos / dur).clamp(0.0, 1.0),
+            backgroundColor: Colors.blue.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            minHeight: 2,
+          ),
+        );
+      },
+    );
+  }
+  Size _getCurrentPlayerSize() {
+    if (player.currentType == "video") {
+      return const Size(150.0, 100.0); // Video size
+    } else {
+      return const Size(210.0, 70.0);  // Audio floating size
+    }
+  }
+  void _updatePosition(DragUpdateDetails details) {
+    final size = MediaQuery.of(context).size;
+    final bool isVideo = player.currentType == "video";
+    final double pWidth = isVideo ? 150.0 : 210.0;
+    final double pHeight = isVideo ? 100.0 : 70.0;
+
+    setState(() {
+      // Left side 0 thi Right side (width - playerWidth) sudhi
+      double newX = (position.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
+      // Top side 30 (Status bar) thi Bottom side (height - playerHeight - margin) sudhi
+      double newY = (position.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
+      position = Offset(newX, newY);
+    });
+  }
   void _snapToClosestCorner(Size screenSize) {
     final padding = MediaQuery.of(context).padding;
-    const double pWidth = 150.0;
-    const double pHeight = 120.0;
+    final playerSize = _getCurrentPlayerSize(); // ðŸŸ¢ Dynamic Size
     const double margin = 16.0;
 
-    double finalX = (position.dx + pWidth / 2 < screenSize.width / 2)
+    double finalX = (position.dx + playerSize.width / 2 < screenSize.width / 2)
         ? margin
-        : screenSize.width - pWidth - margin;
+        : screenSize.width - playerSize.width - margin;
 
     double finalY;
-    if (position.dy + pHeight / 2 < screenSize.height / 2) {
-      finalY = padding.top + margin; // Top safe area
+    if (position.dy + playerSize.height / 2 < screenSize.height / 2) {
+      finalY = padding.top + margin;
     } else {
-      finalY = screenSize.height - 250;
+      finalY = screenSize.height - playerSize.height - 150;
     }
 
     setState(() {
@@ -305,18 +567,18 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color:
-              Colors.black, // àªµà«àª¹àª¾àª‡àªŸ àª¸à«àªªà«‡àª¸ àª¨ àª¦à«‡àª–àª¾àª¯ àªàªŸàª²à«‡ àª¬à«àª²à«‡àª• àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡
+              Colors.black, // Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¹Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÅ¸ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂªÃ Â«â€¡Ã ÂªÂ¸ Ã ÂªÂ¨ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂÃ ÂªÅ¸Ã ÂªÂ²Ã Â«â€¡ Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã Âªâ€¢ Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡
             ),
             clipBehavior: Clip.antiAlias,
-            // àª–à«‚àª£àª¾ àª°àª¾àª‰àª¨à«àª¡ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+            // Ã Âªâ€“Ã Â«â€šÃ ÂªÂ£Ã ÂªÂ¾ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
             child: Stack(
               children: [
-                // 1. àª¡àª¾àª¯àª¨à«‡àª®àª¿àª• àª¬à«àª²àª° àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡
+                // 1. Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂ®Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡
                 Positioned.fill(
                   child: ImageFiltered(
                     imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: Transform.scale(
-                      scale: 1.8, // àª¬à«àª²àª° àªµàª§à« àª¸àª¾àª°à«àª‚ àª¦à«‡àª–àª¾àª¯ àª àª®àª¾àªŸà«‡ àª¥à«‹àª¡à«‹ àª®à«‹àªŸà«‹ àª¸à«àª•à«‡àª²
+                      scale: 1.8, // Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂµÃ ÂªÂ§Ã Â«Â Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â€¹ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã Â«â€¹ Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«â€¡Ã ÂªÂ²
                       child: Center(
                         child: AspectRatio(
                           aspectRatio: value.aspectRatio,
@@ -330,12 +592,12 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   ),
                 ),
 
-                // 2. àª¬à«àª²à«‡àª• àª“àªµàª°àª²à«‡ (àª¬à«àª²àª° àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡àª¨à«‡ àª¥à«‹àª¡à«àª‚ àª¡àª¾àª°à«àª• àª•àª°àªµàª¾ àª®àª¾àªŸà«‡)
+                // 2. Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€œÃ ÂªÂµÃ ÂªÂ°Ã ÂªÂ²Ã Â«â€¡ (Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡)
                 Positioned.fill(
                   child: Container(color: Colors.black.withOpacity(0.3)),
                 ),
 
-                // 3. àª®à«‡àªˆàª¨ àªµà«€àª¡àª¿àª¯à«‹ (àª¸à«‡àª¨à«àªŸàª°àª®àª¾àª‚ àª¸à«‡àªŸ àª¥àª¶à«‡)
+                // 3. Ã ÂªÂ®Ã Â«â€¡Ã ÂªË†Ã ÂªÂ¨ Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ (Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ°Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡)
                 Center(
                   child: AspectRatio(
                     aspectRatio: value.aspectRatio,
@@ -343,7 +605,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   ),
                 ),
 
-                // 4. àª•àª‚àªŸà«àª°à«‹àª²à«àª¸ (Close àª…àª¨à«‡ Play/Pause)
+                // 4. Ã Âªâ€¢Ã Âªâ€šÃ ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â€¹Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¸ (Close Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Play/Pause)
                 Positioned(
                   top: 0,
                   left: 0,

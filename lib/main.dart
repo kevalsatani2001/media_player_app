@@ -1,10 +1,13 @@
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/models/player_data.dart';
+import 'package:media_player/services/ads_service.dart';
 import 'package:media_player/utils/app_imports.dart';
-Offset position = Offset.zero;
+Offset position = const Offset(0, 0);
+bool isPositionInitialized = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
+  // AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
     androidNotificationChannelName: 'Audio playback',
@@ -62,7 +65,7 @@ void main() async {
 final RouteObserver<ModalRoute<void>> routeObserver =
 RouteObserver<ModalRoute<void>>();
 
-class MyApp extends StatefulWidget with WidgetsBindingObserver {
+class MyApp extends StatefulWidget {
   MyApp({super.key});
 
   static _MyAppState? of(BuildContext context) =>
@@ -72,21 +75,43 @@ class MyApp extends StatefulWidget with WidgetsBindingObserver {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   // final FlutterLocalization _localization = FlutterLocalization.instance;
-
+  final GlobalPlayer player = GlobalPlayer();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (!mounted) return;
+    //
+    //   final size = MediaQuery.of(context).size;
+    //   final bool isVideo = player.currentType == "video";
+    //
+    //   // ðŸŸ¢ Type mujab width nakki karo
+    //   final double pWidth = isVideo ? 150.0 : 210.0;
+    //   const double margin = 16.0;
+    //
+    //   setState(() {
+    //     // Right side mathi margin muki ne set karo
+    //     position = Offset(size.width - pWidth - margin, size.height - 250);
+    //   });
+    // });
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final size = MediaQuery.of(context).size;
-      setState(() {
-        // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ 150x120 Ã Âªâ€ºÃ Â«â€¡, Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-        position = Offset(size.width - 170, size.height - 250);
-      });
-    });
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // ðŸŸ¢ Jyare pan app background mathi fari screen par ave
+    if (state == AppLifecycleState.resumed) {
+      // AdHelper.showAppOpenAdIfAvailable();
+    }
   }
 
   @override
