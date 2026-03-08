@@ -1,5 +1,8 @@
+// import 'package:media_player/screens/privacy_poimport '
 import 'package:media_player/screens/privacy_policy_screen.dart';
+// package:media_player/screens/privacy_policy_screen.dart';
 
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -16,8 +19,6 @@ class _SettingScreenState extends State<SettingScreen> {
   void initState() {
     super.initState();
 
-    // àª† àªªà«‡àªœ àªªàª° àª†àªµà«‡ àªàªŸàª²à«‡ àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àªµà«€àª¡àª¿àª¯à«‹ àªšàª¾àª²à« àª›à«‡?
-    // àªœà«‹ àªµà«€àª¡àª¿àª¯à«‹ àªšàª¾àª²à« àª¹à«‹àª¯ àª¤à«‹ àª¤à«‡àª¨à«‡ àªªà«‹àª àª•àª°à«€ àª¦à«‹
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (player.currentType == "video" && player.isPlaying) {
         player.pause();
@@ -38,116 +39,87 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Widget _buildSettingsTab() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return Padding(
+    return SingleChildScrollView( // ðŸŸ¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// ðŸŸ¢ 1. TOP ADAPTIVE BANNER
+          AdHelper.adaptiveBannerWidget(context),
+          const SizedBox(height: 15),
+
           AppText(
             "settings",
             fontSize: 15,
             fontWeight: FontWeight.w500,
             color: colors.lightThemePrimary,
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
+
+          // --- First Settings Box (Theme/Language) ---
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(17.03),
-              // color: colors.dividerColor,
               border: Border.all(width: 1.06, color: colors.dividerColor),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0),
-              child: Column(
-                children: [
-                  _buildSettingTab(() {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => ThemeScreen(),
-                    //   ),
-                    // );
-                  }, "appTheme", AppSvg.appThemeIcon, 0),
-                  Divider(color: colors.dividerColor),
-
-                  BlocBuilder<LocaleBloc, LocaleState>(
-                    builder: (context, localeState) {
-                      return _buildSettingTab(
-                            () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  LanguageScreen(isSettingPage: true),
-                            ),
-                          );
-                        },
-                        "preferredLanguage",
-                        AppSvg.languageIcon,
-                        1,
-                      );
-                    },
-                  ),
-                ],
-              ),
+            child: Column(
+              children: [
+                _buildSettingTab(() {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => ThemeScreen()));
+                }, "appTheme", AppSvg.appThemeIcon, 0),
+                Divider(color: colors.dividerColor),
+                BlocBuilder<LocaleBloc, LocaleState>(
+                  builder: (context, localeState) {
+                    return _buildSettingTab(() {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => LanguageScreen(isSettingPage: true)));
+                    }, "preferredLanguage", AppSvg.languageIcon, 1);
+                  },
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 20),
+
+          /// ðŸŸ¢ 2. MEDIUM RECTANGLE AD (Vachma)
+          // Aa jagya sauthi best chhe karan ke user scroll karshe tyare dhyan jase
+          const SizedBox(height: 25),
+          Center(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+            ),
+          ),
+          const SizedBox(height: 25),
+
           AppText(
             "otherSettings",
             fontSize: 15,
             fontWeight: FontWeight.w500,
             color: colors.lightThemePrimary,
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 15),
+
+          // --- Second Settings Box (Share/Rate/Privacy) ---
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(17.03),
               border: Border.all(width: 1.06, color: colors.dividerColor),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 0),
-              child: Column(
-                children: [
-                  _buildSettingTab(
-                        () {
-                      shareApp();
-                    },
-                    "shareTheApp",
-                    AppSvg.shareAppIcon,
-                    2,
-                  ),
-                  Divider(color: colors.dividerColor),
-                  _buildSettingTab(
-                        () {
-                      showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (context) => _buildCustomRatingDialog(context),
-                      );
-                    },
-                    "rateTheApp",
-                    AppSvg.rateAppIcon,
-                    3,
-                  ),
-                  Divider(color: colors.dividerColor),
-                  _buildSettingTab(
-                        () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PrivacyPolicyScreen(),
-                        ),
-                      );
-                    },
-                    "privacyPolicy",
-                    AppSvg.privacyPolicyIcon,
-                    4,
-                  ),
-                ],
-              ),
+            child: Column(
+              children: [
+                _buildSettingTab(() => shareApp(), "shareTheApp", AppSvg.shareAppIcon, 2),
+                Divider(color: colors.dividerColor),
+                _buildSettingTab(() {
+                  showDialog(context: context, builder: (context) => _buildCustomRatingDialog(context));
+                }, "rateTheApp", AppSvg.rateAppIcon, 3),
+                Divider(color: colors.dividerColor),
+                _buildSettingTab(() {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => PrivacyPolicyScreen()));
+                }, "privacyPolicy", AppSvg.privacyPolicyIcon, 4),
+              ],
             ),
           ),
+
+          const SizedBox(height: 100), // Bottom MiniPlayer mate space
         ],
       ),
     );
@@ -178,7 +150,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 color: colors.appBarTitleColor,
               ),
               const SizedBox(height: 10),
-              // Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ“
+              // Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…â€œ
               AppText(
                 "howWouldYouLove",
                 fontSize: 16,
@@ -297,7 +269,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   void shareApp() {
     String appMessage =
-        "${context.tr("checkOutThisAmazing")} ðŸŽ¶ðŸŽ¬\n\n"
+        "${context.tr("checkOutThisAmazing")} Ã°Å¸Å½Â¶Ã°Å¸Å½Â¬\n\n"
         "${context.tr("downloadItNowFrom")}\n"
         "https://play.google.com/store/apps/details?id=your.package.name";
 

@@ -1,4 +1,12 @@
+
+
+
+
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
+
+
+int _audioClickCount = 0;
 
 class AudioScreen extends StatefulWidget {
   bool isComeHomeScreen;
@@ -248,66 +256,88 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   Widget _buildAudioList(List<AssetEntity> entities) {
+    const int adInterval = 5; // Darek 6 audio pachi ek Ad
+
+    // Total count calculate karo: Audio + Ads + Bottom Spacer (80px for MiniPlayer)
+    int totalCount = entities.length + (entities.length ~/ adInterval) + 1;
+
     return AnimationLimiter(
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 15),
-        itemCount: entities.length,
-        itemBuilder: (context, index) {
-          final audio = entities[index];
-          final colors = Theme.of(context).extension<AppThemeColors>()!;
 
+        itemCount: totalCount,
+        // itemCount: entities.length,
+        itemBuilder: (context, index) {
+          final colors = Theme.of(context).extension<AppThemeColors>()!;
+// 1. Bottom Spacer for MiniPlayer
+          if (index == totalCount - 1) {
+            return const SizedBox(height: 80);
+          }
+
+          // ðŸŸ¢ 2. AD LOGIC: Darek 7mi position par Ad (index 6, 13, 20...)
+          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+            return AdHelper.bannerAdWidget(size: AdSize.banner);
+          }
+
+          // ðŸŸ¢ 3. ACTUAL DATA INDEX calculation
+          final int actualIndex = index - (index ~/ (adInterval + 1));
+          if (actualIndex >= entities.length) return const SizedBox.shrink();
+
+          final audio = entities[actualIndex];
           return Consumer<GlobalPlayer>(
             builder: (context, player, child) {
               final bool isCurrentPlaying =
                   player.currentEntity?.id == audio.id;
 
-              return AppTransition(
-                index: index,
-                child: FutureBuilder<File?>(
-                  future: audio.file,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return  ListTile(
-                        leading: Icon(Icons.music_note, color: colors.blackColor,),
-                        title: AppText("loading"),
-                      );
-                    }
-                    final file = snapshot.data!;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: AppTransition(
+                  index: index,
+                  child: FutureBuilder<File?>(
+                    future: audio.file,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return  ListTile(
+                          leading: Icon(Icons.music_note, color: colors.blackColor,),
+                          title: AppText("loading"),
+                        );
+                      }
+                      final file = snapshot.data!;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 7.5),
-                      child: GestureDetector(
-                        onTap: () => _handleOnTap(entities, audio, file),
-                        child: Container(
-                          padding: const EdgeInsets.only(
-                            top: 10,
-                            left: 10,
-                            bottom: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colors.cardBackground,
-                            borderRadius: BorderRadius.circular(10),
-                            border: isCurrentPlaying
-                                ? Border.all(color: colors.primary, width: 0.5)
-                                : null,
-                          ),
-                          child: Row(
-                            children: [
-                              _buildLeadingIcon(
-                                audio,
-                                colors,
-                                isCurrentPlaying,
-                              ),
-                              const SizedBox(width: 12),
-                              _buildTitleAndDuration(audio, file, colors),
-                              _buildPopupMenu(audio, index),
-                            ],
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 7.5),
+                        child: GestureDetector(
+                          onTap: () => _handleOnTap(entities, audio, file),
+                          child: Container(
+                            padding: const EdgeInsets.only(
+                              top: 10,
+                              left: 10,
+                              bottom: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.cardBackground,
+                              borderRadius: BorderRadius.circular(10),
+                              border: isCurrentPlaying
+                                  ? Border.all(color: colors.primary, width: 0.5)
+                                  : null,
+                            ),
+                            child: Row(
+                              children: [
+                                _buildLeadingIcon(
+                                  audio,
+                                  colors,
+                                  isCurrentPlaying,
+                                ),
+                                const SizedBox(width: 12),
+                                _buildTitleAndDuration(audio, file, colors),
+                                _buildPopupMenu(audio, index),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               );
             },
@@ -319,7 +349,10 @@ class _AudioBodyState extends State<_AudioBody>
 
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
     // GlobalPlayer().initAndPlay(entities: entities, selectedId: audio.id);
-    print("type===> ${audio.type}");
+    _audioClickCount++;
+    if (_audioClickCount % 4 == 0) { // Darek 4thi click par Ad
+      AdHelper.showInterstitialAd();
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -538,6 +571,3 @@ class _AudioBodyState extends State<_AudioBody>
     setState(() {});
   }
 }
-
-
-

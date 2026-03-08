@@ -1,7 +1,12 @@
 
 
+
+
+
 import 'dart:ui' as ui;
 import 'package:media_player/utils/app_imports.dart';
+
+import '../services/ads_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -120,6 +125,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 ),
               ),
             ),
+            /// ðŸŸ¢ 1. TOP ADAPTIVE BANNER
+            Center(child: AdHelper.adaptiveBannerWidget(context)),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -198,7 +205,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
                         ),
                       ],
                     ),
-
+                    /// ðŸŸ¢ 2. NATIVE AD (Grid Cards pachi)
+                    // Ahia 300x250 medium rectangle ad best dekhase
+                    const SizedBox(height: 20),
+                    Center(child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle)),
                     Padding(
                       padding: const EdgeInsets.only(
                         left: 0,
@@ -640,7 +650,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final file = await entity.file;
 
     if (file == null || !file.existsSync()) return;
-
+    /// ðŸŸ¢ 3. INTERSTITIAL AD (Player open thay e pela)
+    // Professional apps ma humesha click par ad show thay chhe
+    AdHelper.showInterstitialAd();
     Navigator.push(
       context,
       MaterialPageRoute(

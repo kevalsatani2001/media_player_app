@@ -1,3 +1,9 @@
+
+
+
+
+
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -87,9 +93,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       animation: player, // UI updates on every player state change
       builder: (context, _) {
         // Live data fetching
-        final currentType =
-            player.currentType ??
-            (widget.entity.typeInt == 3 ? "audio" : "video");
+        final currentType = player.currentType ?? (widget.entity.typeInt == 3 ? "audio" : "video");
         final bool isAudio = currentType == "audio";
 
         return Scaffold(
@@ -131,22 +135,32 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
             ],
           ),
-          body: Stack(
+          body: Column(
             children: [
-              Positioned.fill(
-                child: isAudio
-                    ? _buildAudioPlayer()
-                    : // Hero Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÅ¸Ã Â«â€¡Ã Âªâ€” Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: isAudio
+                          ? _buildAudioPlayer()
+                          : // Hero Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÅ¸Ã Â«â€¡Ã Âªâ€” Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
                       Hero(
-                        tag: 'player_${widget.entity.id}',
-                        // Ã ÂªÅ¸Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂª Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¢Ã Â«â‚¬ Ã ÂªÂ¨Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹, Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ° ID Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+                        tag: 'player_${widget.entity.id}', // Ã ÂªÅ¸Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂª Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¢Ã Â«â‚¬ Ã ÂªÂ¨Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹, Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ° ID Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
                         child: Material(
-                          color: Colors.transparent,
-                          // Material Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
+                          color: Colors.transparent, // Material Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«â€¹
                           child: _buildVideoPlayer(),
                         ),
                       ),
+                    ),
+                  ],
+                ),
               ),
+              // ðŸŸ¢ AUDIO PLAYER HOY TYARE J AD BATAVO
+              if (isAudio)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: AdHelper.adaptiveBannerWidget(context),
+                ),
             ],
           ),
         );
@@ -162,7 +176,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const SizedBox(height: 70),
+          const SizedBox(height: 40), // ðŸŸ¢ Height thodi ghatadi (70 mathi 40)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 56),
             child: SizedBox(
@@ -220,7 +234,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             ),
           ),
-          const SizedBox(height: 62),
+          const SizedBox(height: 30), // ðŸŸ¢ Height thodi ghatadi (62 mathi 30)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: AppText(
@@ -251,10 +265,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         inactiveTrackColor: colors.textFieldBorder,
                       ),
                       child: Slider(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 0,
-                          vertical: 12,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 0,vertical: 12),
                         min: 0,
                         max: duration.inMilliseconds.toDouble().clamp(
                           1,
@@ -284,10 +295,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playPrevious(),
-                          child: AppImage(
-                            src: AppSvg.skipPrev,
-                            color: colors.blackColor,
-                          ),
+                          child: AppImage(src: AppSvg.skipPrev,color: colors.blackColor,),
                         ),
                         const SizedBox(width: 8),
                         StreamBuilder<bool>(
@@ -304,17 +312,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 width: 61,
                               ),
                               onPressed: () =>
-                                  isPlaying ? player.pause() : player.resume(),
+                              isPlaying ? player.pause() : player.resume(),
                             );
                           },
                         ),
                         const SizedBox(width: 8),
                         CupertinoButton(
                           onPressed: () => player.playNext(),
-                          child: AppImage(
-                            src: AppSvg.skipNext,
-                            color: colors.blackColor,
-                          ),
+                          child: AppImage(src: AppSvg.skipNext,color: colors.blackColor,),
                         ),
                         const SizedBox(width: 8),
                         AppText(
@@ -325,7 +330,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 62),
+                    const SizedBox(height: 20),
                   ],
                 );
               },

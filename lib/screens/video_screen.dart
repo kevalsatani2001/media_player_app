@@ -1,7 +1,11 @@
 
 
 
+
+
+
 import 'dart:ui' as ui;
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -12,6 +16,9 @@ class VideoScreen extends StatefulWidget {
   @override
   State<VideoScreen> createState() => _VideoScreenState();
 }
+
+// 1. Class ni upar ek global variable banavo counter mate
+int _videoClickCount = 0;
 
 class _VideoScreenState extends State<VideoScreen> {
   String _searchQuery = '';
@@ -119,6 +126,8 @@ class _VideoScreenState extends State<VideoScreen> {
               children: [
                 Column(
                   children: [
+                    /// ðŸŸ¢ 1. TOP ADAPTIVE BANNER
+                    AdHelper.adaptiveBannerWidget(context),
                     Expanded(child: _buildVideoPage()),
                   ],
                 ),
@@ -155,6 +164,9 @@ class _VideoScreenState extends State<VideoScreen> {
                 ),
               ),
               Divider(color: colors.dividerColor),
+              /// ðŸŸ¢ 2. TOP BANNER FOR TAB VIEW
+              AdHelper.adaptiveBannerWidget(context),
+
               Expanded(child: _buildVideoPage()),
               // Audio chaltu hoy to niche space khali karva mate:
             ],
@@ -225,7 +237,15 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
+
   _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
+    // ðŸŸ¢ Darek 5 item pachi ek Ad (Interval 2 bahu vadhare thai jase, 5-6 best rahese)
+    const int adIndexInterval = 5;
+
+    // ðŸŸ¢ Sacho ItemCount: Videos + Ads + Loader
+    int totalItems = entitiesToShow.length + (entitiesToShow.length ~/ adIndexInterval);
+    if (hasMore) totalItems++;
+
     return GridView.builder(
       key: key,
       controller: _scrollController,
@@ -237,32 +257,56 @@ class _VideoScreenState extends State<VideoScreen> {
         childAspectRatio: 1.05,
       ),
 
-      itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
+      itemCount:totalItems,
+      // itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ FIRST CHECK LOADER
-        if (index >= entitiesToShow.length) {
+// 1. Loader check
+        if (hasMore && index == totalItems - 1) {
           return const Center(child: CustomLoader());
         }
 
-        final entity = entitiesToShow[index];
+        // _buildGridView ના itemBuilder અંદર AD LOGIC વાળો ભાગ આ રીતે બદલો:
+
+        if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // એડ પાછળ વ્હાઇટ બેકગ્રાઉન્ડ સારું લાગશે
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)), // આઉટલાઇન
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.contain, // આ એડને બોક્સમાં ફિટ કરશે
+                  child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // ðŸŸ¢ 3. ACTUAL INDEX CALCULATION (Bau mukhya chhe)
+        final int actualIndex = index - (index ~/ (adIndexInterval + 1));
+
+        if (actualIndex >= entitiesToShow.length) return const SizedBox.shrink();
+
+        final entity = entitiesToShow[actualIndex];
 
         return AppTransition(
           index: index % 10,
           columnCount: 2,
           child: GestureDetector(
             onTap: () async {
-              final entity = entitiesToShow[index];
-
+              // ðŸŸ¢ Ahiya 'actualIndex' vapro, 'index' nahi
               if (entity is AssetEntity) {
                 List<AssetEntity> videoList = entitiesToShow
                     .whereType<AssetEntity>()
                     .toList();
 
-                int actualIndex = videoList.indexOf(entity);
-
-                _navigateToPlayer(context, videoList, actualIndex, entity);
-              }
-            },
+                int playerIndex = videoList.indexOf(entity);
+                _navigateToPlayer(context, videoList, playerIndex, entity);
+              }},
             child: Padding(
               padding: const EdgeInsets.all(4.0),
               child: Column(
@@ -343,14 +387,27 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   _buildListView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
+    // ðŸŸ¢ Ad frequency: Darek 5 items pachi ek ad
+    const int adIndexInterval = 5;
+
     return ListView.builder(
       key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
-      itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
+      // ðŸŸ¢ Item count ma ads ni sankhya add karvi padse
+      itemCount: (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
+          (entitiesToShow.length ~/ adIndexInterval),
       itemBuilder: (context, index) {
         // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ FIRST CHECK LOADER
-        if (index >= entitiesToShow.length) {
+
+        // ðŸŸ¢ Logic: Check karo ke aa ad ni jagya chhe?
+        if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
+          return AdHelper.bannerAdWidget(size: AdSize.banner); // Nano banner list ni vachma
+        }
+
+        // ðŸŸ¢ Actual data index calculate karo (Ads ne bad karye pachi no index)
+        final int actualIndex = index - (index ~/ (adIndexInterval + 1));
+        if (actualIndex >= entitiesToShow.length) {
           return const Padding(
             padding: EdgeInsets.all(0),
             child: Center(child: CustomLoader()),
@@ -359,7 +416,7 @@ class _VideoScreenState extends State<VideoScreen> {
         final entity = entitiesToShow[index];
 
         return AppTransition(
-          index: index % 10,
+          index: actualIndex % 10,
           child: ImageItemWidget(
             onMenuSelected: (action) async {
               switch (action) {
@@ -565,6 +622,13 @@ class _VideoScreenState extends State<VideoScreen> {
     //   // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â° ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â«ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¶ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡
     //   context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     // });
+
+    /// ðŸŸ¢ 3. SMART INTERSTITIAL AD LOGIC
+    _videoClickCount++;
+    // Darek 3 video click pachi j ad dekhase (User experience better rahese)
+    if (_videoClickCount % 3 == 0) {
+      AdHelper.showInterstitialAd();
+    }
 
     Navigator.push(
       context,

@@ -7,7 +7,7 @@ bool isPositionInitialized = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
-  // AdHelper.loadAppOpenAd();
+  AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
     androidNotificationChannelName: 'Audio playback',
@@ -110,7 +110,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // ðŸŸ¢ Jyare pan app background mathi fari screen par ave
     if (state == AppLifecycleState.resumed) {
-      // AdHelper.showAppOpenAdIfAvailable();
+      AdHelper.showAppOpenAdIfAvailable();
     }
   }
 
