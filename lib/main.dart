@@ -4,6 +4,7 @@ import 'package:media_player/services/ads_service.dart';
 import 'package:media_player/utils/app_imports.dart';
 Offset position = const Offset(0, 0);
 bool isPositionInitialized = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
@@ -30,16 +31,25 @@ void main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
+  await PhotoManager.requestPermissionExtend();
+
   runApp(
     MultiBlocProvider(
       providers: [
+        BlocProvider<FavouriteBloc>(
+          lazy: false, // âœ¨ àª† àª‰àª®à«‡àª°àªµàª¾àª¥à«€ àªàªª àª¶àª°à«‚ àª¥àª¤àª¾ àªœ àª•à«‹àª² àª¥àª¶à«‡
+          create: (context) => FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
+        ),
+        BlocProvider<HomeCountBloc>(
+          // âœ¨ àªàªª àª–à«àª²àª¤àª¾àª¨à«€ àª¸àª¾àª¥à«‡ àªœ àª²à«‹àª¡àª¿àª‚àª— àª¶àª°à«‚ àª•àª°à«€ àª¦à«‡àª¶à«‡
+          create: (context) => HomeCountBloc()..add(LoadCounts()),
+        ),
         ChangeNotifierProvider(create: (_) => GlobalPlayer()),
         BlocProvider(create: (_) => ThemeBloc()),
         BlocProvider(
           create: (_) =>
           LocaleBloc()..add(ChangeLocale(Locale(HiveService.languageCode))),
         ),
-        BlocProvider(create: (_) => HomeCountBloc()..add(LoadCounts())),
         // BlocProvider(create: (_) => FavouriteChangeBloc()),
         BlocProvider<FavouriteChangeBloc>(create: (_) => FavouriteChangeBloc()),
         BlocProvider<VideoBloc>(
@@ -47,10 +57,7 @@ void main() async {
           VideoBloc(Hive.box('videos'))
             ..add(LoadVideosFromGallery(showLoading: true)),
         ),
-        BlocProvider<FavouriteBloc>(
-          create: (_) =>
-          FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
-        ),
+
         BlocProvider<AudioBloc>(
           create: (_) => AudioBloc(Hive.box('audios'))..add(LoadAudios()),
         ),
@@ -83,21 +90,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (!mounted) return;
-    //
-    //   final size = MediaQuery.of(context).size;
-    //   final bool isVideo = player.currentType == "video";
-    //
-    //   // ðŸŸ¢ Type mujab width nakki karo
-    //   final double pWidth = isVideo ? 150.0 : 210.0;
-    //   const double margin = 16.0;
-    //
-    //   setState(() {
-    //     // Right side mathi margin muki ne set karo
-    //     position = Offset(size.width - pWidth - margin, size.height - 250);
-    //   });
-    // });
+    AdHelper.loadAppOpenAd(); // àªªàª¹à«‡àª²à«€ àªàª¡ àª²à«‹àª¡ àª•àª°à«‹
   }
 
   @override
@@ -108,19 +101,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // ðŸŸ¢ Jyare pan app background mathi fari screen par ave
+    // 1. àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
     if (state == AppLifecycleState.resumed) {
       AdHelper.showAppOpenAdIfAvailable();
     }
-  }
 
-  @override
-  void didChangeAppLifeCycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    // 2. àª¸à«àªŸà«‡àªŸ àª¸à«‡àªµ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ (àª¬àª‚àª¨à«‡ àª²à«‹àªœàª¿àª• àªàª• àªœ àª«àª‚àª•à«àª¶àª¨àª®àª¾àª‚ àª°àª¾àª–à«‹)
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       GlobalPlayer().savePlayerState();
     }
-    // TODO: implement didChangeDependencies
   }
 
   @override

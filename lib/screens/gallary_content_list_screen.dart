@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class GalleryContentListPage extends StatefulWidget {
@@ -44,7 +45,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
   }
 
   ThumbnailOption get thumbOption => ThumbnailOption(
-    size: const ThumbnailSize.square(200),
+    size: const ThumbnailSize.square(150),
     format: thumbFormat,
   );
 
@@ -65,7 +66,15 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
           centerTitle: true,
           title: AppText(path.name, fontSize: 20, fontWeight: FontWeight.w500),
         ),
-        body: buildRefreshIndicator(context),
+        body: Column(
+          children: [
+            Expanded(
+              child: buildRefreshIndicator(context), // àª—à«àª°à«€àª¡ àª…àª¹à«€àª‚ àª†àªµàª¶à«‡
+            ),
+            // âœ¨ Bottom Sticky Ad
+            AdHelper.bannerAdWidget(size: AdSize.banner),
+          ],
+        ),
       ),
     );
   }
@@ -75,25 +84,52 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       onRefresh: () => _onRefresh(context),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        child: Scrollbar(
-          child: CustomScrollView(
-            slivers: <Widget>[
-              Consumer<AssetPathProvider>(
-                builder: (BuildContext c, AssetPathProvider p, _) => SliverGrid(
+        child: Consumer<AssetPathProvider>(
+          builder: (BuildContext c, AssetPathProvider p, _) {
+            const int adInterval = 5;
+            int listLength = p.showItemCount;
+
+            // àªàª¡àª¨à«€ àª¸àª‚àª–à«àª¯àª¾ àª—àª£à«‹
+            int adCount = listLength ~/ adInterval;
+            if (listLength > 0 && listLength < adInterval) {
+              adCount = 1; // àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àªªàª£ à«§ àªàª¡ àª—à«àª°à«€àª¡àª®àª¾àª‚
+            }
+
+            return CustomScrollView(
+              slivers: <Widget>[
+                SliverGrid(
                   delegate: SliverChildBuilderDelegate(
-                        (_, int index) => Builder(
-                      builder: (BuildContext c) => _buildItem(context, index),
-                    ),
-                    childCount: p.showItemCount,
-                    findChildIndexCallback: (Key? key) {
-                      if (key is ValueKey<String>) {
-                        return findChildIndexBuilder(
-                          id: key.value,
-                          assets: p.list,
+                        (context, index) {
+                      // à«§. àª—à«àª°à«€àª¡ àªàª¡ àª•àª¨à«àª¡àª¿àª¶àª¨
+                      bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
+                      bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
+
+                      if (isAdPosition || isLastAdForSmallList) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Center(
+                              child: FittedBox(
+                                fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+                                child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                              ),
+                            ),
+                          ),
                         );
                       }
-                      return null;
+
+                      // à«¨. àª¸àª¾àªšà«‹ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸
+                      final int actualIndex = index - (index ~/ (adInterval + 1));
+                      if (actualIndex >= listLength) return const SizedBox.shrink();
+
+                      return _buildItem(context, actualIndex);
                     },
+                    childCount: listLength + adCount,
                   ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -102,9 +138,9 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
                     childAspectRatio: 1.05,
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -189,6 +225,39 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
     );
   }
 
+  Widget _buildItemWithAd(BuildContext context, int index, int adInterval, int listLength) {
+    // à«§. àªàª¡ àª•à«àª¯àª¾àª°à«‡ àª¬àª¤àª¾àªµàªµà«€ àª¤à«‡àª¨à«€ àª•àª¨à«àª¡àª¿àª¶àª¨
+    bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
+    bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
+
+    if (isAdPosition || isLastAdForSmallList) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+              child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // à«¨. àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª—àª£à«‹
+    final int actualIndex = index - (index ~/ (adInterval + 1));
+
+    // àª¸à«‡àª«à«àªŸà«€ àªšà«‡àª•
+    if (actualIndex >= listLength) return const SizedBox.shrink();
+
+    return _buildItem(context, actualIndex);
+  }
+
   int findChildIndexBuilder({
     required String id,
     required List<AssetEntity> assets,
@@ -253,7 +322,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
 
     final key = file.path;
 
-    // ðŸ”¹ Update Hive
+    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
     } else {
@@ -280,11 +349,11 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       );
     }
 
-    // ðŸ”¹ Reload entity
+    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // ðŸ”¹ Update UI list
+    // Ã°Å¸â€Â¹ Update UI list
     readPathProvider(context).list[index] = newEntity;
     setState(() {});
   }
@@ -407,7 +476,7 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
         return FutureBuilder<Uint8List?>(
           future: entity.thumbnailDataWithOption(
             ThumbnailOption.ios(
-              size: const ThumbnailSize.square(500),
+              size: const ThumbnailSize.square(150),
               // resizeContentMode: ResizeContentMode.fill,
             ),
           ),

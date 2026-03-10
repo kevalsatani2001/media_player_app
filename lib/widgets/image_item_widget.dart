@@ -207,7 +207,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 clipBehavior: Clip.antiAlias,
-                // ðŸ”‘ important
+                // Ã°Å¸â€â€˜ important
                 child: AssetEntityImage(
                   entity,
                   thumbnailSize: const ThumbnailSize(160, 120),
@@ -522,8 +522,6 @@ Widget videoPlaceholder({bool? isAudio = false}) {
 }
 
 Widget? assetAntityImage(AssetEntity entity) {
-  // à«§. àªœà«‹ àªŸàª¾àª‡àªª àª“àª¡àª¿àª¯à«‹ (3) àª¹à«‹àª¯, àª¤à«‹ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àªªà«àª²à«‡àª¸àª¹à«‹àª²à«àª¡àª° àªœ àª°àª¿àªŸàª°à«àª¨ àª•àª°à«‹
-  // àª•àª¾àª°àª£ àª•à«‡ àª“àª¡àª¿àª¯à«‹àª®àª¾àª‚àª¥à«€ àª¥àª‚àª¬àª¨à«‡àª² àª•àª¾àª¢àªµàª¾àª¨à«‹ àª“àªªàª°à«‡àª¶àª¨ àª¸àªªà«‹àª°à«àªŸà«‡àª¡ àª¨àª¥à«€.
   if (entity.typeInt == 3 || entity.type == AssetType.audio) {
     return videoPlaceholder(isAudio: true);
   }
@@ -541,12 +539,11 @@ Widget? assetAntityImage(AssetEntity entity) {
         return videoPlaceholder(isAudio: false);
       }
 
-      // à«¨. àª«àª•à«àª¤ àªµà«€àª¡àª¿àª¯à«‹ àª•à«‡ àªˆàª®à«‡àªœ àª®àª¾àªŸà«‡ àªœ AssetEntityImage àªµàª¾àªªàª°àªµà«àª‚
       return AssetEntityImage(
         entity,
         width: double.infinity,
         isOriginal: false,
-        thumbnailSize: const ThumbnailSize.square(300),
+        thumbnailSize: const ThumbnailSize.square(150),
         thumbnailFormat: ThumbnailFormat.jpeg,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {

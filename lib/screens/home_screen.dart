@@ -1,8 +1,3 @@
-
-
-
-
-
 import 'dart:ui' as ui;
 import 'package:media_player/utils/app_imports.dart';
 
@@ -33,57 +28,43 @@ class _HomePageState extends State<HomePage> with RouteAware {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // routeObserver àª¨à«‡ àª¸àª¬à«àª¸à«àª•à«àª°àª¾àª‡àª¬ àª•àª°à«‹
+    routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
+  }
+
+  @override
   void didPopNext() {
+    // àªœà«àª¯àª¾àª°à«‡ àª¬à«€àªœàª¾ àªªà«‡àªœ àªªàª°àª¥à«€ àª¹à«‹àª® àªªàª° àªªàª¾àª›àª¾ àª†àªµà«‹ àª¤à«àª¯àª¾àª°à«‡ àª† àª«àª¾àª¯àª° àª¥àª¶à«‡
+    debugPrint("Home Screen: Refreshing counts...");
     context.read<HomeCountBloc>().add(LoadCounts());
-    context.read<VideoBloc>().add(
-      LoadVideosFromGallery(showLoading: false),
-    ); // optional: refresh video list
-    context.read<AudioBloc>().add(LoadAudios()); // optional: refresh video list
+    context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<HomeCountBloc>().add(LoadCounts());
-        _loadFolders();
-      }
+      context.read<HomeCountBloc>().add(LoadCounts());
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _loadFolders();
     });
   }
 
-// HomePage build method ma aa mujab logic rakho:
+  // HomePage build method ma aa mujab logic rakho:
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => HomeCountBloc()..add(LoadCounts()),
-      child: BlocListener<HomeTabBloc, HomeTabState>(
-        listener: (context, state) {
-          context.read<HomeCountBloc>().add(LoadCounts());
-        },
-        child: Stack( // ðŸŸ¢ Humesha Stack j rakho
-          children: [
-            Column(
-              children: [
-                Expanded(child: _buildHomePageWidget()),
-                // Audio chaltu hoy to niche space khali karva mate niche no part:
-                // AnimatedBuilder(
-                //   animation: GlobalPlayer(),
-                //   builder: (context, _) {
-                //     final player = GlobalPlayer();
-                //     // Fakt Audio hoy tyare j Column ma space add karo
-                //     if (player.currentType == "audio" && player.currentIndex != -1) {
-                //       return SizedBox(height: 10);
-                //     }
-                //     return const SizedBox.shrink();
-                //   },
-                // ),
-              ],
-            ),
-            // ðŸŸ¢ Player humesha Stack na child tarike j raheshe
-            const SmartMiniPlayer(forceMiniMode: true),
-          ],
-        ),
+    return BlocListener<HomeTabBloc, HomeTabState>(
+      listener: (context, state) {
+        context.read<HomeCountBloc>().add(LoadCounts());
+      },
+      child: Stack(
+        children: [
+          Column(children: [Expanded(child: _buildHomePageWidget())]),
+          const SmartMiniPlayer(forceMiniMode: true),
+        ],
       ),
     );
   }
@@ -92,231 +73,211 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return BlocBuilder<HomeCountBloc, HomeCountState>(
       builder: (context, state) {
-        return Column(
-          children: [
-            CommonAppBar(
-              title: "videMusicPlayer",
-              subTitle: "mediaPlayer",
-              actionWidget: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
-                  );
-                },
-                child: TweenAnimationBuilder(
-                  tween: Tween<double>(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  builder: (context, double val, child) =>
-                      Transform.scale(scale: val, child: child),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: colors.textFieldFill,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: AppImage(
-                        src: AppSvg.searchIcon,
-                        color: colors.blackColor,
+        return CustomScrollView(
+          // SingleChildScrollView àª¨à«‡ àª¬àª¦àª²à«‡ CustomScrollView
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  CommonAppBar(
+                    title: "videMusicPlayer",
+                    subTitle: "mediaPlayer",
+                    actionWidget: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SearchScreen(),
+                          ),
+                        );
+                      },
+                      child: TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 0.8, end: 1.0),
+                        duration: const Duration(milliseconds: 500),
+                        builder: (context, double val, child) =>
+                            Transform.scale(scale: val, child: child),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: colors.textFieldFill,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: AppImage(
+                              src: AppSvg.searchIcon,
+                              color: colors.blackColor,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  // Adaptive Banner
+                  Container(
+                    height: 60, // àª«àª¿àª•à«àª¸ àª¹àª¾àªˆàªŸ àªœà«‡àª¥à«€ UI àªœàª®à«àªª àª¨ àª•àª°à«‡
+                    child: AdHelper.adaptiveBannerWidget(context),
+                  ),
+                ],
               ),
             ),
-            /// ðŸŸ¢ 1. TOP ADAPTIVE BANNER
-            Center(child: AdHelper.adaptiveBannerWidget(context)),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              sliver: SliverToBoxAdapter(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Grid of Cards
-                    //state.entitie
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppTransition(
-                            index: 0,
-                            child: HomeCard(
-                              title: "video",
-                              icon: AppSvg.videoIcon,
-                              route: "/video",
-                              count: state.videoCount,
-                              onBack: () => context.read<HomeCountBloc>().add(
-                                LoadCounts(),
-                              ),
-                              // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: AppTransition(
-                            index: 1,
-                            child: HomeCard(
-                              title: "audio",
-                              icon: AppSvg.audioIcon,
-                              route: "/audio",
-                              count: state.audioCount,
-                              onBack: () => context.read<HomeCountBloc>().add(
-                                LoadCounts(),
-                              ),
-                              // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppTransition(
-                            index: 2,
-                            child: HomeCard(
-                              title: "playlist",
-                              icon: AppSvg.playlistIcon,
-                              route: "/playlist",
-                              count: state.playlistCount,
-                              onBack: () => context.read<HomeCountBloc>().add(
-                                LoadCounts(),
-                              ),
-                              // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: AppTransition(
-                            index: 3,
-                            child: HomeCard(
-                              title: "favourite",
-                              icon: AppSvg.favouriteIcon,
-                              route: "/favourite",
-                              count: state.favouriteCount,
-                              onBack: () => context.read<HomeCountBloc>().add(
-                                LoadCounts(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    /// ðŸŸ¢ 2. NATIVE AD (Grid Cards pachi)
-                    // Ahia 300x250 medium rectangle ad best dekhase
+                    _buildGridCards(state), // àª•àª¾àª°à«àª¡à«àª¸ àª®àª¾àªŸà«‡ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
                     const SizedBox(height: 20),
-                    Center(child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle)),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        left: 0,
-                        right: 0,
-                        top: 21,
-                        bottom: 15,
+                    // Native Ad with Placeholder
+                    Container(
+                      height: 250,
+                      decoration: BoxDecoration(
+                        color: colors.textFieldFill,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              _buildTab(context, "video", 0),
-                              const SizedBox(width: 25),
-                              _buildTab(context, "folder", 1),
-                            ],
-                          ),
-                          BlocBuilder<HomeTabBloc, HomeTabState>(
-                            builder: (context, tabState) {
-                              final isVideoTab = tabState.selectedIndex == 0;
-                              final isFolderTab = tabState.selectedIndex == 1;
-
-                              bool showButton = false;
-                              if (isVideoTab && state.videoCount > 6) {
-                                showButton = true;
-                              } else if (isFolderTab && folderList.length > 4) {
-                                showButton = true;
-                              }
-
-                              if (!showButton) return const SizedBox.shrink();
-
-                              return GestureDetector(
-                                onTap: isVideoTab
-                                    ? () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    "/video",
-                                  ).then((value) {
-                                    context.read<HomeCountBloc>().add(
-                                      LoadCounts(),
-                                    );
-                                    context.read<VideoBloc>().add(
-                                      LoadVideosFromGallery(
-                                        showLoading: false,
-                                      ),
-                                    );
-                                  });
-                                }
-                                    : () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                      const FolderScreen(),
-                                    ),
-                                  );
-                                },
-                                child: AppText(
-                                  "viewAll",
-                                  color: colors.primary,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+                      child: AdHelper.bannerAdWidget(
+                        size: AdSize.mediumRectangle,
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(0),
-                      child: BlocBuilder<HomeTabBloc, HomeTabState>(
-                        builder: (context, state) {
-                          return AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            switchInCurve: Curves.easeIn,
-                            switchOutCurve: Curves.easeOut,
-                            transitionBuilder:
-                                (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0.0, 0.05),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: state.selectedIndex == 0
-                                ? Container(
-                              key: const ValueKey(0),
-                              child: _buildVideoSection(),
-                            )
-                                : Container(
-                              key: const ValueKey(1),
-                              child: _buildFolderSection(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                    _buildTabRow(context, state),
                   ],
                 ),
               ),
             ),
+            // àªŸà«‡àª¬ àª®à«àªœàª¬àª¨à«àª‚ àª²àª¿àª¸à«àªŸ
+            BlocBuilder<HomeTabBloc, HomeTabState>(
+              builder: (context, tabState) {
+                return tabState.selectedIndex == 0
+                    ? _buildSliverVideoList()
+                    : _buildSliverFolderGrid();
+              },
+            ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildGridCards(HomeCountState state) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: AppTransition(
+                index: 0,
+                child: HomeCard(
+                  title: "video",
+                  icon: AppSvg.videoIcon,
+                  route: "/video",
+                  count: state.videoCount,
+                  onBack: () => context.read<HomeCountBloc>().add(LoadCounts()),
+                  // loadCounts: Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: AppTransition(
+                index: 1,
+                child: HomeCard(
+                  title: "audio",
+                  icon: AppSvg.audioIcon,
+                  route: "/audio",
+                  count: state.audioCount,
+                  onBack: () => context.read<HomeCountBloc>().add(LoadCounts()),
+                  // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: AppTransition(
+                index: 2,
+                child: HomeCard(
+                  title: "playlist",
+                  icon: AppSvg.playlistIcon,
+                  route: "/playlist",
+                  count: state.playlistCount,
+                  onBack: () => context.read<HomeCountBloc>().add(LoadCounts()),
+                  // loadCounts:  Future(() => context.read<HomeCountBloc>().add(LoadCounts())),
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: AppTransition(
+                index: 3,
+                child: HomeCard(
+                  title: "favourite",
+                  icon: AppSvg.favouriteIcon,
+                  route: "/favourite",
+                  count: state.favouriteCount,
+                  onBack: () => context.read<HomeCountBloc>().add(LoadCounts()),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabRow(BuildContext context, HomeCountState state) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    return Padding(
+      padding: const EdgeInsets.only(left: 0, right: 0, top: 21, bottom: 15),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              _buildTab(context, "video", 0),
+              const SizedBox(width: 25),
+              _buildTab(context, "folder", 1),
+            ],
+          ),
+          BlocBuilder<HomeTabBloc, HomeTabState>(
+            builder: (context, tabState) {
+              final isVideoTab = tabState.selectedIndex == 0;
+              final isFolderTab = tabState.selectedIndex == 1;
+
+              bool showButton = false;
+              if (isVideoTab && state.videoCount > 6) {
+                showButton = true;
+              } else if (isFolderTab && folderList.length > 4) {
+                showButton = true;
+              }
+
+              if (!showButton) return const SizedBox.shrink();
+
+              return GestureDetector(
+                onTap: isVideoTab
+                    ? () {
+                  Navigator.pushNamed(context, "/video").then((value) {
+                    context.read<HomeCountBloc>().add(LoadCounts());
+                    context.read<VideoBloc>().add(
+                      LoadVideosFromGallery(showLoading: false),
+                    );
+                  });
+                }
+                    : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FolderScreen(),
+                    ),
+                  );
+                },
+                child: AppText("viewAll", color: colors.primary),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -365,102 +326,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
             ],
           ),
         );
-      },
-    );
-  }
-
-  // Video Section using VideoBloc
-  Widget _buildVideoSection() {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return BlocBuilder<VideoBloc, VideoState>(
-      builder: (context, state) {
-        if (state is VideoLoading) {
-          return const MediaShimmerLoading();
-        }
-
-        if (state is VideoError) {
-          return Center(child: Text(state.message));
-        }
-
-        if (state is VideoLoaded) {
-          final entities = state.entities;
-
-          if (entities.isEmpty) {
-            return AppText("noVideosFound", color: colors.whiteColor);
-          }
-
-          isShowViewAllButton = entities.length > 1;
-
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: entities.length > 6 ? 6 : entities.length,
-            itemBuilder: (context, index) {
-              final entity = entities[index];
-              return AppTransition(
-                index: index + 5,
-                child: ImageItemWidget(
-                  onMenuSelected: (action) async {
-                    switch (action) {
-                      case MediaMenuAction.detail:
-                        routeToDetailPage(entity);
-                        break;
-
-                      case MediaMenuAction.info:
-                        showInfoDialog(context, entity);
-                        break;
-
-                      case MediaMenuAction.thumb:
-                        showThumb(entity, 500);
-                        break;
-
-                      case MediaMenuAction.share:
-                        shareItem(context, entity);
-                        break;
-
-                      case MediaMenuAction.delete:
-                        deleteCurrentItem(context, entity);
-                        break;
-
-                      case MediaMenuAction.addToFavourite:
-                        await _toggleFavourite(context, entity, index);
-                        break;
-                      case MediaMenuAction.addToPlaylist:
-                        final file = await entity.file;
-                        addToPlaylist(
-                          MediaItem(
-                            path: file!.path,
-                            isNetwork: false,
-                            type: entity.type == AssetType.audio
-                                ? "audio"
-                                : "video",
-                            id: entity.id,
-                            isFavourite: entity.isFavorite,
-                          ),
-                          context,
-                        );
-                        break;
-                    }
-                  },
-                  onTap: () async {
-                    _navigateToPlayer(
-                      context,
-                      entities.cast<AssetEntity>(),
-                      index,
-                    );
-                  },
-                  isGrid: false,
-                  entity: entity,
-                  option: const ThumbnailOption(
-                    size: ThumbnailSize.square(300),
-                  ),
-                ),
-              );
-            },
-          );
-        }
-
-        return const SizedBox();
       },
     );
   }
@@ -520,40 +385,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // readPathProvider(context).list[index] = newEntity;
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
     context.read<HomeCountBloc>().add(LoadCounts());
     setState(() {});
-  }
-
-  // Folder Section
-  Widget _buildFolderSection() {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
-    if (folderList.isEmpty) {
-      return AppText("noFoldersFound", color: colors.whiteColor);
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: folderList.length > 4 ? 4 : folderList.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.05,
-      ),
-      itemBuilder: (context, index) {
-        final item = folderList[index];
-        return AppTransition(
-          index: index + 5,
-          columnCount: 2,
-          child: GalleryItemWidget(
-            path: item,
-            setState: setState,
-          ),   );
-      },
-    );
   }
 
   // Load folders using PhotoManager
@@ -580,7 +414,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
       ),
     );
 
-    if (!mounted) return; // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ VERY IMPORTANT
+    if (!mounted) return;
 
     setState(() {
       folderList = galleryList;
@@ -607,7 +441,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
         return FutureBuilder<Uint8List?>(
           future: entity.thumbnailDataWithOption(
             ThumbnailOption.ios(
-              size: const ThumbnailSize.square(500),
+              size: const ThumbnailSize.square(150),
               // resizeContentMode: ResizeContentMode.fill,
             ),
           ),
@@ -641,37 +475,188 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
+  int _videoClickCount = 0;
+
   void _navigateToPlayer(
       BuildContext context,
       List<AssetEntity> allEntities,
       int currentIndex,
       ) async {
+    // 1. àª«àª¾àªˆàª² àªšà«‡àª• àª•àª°à«‹
     final entity = allEntities[currentIndex];
     final file = await entity.file;
-
     if (file == null || !file.existsSync()) return;
-    /// ðŸŸ¢ 3. INTERSTITIAL AD (Player open thay e pela)
-    // Professional apps ma humesha click par ad show thay chhe
-    AdHelper.showInterstitialAd();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PlayerScreen(
-          entity: entity,
-          item: MediaItem(
-            isFavourite: entity.isFavorite,
-            id: entity.id,
-            path: file.path,
-            isNetwork: false,
-            type: 'video',
+
+    // 2. àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª«àª‚àª•à«àª¶àª¨ (àªœà«‡ àªàª¡ àªªàª›à«€ àª…àª¥àªµàª¾ àªàª¡ àªµàª—àª° àª•à«‹àª² àª¥àª¶à«‡)
+    void openPlayer() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PlayerScreen(
+            entity: entity,
+            item: MediaItem(
+              isFavourite: entity.isFavorite,
+              id: entity.id,
+              path: file.path,
+              isNetwork: false,
+              type: 'video',
+            ),
+            index: currentIndex,
+            entityList: allEntities,
           ),
-          index: currentIndex,
-          entityList:
-          allEntities,
         ),
+      ).then((value) {
+        if (context.mounted) {
+          context.read<VideoBloc>().add(
+            LoadVideosFromGallery(showLoading: false),
+          );
+        }
+      });
+    }
+
+    // 3. àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸàª° àªµàª§àª¾àª°à«‹
+    _videoClickCount++;
+
+    // 4. àªàª¡ àª²à«‹àªœàª¿àª• (àª¦àª° 3 àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹)
+    if (_videoClickCount % 3 == 0) {
+      debugPrint("Showing Interstitial Ad before navigation...");
+
+      // Callback àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°à«€àª¨à«‡ àªàª¡ àª¬àª¤àª¾àªµà«‹
+      AdHelper.showInterstitialAd(() {
+        openPlayer(); // àªàª¡ àª¬àª‚àª§ àª¥àª¾àª¯ àªªàª›à«€ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+      });
+    } else {
+      // àªœà«‹ 3 àª•à«àª²àª¿àª• àª¨ àª¥àªˆ àª¹à«‹àª¯ àª¤à«‹ àª¸à«€àª§à«àª‚ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+      openPlayer();
+    }
+  }
+
+  Widget _buildSliverFolderGrid() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    if (folderList.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Center(
+          child: AppText("noFoldersFound", color: colors.whiteColor),
+        ),
+      );
+    }
+
+    final displayCount = folderList.length > 4 ? 4 : folderList.length;
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.05,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final item = folderList[index];
+          return AppTransition(
+            index: index + 5,
+            columnCount: 2,
+            child: GalleryItemWidget(path: item, setState: setState),
+          );
+        }, childCount: displayCount),
       ),
-    ).then((value) {
-      context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-    });
+    );
+  }
+
+  Widget _buildSliverVideoList() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    return BlocBuilder<VideoBloc, VideoState>(
+      builder: (context, state) {
+        if (state is VideoLoading) {
+          return const SliverToBoxAdapter(child: MediaShimmerLoading());
+        }
+
+        if (state is VideoLoaded) {
+          final entities = state.entities;
+          if (entities.isEmpty) {
+            return SliverToBoxAdapter(
+              child: Center(
+                child: AppText("noVideosFound", color: colors.whiteColor),
+              ),
+            );
+          }
+
+          // àª¹à«‹àª® àªªà«‡àªœ àªªàª° àª²àª¿àª®àª¿àªŸà«‡àª¡ àª†àªˆàªŸàª®à«àª¸ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
+          final displayCount = entities.length > 6 ? 6 : entities.length;
+
+          return SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final entity = entities[index];
+              return AppTransition(
+                index: index + 5,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: ImageItemWidget(
+                    onMenuSelected: (action) async {
+                      switch (action) {
+                        case MediaMenuAction.detail:
+                          routeToDetailPage(entity);
+                          break;
+
+                        case MediaMenuAction.info:
+                          showInfoDialog(context, entity);
+                          break;
+
+                        case MediaMenuAction.thumb:
+                          showThumb(entity, 500);
+                          break;
+
+                        case MediaMenuAction.share:
+                          shareItem(context, entity);
+                          break;
+
+                        case MediaMenuAction.delete:
+                          deleteCurrentItem(context, entity);
+                          break;
+
+                        case MediaMenuAction.addToFavourite:
+                          await _toggleFavourite(context, entity, index);
+                          break;
+                        case MediaMenuAction.addToPlaylist:
+                          final file = await entity.file;
+                          addToPlaylist(
+                            MediaItem(
+                              path: file!.path,
+                              isNetwork: false,
+                              type: entity.type == AssetType.audio
+                                  ? "audio"
+                                  : "video",
+                              id: entity.id,
+                              isFavourite: entity.isFavorite,
+                            ),
+                            context,
+                          );
+                          break;
+                      }
+                    },
+                    onTap: () async {
+                      _navigateToPlayer(
+                        context,
+                        entities.cast<AssetEntity>(),
+                        index,
+                      );
+                    },
+                    isGrid: false,
+                    entity: entity,
+                    option: const ThumbnailOption(
+                      size: ThumbnailSize.square(
+                        150,
+                      ), // àª¸àª¾àªˆàª àª˜àªŸàª¾àª¡à«€ (àª¸à«àª®à«‚àª¥àª¨à«‡àª¸ àª®àª¾àªŸà«‡)
+                    ),
+                  ),
+                ),
+              );
+            }, childCount: displayCount),
+          );
+        }
+        return const SliverToBoxAdapter(child: SizedBox());
+      },
+    );
   }
 }

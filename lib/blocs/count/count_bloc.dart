@@ -30,28 +30,30 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
         for (int i = 0; i < a; i++) aBox.put('a_$i', 'c');
       }
     }
+    // âœ¨ àª…àª¹à«€àª‚ àª•à«‹àª² àª•àª°à«‹: àª†àª¨àª¾àª¥à«€ àª¬à«àª²à«‹àª• àª¬àª¨àª¤àª¾àª¨à«€ àª¸àª¾àª¥à«‡ àªœ àª²àª¿àª¸àª¨àª¿àª‚àª— àªšàª¾àª²à« àª¥àª¶à«‡
+    _listenHive();
     on<LoadCounts>((event, emit) {
-      // ૧. પહેલા જે Hive માં પડ્યું હોય તે તરત બતાવી દો (Zero lag)
+      // à«§. àªªàª¹à«‡àª²àª¾ àªœà«‡ Hive àª®àª¾àª‚ àªªàª¡à«àª¯à«àª‚ àª¹à«‹àª¯ àª¤à«‡ àª¤àª°àª¤ àª¬àª¤àª¾àªµà«€ àª¦à«‹ (Zero lag)
       _emitCounts(emit);
 
-      // ૨. 🔴 UI ને બ્લોક કર્યા વગર બેકગ્રાઉન્ડમાં ગણતરી ચાલુ કરો
-      // અહીં await નથી એટલે UI અટકશે નહીં
+      // à«¨. ðŸ”´ UI àª¨à«‡ àª¬à«àª²à«‹àª• àª•àª°à«àª¯àª¾ àªµàª—àª° àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡àª®àª¾àª‚ àª—àª£àª¤àª°à«€ àªšàª¾àª²à« àª•àª°à«‹
+      // àª…àª¹à«€àª‚ await àª¨àª¥à«€ àªàªŸàª²à«‡ UI àª…àªŸàª•àª¶à«‡ àª¨àª¹à«€àª‚
       PhotoManager.getAssetCount(type: RequestType.video).then((vCount) {
         PhotoManager.getAssetCount(type: RequestType.audio).then((aCount) {
 
-          // ૩. જ્યારે ડેટા મળી જાય ત્યારે 'RefreshCountsWithData' ઇવેન્ટ ફાયર કરો
-          // આ ઇવેન્ટ આપણે અગાઉ બનાવ્યો હતો
+          // à«©. àªœà«àª¯àª¾àª°à«‡ àª¡à«‡àªŸàª¾ àª®àª³à«€ àªœàª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ 'RefreshCountsWithData' àª‡àªµà«‡àª¨à«àªŸ àª«àª¾àª¯àª° àª•àª°à«‹
+          // àª† àª‡àªµà«‡àª¨à«àªŸ àª†àªªàª£à«‡ àª…àª—àª¾àª‰ àª¬àª¨àª¾àªµà«àª¯à«‹ àª¹àª¤à«‹
           if (!isClosed) {
             add(RefreshCountsWithData(vCount, aCount));
           }
 
-          // ૪. (Optional) Hive માં ડમી ડેટા ભરી દેવો જેથી નેક્સ્ટ ટાઈમ એપ ખોલો ત્યારે સીધો આંકડો મળે
+          // à«ª. (Optional) Hive àª®àª¾àª‚ àª¡àª®à«€ àª¡à«‡àªŸàª¾ àª­àª°à«€ àª¦à«‡àªµà«‹ àªœà«‡àª¥à«€ àª¨à«‡àª•à«àª¸à«àªŸ àªŸàª¾àªˆàª® àªàªª àª–à«‹àª²à«‹ àª¤à«àª¯àª¾àª°à«‡ àª¸à«€àª§à«‹ àª†àª‚àª•àª¡à«‹ àª®àª³à«‡
           silentSyncWithHive(vCount, aCount);
         });
       });
     });
 
-// આ ફંક્શન બેકગ્રાઉન્ડમાં Hive અપડેટ કરશે
+// àª† àª«àª‚àª•à«àª¶àª¨ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡àª®àª¾àª‚ Hive àª…àªªàª¡à«‡àªŸ àª•àª°àª¶à«‡
 
     on<RefreshCountsWithData>((event, emit) {
       emit(state.copyWith(
@@ -82,7 +84,7 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
 
   // count_bloc.dart
   void _emitCounts(Emitter<HomeCountState> emit) {
-    // કોઈ await નહીં, ફક્ત Hive માંથી ડેટા લો
+    // àª•à«‹àªˆ await àª¨àª¹à«€àª‚, àª«àª•à«àª¤ Hive àª®àª¾àª‚àª¥à«€ àª¡à«‡àªŸàª¾ àª²à«‹
     emit(HomeCountState(
         videoCount: Hive.box('videos').length,
         audioCount: Hive.box('audios').length,
@@ -93,12 +95,12 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
   }
 
   Future<void> silentMediaSync() async {
-    // ૧. પરમિશન ચેક
+    // à«§. àªªàª°àª®àª¿àª¶àª¨ àªšà«‡àª•
     final PermissionState ps = await PhotoManager.requestPermissionExtend();
     if (!ps.hasAccess) return;
 
-    // ૨. વિડિયો અને ઓડિયોના આઈડી મેળવો
-    // અહીં આપણે 'onlyAll: true' વાપરીશું જેથી એક જ વારમાં બધું મળી જાય
+    // à«¨. àªµàª¿àª¡àª¿àª¯à«‹ àª…àª¨à«‡ àª“àª¡àª¿àª¯à«‹àª¨àª¾ àª†àªˆàª¡à«€ àª®à«‡àª³àªµà«‹
+    // àª…àª¹à«€àª‚ àª†àªªàª£à«‡ 'onlyAll: true' àªµàª¾àªªàª°à«€àª¶à«àª‚ àªœà«‡àª¥à«€ àªàª• àªœ àªµàª¾àª°àª®àª¾àª‚ àª¬àª§à«àª‚ àª®àª³à«€ àªœàª¾àª¯
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
       type: RequestType.fromTypes([RequestType.video, RequestType.audio]),
       onlyAll: true,
@@ -109,7 +111,7 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
     final recentPath = paths.first;
     final int totalCount = await recentPath.assetCountAsync;
 
-    // ૩. ડેટા ફેચ કરો (અહીં ટ્રીક છે: આપણે Pagination નથી કરતા, પણ સીધા IDs લઈએ છીએ)
+    // à«©. àª¡à«‡àªŸàª¾ àª«à«‡àªš àª•àª°à«‹ (àª…àª¹à«€àª‚ àªŸà«àª°à«€àª• àª›à«‡: àª†àªªàª£à«‡ Pagination àª¨àª¥à«€ àª•àª°àª¤àª¾, àªªàª£ àª¸à«€àª§àª¾ IDs àª²àªˆàª àª›à«€àª)
     final List<AssetEntity> entities = await recentPath.getAssetListRange(
       start: 0,
       end: totalCount,
@@ -118,8 +120,8 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
     final videoBox = Hive.box('videos');
     final audioBox = Hive.box('audios');
 
-    // જૂનો ડેટા ક્લીન કરીને નવો ડેટા ભરો
-    // નોંધ: અહીં .file કે thumbnail નથી લેતા એટલે લોડ નહીં પડે
+    // àªœà«‚àª¨à«‹ àª¡à«‡àªŸàª¾ àª•à«àª²à«€àª¨ àª•àª°à«€àª¨à«‡ àª¨àªµà«‹ àª¡à«‡àªŸàª¾ àª­àª°à«‹
+    // àª¨à«‹àª‚àª§: àª…àª¹à«€àª‚ .file àª•à«‡ thumbnail àª¨àª¥à«€ àª²à«‡àª¤àª¾ àªàªŸàª²à«‡ àª²à«‹àª¡ àª¨àª¹à«€àª‚ àªªàª¡à«‡
     await videoBox.clear();
     await audioBox.clear();
 
@@ -134,14 +136,15 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
 
   void _listenHive() {
     _videoSub = Hive.box('videos').watch().listen((_) {
-      if (!isClosed) add(RefreshCounts()); // બ્લોક ખુલ્લો હોય તો જ ઇવેન્ટ એડ કરો
+      if (!isClosed) add(RefreshCounts()); // àª¬à«àª²à«‹àª• àª–à«àª²à«àª²à«‹ àª¹à«‹àª¯ àª¤à«‹ àªœ àª‡àªµà«‡àª¨à«àªŸ àªàª¡ àª•àª°à«‹
     });
 
     _audioSub = Hive.box('audios').watch().listen((_) {
       if (!isClosed) add(RefreshCounts());
     });
 
-    _favSub = Hive.box('favourites').watch().listen((_) {
+    Hive.box('favourites').watch().listen((event) {
+      // àªœà«‡àªµà«àª‚ àª«à«‡àªµàª°àª¿àªŸ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª¡à«‡àªŸàª¾ àª¸à«‡àªµ àª¥àª¶à«‡, àª† àª¤àª°àª¤ àª¹à«‹àª® àªªà«‡àªœ àª…àªªàª¡à«‡àªŸ àª•àª°àª¶à«‡
       if (!isClosed) add(RefreshCounts());
     });
 
@@ -157,7 +160,7 @@ class HomeCountBloc extends Bloc<HomeCountEvent, HomeCountState> {
     _audioSub?.cancel();
     _favSub?.cancel();
     _playlistSub?.cancel();
-    _recent?.cancel(); // આ પણ ઉમેરી દો
+    _recent?.cancel(); // àª† àªªàª£ àª‰àª®à«‡àª°à«€ àª¦à«‹
     return super.close();
   }
 

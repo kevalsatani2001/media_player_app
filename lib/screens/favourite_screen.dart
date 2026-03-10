@@ -1,3 +1,4 @@
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class FavouriteScreen extends StatefulWidget {
@@ -8,6 +9,7 @@ class FavouriteScreen extends StatefulWidget {
 }
 
 class _FavouriteScreenState extends State<FavouriteScreen> {
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -31,8 +33,14 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
+        // àª…àª¹àª¿àª¯àª¾àª‚ àª¨à«€àªšà«‡ àª¬à«‡àª¨àª° àªàª¡ àª‰àª®à«‡àª°à«‹
+        bottomNavigationBar: SizedBox(
+          height: 60, // àªàª¡àª¨à«€ àª¹àª¾àªˆàªŸ àª®à«àªœàª¬
+          child: AdHelper.bannerAdWidget(),
+        ),
         body: BlocBuilder<FavouriteBloc, FavouriteState>(
           builder: (context, state) {
+
             if (state is FavouriteLoading) {
               return Center(child: CustomLoader());
             }
@@ -65,6 +73,7 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
 
 class _FavouriteGrid extends StatelessWidget {
   final FavouriteLoaded state;
+  final int adInterval = 5; // àª¦àª° 5 àª†àªˆàªŸàª® àªªàª›à«€ àªàª¡ àª¬àª¤àª¾àªµàªµà«€
 
   const _FavouriteGrid({required this.state});
 
@@ -72,6 +81,13 @@ class _FavouriteGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final entities = state.entities;
 
+    // àªœà«‹ àª¡à«‡àªŸàª¾ 5 àª¥à«€ àª“àª›à«‹ àª¹à«‹àª¯ àª¤à«‹ àªªàª£ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡:
+    int adCount = (entities.length ~/ adInterval);
+    if (entities.length > 0 && entities.length < adInterval) {
+      adCount = 1; // 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àªªàª£ 1 àªàª¡ àª‰àª®à«‡àª°àªµà«€
+    }
+
+    final int totalItemCount = entities.length + adCount;
     return GridView.builder(
       padding: const EdgeInsets.all(15),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -80,14 +96,43 @@ class _FavouriteGrid extends StatelessWidget {
         mainAxisSpacing: 15,
         childAspectRatio: 1.05,
       ),
-      itemCount: entities.length,
+      itemCount: totalItemCount,
       itemBuilder: (context, index) {
-        if (index == entities.length - 8 && state.hasMore) {
+
+        // àªœà«‹ àª† àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªàª¡ àª®àª¾àªŸà«‡ àª¹à«‹àª¯
+        if ((entities.length < adInterval && index == entities.length)||(index + 1) % (adInterval + 1) == 0) {
+          // àª…àª¹àª¿àª¯àª¾àª‚ àª¤àª®àª¾àª°à«àª‚ Native Ad àªµàª¿àªœà«‡àªŸ àª…àª¥àªµàª¾ Banner Ad àª¬àª¤àª¾àªµà«‹
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+                  child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // àª…àª¸àª²à«€ àª¡à«‡àªŸàª¾àª¨à«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
+        final int actualDataIndex = index - (index ~/ (adInterval + 1));
+
+        if (actualDataIndex >= entities.length) return const SizedBox.shrink();
+
+        final entity = entities[actualDataIndex];
+        if (actualDataIndex == entities.length - 8 && state.hasMore) {
           context.read<FavouriteBloc>().add(LoadMoreFavourites());
         }
 
+
         return GestureDetector(
-          onTap: () {
+          onTap: () async{
             final List<AssetEntity> validEntities = entities
                 .whereType<AssetEntity>()
                 .toList();
@@ -99,12 +144,13 @@ class _FavouriteGrid extends StatelessWidget {
             print("index is ===> ${validEntities.length}");
 
             if (actualIndex != -1) {
+
               _navigateToPlayer(context, validEntities, actualIndex);
             }
           },
           child: _FavouriteItem(
-            entity: entities[index],
-            index: index,
+            entity:entity,
+            index: actualDataIndex,
             entityList: entities,
           ),
         );
@@ -117,32 +163,38 @@ class _FavouriteGrid extends StatelessWidget {
       List<AssetEntity> allEntities,
       int currentIndex,
       ) async {
-    final entity = allEntities[currentIndex];
-    final file = await entity.file;
 
-    if (file == null || !file.existsSync()) return;
-    print("ent===> ${entity.type}");
-    print("ent===> ${entity.title}");
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PlayerScreen(
-          entity: entity,
-          item: MediaItem(
-            isFavourite: entity.isFavorite,
-            id: entity.id,
-            path: file.path,
-            isNetwork: false,
-            // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š entity.type Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«â€¹ Ã ÂªÂµÃ ÂªÂ§Ã Â«Â Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ°Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ·Ã ÂªÂ¿Ã ÂªÂ¤ Ã Âªâ€ºÃ Â«â€¡
-            type: entity.type == AssetType.audio ? "audio" : "video",
+    // àª«àª‚àª•à«àª¶àª¨ àªœà«‡ àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª¹à«‡àª¨à«àª¡àª² àª•àª°àª¶à«‡
+    void moveNext() async {
+      final entity = allEntities[currentIndex];
+      final file = await entity.file;
+
+      if (file == null || !file.existsSync()) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PlayerScreen(
+            entity: entity,
+            item: MediaItem(
+              isFavourite: entity.isFavorite,
+              id: entity.id,
+              path: file.path,
+              isNetwork: false,
+              type: entity.type == AssetType.audio ? "audio" : "video",
+            ),
+            index: currentIndex,
+            entityList: allEntities,
           ),
-          index: currentIndex,
-          entityList: allEntities,
         ),
-      ),
-    ).then((value) {
-      // Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂµÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ¸ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ«Ã Â«ÂÃ ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
-      context.read<FavouriteBloc>().add(LoadFavourite());
+      ).then((value) {
+        context.read<FavouriteBloc>().add(LoadFavourite());
+      });
+    }
+
+    // àªªàª¹à«‡àª²àª¾ àªàª¡ àª¬àª¤àª¾àªµà«‹, àªàª¡ àª¬àª‚àª§ àª¥àª¾àª¯ àªªàª›à«€ àªœ 'moveNext' àª°àª¨ àª¥àª¶à«‡
+    AdHelper.showInterstitialAd(() {
+      moveNext();
     });
   }
 }
@@ -159,7 +211,7 @@ class _FavouriteItem extends StatelessWidget {
   });
 
   ThumbnailOption get _thumbOption =>
-      const ThumbnailOption(size: ThumbnailSize.square(200));
+      const ThumbnailOption(size: ThumbnailSize.square(150));
 
   @override
   Widget build(BuildContext context) {
@@ -226,7 +278,7 @@ Future<void> _showThumb(BuildContext context, AssetEntity entity) {
     context: context,
     builder: (_) => FutureBuilder<Uint8List?>(
       future: entity.thumbnailDataWithOption(
-        const ThumbnailOption(size: ThumbnailSize.square(500)),
+        const ThumbnailOption(size: ThumbnailSize.square(150)),
       ),
       builder: (context, snapshot) {
         if (snapshot.hasData) {

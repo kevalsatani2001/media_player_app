@@ -27,9 +27,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // ðŸŸ¢ 1. Background ma Ad load àª•àª°àªµàª¾àª¨à«àª‚ àªšàª¾àª²à« àª•àª°à«‹
-    AdHelper.loadAppOpenAd();
-
     _startTyping();
 
     _sliderController = AnimationController(
@@ -40,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen>
     _sliderAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_sliderController)
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          // ðŸš€ Slider àªªàª¤à«àª¯àª¾ àªªàª›à«€ Ad àª¬àª¤àª¾àªµà«‹ àª…àª¨à«‡ àªªàª›à«€ Navigate àª•àª°à«‹
+          // Ã°Å¸Å¡â‚¬ Slider Ã ÂªÂªÃ ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ad Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Navigate Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
           _showAdAndNavigate();
         }
       });
@@ -48,11 +45,10 @@ class _SplashScreenState extends State<SplashScreen>
     _sliderController.forward();
   }
 
-  // ðŸŸ¢ 2. Ad àª¬àª¤àª¾àªµà«€àª¨à«‡ àªªàª›à«€ àª†àª—àª³ àªµàª§àªµàª¾àª¨à«àª‚ Logic
+  // Ã°Å¸Å¸Â¢ 2. Ad Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã Âªâ€ Ã Âªâ€”Ã ÂªÂ³ Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Logic
   void _showAdAndNavigate() {
     // AdHelper ma jaine check karo ke ad ready che?
     // Jo hoy to batavo, dismiss thaya pachi navigate thase.
-    AdHelper.showAppOpenAdIfAvailable();
 
     // Ad show thava mate thodo samay apiye jethi AppOpenAd handle kari shake
     Future.delayed(const Duration(milliseconds: 500), () {
@@ -208,7 +204,7 @@ class _SplashScreenState extends State<SplashScreen>
 //         Tween<double>(begin: 0.0, end: 1.0).animate(_sliderController)
 //           ..addStatusListener((status) {
 //             if (status == AnimationStatus.completed) {
-//               navigateNext(); // 🚀 CALL AFTER SLIDER COMPLETES
+//               navigateNext(); // ðŸš€ CALL AFTER SLIDER COMPLETES
 //             }
 //           });
 //
@@ -269,7 +265,7 @@ class _SplashScreenState extends State<SplashScreen>
 //             Spacer(),
 //             Center(child: AppImage(src: AppSvg.appLogo, height: 120)),
 //
-//             /// 🔹 Animated text ONLY
+//             /// ðŸ”¹ Animated text ONLY
 //             Padding(
 //               padding: const EdgeInsets.only(top: 13),
 //               child: AppText(
@@ -299,7 +295,7 @@ class _SplashScreenState extends State<SplashScreen>
 //                         ),
 //                         overlayShape: SliderComponentShape.noOverlay,
 //
-//                         /// ⭐ IMPORTANT PART
+//                         /// â­ IMPORTANT PART
 //                         disabledActiveTrackColor: colors.primary,
 //                         disabledInactiveTrackColor: colors.primary.withOpacity(
 //                           0.5,

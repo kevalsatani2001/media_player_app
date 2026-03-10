@@ -1,3 +1,4 @@
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class LanguageScreen extends StatefulWidget {
@@ -31,14 +32,29 @@ class _LanguageScreenState extends State<LanguageScreen> {
   Widget build(BuildContext context) {
     final Box settingsBox = Hive.box('settings');
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context, colors),
-            const SizedBox(height: 8),
-            _buildLanguageList(settingsBox, colors),
-          ],
+    return WillPopScope(
+      onWillPop: () async{
+        if(!widget.isSettingPage){
+          SystemNavigator.pop();
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(context, colors),
+              const SizedBox(height: 8),
+              _buildLanguageList(settingsBox, colors),
+              // âœ¨ Sticky Banner Ad
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: AdHelper.bannerAdWidget(size: AdSize.banner),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -108,25 +124,17 @@ class _LanguageScreenState extends State<LanguageScreen> {
           ),
           const SizedBox(width: 8),
           GestureDetector(
+            // _buildHeader àª¨à«€ àª…àª‚àª¦àª° GestureDetector àª¨àª¾ onTap àª®àª¾àª‚:
             onTap: _selectedLangCode == null
                 ? null
                 : () {
-              // --- Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂª Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂµ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡ ---
-              HiveService.languageCode = _selectedLangCode!;
-              context.read<LocaleBloc>().add(
-                ChangeLocale(Locale(_selectedLangCode!)),
-              );
+              // --- Interstitial Ad àª²à«‹àªœàª¿àª• ---
+              if(widget.isSettingPage){
+                AdHelper.showInterstitialAd((){_onTapDone();});
+              }else{
+                _onTapDone();
+              }
 
-              // Ã¢Å“â€¦ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂµ Ã ÂªÂ¥Ã ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÅ¸Ã Â«â€¹Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸
-              AppToast.show(
-                context,
-                "${context.tr("languageSaved")}",
-                type: ToastType.success,
-              );
-
-              !widget.isSettingPage
-                  ? Navigator.pushReplacementNamed(context, '/onboarding')
-                  : Navigator.pop(context);
             },
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -146,17 +154,52 @@ class _LanguageScreenState extends State<LanguageScreen> {
     );
   }
 
+  _onTapDone(){
+    // àª† àª•à«‹àª¡ àªàª¡ àª¬àª‚àª§ àª¥àª¯àª¾ àªªàª›à«€ àªœ àª°àª¨ àª¥àª¶à«‡
+    HiveService.languageCode = _selectedLangCode!;
+    context.read<LocaleBloc>().add(
+      ChangeLocale(Locale(_selectedLangCode!)),
+    );
+
+    AppToast.show(
+      context,
+      "${context.tr("languageSaved")}",
+      type: ToastType.success,
+    );
+
+    if (!widget.isSettingPage) {
+      Navigator.pushReplacementNamed(context, '/onboarding');
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
   /// Language List
   Widget _buildLanguageList(Box settingsBox, AppThemeColors colors) {
     final langCodes = AppStrings.translations.keys
         .toList();
+    const int adInterval = 6; // àª¦àª° 6 àª­àª¾àª·àª¾ àªªàª›à«€ àªàª• àªàª¡
+
+    int totalCount = langCodes.length + (langCodes.length ~/ adInterval);
 
     return Expanded(
       child: ListView.builder(
         padding: const EdgeInsets.only(left: 15, right: 15, bottom: 10),
-        itemCount: langCodes.length,
+        itemCount: totalCount,
         itemBuilder: (context, index) {
-          final langCode = langCodes[index];
+          // àªàª¡ àªªà«‹àªàª¿àª¶àª¨ àªšà«‡àª•
+          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
+            );
+          }
+
+          // àª¸àª¾àªšà«‹ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸
+          final int actualIndex = index - (index ~/ (adInterval + 1));
+          if (actualIndex >= langCodes.length) return const SizedBox.shrink();
+
+          final langCode = langCodes[actualIndex];
           final langName =
               AppStrings.translations[langCode]?['language'] ?? langCode;
           final langNameEnglish =
@@ -243,24 +286,24 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
 /*
 "renamePlaylist_en":"Rename Playlist",
-"renamePlaylist_ar":"Ø¥Ø¹Ø§Ø¯Ø© ØªØ³Ù…ÙŠØ© Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„ØªØ´ØºÙŠÙ„",
-"renamePlaylist_my":"á€•á€œá€±á€¸á€œá€…á€ºá€¡á€™á€Šá€ºá€•á€¼á€±á€¬á€„á€ºá€¸á€›á€”á€º",
+"renamePlaylist_ar":"Ã˜Â¥Ã˜Â¹Ã˜Â§Ã˜Â¯Ã˜Â© Ã˜ÂªÃ˜Â³Ã™â€¦Ã™Å Ã˜Â© Ã™â€šÃ˜Â§Ã˜Â¦Ã™â€¦Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â´Ã˜ÂºÃ™Å Ã™â€ž",
+"renamePlaylist_my":"Ã¡â‚¬â€¢Ã¡â‚¬Å“Ã¡â‚¬Â±Ã¡â‚¬Â¸Ã¡â‚¬Å“Ã¡â‚¬â€¦Ã¡â‚¬ÂºÃ¡â‚¬Â¡Ã¡â‚¬â„¢Ã¡â‚¬Å Ã¡â‚¬ÂºÃ¡â‚¬â€¢Ã¡â‚¬Â¼Ã¡â‚¬Â±Ã¡â‚¬Â¬Ã¡â‚¬â€žÃ¡â‚¬ÂºÃ¡â‚¬Â¸Ã¡â‚¬â€ºÃ¡â‚¬â€Ã¡â‚¬Âº",
 "renamePlaylist_fil":"Palitan ang pangalan ng Playlist",
 "renamePlaylist_fr":"Renommer la liste de lecture",
 "renamePlaylist_de":"Playlist umbenennen",
-"renamePlaylist_gu":"àªªà«àª²à«‡àª²àª¿àª¸à«àªŸàª¨à«àª‚ àª¨àª¾àª® àª¬àª¦àª²à«‹",
-"renamePlaylist_hi":"à¤ªà¥à¤²à¥‡à¤²à¤¿à¤¸à¥à¤Ÿ à¤•à¤¾ à¤¨à¤¾à¤® à¤¬à¤¦à¤²à¥‡à¤‚",
+"renamePlaylist_gu":"Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂ® Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¹",
+"renamePlaylist_hi":"Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â²Ã Â¥â€¡Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â¸Ã Â¥ÂÃ Â¤Å¸ Ã Â¤â€¢Ã Â¤Â¾ Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Â® Ã Â¤Â¬Ã Â¤Â¦Ã Â¤Â²Ã Â¥â€¡Ã Â¤â€š",
 "renamePlaylist_id":"Ubah Nama Daftar Putar",
 "renamePlaylist_it":"Rinomina playlist",
-"renamePlaylist_ja":"ãƒ—ãƒ¬ã‚¤ãƒªã‚¹ãƒˆåã‚’å¤‰æ›´",
-"renamePlaylist_ko":"ìž¬ìƒëª©ë¡ ì´ë¦„ ë°”ê¾¸ê¸°",
+"renamePlaylist_ja":"Ã£Æ’â€”Ã£Æ’Â¬Ã£â€šÂ¤Ã£Æ’ÂªÃ£â€šÂ¹Ã£Æ’Ë†Ã¥ÂÂÃ£â€šâ€™Ã¥Â¤â€°Ã¦â€ºÂ´",
+"renamePlaylist_ko":"Ã¬Å¾Â¬Ã¬Æ’ÂÃ«ÂªÂ©Ã«Â¡Â Ã¬ÂÂ´Ã«Â¦â€ž Ã«Â°â€ÃªÂ¾Â¸ÃªÂ¸Â°",
 "renamePlaylist_ms":"Namakan semula Senarai Main",
-"renamePlaylist_mr":"à¤ªà¥à¤²à¥‡à¤²à¤¿à¤¸à¥à¤Ÿà¤šà¥‡ à¤¨à¤¾à¤µ à¤¬à¤¦à¤²à¤¾",
-"renamePlaylist_fa":"ØªØºÛŒÛŒØ± Ù†Ø§Ù… Ù„ÛŒØ³Øª Ù¾Ø®Ø´",
-"renamePlaylist_pl":"ZmieÅ„ nazwÄ™ playlisty",
+"renamePlaylist_mr":"Ã Â¤ÂªÃ Â¥ÂÃ Â¤Â²Ã Â¥â€¡Ã Â¤Â²Ã Â¤Â¿Ã Â¤Â¸Ã Â¥ÂÃ Â¤Å¸Ã Â¤Å¡Ã Â¥â€¡ Ã Â¤Â¨Ã Â¤Â¾Ã Â¤Âµ Ã Â¤Â¬Ã Â¤Â¦Ã Â¤Â²Ã Â¤Â¾",
+"renamePlaylist_fa":"Ã˜ÂªÃ˜ÂºÃ›Å’Ã›Å’Ã˜Â± Ã™â€ Ã˜Â§Ã™â€¦ Ã™â€žÃ›Å’Ã˜Â³Ã˜Âª Ã™Â¾Ã˜Â®Ã˜Â´",
+"renamePlaylist_pl":"ZmieÃ…â€ž nazwÃ„â„¢ playlisty",
 "renamePlaylist_pt":"Renomear Playlist",
 "renamePlaylist_es":"Cambiar nombre de la lista",
-"renamePlaylist_sv":"Byt namn pÃ¥ spellista",
-"renamePlaylist_ta":"à®ªà®¿à®³à¯‡àª²à«€à®¸à¯à®Ÿà¯à®Ÿà¯ˆ à®®à®±à¯à®ªà¯†à®¯à®°à®¿à®Ÿà¯",
-"renamePlaylist_ur":"Ù¾Ù„Û’ Ù„Ø³Ù¹ Ú©Ø§ Ù†Ø§Ù… ØªØ¨Ø¯ÛŒÙ„ Ú©Ø±ÛŒÚº"
+"renamePlaylist_sv":"Byt namn pÃƒÂ¥ spellista",
+"renamePlaylist_ta":"Ã Â®ÂªÃ Â®Â¿Ã Â®Â³Ã Â¯â€¡Ã ÂªÂ²Ã Â«â‚¬Ã Â®Â¸Ã Â¯ÂÃ Â®Å¸Ã Â¯ÂÃ Â®Å¸Ã Â¯Ë† Ã Â®Â®Ã Â®Â±Ã Â¯ÂÃ Â®ÂªÃ Â¯â€ Ã Â®Â¯Ã Â®Â°Ã Â®Â¿Ã Â®Å¸Ã Â¯Â",
+"renamePlaylist_ur":"Ã™Â¾Ã™â€žÃ›â€™ Ã™â€žÃ˜Â³Ã™Â¹ ÃšÂ©Ã˜Â§ Ã™â€ Ã˜Â§Ã™â€¦ Ã˜ÂªÃ˜Â¨Ã˜Â¯Ã›Å’Ã™â€ž ÃšÂ©Ã˜Â±Ã›Å’ÃšÂº"
  */

@@ -1,10 +1,5 @@
-
-
-
-
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
-
 
 int _audioClickCount = 0;
 
@@ -88,7 +83,10 @@ class _AudioScreenState extends State<AudioScreen> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8),
-                    child: AppImage(src: AppSvg.searchIcon,color: colors.blackColor,),
+                    child: AppImage(
+                      src: AppSvg.searchIcon,
+                      color: colors.blackColor,
+                    ),
                   ),
                 ),
               ),
@@ -108,8 +106,9 @@ class _AudioScreenState extends State<AudioScreen> {
             children: [
               Expanded(child: _AudioBody()),
               Align(
-                  alignment: Alignment.bottomCenter,
-                  child: const SmartMiniPlayer()),
+                alignment: Alignment.bottomCenter,
+                child: const SmartMiniPlayer(),
+              ),
             ],
           ),
         ),
@@ -148,7 +147,10 @@ class _AudioScreenState extends State<AudioScreen> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8),
-                        child: AppImage(src: AppSvg.searchIcon, color: colors.blackColor,),
+                        child: AppImage(
+                          src: AppSvg.searchIcon,
+                          color: colors.blackColor,
+                        ),
                       ),
                     ),
                   ),
@@ -185,7 +187,10 @@ class _AudioScreenState extends State<AudioScreen> {
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(8),
-                    child: AppImage(src: AppSvg.searchIcon, color: colors.blackColor,),
+                    child: AppImage(
+                      src: AppSvg.searchIcon,
+                      color: colors.blackColor,
+                    ),
                   ),
                 ),
               ),
@@ -194,8 +199,9 @@ class _AudioScreenState extends State<AudioScreen> {
           Divider(color: colors.dividerColor),
           Expanded(child: _AudioBody()),
           Align(
-              alignment: Alignment.bottomCenter,
-              child: const SmartMiniPlayer()),
+            alignment: Alignment.bottomCenter,
+            child: const SmartMiniPlayer(),
+          ),
         ],
       ),
     );
@@ -209,12 +215,14 @@ class _AudioBody extends StatefulWidget {
   State<_AudioBody> createState() => _AudioBodyState();
 }
 
+
 class _AudioBodyState extends State<_AudioBody>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
 
   @override
   bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -256,10 +264,18 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   Widget _buildAudioList(List<AssetEntity> entities) {
-    const int adInterval = 5; // Darek 6 audio pachi ek Ad
+    const int adInterval = 5;
 
-    // Total count calculate karo: Audio + Ads + Bottom Spacer (80px for MiniPlayer)
-    int totalCount = entities.length + (entities.length ~/ adInterval) + 1;
+    // à«§. àªàª¡àª¨à«€ àª¸àª‚àª–à«àª¯àª¾ àª¨àª•à«àª•à«€ àª•àª°à«‹
+    int adCount = entities.length ~/ adInterval;
+
+    // àªœà«‹ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª†àªˆàªŸàª® àª¹à«‹àª¯ àªªàª£ 5 àª¥à«€ àª“àª›à«€ àª¹à«‹àª¯, àª¤à«‹ àª›à«‡àª²à«àª²à«‡ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
+    if (entities.isNotEmpty && entities.length < adInterval) {
+      adCount = 1;
+    }
+
+    // à«¨. Total count: Audio + Ads + Bottom Spacer
+    int totalCount = entities.length + adCount + 1;
 
     return AnimationLimiter(
       child: ListView.builder(
@@ -269,18 +285,31 @@ class _AudioBodyState extends State<_AudioBody>
         // itemCount: entities.length,
         itemBuilder: (context, index) {
           final colors = Theme.of(context).extension<AppThemeColors>()!;
-// 1. Bottom Spacer for MiniPlayer
+          // à«©. Bottom Spacer (MiniPlayer àª®àª¾àªŸà«‡)
           if (index == totalCount - 1) {
-            return const SizedBox(height: 80);
+            return const SizedBox(height: 100); // àª¥à«‹àª¡à«àª‚ àªµàª§àª¾àª°à«‡ àªªà«‡àª¡àª¿àª‚àª—
           }
 
-          // ðŸŸ¢ 2. AD LOGIC: Darek 7mi position par Ad (index 6, 13, 20...)
-          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
-            return AdHelper.bannerAdWidget(size: AdSize.banner);
+          // à«ª. AD LOGIC
+          // àªœà«‹ 5 àª¥à«€ àªµàª§à« àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª¦àª° 6àª à«àª à«€ àªªà«‹àªàª¿àª¶àª¨ àªªàª°,
+          // àª…àª¥àªµàª¾ àªœà«‹ 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª²àª¿àª¸à«àªŸàª¨àª¾ àª…àª‚àª¤à«‡ (index == entities.length)
+          bool isAdPosition =
+          (index != 0 && (index + 1) % (adInterval + 1) == 0);
+          bool isLastAdForSmallList =
+          (entities.length < adInterval && index == entities.length);
+
+          if (isAdPosition || isLastAdForSmallList) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: AdHelper.bannerAdWidget(size: AdSize.banner),
+            );
           }
 
-          // ðŸŸ¢ 3. ACTUAL DATA INDEX calculation
+          // à««. ACTUAL DATA INDEX Calculation
+          // àªœà«‹ àªàª¡ àªªà«‹àªàª¿àª¶àª¨ àª¨àª¥à«€, àª¤à«‹ àªœ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª—àª£àªµà«‹
           final int actualIndex = index - (index ~/ (adInterval + 1));
+
+          // àª¸à«‡àª«à«àªŸà«€ àªšà«‡àª•: àªœà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª²àª¿àª¸à«àªŸàª¨à«€ àª¬àª¹àª¾àª° àªœàª¤à«‹ àª¹à«‹àª¯
           if (actualIndex >= entities.length) return const SizedBox.shrink();
 
           final audio = entities[actualIndex];
@@ -297,8 +326,11 @@ class _AudioBodyState extends State<_AudioBody>
                     future: audio.file,
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
-                        return  ListTile(
-                          leading: Icon(Icons.music_note, color: colors.blackColor,),
+                        return ListTile(
+                          leading: Icon(
+                            Icons.music_note,
+                            color: colors.blackColor,
+                          ),
                           title: AppText("loading"),
                         );
                       }
@@ -318,7 +350,10 @@ class _AudioBodyState extends State<_AudioBody>
                               color: colors.cardBackground,
                               borderRadius: BorderRadius.circular(10),
                               border: isCurrentPlaying
-                                  ? Border.all(color: colors.primary, width: 0.5)
+                                  ? Border.all(
+                                color: colors.primary,
+                                width: 0.5,
+                              )
                                   : null,
                             ),
                             child: Row(
@@ -348,29 +383,46 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
-    // GlobalPlayer().initAndPlay(entities: entities, selectedId: audio.id);
-    _audioClickCount++;
-    if (_audioClickCount % 4 == 0) { // Darek 4thi click par Ad
-      AdHelper.showInterstitialAd();
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PlayerScreen(
-          entityList: entities,
-          entity: audio,
-          item: MediaItem(
-            isFavourite: audio.isFavorite,
-            id: audio.id,
-            path: file.path,
-            isNetwork: false,
-            type: 'audio',
+    // à«§. àªªà«àª²à«‡àª¯àª° àª–à«‹àª²àªµàª¾ àª®àª¾àªŸà«‡àª¨à«àª‚ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
+    void openAudioPlayer() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PlayerScreen(
+            entityList: entities,
+            entity: audio,
+            item: MediaItem(
+              isFavourite: audio.isFavorite,
+              id: audio.id,
+              path: file.path,
+              isNetwork: false,
+              type: 'audio',
+            ),
           ),
         ),
-      ),
-    ).then((_) {
-      context.read<AudioBloc>().add(LoadAudios(showLoading: false));
-    });
+      ).then((_) {
+        if (mounted) {
+          context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+        }
+      });
+    }
+
+    // à«¨. àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸ àªµàª§àª¾àª°à«‹
+    _audioClickCount++;
+
+    // à«©. àªàª¡ àª²à«‹àªœàª¿àª•: àª¦àª° 4 àª¥à«€ àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
+    if (_audioClickCount % 4 == 0) {
+      debugPrint("Showing Interstitial Ad before audio player...");
+
+      // AdHelper àª®àª¾àª‚ àª†àªªàª£à«‡ àªœà«‡ Callback àª¸à«‡àªŸ àª•àª°à«àª¯à«‹ àª›à«‡ àª¤à«‡àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°à«‹
+      AdHelper.showInterstitialAd(() {
+        // àª† àª•à«‹àª¡ àª¤à«àª¯àª¾àª°à«‡ àªœ àªšàª¾àª²àª¶à«‡ àªœà«àª¯àª¾àª°à«‡ àªàª¡ àª¬àª‚àª§ àª¥àª¶à«‡ àª…àª¥àªµàª¾ àª²à«‹àª¡ àª¨àª¹à«€àª‚ àª¥àª¾àª¯
+        openAudioPlayer();
+      });
+    } else {
+      // àªœà«‹ 4 àª¥à«€ àª•à«àª²àª¿àª• àª¨àª¥à«€, àª¤à«‹ àª¸à«€àª§à«àª‚ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+      openAudioPlayer();
+    }
   }
 
   Widget _buildLeadingIcon(
@@ -388,7 +440,11 @@ class _AudioBodyState extends State<_AudioBody>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          AppImage(src: AppSvg.musicUnselected, height: 22, color: colors.whiteColor,),
+          AppImage(
+            src: AppSvg.musicUnselected,
+            height: 22,
+            color: colors.whiteColor,
+          ),
           if (isPlaying)
             AppImage(
               src: GlobalPlayer().isPlaying
@@ -436,7 +492,7 @@ class _AudioBodyState extends State<_AudioBody>
       shadowColor: Colors.black.withOpacity(0.60),
       offset: Offset(0, 0),
       // splashRadius: 15,
-      icon: AppImage(src: AppSvg.dropDownMenuDot,color: colors.blackColor,),
+      icon: AppImage(src: AppSvg.dropDownMenuDot, color: colors.blackColor),
       menuPadding: EdgeInsets.symmetric(horizontal: 10),
       onSelected: (action) => handleMenuAction(context, audio, action, index),
       itemBuilder: (context) => [
@@ -471,7 +527,8 @@ class _AudioBodyState extends State<_AudioBody>
       AssetEntity audio,
       MediaMenuAction action,
       int index,
-      ) async {
+      ) async
+  {
     switch (action) {
       case MediaMenuAction.detail:
         routeToDetailPage(context, audio);

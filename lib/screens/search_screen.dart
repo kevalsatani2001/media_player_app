@@ -1,3 +1,4 @@
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -80,6 +81,18 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
+    // --- àªàª¡à«àª¸ àª®àª¾àªŸà«‡àª¨à«€ àª—àª£àª¤àª°à«€ (Build àª®à«‡àª¥àª¡àª¨à«€ àª¶àª°à«‚àª†àª¤àª®àª¾àª‚) ---
+    const int adInterval = 5;
+    int adCount = 0;
+    if (_results.isNotEmpty) {
+      adCount = (_results.length ~/ adInterval);
+      // àªœà«‹ 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯, àª¤à«‹ àª›à«‡àª²à«àª²à«‡ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
+      if (_results.length < adInterval) {
+        adCount = 1;
+      }
+    }
+    final int totalItemCount = _results.length + adCount;
     return Scaffold(
         appBar: AppBar(
           leading: Padding(
@@ -166,17 +179,39 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   )
                       : _results.isEmpty
-                      ? const Center(
-                    child: AppText(
-                      "noDataFound",
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
+                      ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const AppText("noDataFound", fontSize: 18),
+                        const SizedBox(height: 20),
+                        // àª–àª¾àª²à«€ àª¸à«àª•à«àª°à«€àª¨ àªªàª° àªàª¡
+                        AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                      ],
                     ),
                   )
                       : ListView.builder(
-                    itemCount: _results.length,
+                    // âœ¨ àª®àª¹àª¤à«àªµàª¨à«àª‚: àª²àª¿àª¸à«àªŸàª¨à«€ àª²àª‚àª¬àª¾àªˆ + àªàª¡à«àª¸àª¨à«€ àª¸àª‚àª–à«àª¯àª¾
+                    itemCount: totalItemCount,
                     itemBuilder: (_, i) {
-                      final item = _results[i];
+                      // à«§. àªàª¡ àª¬àª¤àª¾àªµàªµàª¾àª¨à«àª‚ àª²à«‹àªœàª¿àª•
+                      // àª¦àª° 5 àª†àªˆàªŸàª®à«‡ àª…àª¥àªµàª¾ àªœà«‹ àª²àª¿àª¸à«àªŸ àª¨àª¾àª¨à«àª‚ àª¹à«‹àª¯ àª¤à«‹ àª›à«‡àª²à«àª²à«‡
+                      bool showAdHere = (i != 0 && (i + 1) % (adInterval + 1) == 0) ||
+                          (_results.length < adInterval && i == _results.length);
+
+                      if (showAdHere) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                          alignment: Alignment.center,
+                          child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
+                        );
+                      }
+
+                      // à«¨. àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
+                      final int actualIndex = i - (i ~/ (adInterval + 1));
+                      if (actualIndex >= _results.length) return const SizedBox.shrink();
+
+                      final item = _results[actualIndex];
                       PlaylistModel? playlist;
                       if (item.type == 'playlist') {
                         final playlistBox = Hive.box('playlists');
@@ -193,125 +228,148 @@ class _SearchScreenState extends State<SearchScreen> {
                             horizontal: 15,
                           ),
                           child: GestureDetector(
-                            onTap: () async {
-                              if (item.type == 'playlist') {
-                                final playlistBox = Hive.box('playlists');
-                                playlist = playlistBox.values
-                                    .cast<PlaylistModel>()
-                                    .firstWhere((pl) => pl.name == item.path);
+                              onTap: () async {
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PlaylistItemsScreen(
-                                      name: playlist!.name,
-                                      items: playlist!.items,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                final file = File(item.path);
-                                if (!await file.exists()) {
-                                  AppToast.show(
-                                    context,
-                                    context.tr("fileNotFoundOrDeleted"),
-                                    type: ToastType.error,
-                                  );
-                                  return;
-                                }
+                                AdHelper.showInterstitialAd(() async {
+                                  if (item.type == 'playlist') {
+                                    final playlistBox = Hive.box('playlists');
+                                    playlist = playlistBox.values
+                                        .cast<PlaylistModel>()
+                                        .firstWhere((pl) => pl.name == item.path);
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PlayerScreen(
-                                      item: item,
-                                      entity: AssetEntity(
-                                        id: item.id,
-                                        typeInt: item.type == "audio" ? 3 : 2,
-                                        width: 200,
-                                        height: 200,
-                                        isFavorite: item.isFavourite,
-                                        title: item.path.split("/").last,
-                                        relativePath: item.path,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: colors.cardBackground,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 10,
-                                  top: 10,
-                                  bottom: 10,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 80,
-                                      height: 60,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        color: item.type == 'playlist'
-                                            ? colors.primary.withOpacity(0.1)
-                                            : Colors.transparent,
-                                      ),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: item.type == 'playlist'
-                                          ? Icon(
-                                        Icons.playlist_play,
-                                        color: colors.primary,
-                                        size: 30,
-                                      )
-                                          : (item.type == 'audio'
-                                          ? videoPlaceholder(
-                                        isAudio: true,
-                                      )
-                                          : assetAntityImage(
-                                        AssetEntity(
-                                          relativePath: item.path,
-                                          id: item.id!,
-                                          typeInt: 2,
-                                          width: 80,
-                                          height: 80,
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PlaylistItemsScreen(
+                                          name: playlist!.name,
+                                          items: playlist!.items,
                                         ),
-                                      )),
-                                    ),
-                                    SizedBox(width: 13),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        children: [
-                                          AppText(
-                                            item.path.split('/').last,
-                                            maxLines: 1,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
+                                      ),
+                                    );
+                                  } else {
+                                    final file = File(item.path);
+                                    if (!await file.exists()) {
+                                      AppToast.show(
+                                        context,
+                                        context.tr("fileNotFoundOrDeleted"),
+                                        type: ToastType.error,
+                                      );
+                                      return;
+                                    }
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PlayerScreen(
+                                          item: item,
+                                          entity: AssetEntity(
+                                            id: item.id,
+                                            typeInt: item.type == "audio" ? 3 : 2,
+                                            width: 200,
+                                            height: 200,
+                                            isFavorite: item.isFavourite,
+                                            title: item.path.split("/").last,
+                                            relativePath: item.path,
                                           ),
-                                          SizedBox(height: 7),
-                                          AppText(
-                                            item.type != "playlist"
-                                                ? item.path
-                                                : "${playlist!.items.length} ${context.tr("items")}",
-                                            maxLines: 1,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w400,
-                                            color: colors.textFieldBorder,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                });
+
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: colors.cardBackground,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 10,
+                                    top: 10,
+                                    bottom: 10,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 80,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          color: item.type == 'playlist'
+                                              ? colors.primary.withOpacity(0.1)
+                                              : Colors.transparent,
+                                        ),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: item.type == 'playlist'
+                                            ? Icon(
+                                          Icons.playlist_play,
+                                          color: colors.primary,
+                                          size: 30,
+                                        )
+                                            : (item.type == 'audio'
+                                            ? videoPlaceholder(
+                                          isAudio: true,
+                                        )
+                                            : assetAntityImage(
+                                          AssetEntity(
+                                            relativePath: item.path,
+                                            id: item.id!,
+                                            typeInt: 2,
+                                            width: 80,
+                                            height: 80,
                                           ),
-                                          SizedBox(height: 7),
-                                          if (item.type != "playlist")
-                                            Row(
-                                              children: [
-                                                AppText(
-                                                  formatDuration(
-                                                    AssetEntity(
+                                        )),
+                                      ),
+                                      SizedBox(width: 13),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                          children: [
+                                            AppText(
+                                              item.path.split('/').last,
+                                              maxLines: 1,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            SizedBox(height: 7),
+                                            AppText(
+                                              item.type != "playlist"
+                                                  ? item.path
+                                                  : "${playlist!.items.length} ${context.tr("items")}",
+                                              maxLines: 1,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w400,
+                                              color: colors.textFieldBorder,
+                                            ),
+                                            SizedBox(height: 7),
+                                            if (item.type != "playlist")
+                                              Row(
+                                                children: [
+                                                  AppText(
+                                                    formatDuration(
+                                                      AssetEntity(
+                                                        relativePath: item.path,
+                                                        id: item.id!,
+                                                        typeInt:
+                                                        item.type == 'audio'
+                                                            ? 3
+                                                            : 2,
+                                                        width: 80,
+                                                        height: 80,
+                                                      ).duration,
+                                                    ),
+                                                    maxLines: 2,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                    color:
+                                                    colors.appBarTitleColor,
+                                                  ),
+                                                  SizedBox(width: 10),
+                                                  FutureBuilder<File?>(
+                                                    future: AssetEntity(
                                                       relativePath: item.path,
                                                       id: item.id!,
                                                       typeInt:
@@ -320,70 +378,51 @@ class _SearchScreenState extends State<SearchScreen> {
                                                           : 2,
                                                       width: 80,
                                                       height: 80,
-                                                    ).duration,
-                                                  ),
-                                                  maxLines: 2,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w500,
-                                                  color:
-                                                  colors.appBarTitleColor,
-                                                ),
-                                                SizedBox(width: 10),
-                                                FutureBuilder<File?>(
-                                                  future: AssetEntity(
-                                                    relativePath: item.path,
-                                                    id: item.id!,
-                                                    typeInt:
-                                                    item.type == 'audio'
-                                                        ? 3
-                                                        : 2,
-                                                    width: 80,
-                                                    height: 80,
-                                                  ).file,
-                                                  builder: (context, snapshot) {
-                                                    if (!snapshot.hasData ||
-                                                        snapshot.data == null) {
-                                                      return const SizedBox(
-                                                        height: 14,
-                                                      );
-                                                    }
+                                                    ).file,
+                                                    builder: (context, snapshot) {
+                                                      if (!snapshot.hasData ||
+                                                          snapshot.data == null) {
+                                                        return const SizedBox(
+                                                          height: 14,
+                                                        );
+                                                      }
 
-                                                    final file = snapshot.data!;
+                                                      final file = snapshot.data!;
 
-                                                    if (!file.existsSync()) {
+                                                      if (!file.existsSync()) {
+                                                        return AppText(
+                                                          'unavailable',
+                                                          fontSize: 11,
+                                                          color: Colors.redAccent,
+                                                        );
+                                                      }
+
+                                                      final bytes = file
+                                                          .lengthSync();
+
                                                       return AppText(
-                                                        'unavailable',
-                                                        fontSize: 11,
-                                                        color: Colors.redAccent,
+                                                        formatSize(
+                                                          bytes,
+                                                          context,
+                                                        ),
+                                                        fontSize: 10,
+                                                        fontWeight:
+                                                        FontWeight.w500,
+                                                        color: colors
+                                                            .appBarTitleColor,
                                                       );
-                                                    }
-
-                                                    final bytes = file
-                                                        .lengthSync();
-
-                                                    return AppText(
-                                                      formatSize(
-                                                        bytes,
-                                                        context,
-                                                      ),
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                      FontWeight.w500,
-                                                      color: colors
-                                                          .appBarTitleColor,
-                                                    );
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                        ],
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(width: 13),
-                                  ],
+                                      SizedBox(width: 13),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ),
+                              )
                           ),
                         ),
                       );

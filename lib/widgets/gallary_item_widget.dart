@@ -1,16 +1,8 @@
 import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import 'package:photo_manager/photo_manager.dart';
-
-import '../core/constants.dart';
-import '../screens/bottom_bar_screen.dart';
-import '../screens/gallary_content_list_screen.dart';
-import '../utils/app_colors.dart';
-import 'image_widget.dart';
+import '../services/ads_service.dart';
+import '../utils/app_imports.dart';
 
 class GalleryItemWidget extends StatelessWidget {
   const GalleryItemWidget({
@@ -22,50 +14,65 @@ class GalleryItemWidget extends StatelessWidget {
   final AssetPathEntity path;
   final ValueSetter<VoidCallback> setState;
 
+  // âœ¨ àª¸à«àªŸà«‡àªŸàª¿àª• àª•àª¾àª‰àª¨à«àªŸàª°: àªœà«‡ àª®à«‡àª®àª°à«€àª®àª¾àª‚ àª¸à«àªŸà«‹àª° àª°àª¹à«‡àª¶à«‡ àª…àª¨à«‡ àª¦àª°à«‡àª• àª•à«àª²àª¿àª• àª—àª£àª¶à«‡
+  static int _clickCount = 0;
+
   Widget buildGalleryItemWidget(AssetPathEntity item, BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final navigator = Navigator.of(context);
+
     return InkWell(
       onTap: () async {
         if (item.albumType == 2) {
           Fluttertoast.showToast(msg: "The folder can't get asset");
           return;
         }
-        if (await item.assetCountAsync == 0) {
+
+        final count = await item.assetCountAsync;
+        if (count == 0) {
           Fluttertoast.showToast(msg: 'The asset count is 0.');
           return;
         }
-        navigator.push<void>(
-          MaterialPageRoute<void>(
-            builder: (_) => GalleryContentListPage(path: item),
-          ),
-        );
+
+        // âœ¨ àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸàª° àª²à«‹àªœàª¿àª•
+        _clickCount++;
+
+        if (_clickCount % 3 == 0) {
+          // àª¦àª° à«© àªœà«€ àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
+          AdHelper.showInterstitialAd(() {
+            navigator.push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => GalleryContentListPage(path: item),
+              ),
+            );
+          });
+        } else {
+          // àª¬àª¾àª•à«€àª¨à«€ àª•à«àª²àª¿àª• àªªàª° àª¸à«€àª§à«àª‚ àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨
+          navigator.push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => GalleryContentListPage(path: item),
+            ),
+          );
+        }
       },
-      onLongPress: () => Platform.isIOS || Platform.isMacOS
+      onLongPress: () => (Platform.isIOS || Platform.isMacOS)
           ? showDialog<void>(
         context: context,
         builder: (_) {
           return ListDialog(
             children: <Widget>[
-              if (Platform.isIOS || Platform.isMacOS) ...[
-                ElevatedButton(
-                  child: Text('Delete self (${item.name})'),
-                  onPressed: () async {
-                    if (!(Platform.isIOS || Platform.isMacOS)) {
-                      Fluttertoast.showToast(
-                        msg: 'The function only support iOS.',
-                      );
-                      return;
-                    }
-                    PhotoManager.editor.darwin.deletePath(path);
-                  },
-                ),
-              ],
+              ElevatedButton(
+                child: Text('Delete self (${item.name})'),
+                onPressed: () async {
+                  PhotoManager.editor.darwin.deletePath(path);
+                  Navigator.pop(context);
+                },
+              ),
             ],
           );
         },
       )
-          : SizedBox(),
+          : const SizedBox.shrink(),
       child: Container(
         decoration: BoxDecoration(
           color: colors.cardBackground,
@@ -78,7 +85,7 @@ class GalleryItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AppImage(src: AppSvg.folderIcon),
-              SizedBox(height: 21.22),
+              const SizedBox(height: 21.22),
               AppText(
                 item.name,
                 align: TextAlign.center,
@@ -87,44 +94,19 @@ class GalleryItemWidget extends StatelessWidget {
                 fontWeight: FontWeight.w500,
                 color: colors.appBarTitleColor,
               ),
-              SizedBox(height: 2.41),
+              const SizedBox(height: 2.41),
               FutureBuilder<int>(
                 future: item.assetCountAsync,
                 builder: (_, AsyncSnapshot<int> data) {
                   if (data.hasData) {
                     return AppText(
+                      '${data.data} items',
                       maxLines: 1,
                       align: TextAlign.center,
-                      '${data.data} items',
                       fontSize: 12,
                       color: colors.textFieldBorder,
                       fontWeight: FontWeight.w400,
                     );
-                    // Column(
-                    //   crossAxisAlignment: CrossAxisAlignment.start,
-                    //   mainAxisSize: MainAxisSize.min,
-                    //   children: [
-                    //     Text('${data.data} items'),
-                    //     FutureBuilder<String?>(
-                    //       future: item.relativePathAsync,
-                    //       builder: (_, AsyncSnapshot<String?> pathData) {
-                    //         if (pathData.connectionState == ConnectionState.done) {
-                    //           final path = pathData.data;
-                    //           if (path != null) {
-                    //             return Text(
-                    //               'path: $path',
-                    //               style: TextStyle(
-                    //                 fontSize: 12,
-                    //                 color: Colors.grey[600],
-                    //               ),
-                    //             );
-                    //           }
-                    //         }
-                    //         return const SizedBox.shrink();
-                    //       },
-                    //     ),
-                    //   ],
-                    // );
                   }
                   return const SizedBox.shrink();
                 },
@@ -133,44 +115,6 @@ class GalleryItemWidget extends StatelessWidget {
           ),
         ),
       ),
-
-      //
-      // ListTile(
-      //   title: Text(item.name),
-      //   subtitle: FutureBuilder<int>(
-      //     future: item.assetCountAsync,
-      //     builder: (_, AsyncSnapshot<int> data) {
-      //       if (data.hasData) {
-      //         return Column(
-      //           crossAxisAlignment: CrossAxisAlignment.start,
-      //           mainAxisSize: MainAxisSize.min,
-      //           children: [
-      //             Text('count : ${data.data}'),
-      //             FutureBuilder<String?>(
-      //               future: item.relativePathAsync,
-      //               builder: (_, AsyncSnapshot<String?> pathData) {
-      //                 if (pathData.connectionState == ConnectionState.done) {
-      //                   final path = pathData.data;
-      //                   if (path != null) {
-      //                     return Text(
-      //                       'path: $path',
-      //                       style: TextStyle(
-      //                         fontSize: 12,
-      //                         color: Colors.grey[600],
-      //                       ),
-      //                     );
-      //                   }
-      //                 }
-      //                 return const SizedBox.shrink();
-      //               },
-      //             ),
-      //           ],
-      //         );
-      //       }
-      //       return const SizedBox.shrink();
-      //     },
-      //   ),
-      // ),
     );
   }
 

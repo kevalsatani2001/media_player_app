@@ -39,12 +39,12 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Widget _buildSettingsTab() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return SingleChildScrollView( // ðŸŸ¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
+    return SingleChildScrollView( // Ã°Å¸Å¸Â¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// ðŸŸ¢ 1. TOP ADAPTIVE BANNER
+          /// Ã°Å¸Å¸Â¢ 1. TOP ADAPTIVE BANNER
           AdHelper.adaptiveBannerWidget(context),
           const SizedBox(height: 15),
 
@@ -79,7 +79,7 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
           ),
 
-          /// ðŸŸ¢ 2. MEDIUM RECTANGLE AD (Vachma)
+          /// Ã°Å¸Å¸Â¢ 2. MEDIUM RECTANGLE AD (Vachma)
           // Aa jagya sauthi best chhe karan ke user scroll karshe tyare dhyan jase
           const SizedBox(height: 25),
           Center(
@@ -150,7 +150,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 color: colors.appBarTitleColor,
               ),
               const SizedBox(height: 10),
-              // Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…â€œ
+              // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“
               AppText(
                 "howWouldYouLove",
                 fontSize: 16,
@@ -269,7 +269,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   void shareApp() {
     String appMessage =
-        "${context.tr("checkOutThisAmazing")} Ã°Å¸Å½Â¶Ã°Å¸Å½Â¬\n\n"
+        "${context.tr("checkOutThisAmazing")} ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¶ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¬\n\n"
         "${context.tr("downloadItNowFrom")}\n"
         "https://play.google.com/store/apps/details?id=your.package.name";
 
@@ -366,7 +366,7 @@ extension LocalizationExtension on BuildContext {
   }
 }
 
-enum AppThemeMode { light, dark, system }
+enum AppThemeMode { light, dark}
 
 class ThemeScreen extends StatefulWidget {
   const ThemeScreen({super.key});
@@ -387,44 +387,68 @@ class _ThemeScreenState extends State<ThemeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    // à«§. àª¹àª¾àª²àª¨à«€ àª¸àª¿àª²à«‡àª•à«àªŸà«‡àª¡ àªŸà«‡àª®à«àªªàª°àª°à«€ àª¥à«€àª® àª®à«àªœàª¬ àª¡à«‡àªŸàª¾ àª¤à«ˆàª¯àª¾àª° àª•àª°à«‹
+    final isDark = _tempSelectedTheme == AppThemeMode.dark.name;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0),
-          child: Column(
-            children: [
-              _buildHeader(context, colors),
-              const SizedBox(height: 10),
-              _buildOption(
-                "lightMode",
-                "classicLight",
-                AppThemeMode.light.name,
-                Icons.wb_sunny_outlined,
-                colors,
+    // à«¨. àªªà«àª°àª¿àªµà«àª¯à«‚ àª®àª¾àªŸà«‡ àª¨àªµà«‹ àª¥à«€àª® àª¡à«‡àªŸàª¾ àª¬àª¨àª¾àªµà«‹ (àª¤àª®àª¾àª°à«€ àªàªªàª¨à«€ àª®à«‡àªˆàª¨ àª¥à«€àª® àª®à«àªœàª¬)
+    final previewTheme = isDark ? AppTheme.dark() : AppTheme.light();
+
+    return Theme(
+      data: previewTheme, // àª®àª¾àª¤à«àª° àª† àª¸à«àª•à«àª°à«€àª¨ àª®àª¾àªŸà«‡ àª¥à«€àª® àª¬àª¦àª²àª¾àª¶à«‡
+      child: Builder(
+        builder: (context) {
+          // àª† àª•àª²àª°à«àª¸ àª¹àªµà«‡ 'previewTheme' àª®àª¾àª‚àª¥à«€ àª†àªµàª¶à«‡
+          final colors = Theme.of(context).extension<AppThemeColors>()!;
+
+          return Scaffold(
+            // backgroundColor: colors.scaffoldBackground,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(context, colors),
+                  const SizedBox(height: 10),
+                  _buildOption(
+                    "lightMode",
+                    "classicLight",
+                    AppThemeMode.light.name,
+                    Icons.wb_sunny_outlined,
+                    colors,
+                  ),
+                  _buildOption(
+                    "darkMode",
+                    "modernDark",
+                    AppThemeMode.dark.name,
+                    Icons.nightlight_round_outlined,
+                    colors,
+                  ),
+
+                  const Spacer(),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      children: [
+                        AppText(
+                          "Advertisement",
+                          fontSize: 10,
+                          color: colors.subTextColor.withOpacity(0.4),
+                        ),
+                        const SizedBox(height: 5),
+                        KeyedSubtree(
+                          key: ValueKey(_tempSelectedTheme),
+                          child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              _buildOption(
-                "darkMode",
-                "modernDark",
-                AppThemeMode.dark.name,
-                Icons.nightlight_round_outlined,
-                colors,
-              ),
-              _buildOption(
-                "systemDefault",
-                "followDevice",
-                AppThemeMode.system.name,
-                Icons.settings_brightness_outlined,
-                colors,
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
-
   Widget _buildHeader(BuildContext context, AppThemeColors colors) {
 
     return Container(
@@ -480,18 +504,18 @@ class _ThemeScreenState extends State<ThemeScreen> {
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: _tempSelectedTheme == HiveService.themeMode?null:() {
-              context.read<ThemeBloc>().add(
-                UpdateThemeMode(_tempSelectedTheme),
-              );
+            onTap: _tempSelectedTheme == HiveService.themeMode ? null : () {
+              // àª¥à«€àª® àª…àªªàª¡à«‡àªŸ àª•àª°àª¤àª¾ àªªàª¹à«‡àª²àª¾ àªàª¡ àª¬àª¤àª¾àªµà«‹
+              AdHelper.showInterstitialAd(() {
+                context.read<ThemeBloc>().add(UpdateThemeMode(_tempSelectedTheme));
 
-              AppToast.show(
-                context,
-                "${context.tr("themeUpdatesSuccessfully")}",
-                type: ToastType.success,
-              );
-
-              Navigator.pop(context);
+                AppToast.show(
+                  context,
+                  "${context.tr("themeUpdatesSuccessfully")}",
+                  type: ToastType.success,
+                );
+                Navigator.pop(context);
+              });
             },
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
@@ -526,7 +550,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() {
-            _tempSelectedTheme = code;
+            _tempSelectedTheme = code; // àª®àª¾àª¤à«àª° àª†àªŸàª²à«àª‚ àªœ, àªœà«‡àª¥à«€ àªªà«àª°àª¿àªµà«àª¯à«‚ àª¬àª¦àª²àª¾àª¯
           });
         },
         child: Container(

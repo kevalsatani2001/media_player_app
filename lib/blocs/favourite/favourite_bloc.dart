@@ -34,13 +34,13 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
     final existingIndex =
     updatedEntities.indexWhere((e) => e.id == entity.id);
 
-    // 🧠 If unfavourite → remove
+    // ðŸ§  If unfavourite â†’ remove
     if (entity.isFavorite) {
       if (existingIndex != -1) {
         updatedEntities.removeAt(existingIndex);
       }
     } else {
-      // ❤️ Favourite
+      // â¤ï¸ Favourite
       if (existingIndex == -1) {
         updatedEntities.add(entity.copyWith(isFavorite: true));
       } else {
@@ -49,7 +49,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
       }
     }
 
-    // ✅ Instant UI update
+    // âœ… Instant UI update
     emit(current.copyWith(entities: updatedEntities));
 
     try {
@@ -66,7 +66,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
         });
       }
 
-      // 🔁 Sync system favourite silently
+      // ðŸ” Sync system favourite silently
       if (PlatformUtils.isOhos) {
         await PhotoManager.editor.ohos.favoriteAsset(
           entity: entity,
@@ -84,84 +84,58 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
         );
       }
     } catch (_) {
-      // 🔙 rollback
+      // ðŸ”™ rollback
       emit(current);
     }
   }
 
 
-  Future<void> _onLoadFavourite(
-      LoadFavourite event,
-      Emitter<FavouriteState> emit,
-      ) async {
-    if (state is FavouriteInitial) {
-      emit(FavouriteLoading());
-    }
+  Future<void> _onLoadFavourite(LoadFavourite event, Emitter<FavouriteState> emit) async {
+    print("Load fav STARTING... ðŸš€"); // àª† àªªà«àª°àª¿àª¨à«àªŸ àªšà«‡àª• àª•àª°à«‹
 
     try {
-      final PermissionState ps = await PhotoManager.requestPermissionExtend(
-        requestOption: PermissionRequestOption(
-          androidPermission: AndroidPermission(
-            type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-            mediaLocation: true,
-          ),
-        ),
-      );
+      // àªªàª°àª®àª¿àª¶àª¨ àªšà«‡àª•
+      final PermissionState ps = await PhotoManager.requestPermissionExtend();
+      if (!ps.hasAccess) return;
 
-      if (!ps.hasAccess) {
-        emit(FavouriteError('Permission denied'));
-        return;
-      }
-
-      final filter = FilterOptionGroup(
-        videoOption: const FilterOption(
-          sizeConstraint: SizeConstraint(ignoreSize: true),
-        ),
-        audioOption: const FilterOption(
-          sizeConstraint: SizeConstraint(ignoreSize: true),
-        ),
-      );
-
+      // 'Recent' àª†àª²à«àª¬àª® àª²à«‹
       final paths = await PhotoManager.getAssetPathList(
         onlyAll: true,
         type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-        filterOption: filter,
       );
 
-      if (paths.isEmpty) {
-        emit(FavouriteError('No media found'));
-        return;
-      }
+      if (paths.isEmpty) return;
 
-      final path = paths.first;
-      final totalCount = await path.assetCountAsync;
+      final recentPath = paths.first;
+      final int totalCount = await recentPath.assetCountAsync;
 
-      // 🔹 Load first page
-      final List<AssetEntity> pageEntities = await path.getAssetListPaged(
-        page: 0,
-        size: 20,
+      // âœ¨ àª¯à«àª•à«àª¤àª¿: à«¨à«¦ àª¨à«‡ àª¬àª¦àª²à«‡ àª®à«‹àªŸàª¾ àª­àª¾àª—àª¨à«‹ àª¡à«‡àªŸàª¾ àªàª•àª¸àª¾àª¥à«‡ àªšà«‡àª• àª•àª°à«‹ (àª®àª¾àª¤à«àª° àª®à«‡àªŸàª¾àª¡à«‡àªŸàª¾ àª›à«‡, àª²à«‹àª¡ àª¨àª¹à«€àª‚ àªªàª¡à«‡)
+      // àªœà«‹ àª¤àª®àª¾àª°à«€ àªªàª¾àª¸à«‡ à«§à«¦à«¦à«¦ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª…àª¹à«€àª‚ à«§à«¦à«¦à«¦ àª²àª–à«‹
+      final List<AssetEntity> allEntities = await recentPath.getAssetListRange(
+        start: 0,
+        end: totalCount,
       );
 
-      // 🔹 Filter favourites ONLY (FIX)
-      final List<AssetEntity> favouriteEntities = pageEntities
+      // àª¸àª¿àª¸à«àªŸàª® àª«à«‡àªµàª°àª¿àªŸ àª«àª¿àª²à«àªŸàª° àª•àª°à«‹
+      final List<AssetEntity> favouriteEntities = allEntities
           .where((e) => e.isFavorite)
           .toList();
 
-      // 🔹 Sync Hive
+      // Hive àª¸àª¿àª‚àª• àª•àª°à«‹
       await box.clear();
       await _saveToHive(favouriteEntities);
 
-      emit(
-        FavouriteLoaded(
-          entities: favouriteEntities,
-          path: path,
-          page: 0,
-          totalCount: totalCount,
-          hasMore: favouriteEntities.length < totalCount,
-        ),
-      );
+      print("Total Favourites Found: ${favouriteEntities.length}");
+
+      emit(FavouriteLoaded(
+        entities: favouriteEntities,
+        path: recentPath,
+        page: 0,
+        totalCount: totalCount,
+        hasMore: false,
+      ));
     } catch (e) {
-      emit(FavouriteError(e.toString()));
+      print("Error in LoadFavourite: $e");
     }
   }
 
@@ -181,7 +155,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
       size: 20,
     );
 
-    // 🔹 Filter favourites ONLY
+    // ðŸ”¹ Filter favourites ONLY
     final List<AssetEntity> favouriteEntities = pageEntities
         .where((e) => e.isFavorite)
         .toList();

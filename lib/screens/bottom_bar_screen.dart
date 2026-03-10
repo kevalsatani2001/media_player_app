@@ -1046,7 +1046,7 @@ class _CopyToAnotherGalleryPageState extends State<CopyToAnotherGalleryPage> {
             aspectRatio: 1,
             child: AssetEntityImage(
               widget.assetEntity,
-              thumbnailSize: const ThumbnailSize.square(500),
+              thumbnailSize: const ThumbnailSize.square(150),
               loadingBuilder: (_, Widget child, ImageChunkEvent? progress) {
                 if (progress == null) {
                   return child;
@@ -1466,7 +1466,7 @@ class _MoveToAnotherExampleState extends State<MoveToAnotherExample> {
   Widget _buildPreview() {
     return AssetEntityImage(
       widget.entity,
-      thumbnailSize: const ThumbnailSize.square(500),
+      thumbnailSize: const ThumbnailSize.square(150),
       loadingBuilder: (_, Widget child, ImageChunkEvent? progress) {
         if (progress == null) {
           return child;
