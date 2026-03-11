@@ -39,12 +39,11 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Widget _buildSettingsTab() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return SingleChildScrollView( // Ã°Å¸Å¸Â¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
+    return SingleChildScrollView( // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Ã°Å¸Å¸Â¢ 1. TOP ADAPTIVE BANNER
           AdHelper.adaptiveBannerWidget(context),
           const SizedBox(height: 15),
 
@@ -78,9 +77,6 @@ class _SettingScreenState extends State<SettingScreen> {
               ],
             ),
           ),
-
-          /// Ã°Å¸Å¸Â¢ 2. MEDIUM RECTANGLE AD (Vachma)
-          // Aa jagya sauthi best chhe karan ke user scroll karshe tyare dhyan jase
           const SizedBox(height: 25),
           Center(
             child: ClipRRect(
@@ -150,7 +146,6 @@ class _SettingScreenState extends State<SettingScreen> {
                 color: colors.appBarTitleColor,
               ),
               const SizedBox(height: 10),
-              // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“
               AppText(
                 "howWouldYouLove",
                 fontSize: 16,
@@ -269,7 +264,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   void shareApp() {
     String appMessage =
-        "${context.tr("checkOutThisAmazing")} ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¶ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¬\n\n"
+        "${context.tr("checkOutThisAmazing")}\n\n"
         "${context.tr("downloadItNowFrom")}\n"
         "https://play.google.com/store/apps/details?id=your.package.name";
 
@@ -387,17 +382,14 @@ class _ThemeScreenState extends State<ThemeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // à«§. àª¹àª¾àª²àª¨à«€ àª¸àª¿àª²à«‡àª•à«àªŸà«‡àª¡ àªŸà«‡àª®à«àªªàª°àª°à«€ àª¥à«€àª® àª®à«àªœàª¬ àª¡à«‡àªŸàª¾ àª¤à«ˆàª¯àª¾àª° àª•àª°à«‹
     final isDark = _tempSelectedTheme == AppThemeMode.dark.name;
 
-    // à«¨. àªªà«àª°àª¿àªµà«àª¯à«‚ àª®àª¾àªŸà«‡ àª¨àªµà«‹ àª¥à«€àª® àª¡à«‡àªŸàª¾ àª¬àª¨àª¾àªµà«‹ (àª¤àª®àª¾àª°à«€ àªàªªàª¨à«€ àª®à«‡àªˆàª¨ àª¥à«€àª® àª®à«àªœàª¬)
     final previewTheme = isDark ? AppTheme.dark() : AppTheme.light();
 
     return Theme(
-      data: previewTheme, // àª®àª¾àª¤à«àª° àª† àª¸à«àª•à«àª°à«€àª¨ àª®àª¾àªŸà«‡ àª¥à«€àª® àª¬àª¦àª²àª¾àª¶à«‡
+      data: previewTheme,
       child: Builder(
         builder: (context) {
-          // àª† àª•àª²àª°à«àª¸ àª¹àªµà«‡ 'previewTheme' àª®àª¾àª‚àª¥à«€ àª†àªµàª¶à«‡
           final colors = Theme.of(context).extension<AppThemeColors>()!;
 
           return Scaffold(
@@ -449,6 +441,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
       ),
     );
   }
+  bool _isAdLoading = false;
   Widget _buildHeader(BuildContext context, AppThemeColors colors) {
 
     return Container(
@@ -504,8 +497,10 @@ class _ThemeScreenState extends State<ThemeScreen> {
           ),
           const SizedBox(width: 8),
           GestureDetector(
-            onTap: _tempSelectedTheme == HiveService.themeMode ? null : () {
-              // àª¥à«€àª® àª…àªªàª¡à«‡àªŸ àª•àª°àª¤àª¾ àªªàª¹à«‡àª²àª¾ àªàª¡ àª¬àª¤àª¾àªµà«‹
+            onTap: _tempSelectedTheme == HiveService.themeMode
+                ? null
+                : () async {
+              setState(() => _isAdLoading = true);
               AdHelper.showInterstitialAd(() {
                 context.read<ThemeBloc>().add(UpdateThemeMode(_tempSelectedTheme));
 
@@ -516,16 +511,26 @@ class _ThemeScreenState extends State<ThemeScreen> {
                 );
                 Navigator.pop(context);
               });
+
+              // if (mounted) setState(() => _isAdLoading = false); // stop loader
             },
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
                 return ScaleTransition(scale: animation, child: child);
               },
-              child: AppImage(
+              child: _isAdLoading
+                  ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: colors.primary,
+                  strokeWidth: 2,
+                ),
+              )
+                  : AppImage(
                 src: _tempSelectedTheme == HiveService.themeMode
-                    ? AppSvg
-                    .doneUnSelect
+                    ? AppSvg.doneUnSelect
                     : AppSvg.doneSelect,
               ),
             ),
@@ -550,7 +555,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() {
-            _tempSelectedTheme = code; // àª®àª¾àª¤à«àª° àª†àªŸàª²à«àª‚ àªœ, àªœà«‡àª¥à«€ àªªà«àª°àª¿àªµà«àª¯à«‚ àª¬àª¦àª²àª¾àª¯
+            _tempSelectedTheme = code;
           });
         },
         child: Container(

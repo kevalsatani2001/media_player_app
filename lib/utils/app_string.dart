@@ -10,6 +10,11 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      "internetRequired": "Internet Required",
+      "mandatoryInternetContent":
+          "To enjoy free services, an active internet connection is mandatory for loading ads.",
+      "checkConnection": "Check Connection",
+      "restoringConnection": "Connecting...",
       "renamePlaylist": "Rename Playlist",
       "yourMediaYourPrivacy": "1. Your Media, Your Privacy",
       "yourMediaYourPrivacyContent":
@@ -174,6 +179,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "Add some videos or audio to see them here!",
     },
     'ar': {
+      "internetRequired": "الاتصال بالإنترنت مطلوب",
+      "mandatoryInternetContent":
+          "للاستمتاع بالخدمات المجانية، يجب توفر اتصال نشط بالإنترنت لتحميل الإعلانات.",
+      "checkConnection": "تحقق من الاتصال",
+      "restoringConnection": "جاري الاتصال...",
       "renamePlaylist": "إعادة تسمية قائمة التشغيل",
       "yourMediaYourPrivacy": "١. وسائطك، خصوصيتك",
       "yourMediaYourPrivacyContent":
@@ -333,6 +343,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "أضف بعض الفيديوهات أو الصوتيات لتظهر هنا!",
     },
     'my': {
+      "internetRequired": "အင်တာနက်လိုအပ်သည်",
+      "mandatoryInternetContent":
+          "အခမဲ့ဝန်ဆောင်မှုများကို အသုံးပြုရန် ကြော်ငြာများတင်ရန် အင်တာနက်ချိတ်ဆက်မှုရှိရန် လိုအပ်ပါသည်။",
+      "checkConnection": "ချိတ်ဆက်မှုကို စစ်ဆေးပါ",
+      "restoringConnection": "ချိတ်ဆက်နေသည်...",
       "renamePlaylist": "ပလေးလစ်အမည်ပြောင်းရန်",
       "yourMediaYourPrivacy": "၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
       "yourMediaYourPrivacyContent":
@@ -497,6 +512,11 @@ class AppStrings {
           "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
     },
     'fil': {
+      "internetRequired": "Kailangan ng Internet",
+      "mandatoryInternetContent":
+          "Upang tamasahin ang mga libreng serbisyo, ang isang aktibong koneksyon sa internet ay sapilitan para sa paglo-load ng mga ad.",
+      "checkConnection": "Suriin ang Koneksyon",
+      "restoringConnection": "Kumokonekta...",
       "renamePlaylist": "Palitan ang pangalan ng Playlist",
       "yourMediaYourPrivacy": "1. Iyong Media, Iyong Privacy",
       "yourMediaYourPrivacyContent":
@@ -661,6 +681,11 @@ class AppStrings {
           "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
     },
     'fr': {
+      "internetRequired": "Internet requis",
+      "mandatoryInternetContent":
+          "Pour profiter des services gratuits, une connexion Internet active est obligatoire pour charger les publicités.",
+      "checkConnection": "Vérifier la connexion",
+      "restoringConnection": "Connexion en cours...",
       "renamePlaylist": "Renommer la liste de lecture",
       "yourMediaYourPrivacy": "1. Vos Médias, Votre Vie Privée",
       "yourMediaYourPrivacyContent":
@@ -824,6 +849,11 @@ class AppStrings {
           "Ajoutez des vidéos ou du son pour les voir ici !",
     },
     'de': {
+      "internetRequired": "Internet erforderlich",
+      "mandatoryInternetContent":
+          "Um kostenlose Dienste nutzen zu können, ist eine aktive Internetverbindung zum Laden von Werbung zwingend erforderlich.",
+      "checkConnection": "Verbindung prüfen",
+      "restoringConnection": "Verbinden...",
       "renamePlaylist": "Playlist umbenennen",
       "yourMediaYourPrivacy": "1. Ihre Medien, Ihre Privatsphäre",
       "yourMediaYourPrivacyContent":
@@ -988,6 +1018,11 @@ class AppStrings {
           "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
     },
     'gu': {
+      "internetRequired": "ઇન્ટરનેટ જરૂરી છે",
+      "mandatoryInternetContent":
+          "મફત સેવાઓનો આનંદ માણવા માટે, જાહેરાતો લોડ કરવા માટે સક્રિય ઇન્ટરનેટ કનેક્શન ફરજિયાત છે.",
+      "checkConnection": "કનેક્શન તપાસો",
+      "restoringConnection": "કનેક્ટ થઈ રહ્યું છે...",
       "renamePlaylist": "પ્લેલિસ્ટનું નામ બદલો",
       "yourMediaYourPrivacy": "૧. તમારું મીડિયા, તમારી ગોપનીયતા",
       "yourMediaYourPrivacyContent":
@@ -1151,6 +1186,11 @@ class AppStrings {
           "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
     },
     'hi': {
+      "internetRequired": "इंटरनेट आवश्यक है",
+      "mandatoryInternetContent":
+          "मुफ़्त सेवाओं का आनंद लेने के लिए, विज्ञापનો लोड करने के लिए एक सक्रिय इंटरनेट कनेक्शन अनिवार्य है।",
+      "checkConnection": "कनेक्शन जांचें",
+      "restoringConnection": "कनेक्ट हो रहा है...",
       "renamePlaylist": "प्लेलिस्ट का नाम बदलें",
       "yourMediaYourPrivacy": "१. आपका मीडिया, आपकी गोपनीयता",
       "yourMediaYourPrivacyContent":
@@ -1314,6 +1354,11 @@ class AppStrings {
           "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
     },
     'id': {
+      "internetRequired": "Koneksi Internet Diperlukan",
+      "mandatoryInternetContent":
+          "Untuk menikmati layanan gratis, koneksi internet aktif wajib diperlukan untuk memuat iklan.",
+      "checkConnection": "Periksa Koneksi",
+      "restoringConnection": "Menghubungkan...",
       "renamePlaylist": "Ubah Nama Daftar Putar",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
@@ -1478,6 +1523,11 @@ class AppStrings {
           "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
     },
     'it': {
+      "internetRequired": "Internet richiesto",
+      "mandatoryInternetContent":
+          "Per usufruire dei servizi gratuiti, è obbligatoria una connessione Internet attiva per caricare gli annunci.",
+      "checkConnection": "Controlla connessione",
+      "restoringConnection": "Connessione in corso...",
       "renamePlaylist": "Rinomina playlist",
       "yourMediaYourPrivacy": "1. I Tuoi Media, La Tua Privacy",
       "yourMediaYourPrivacyContent":
@@ -1642,6 +1692,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "Aggiungi video o audio per vederli qui!",
     },
     'ja': {
+      "internetRequired": "インターネットが必要です",
+      "mandatoryInternetContent":
+          "無料サービスを利用するには、広告を読み込むためにアクティブなインターネット接続が必須です。",
+      "checkConnection": "接続を確認",
+      "restoringConnection": "接続中...",
       "renamePlaylist": "プレイリスト名を変更",
       "yourMediaYourPrivacy": "1. あなたのメディア、あなたのプライバシー",
       "yourMediaYourPrivacyContent":
@@ -1800,6 +1855,10 @@ class AppStrings {
       "addSomeVideosOrAudio": "ビデオやオーディオを追加してここに表示しましょう！",
     },
     'ko': {
+      "internetRequired": "인터넷 연결 필요",
+      "mandatoryInternetContent": "무료 서비스를 이용하려면 광고 로드를 위해 활성 인터넷 연결이 필수입니다.",
+      "checkConnection": "연결 확인",
+      "restoringConnection": "연결 중...",
       "renamePlaylist": "재생목록 이름 바꾸기",
       "yourMediaYourPrivacy": "1. 귀하의 미디어, 귀하의 개인정보",
       "yourMediaYourPrivacyContent":
@@ -1958,6 +2017,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "여기에 표시할 비디오나 오디오를 추가하세요!",
     },
     'ms': {
+      "internetRequired": "Internet Diperlukan",
+      "mandatoryInternetContent":
+          "Untuk menikmati perkhidmatan percuma, sambungan internet yang aktif adalah wajib untuk memuatkan iklan.",
+      "checkConnection": "Semak Sambungan",
+      "restoringConnection": "Menghubungkan...",
       "renamePlaylist": "Namakan semula Senarai Main",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
@@ -2122,6 +2186,11 @@ class AppStrings {
           "Tambah beberapa video atau audio untuk melihatnya di sini!",
     },
     'mr': {
+      "internetRequired": "इंटरनेट आवश्यक आहे",
+      "mandatoryInternetContent":
+          "विनामूल्य सेवांचा आनंद घेण्यासाठी, जाहिराती लोड करण्यासाठी सक्रिय इंटरनेट कनेक्शन अनिवार्य आहे.",
+      "checkConnection": "कनेक्शन तपासा",
+      "restoringConnection": "कनेक्ट होत आहे...",
       "renamePlaylist": "प्लेलिस्टचे नाव बदला",
       "yourMediaYourPrivacy": "१. तुमचे मीडिया, तुमची गोपनीयता",
       "yourMediaYourPrivacyContent":
@@ -2285,6 +2354,11 @@ class AppStrings {
           "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
     },
     'fa': {
+      "internetRequired": "اتصال به اینترنت الزامی است",
+      "mandatoryInternetContent":
+          "برای بهره‌مندی از خدمات رایگان، داشتن اتصال اینترنت فعال جهت بارگذاری تبلیغات اجباری است.",
+      "checkConnection": "بررسی اتصال",
+      "restoringConnection": "در حال اتصال...",
       "renamePlaylist": "تغییر نام لیست پخش",
       "yourMediaYourPrivacy": "۱. رسانه شما، حریم خصوصی شما",
       "yourMediaYourPrivacyContent":
@@ -2448,6 +2522,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "تعدادی ویدیو یا صدا اضافه کنید تا اینجا ببینید!",
     },
     'pl': {
+      "internetRequired": "Wymagany internet",
+      "mandatoryInternetContent":
+          "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
+      "checkConnection": "Sprawdź połączenie",
+      "restoringConnection": "Łączenie...",
       "renamePlaylist": "Zmień nazwę playlisty",
       "yourMediaYourPrivacy": "1. Twoje multimedia, Twoja prywatność",
       "yourMediaYourPrivacyContent":
@@ -2609,6 +2688,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "Dodaj wideo lub dźwięk, aby zobaczyć je tutaj!",
     },
     'pt': {
+      "internetRequired": "Wymagany internet",
+      "mandatoryInternetContent":
+          "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
+      "checkConnection": "Sprawdź połączenie",
+      "restoringConnection": "Łączenie...",
       "renamePlaylist": "Renomear Playlist",
       "yourMediaYourPrivacy": "1. Sua Mídia, Sua Privacidade",
       "yourMediaYourPrivacyContent":
@@ -2774,6 +2858,11 @@ class AppStrings {
           "Adicione alguns vídeos ou áudio para os ver aqui!",
     },
     'es': {
+      "internetRequired": "Internet requerido",
+      "mandatoryInternetContent":
+          "Para disfrutar de los servicios gratuitos, es obligatoria una conexión a Internet activa para cargar los anuncios.",
+      "checkConnection": "Comprobar conexión",
+      "restoringConnection": "Conectando...",
       "renamePlaylist": "Cambiar nombre de la lista",
       "yourMediaYourPrivacy": "1. Tus medios, tu privacidad",
       "yourMediaYourPrivacyContent":
@@ -2939,6 +3028,11 @@ class AppStrings {
           "¡Agrega algunos videos o audio para verlos aquí!",
     },
     'sv': {
+      "internetRequired": "Internet krävs",
+      "mandatoryInternetContent":
+          "För att kunna använda gratistjänster krävs en aktiv internetanslutning för att ladda annonser.",
+      "checkConnection": "Kontrollera anslutning",
+      "restoringConnection": "Ansluter...",
       "renamePlaylist": "Byt namn på spellista",
       "yourMediaYourPrivacy": "1. Din media, din integritet",
       "yourMediaYourPrivacyContent":
@@ -3101,6 +3195,11 @@ class AppStrings {
       "addSomeVideosOrAudio": "Lägg till videor eller ljud för att se dem här!",
     },
     'ta': {
+      "internetRequired": "இணையம் தேவை",
+      "mandatoryInternetContent":
+          "இலவச சேவைகளை அனுபவிக்க, விளம்பரங்களை ஏற்றுவதற்கு செயலில் உள்ள இணைய இணைப்பு கட்டாயமாகும்.",
+      "checkConnection": "இணைப்பைச் சரிபார்க்கவும்",
+      "restoringConnection": "இணைக்கப்படுகிறது...",
       "renamePlaylist": "பிளேலிஸ்ட்டை மறுபெயரிடு",
       "yourMediaYourPrivacy": "1. உங்கள் மீடியா, உங்கள் தனியுரிமை",
       "yourMediaYourPrivacyContent":
@@ -3265,6 +3364,11 @@ class AppStrings {
           "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
     },
     'ur': {
+      "internetRequired": "انٹرنیٹ درکار ہے",
+      "mandatoryInternetContent":
+          "مفت سروسز سے لطف اندوز ہونے کے لیے، اشتہارات لوڈ کرنے کی خاطر فعال انٹرنیٹ کنکشن لازمی ہے۔",
+      "checkConnection": "کنکشن چیک کریں",
+      "restoringConnection": "کنیکٹ ہو رہا ہے...",
       "renamePlaylist": "پلے لسٹ کا نام تبدیل کریں",
       "yourMediaYourPrivacy": "١. آپ کا میڈیا، آپ کی رازداری",
       "yourMediaYourPrivacyContent":

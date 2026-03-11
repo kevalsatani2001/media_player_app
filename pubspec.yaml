@@ -59,6 +59,8 @@ dependencies:
   shimmer:
   lottie:
   flutter_secure_storage:
+  connectivity_plus:
+  app_settings:
 #  google_fonts:
 
 dev_dependencies:

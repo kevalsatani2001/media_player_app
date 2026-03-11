@@ -1,8 +1,9 @@
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/models/player_data.dart';
 import 'package:media_player/services/ads_service.dart';
+import 'package:media_player/services/connectivity_service.dart';
 import 'package:media_player/utils/app_imports.dart';
-Offset position = const Offset(0, 0);
+Offset position = Offset(245.4, 673.4);
 bool isPositionInitialized = false;
 
 void main() async {
@@ -37,11 +38,10 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider<FavouriteBloc>(
-          lazy: false, // âœ¨ àª† àª‰àª®à«‡àª°àªµàª¾àª¥à«€ àªàªª àª¶àª°à«‚ àª¥àª¤àª¾ àªœ àª•à«‹àª² àª¥àª¶à«‡
+          lazy: false,
           create: (context) => FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
         ),
         BlocProvider<HomeCountBloc>(
-          // âœ¨ àªàªª àª–à«àª²àª¤àª¾àª¨à«€ àª¸àª¾àª¥à«‡ àªœ àª²à«‹àª¡àª¿àª‚àª— àª¶àª°à«‚ àª•àª°à«€ àª¦à«‡àª¶à«‡
           create: (context) => HomeCountBloc()..add(LoadCounts()),
         ),
         ChangeNotifierProvider(create: (_) => GlobalPlayer()),
@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    AdHelper.loadAppOpenAd(); // àªªàª¹à«‡àª²à«€ àªàª¡ àª²à«‹àª¡ àª•àª°à«‹
+    AdHelper.showAppOpenAdIfAvailable();
   }
 
   @override
@@ -101,12 +101,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 1. àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
     if (state == AppLifecycleState.resumed) {
+      debugPrint("App Resumed - Showing Ad");
       AdHelper.showAppOpenAdIfAvailable();
     }
 
-    // 2. àª¸à«àªŸà«‡àªŸ àª¸à«‡àªµ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ (àª¬àª‚àª¨à«‡ àª²à«‹àªœàª¿àª• àªàª• àªœ àª«àª‚àª•à«àª¶àª¨àª®àª¾àª‚ àª°àª¾àª–à«‹)
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       GlobalPlayer().savePlayerState();
     }
@@ -120,6 +119,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
           builder: (context, localeState) {
             final savedLang = HiveService.languageCode;
             return MaterialApp(
+              builder: (context, child) {
+                return ConnectivityWrapper(child: child!);
+              },
               navigatorObservers: [routeObserver],
               debugShowCheckedModeBanner: false,
               theme: themeState.themeData,
@@ -154,5 +156,4 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
         );
       },
     );
-  }
-}
+  }}

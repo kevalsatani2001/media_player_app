@@ -1,5 +1,3 @@
-// material_controls....
-
 import 'dart:async';
 import 'package:chewie/src/center_play_button.dart';
 import 'package:chewie/src/center_seek_button.dart';
@@ -82,14 +80,13 @@ class MaterialControlsState extends State<MaterialControls>
     if (!controller.value.isInitialized) {
       return const Center(child: CustomLoader());
     }
-    // à«¨. àªµà«€àª¡àª¿àª¯à«‹ àªªà« àª²à«‡àª¯àª°àª¨à«€ àªµà«‡àª²à« àª¯à« àª àª²à«‹ (àª¸à«‡àª« àª°à«€àª¤à«‡)
     final videoValue = chewieController.videoPlayerController.value;
 
     if (videoValue.hasError) {
       return chewieController.errorBuilder?.call(
-            context,
-            videoValue.errorDescription!,
-          ) ??
+        context,
+        videoValue.errorDescription!,
+      ) ??
           const Center(child: Icon(Icons.error, color: Colors.white));
     }
     return MouseRegion(
@@ -111,8 +108,56 @@ class MaterialControlsState extends State<MaterialControls>
                 _chewieController?.bufferingBuilder?.call(context) ??
                     const Center(child: CustomLoader())
               else
-                // _buildHitArea(),
-                _buildActionBar(),
+              // _buildHitArea(),
+              // _buildActionBar(),
+
+                Positioned.fill(
+                  child: Container(
+                    height: double.infinity,
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        // àª¡àª¾àª¬à«€ àª¬àª¾àªœà« - 10, 20, 30 sec Backward
+                        Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque, // àª†àª¨àª¾àª¥à«€ àª–àª¾àª²à«€ àªœàª—à«àª¯àª¾àª®àª¾àª‚ àªªàª£ àªŸàªš àª¥àª¶à«‡
+                            onTap: cancelAndRestartTimer,
+                            onDoubleTap: () {
+                              _backwardTimer?.cancel();
+                              setState(() {
+                                _backwardSeekAmount += 10;
+                                _seekBackward();
+                              });
+                              _backwardTimer = Timer(const Duration(milliseconds: 700), () {
+                                if (mounted) setState(() => _backwardSeekAmount = 0);
+                              });
+                            },
+                            child: _buildSeekAnimation(isForward: false, amount: _backwardSeekAmount),
+                          ),
+                        ),
+                        // àªœàª®àª£à«€ àª¬àª¾àªœà« - 10, 20, 30 sec Forward
+                        Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: cancelAndRestartTimer,
+                            onDoubleTap: () {
+                              _forwardTimer?.cancel();
+                              setState(() {
+                                _forwardSeekAmount += 10;
+                                _seekForward();
+                              });
+                              _forwardTimer = Timer(const Duration(milliseconds: 700), () {
+                                if (mounted) setState(() => _forwardSeekAmount = 0);
+                              });
+                            },
+                            child: _buildSeekAnimation(isForward: true, amount: _forwardSeekAmount),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              _buildActionBar(),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
@@ -124,12 +169,8 @@ class MaterialControlsState extends State<MaterialControls>
                         chewieController.subtitle!,
                       ),
                     ),
-                  // ensure the hit area gets a finite height by expanding to
-                  // fill available space above the bottom bar. without this
-                  // the Container inside _buildHitArea receives an
-                  // unbounded vertical constraint when in full screen which
-                  // causes the layout assertion seen in the bug report.
-                  _buildHitArea(),
+                  if(!_displayBufferingIndicator)
+                    _buildHitArea(),
                   _buildBottomBar(context),
                 ],
               ),
@@ -143,10 +184,11 @@ class MaterialControlsState extends State<MaterialControls>
   bool isDarkMode = true;
 
   void performControllOperation(
-    ControlType? type,
-    OptionItem option,
-    context,
-  ) async {
+      ControlType? type,
+      OptionItem option,
+      context,
+      ) async
+  {
     switch (type) {
       case ControlType.info:
         option.onTap;
@@ -171,8 +213,8 @@ class MaterialControlsState extends State<MaterialControls>
         option.onTap;
         break;
       case ControlType.playbackSpeed:
-        // _onSpeedButtonTap;
-        // Navigator.pop(context);
+      // _onSpeedButtonTap;
+      // Navigator.pop(context);
         _onSpeedButtonTap();
         // _seekBackward;
         //_seekForward;
@@ -193,16 +235,16 @@ class MaterialControlsState extends State<MaterialControls>
       case ControlType.nextVideo:
         controller.removeListener(_updateState);
 
-        // નેક્સ્ટ વીડિયો કોલ કરો
+        // àª¨à«‡àª•à«àª¸à«àªŸ àªµà«€àª¡àª¿àª¯à«‹ àª•à«‹àª² àª•àª°à«‹
         chewieController.onNextVideo?.call();
 
-        // નવું કંટ્રોલર મેળવો (જે ChewieController માં અપડેટ થયું હશે)
+        // àª¨àªµà«àª‚ àª•àª‚àªŸà«àª°à«‹àª²àª° àª®à«‡àª³àªµà«‹ (àªœà«‡ ChewieController àª®àª¾àª‚ àª…àªªàª¡à«‡àªŸ àª¥àª¯à«àª‚ àª¹àª¶à«‡)
         controller = chewieController.videoPlayerController;
 
-        // નવા કંટ્રોલર પર લિસનર લગાવો
+        // àª¨àªµàª¾ àª•àª‚àªŸà«àª°à«‹àª²àª° àªªàª° àª²àª¿àª¸àª¨àª° àª²àª—àª¾àªµà«‹
         controller.addListener(_updateState);
 
-        // ફરીથી ઈનિશિયલાઈઝ કરો જેથી UI રિફ્રેશ થાય
+        // àª«àª°à«€àª¥à«€ àªˆàª¨àª¿àª¶àª¿àª¯àª²àª¾àªˆàª àª•àª°à«‹ àªœà«‡àª¥à«€ UI àª°àª¿àª«à«àª°à«‡àª¶ àª¥àª¾àª¯
         _initialize();
         break;
 
@@ -219,7 +261,7 @@ class MaterialControlsState extends State<MaterialControls>
         print("loop==>");
         break;
       default:
-        () {};
+            () {};
         break;
     }
   }
@@ -263,11 +305,8 @@ class MaterialControlsState extends State<MaterialControls>
 
   @override
   void dispose() {
-    // àª¬àª§àª¾ àªŸàª¾àªˆàª®àª° àªªàª¹à«‡àª²àª¾ àª¬àª‚àª§ àª•àª°à«‹
     _hideTimer?.cancel();
     _initTimer?.cancel();
-
-    // àª²àª¿àª¸àª¨àª°àª¨à«‡ àª°à«€àª®à«àªµ àª•àª°à«‹ àªœà«‡àª¥à«€ àªàª°àª° àª¨ àª†àªµà«‡
     try {
       controller.removeListener(_updateState);
     } catch (_) {}
@@ -288,13 +327,10 @@ class MaterialControlsState extends State<MaterialControls>
     _chewieController = ChewieController.of(context);
 
     if (oldController != _chewieController) {
-      // à«§. àªœà«‚àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª®àª¾àª‚àª¥à«€ àª²àª¿àª¸àª¨àª° àª¦à«‚àª° àª•àª°à«‹ àªœà«‡àª¥à«€ àª àªœà«‚àª¨à«€ àª®à«‡àª®àª°à«€àª®àª¾àª‚ àªàª°àª° àª¨ àª«à«‡àª‚àª•à«‡
       oldController?.videoPlayerController.removeListener(_updateState);
 
-      // à«¨.The most important thing is to be able to do it.
       controller = chewieController.videoPlayerController;
 
-      // to«©. àª¨àªµàª¾ àª•àª‚àªŸà« àª°à«‹àª²àª° àªªàª° àª²àª¿àª¸àª¨àª° àª²àª—àª¾àªµà«‹
       controller.removeListener(_updateState);
       controller.addListener(_updateState);
 
@@ -307,34 +343,18 @@ class MaterialControlsState extends State<MaterialControls>
     return AbsorbPointer(absorbing: isLocked, child: _buildOptionsButton());
   }
 
-  /*Widget _buildActionBar() {
-    return AbsorbPointer(
-      absorbing: isLocked,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // _buildSubtitleToggle(),
-          _buildOptionsButton(),
-           // <-- Lock button added
-        ],
-      ),
-    );
-  }*/
-
   Widget _buildLockButton() {
     return AnimatedOpacity(
       // hideStuff true opacity 0 (default), 1.0 (default)
       opacity: notifier.hideStuff ? 0.0 : 1.0,
       duration: const Duration(milliseconds: 300),
       child: AbsorbPointer(
-        // notifier controls opacity àª¤à«‡ àª®àª¾àªŸà«‡
         absorbing: notifier.hideStuff,
         child: GestureDetector(
           onTap: () {
             setState(() {
               isLocked = !isLocked; // Toggle Lock
             });
-            // Toggle Lock is a gesture that is used to indicate that the device is locked. àªœà«‹ àª¤àª®à«‡ àªˆàªšà« àª›à«‹ àª•à«‡ àª²à«‹àª• àª•àª°à« àª¯àª¾ àªªàª›à«€ àª•àª‚àªŸà« àª°à«‹àª²à« àª¸ àª¤àª°àª¤ àª›à« àªªàª¾àªˆ àªœàª¾àª¯:
             if (isLocked) {
               cancelAndRestartTimer();
             }
@@ -343,8 +363,8 @@ class MaterialControlsState extends State<MaterialControls>
             height: 40,
             width: 40,
             src: isLocked
-                ? "assets/svg_icon/ic_lock.svg" // àª²à«‹àª• àª¹à«‹àª¯ àª¤à« àª¯àª¾àª°à«‡ àª²à«‹àª• àª†àªˆàª•à«‹àª¨
-                : "assets/svg_icon/ic_unlock.svg", // àª…àª¨àª²à«‹àª• àª¹à«‹àª¯ àª¤à« àª¯àª¾àª°à«‡ àª…àª¨àª²à«‹àª• àª†àªˆàª•à«‹àª¨
+                ? "assets/svg_icon/ic_lock.svg"
+                : "assets/svg_icon/ic_unlock.svg",
           ),
         ),
       ),
@@ -353,17 +373,6 @@ class MaterialControlsState extends State<MaterialControls>
 
   List<OptionItem> _buildOptions(BuildContext context) {
     final options = <OptionItem>[
-      // OptionItem(
-      // onTap: (context) async {
-      // Navigator.pop(context);
-      // _onSpeedButtonTap();
-      //   },
-      //   iconImage: "assets/svg_icon/ic_on.svg",
-      //   iconData: Icons.speed,
-      //   title:
-      //       chewieController.optionsTranslation?.playbackSpeedButtonText ??
-      //       'Playback speed',
-      // ),
     ];
 
     if (chewieController.additionalOptions != null &&
@@ -394,7 +403,7 @@ class MaterialControlsState extends State<MaterialControls>
               builder: (context) => OptionsDialog(
                 options: _buildOptions(context),
                 cancelButtonText:
-                    chewieController.optionsTranslation?.cancelButtonText,
+                chewieController.optionsTranslation?.cancelButtonText,
               ),
             );
           }
@@ -430,36 +439,6 @@ class MaterialControlsState extends State<MaterialControls>
                             );
                           },
                           child: AppImage(src: getIcon(option.controlType)),
-
-                          // Container(
-                          //   padding: const EdgeInsets.symmetric(
-                          //       horizontal: 10, vertical: 6),
-                          //   decoration: BoxDecoration(
-                          //     color: Colors.white.withOpacity(0.1),
-                          //     borderRadius: BorderRadius.circular(6),
-                          //   ),
-                          //   child:
-                          //
-                          //
-                          //   Row(
-                          //     mainAxisSize: MainAxisSize.min,
-                          //     children: [
-                          //       Icon(
-                          //         option.iconData,
-                          //         size: 16,
-                          //         color: Colors.white,
-                          //       ),
-                          //       const SizedBox(width: 4),
-                          //       Text(
-                          //         option.title,
-                          //         style: const TextStyle(
-                          //           color: Colors.white,
-                          //           fontSize: 12,
-                          //         ),
-                          //       ),
-                          //     ],
-                          //   ),
-                          // ),
                         );
                       }).toList(),
                     ),
@@ -471,65 +450,7 @@ class MaterialControlsState extends State<MaterialControls>
             ),
           ),
         ),
-
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   children: [
-        //     // AppImage(src: "assets/svg_icon/ic_on.svg"),
-        //     AppImage(src: "assets/svg_icon/ic_on.svg"),
-        //
-        //     LayoutBuilder(
-        //       builder: (context, constraints) {
-        //         double boxSize = constraints.maxWidth / 22;
-        //
-        //         return Row(
-        //           children: List.generate(
-        //             20,
-        //                 (index) => Container(
-        //               height: boxSize,
-        //               width: boxSize,
-        //               color: Colors.red,
-        //             ),
-        //           ),
-        //         );
-        //       },
-        //     ),
-        //
-        //     AppImage(src: "assets/svg_icon/ic_off.svg"),
-        //
-        //     // AppImage(src: "assets/svg_icon/ic_off.svg"),
-        //   ],
-        // ),
       ),
-
-      // IconButton(
-      //   onPressed: () async {
-      //     _hideTimer?.cancel();
-      //
-      //     if (chewieController.optionsBuilder != null) {
-      //       await chewieController.optionsBuilder!(
-      //         context,
-      //         _buildOptions(context),
-      //       );
-      //     } else {
-      //       await showModalBottomSheet<OptionItem>(
-      //         context: context,
-      //         isScrollControlled: true,
-      //         useRootNavigator: chewieController.useRootNavigator,
-      //         builder: (context) => OptionsDialog(
-      //           options: _buildOptions(context),
-      //           cancelButtonText:
-      //           chewieController.optionsTranslation?.cancelButtonText,
-      //         ),
-      //       );
-      //     }
-      //
-      //     if (_latestValue.isPlaying) {
-      //       _startHideTimer();
-      //     }
-      //   },
-      //   icon: const Icon(Icons.more_vert, color: Colors.white),
-      // ),
     );
   }
 
@@ -573,106 +494,56 @@ class MaterialControlsState extends State<MaterialControls>
       opacity: notifier.hideStuff ? 0.0 : 1.0,
       duration: const Duration(milliseconds: 300),
       child: Container(
-        decoration: BoxDecoration(color: backgroundColor.withOpacity(0.95)),
-        height: barHeight + (chewieController.isFullScreen ? 5.0 : 0),
+        width: double.infinity,
+        decoration: BoxDecoration(color: backgroundColor.withOpacity(0.40)),
+        height: barHeight + (chewieController.isFullScreen ? 2.0 : 0),
         padding: EdgeInsets.only(
           left: 20,
           right: 20,
           bottom: !chewieController.isFullScreen ? 0.0 : 0,
         ),
-        child: SafeArea(
-          top: false,
-          bottom: chewieController.isFullScreen,
-          minimum: chewieController.controlsSafeAreaMinimum,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    // if (chewieController.isLive)
-                    //   const Expanded(child: Text('LIVE'))
-                    // else
-                    //   _buildPosition(iconColor),
-                    // if (chewieController.allowMuting)
-                    // _buildMuteButton(controller),
-                    // const Spacer(),
-                    // if (chewieController.allowFullScreen) _buildExpandButton(),
-                    // IconButton(
-                    //   icon: Icon(
-                    //     Icons.repeat,
-                    //     color: loop ? Colors.blue : Colors.white,
-                    //   ),
-                    //   onPressed: () async {
-                    //     setState(() {
-                    //       loop = !loop;
-                    //     });
-                    //     await chewieController.setLooping(loop);
-                    //   },
-                    // ),
-
-                    // IconButton(
-                    //   icon: const Icon(Icons.replay_10, color: Colors.white),
-                    //   onPressed: () => _seekBackward,
-                    // ),
-                    // IconButton(
-                    //   icon: const Icon(Icons.forward_10, color: Colors.white),
-                    //   onPressed: () => _seekForward,
-                    // ),
-
-                    // IconButton(
-                    //   icon: Icon(
-                    //     Icons.shuffle,
-                    //     color: isShuffle ? Colors.blue : Colors.black54,
-                    //   ),
-                    //   onPressed: () {
-                    //     print("before== ====== $isShuffle");
-                    //     setState(() {
-                    //       isShuffle = !isShuffle;
-                    //
-                    //     });
-                    //     chewieController.onSufflePressed.call();
-                    //     print("after== ====== $isShuffle");
-                    //     // print("before ====== ${materialControlsState.isShuffle}");
-                    //   },
-                    // ),
-                  ],
-                ),
-              ),
-              SizedBox(height: chewieController.isFullScreen ? 15.0 : 0),
-              if (!chewieController.isLive)
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        Text(
-                          formatDuration(videoPlayerLatestValue.position),
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: textColor,
-                            fontWeight: FontWeight.w400,
-                          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Flexible(
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: <Widget>[
+            //     ],
+            //   ),
+            // ),
+            // SizedBox(height: chewieController.isFullScreen ? 15.0 : 0),
+            if (!chewieController.isLive)
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        formatDuration(videoPlayerLatestValue.position),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: textColor,
+                          fontWeight: FontWeight.w400,
                         ),
-                        SizedBox(width: 10),
-                        _buildProgressBar(),
-                        SizedBox(width: 10),
-                        Text(
-                          formatDuration(videoPlayerLatestValue.duration),
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: textColor,
-                            fontWeight: FontWeight.w400,
-                          ),
+                      ),
+                      SizedBox(width: 10),
+                      _buildProgressBar(),
+                      SizedBox(width: 10),
+                      Text(
+                        formatDuration(videoPlayerLatestValue.duration),
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: textColor,
+                          fontWeight: FontWeight.w400,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -728,22 +599,61 @@ class MaterialControlsState extends State<MaterialControls>
       ),
     );
   }
+/*
+    Widget _buildHitArea() {
+    return Expanded(
+      child: Row(
+        children: [
+          // àª¡àª¾àª¬à«€ àª¬àª¾àªœà«àª¨à«‹ àª­àª¾àª— (Double Tap for Backward)
+          Expanded(
+            child: GestureDetector(
+              onTap: () => cancelAndRestartTimer(),
+              onDoubleTap: _seekBackward, // 10 sec àªªàª¾àª›àª³
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+
+          // àªµàªšà«àªšà«‡àª¨à«‹ àª­àª¾àª— (Play/Pause àª¬àªŸàª¨ àª®àª¾àªŸà«‡)
+          AbsorbPointer(
+            absorbing: isLocked,
+            child: CenterPlayButton(
+              backgroundColor: const Color(0XFF3D57F9),
+              iconColor: Colors.white,
+              isFinished: (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration),
+              isPlaying: controller.value.isPlaying,
+              show: !notifier.hideStuff,
+              onPressed: _playPause,
+            ),
+          ),
+
+          // àªœàª®àª£à«€ àª¬àª¾àªœà«àª¨à«‹ àª­àª¾àª— (Double Tap for Forward)
+          Expanded(
+            child: GestureDetector(
+              onTap: () => cancelAndRestartTimer(),
+              onDoubleTap: _seekForward, // 10 sec àª†àª—àª³
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+   */
+  int _backwardSeekAmount = 0;
+  int _forwardSeekAmount = 0;
+  Timer? _backwardTimer;
+  Timer? _forwardTimer;
 
   Widget _buildHitArea() {
-    return GestureDetector(
-      onTap: () {
-        // ટેપ કરવા પર કંટ્રોલ્સ હાઈડ/શો કરવા માટે
-        cancelAndRestartTimer();
-      },
-      child: Container(
-        alignment: Alignment.center,
-        color: Colors.transparent, // આખી સ્ક્રીન પર ટેપ ડિટેક્ટ કરવા માટે
+    return IgnorePointer(
+      ignoring: notifier.hideStuff, // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²à«àª¸ àª¹àª¾àªˆàª¡ àª¹à«‹àª¯ àª¤à«‹ àª¬àªŸàª¨ àªªàª° àª•à«àª²àª¿àª• àª¨ àª¥àª¾àª¯
+      child: AnimatedOpacity(
+        opacity: notifier.hideStuff ? 0.0 : 1.0,
+        duration: const Duration(milliseconds: 300),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          // FittedBox ને બદલે સીધું Row વાપરો અથવા જો સ્કેલિંગ જોઈતું હોય તો Spacer કાઢી નાખો
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center, // બટનોને સેન્ટરમાં રાખવા માટે
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildLockButton(),
               const SizedBox(width: 20),
@@ -755,7 +665,7 @@ class MaterialControlsState extends State<MaterialControls>
                     iconData: Icons.replay_10,
                     backgroundColor: primaryColor,
                     iconColor: Colors.white,
-                    show: !notifier.hideStuff,
+                    show: true, // àª…àª¹à«€àª‚ true àª°àª¾àª–àªµà«àª‚ àª•àª¾àª°àª£ àª•à«‡ àªªà«‡àª°à«‡àª¨à«àªŸàª®àª¾àª‚ Opacity àª›à«‡
                     onPressed: _seekBackward,
                   ),
                 ),
@@ -769,7 +679,7 @@ class MaterialControlsState extends State<MaterialControls>
                   iconColor: Colors.white,
                   isFinished: (videoPlayerLatestValue.position >= videoPlayerLatestValue.duration),
                   isPlaying: controller.value.isPlaying,
-                  show: !notifier.hideStuff,
+                  show: true,
                   onPressed: _playPause,
                 ),
               ),
@@ -783,7 +693,7 @@ class MaterialControlsState extends State<MaterialControls>
                     iconData: Icons.forward_10,
                     backgroundColor: const Color(0XFF3D57F9),
                     iconColor: Colors.white,
-                    show: !notifier.hideStuff,
+                    show: true,
                     onPressed: _seekForward,
                   ),
                 ),
@@ -793,6 +703,47 @@ class MaterialControlsState extends State<MaterialControls>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSeekAnimation({required bool isForward, required int amount}) {
+    if (amount == 0) return const SizedBox.expand();
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // GIF àªœà«‡àªµà«àª‚ àªàª¨àª¿àª®à«‡àª¶àª¨ àª†àªªàªµàª¾ àª®àª¾àªŸà«‡ TweenAnimationBuilder
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: (value * 2 % 1.0), // àª†àª¨àª¾àª¥à«€ àª†àªˆàª•àª¨ àª¬à«àª²àª¿àª‚àª• àª¥àª¶à«‡
+                child: Transform.scale(
+                  scale: 0.8 + (value * 0.4), // àª¥à«‹àª¡à«àª‚ àªà«‚àª®-àªˆàª¨ àªàª¨àª¿àª®à«‡àª¶àª¨
+                  child: Icon(
+                    isForward ? Icons.fast_forward : Icons.fast_rewind,
+                    color: Colors.white,
+                    size: 45,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "$amount Seconds",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              shadows: [Shadow(blurRadius: 5, color: Colors.black)],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -874,14 +825,13 @@ class MaterialControlsState extends State<MaterialControls>
 
   void cancelAndRestartTimer() {
     if (!mounted)
-      return; // àª† àª²àª¾àªˆàª¨ àª¸à«Œàª¥à«€ àª®àª¹àª¤à«àªµàª¨à«€ àª›à«‡
+      return;
 
     _hideTimer?.cancel();
     _startHideTimer();
 
     setState(() {
       try {
-        // àªšà«‡àª• àª•àª°à«‹ àª•à«‡ notifier àª–àª°à«‡àª–àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª›à«‡ àª…àª¨à«‡ àª¡àª¿àª¸à«àªªà«‹àª àª¨àª¥à«€ àª¥àª¯à«‹
         if (mounted) {
           notifier.hideStuff = false;
         }
@@ -913,7 +863,7 @@ class MaterialControlsState extends State<MaterialControls>
   Future<void> _initialize() async {
     _subtitleOn =
         chewieController.showSubtitles &&
-        (chewieController.subtitle?.isNotEmpty ?? false);
+            (chewieController.subtitle?.isNotEmpty ?? false);
     controller.addListener(_updateState);
 
     _updateState();
@@ -935,32 +885,28 @@ class MaterialControlsState extends State<MaterialControls>
     if (!mounted) return;
 
     setState(() {
-      // à«§. Notifier àªšà«‡àª•
       try {
         if (mounted) notifier.hideStuff = true;
       } catch (e) {
         debugPrint("Notifier disposed");
       }
 
-      // à«¨. ChewieController àªšà«‡àª• - àª† àª¸à«Œàª¥à«€ àª®àª¹àª¤à«àªµàª¨à«àª‚ àª›à«‡
       try {
-        // chewieController (getter) àªµàª¾àªªàª°àªµàª¾àª¨à«‡ àª¬àª¦àª²à«‡ _chewieController (variable) àªµàª¾àªªàª°à«‹
         if (_chewieController != null) {
           _chewieController!.toggleFullScreen();
         }
       } catch (e) {
         debugPrint("ChewieController was already disposed, ignoring toggle.");
-        // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª¡àª¿àª¸à«àªªà«‹àª àª¹à«‹àª¯, àª¤à«‹ àª®à«‡àª¨à«àª¯à«àª…àª²à«€ àªªà«‹àªª àª•àª°à«‹ (àªœà«‹ àª«à«‚àª² àª¸à«àª•à«àª°à«€àª¨àª®àª¾àª‚ àª«àª¸àª¾àªˆ àª—àª¯àª¾ àª¹à«‹àª¯ àª¤à«‹)
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
         }
-        return; // àª†àª—àª³ àªµàª§àª¶à«‹ àª¨àª¹à«€àª‚
+        return;
       }
 
       _showAfterExpandCollapseTimer?.cancel();
       _showAfterExpandCollapseTimer = Timer(
         const Duration(milliseconds: 300),
-        () {
+            () {
           if (mounted) {
             setState(() {
               cancelAndRestartTimer();
@@ -971,11 +917,9 @@ class MaterialControlsState extends State<MaterialControls>
     });
   }
 
-  // material_controls.dart àª®àª¾àª‚ _playPause àª®à«‡àª¥àª¡ àª¸à«àª§àª¾àª°à«‹
   void _playPause() {
     if (!_isControllerAlive)
-      return; // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª®àª°à«€ àª—àª¯à«‹ àª¹à«‹àª¯ àª¤à«‹ àª…àª¹à«€àª‚àª¥à«€ àªœ àªªàª¾àª›àª¾ àªµàª³à«€ àªœàª¾àª“
-
+      return;
     final videoController = chewieController.videoPlayerController;
     final bool isFinished =
         videoPlayerLatestValue.position >= videoPlayerLatestValue.duration;
@@ -984,7 +928,6 @@ class MaterialControlsState extends State<MaterialControls>
       if (mounted) notifier.hideStuff = false;
       _hideTimer?.cancel();
 
-      // àª…àª¤à«àª¯àª‚àª¤ àª¸à«àª°àª•à«àª·àª¿àª¤ àª°à«€àª¤à«‡ Pause àª•àª°à«‹
       chewieController.videoPlayerController.pause();
     } else {
       cancelAndRestartTimer();
@@ -1000,8 +943,6 @@ class MaterialControlsState extends State<MaterialControls>
 
   bool get _isControllerAlive {
     try {
-      // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª¡àª¿àª¸à«àªªà«‹àª àª¹àª¶à«‡ àª¤à«‹ .value àªàª•à«àª¸à«‡àª¸ àª•àª°àª¤àª¾ àªœ àªàª°àª° àª†àªµàª¶à«‡
-      // àª…àª¨à«‡ àª†àªªàª£à«‡ àªàª¨à«‡ catch àª®àª¾àª‚ àªªàª•àª¡à«€ àª²àªˆàª¶à«àª‚.
       return mounted &&
           _chewieController != null &&
           chewieController.videoPlayerController.value.isInitialized;
@@ -1011,7 +952,6 @@ class MaterialControlsState extends State<MaterialControls>
   }
 
   void _seekRelative(Duration relativeSeek) {
-    // àª¸à«€àª• àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ àªªàª£ àªªàª¹à«‡àª²àª¾ àªšà«‡àª• àª•àª°à«‹
     if (!_isControllerAlive) return;
 
     cancelAndRestartTimer();
@@ -1072,7 +1012,7 @@ class MaterialControlsState extends State<MaterialControls>
           _startHideTimer();
         },
         colors:
-            chewieController.materialProgressColors ??
+        chewieController.materialProgressColors ??
             ChewieProgressColors(
               playedColor: Theme.of(context).colorScheme.secondary,
               handleColor: Theme.of(context).colorScheme.secondary,

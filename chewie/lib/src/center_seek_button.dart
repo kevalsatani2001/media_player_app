@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CenterSeekButton extends StatelessWidget {
@@ -36,11 +37,15 @@ class CenterSeekButton extends StatelessWidget {
               ),
               // Always set the iconSize on the IconButton, not on the Icon itself:
               // https://github.com/flutter/flutter/issues/52980
-              child: IconButton(
-                iconSize: iconSize,
-                padding: const EdgeInsets.all(8.0),
-                icon: Icon(iconData, color: iconColor),
+              child: CupertinoButton(
+                padding: const EdgeInsets.all(8),
                 onPressed: onPressed,
+                child: Padding(
+                  padding: const EdgeInsets.all(0),
+                  child: Icon(iconData, color: iconColor,
+                    size: iconSize,
+                  ),
+                ),
               ),
             ),
           ),

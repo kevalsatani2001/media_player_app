@@ -1,6 +1,3 @@
-
-
-
 import 'dart:ui' as ui;
 
 import '../utils/app_imports.dart';
@@ -32,7 +29,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     //   final size = MediaQuery.of(context).size;
     //   setState(() {
-    //     // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â 150x120 Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
+    //     // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¹Ã¢â‚¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â 150x120 ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡, ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¤ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹
     //     position = Offset(size.width - 170, size.height - 250);
     //   });
     // });
@@ -56,17 +53,20 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       final size = MediaQuery.of(context).size;
       final bool isVideo = player.currentType == "video";
 
-      // Type mujab width ane height
-      final double pWidth = isVideo ? 150.0 : 210.0;
-      final double pHeight = isVideo ? 100.0 : 70.0;
-      const double margin = 16.0;
+
+      // // Type mujab width ane height
+      // final double pWidth = isVideo ? 150.0 : 210.0;
+      // final double pHeight = isVideo ? 100.0 : 70.0;
+      // const double margin = 16.0;
 
       setState(() {
         // Right-Bottom corner starting position (Video/Audio banne mate alag calculate thase)
-        position = Offset(
-            size.width - pWidth - margin,
-            size.height - pHeight - 150 // Bottom bar thi thodu upar
-        );
+        if(isVideo){
+          position = Offset(255.1, 655.1);
+        }
+        else{
+          position= Offset(185.4, 703.4);
+        }
         isPositionInitialized = true;
       });
     }
@@ -78,7 +78,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     super.dispose();
   }
 
-  // SmartMiniPlayer.dart àª¨àª¾ build àª®àª¾àª‚ àª† àª°à«€àª¤à«‡ àª¬àª¦àª²à«‹:
+  // SmartMiniPlayer.dart Ã ÂªÂ¨Ã ÂªÂ¾ build Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¹:
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +93,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         final double pWidth = isVideo ? 150.0 : 210.0;
         const double margin = 16.0;
 
-        // ðŸŸ¢ Logic: Jo user type change kare (Video -> Audio) ane width vadhe,
+        // Ã°Å¸Å¸Â¢ Logic: Jo user type change kare (Video -> Audio) ane width vadhe,
         // to automatic check kari ne screen ni andar push karo
         if (isPositionInitialized && (position.dx + pWidth > size.width)) {
           Future.delayed(Duration.zero, () {
@@ -384,7 +384,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
   void _snapToClosestCorner(Size screenSize) {
     final padding = MediaQuery.of(context).padding;
-    final playerSize = _getCurrentPlayerSize(); // ðŸŸ¢ Dynamic Size
+    final playerSize = _getCurrentPlayerSize(); // Ã°Å¸Å¸Â¢ Dynamic Size
     const double margin = 16.0;
 
     double finalX = (position.dx + playerSize.width / 2 < screenSize.width / 2)
@@ -401,6 +401,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     setState(() {
       position = Offset(finalX, finalY);
     });
+    print("f pos==> $position");
   }
 
   Widget _buildAudioMiniPlayer({
@@ -528,7 +529,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       },
     );
   }
-
   Widget _buildVideoMiniPlayer({
     required Size size,
     required bool isSmall,
@@ -567,18 +567,18 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               color:
-              Colors.black, // Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¹Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÅ¸ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂªÃ Â«â€¡Ã ÂªÂ¸ Ã ÂªÂ¨ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂÃ ÂªÅ¸Ã ÂªÂ²Ã Â«â€¡ Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã Âªâ€¢ Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡
+              Colors.black, // Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¸ Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡
             ),
             clipBehavior: Clip.antiAlias,
-            // Ã Âªâ€“Ã Â«â€šÃ ÂªÂ£Ã ÂªÂ¾ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+            // Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚Â«Ã¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â£Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡
             child: Stack(
               children: [
-                // 1. Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂ®Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡
+                // 1. Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡
                 Positioned.fill(
                   child: ImageFiltered(
                     imageFilter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                     child: Transform.scale(
-                      scale: 1.8, // Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂµÃ ÂªÂ§Ã Â«Â Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â€¹ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã Â«â€¹ Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«â€¡Ã ÂªÂ²
+                      scale: 1.8, // Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â§Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â²
                       child: Center(
                         child: AspectRatio(
                           aspectRatio: value.aspectRatio,
@@ -592,12 +592,12 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   ),
                 ),
 
-                // 2. Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€œÃ ÂªÂµÃ ÂªÂ°Ã ÂªÂ²Ã Â«â€¡ (Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ° Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡)
+                // 2. Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Å“Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡ (Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡)
                 Positioned.fill(
                   child: Container(color: Colors.black.withOpacity(0.3)),
                 ),
 
-                // 3. Ã ÂªÂ®Ã Â«â€¡Ã ÂªË†Ã ÂªÂ¨ Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ (Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ°Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡)
+                // 3. Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã¢â‚¬Â¹ (Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡)
                 Center(
                   child: AspectRatio(
                     aspectRatio: value.aspectRatio,
@@ -605,7 +605,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   ),
                 ),
 
-                // 4. Ã Âªâ€¢Ã Âªâ€šÃ ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â€¹Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¸ (Close Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Play/Pause)
+                // 4. Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¸ (Close Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Play/Pause)
                 Positioned(
                   top: 0,
                   left: 0,
