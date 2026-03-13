@@ -1,29 +1,56 @@
-import 'package:just_audio_background/just_audio_background.dart'
-as bg;
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:just_audio_background/just_audio_background.dart' as bg;
 import '../models/media_item.dart' as my;
 import 'package:just_audio/just_audio.dart' hide PlayerState;
 import '../utils/app_imports.dart';
+import 'connectivity_service.dart';
+import 'notification_service.dart';
 
 class GlobalPlayer extends ChangeNotifier {
   static final GlobalPlayer _instance = GlobalPlayer._internal();
 
   factory GlobalPlayer() => _instance;
+  StreamSubscription<List<ConnectivityResult>>? _networkSubscription;
+  bool _wasPlayingBeforeOffline = false;
 
   GlobalPlayer._internal() {
     _initAudioSession();
     _listenToJustAudioEvents();
+    _listenToNetworkChanges();
   }
 
-  // àªªà«àª²à«‡àª¯àª°à«àª¸
+  void _listenToNetworkChanges() {
+    _networkSubscription = Connectivity().onConnectivityChanged.listen((
+        results,
+        ) {
+      bool isOffline = results.contains(ConnectivityResult.none);
+
+      if (isOffline) {
+        debugPrint("GlobalPlayer: Internet Lost!");
+
+        if (isPlaying) {
+          _wasPlayingBeforeOffline = true;
+          pause();
+        }
+      } else {
+        debugPrint("GlobalPlayer: Internet Restored!");
+
+        if (_wasPlayingBeforeOffline) {
+          resume();
+          _wasPlayingBeforeOffline = false;
+        }
+      }
+    });
+  }
+
   final AudioPlayer audioPlayer = AudioPlayer();
   VideoPlayerController? videoController;
   ChewieController? chewieController;
 
-  // àª¡à«‡àªŸàª¾ àªµà«‡àª°à«€àªàª¬àª²à«àª¸
   List<my.MediaItem> queue = [];
   int currentIndex = -1;
   AssetEntity? currentEntity;
-  String? currentType; // 'audio' àª…àª¥àªµàª¾ 'video'
+  String? currentType;
   bool isShuffle = false;
   bool _isLoading = false;
 
@@ -34,10 +61,8 @@ class GlobalPlayer extends ChangeNotifier {
     notifyListeners();
   }
 
-  // à«§. Just Audio àª¨àª¾ àª‡àªµà«‡àª¨à«àªŸà«àª¸ àª¸àª¾àª‚àª­àª³à«‹ (UI àª…àªªàª¡à«‡àªŸ àª®àª¾àªŸà«‡)
   void _listenToJustAudioEvents() {
     audioPlayer.currentIndexStream.listen((index) {
-      // àªœà«‹ àªªà«àª²à«‡àª¯àª° àª•à«àª²à«‹àª àª¥àªˆ àª—àª¯à«‹ àª¹à«‹àª¯ àª¤à«‹ àªªà«àª°à«‹àª¸à«‡àª¸ àª¨ àª•àª°àªµà«€
       if (currentIndex == -1) return;
 
       if (index != null && index < queue.length) {
@@ -50,9 +75,28 @@ class GlobalPlayer extends ChangeNotifier {
       }
     });
 
-    audioPlayer.playerStateStream.listen((state) {
-      if (currentIndex == -1) return; // àªªà«àª²à«‡àª¯àª° àª¬àª‚àª§ àª¹à«‹àª¯ àª¤à«‹ àª“àªŸà«‹-àª¨à«‡àª•à«àª¸à«àªŸ àª¨ àª•àª°àªµà«àª‚
+    audioPlayer.playingStream.listen((isPlaying) async {
+      if (isPlaying) {
+        bool isOnline = await NetworkInfo.isConnected();
+        if (!isOnline) {
+          final currentContext = NavigatorKey.root.currentContext;
+          // à«§. àª¤àª°àª¤ àªœ àªªà«‹àª àª•àª°à«‹
+          await audioPlayer.pause();
 
+          // à«¨. àªªà«‹àªàª¿àª¶àª¨àª¨à«‡ àªªàª¾àª›à«€ àª¤à«àª¯àª¾àª‚ àªœ àª²àªˆ àªœàª¾àª“ àªœà«àª¯àª¾àª‚ àª¹àª¤à«€ (àªœà«‡àª¥à«€ à«§ àª¸à«‡àª•àª¨à«àª¡ àª†àª—àª³ àª¨ àªµàª§à«‡)
+          // àª†àª¨àª¾àª¥à«€ àªªà«‡àª²à«€ à«§ àª¸à«‡àª•àª¨à«àª¡àª¨à«€ àªªà«àª²à«‡ àª¥àªµàª¾àª¨à«€ àª…àª¸àª° àªœàª¤à«€ àª°àª¹à«‡àª¶à«‡
+          await audioPlayer.seek(audioPlayer.position);
+
+          await AppNotificationService.showNoInternetNotification(
+            title: "${currentContext?.tr("noInternetTitle")}",
+            bodyTitle: "${currentContext?.tr("noInternetBody")}",
+          );
+        }
+      }
+    });
+
+    audioPlayer.playerStateStream.listen((state) {
+      if (currentIndex == -1) return;
       if (state.processingState == ProcessingState.completed) {
         playNext();
       }
@@ -67,13 +111,9 @@ class GlobalPlayer extends ChangeNotifier {
     if (currentType == 'audio') {
       await audioPlayer.setShuffleModeEnabled(isShuffle);
     } else {
-      // àªµà«€àª¡àª¿àª¯à«‹ àª®àª¾àªŸà«‡ àªœà«‹ àª¶àª«àª² àª•àª°àªµà«àª‚ àª¹à«‹àª¯ àª¤à«‹ àª²àª¿àª¸à«àªŸàª¨à«‡ àª®à«‡àª¨à«àª¯à«àª…àª²à«€ àª¶àª«àª² àª•àª°àªµà«àª‚ àªªàª¡à«‡
       if (isShuffle) {
         queue.shuffle();
-      } else {
-        // àªªàª¾àª›à«àª‚ àª“àª°àª¿àªœàª¿àª¨àª² àª¸àª¿àª•à«àªµàª¨à«àª¸àª®àª¾àª‚ àª²àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡ àª¡à«‡àªŸàª¾ àª°àª¿-àª²à«‹àª¡ àª•àª°àªµà«‹ àªªàª¡à«‡
-        // (àª¨à«‹àª‚àª§: àª† àª®àª¾àªŸà«‡ àª“àª°àª¿àªœàª¿àª¨àª² àª²àª¿àª¸à«àªŸàª¨à«‹ àªµà«‡àª°à«€àªàª¬àª² àª¸àª¾àªšàªµàªµà«‹ àªªàª¡à«‡)
-      }
+      } else {}
     }
     notifyListeners();
   }
@@ -82,25 +122,21 @@ class GlobalPlayer extends ChangeNotifier {
   Future<void> toggleLoopMode() async {
     if (currentType == 'audio') {
       if (loopMode == LoopMode.off) {
-        loopMode = LoopMode.all; // àª†àª–à«àª‚ àª²àª¿àª¸à«àªŸ àª²à«‚àªª àª¥àª¶à«‡
+        loopMode = LoopMode.all;
       } else if (loopMode == LoopMode.all) {
-        loopMode = LoopMode.one; // àªàª• àªœ àª—à«€àª¤ àª²à«‚àªª àª¥àª¶à«‡
+        loopMode = LoopMode.one;
       } else {
-        loopMode = LoopMode.off; // àª²à«‚àªª àª¬àª‚àª§
+        loopMode = LoopMode.off;
       }
       await audioPlayer.setLoopMode(loopMode);
     } else {
-      // àªµà«€àª¡àª¿àª¯à«‹ àª®àª¾àªŸà«‡ àª²à«‚àªª àª²à«‹àªœàª¿àª• (àª«àª•à«àª¤ àªàª• àªµà«€àª¡àª¿àª¯à«‹ àª²à«‚àªª àª®àª¾àªŸà«‡)
       bool currentLoop = chewieController?.looping ?? false;
-      chewieController?.dispose(); // àªœà«àª¨àª¾ àª•àª¨à«àªŸà«àª°à«‹àª²àª°àª¨à«‡ àª°àª¿àª«à«àª°à«‡àª¶ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
-
-      // àª¨àªµà«àª‚ àª²à«‹àªœàª¿àª• àª¸à«‡àªŸ àª•àª°à«‹ (àª† àªµà«€àª¡àª¿àª¯à«‹ àªªà«àª²à«‡àª¯àª°àª¨àª¾ àª•àª¨à«àªŸà«àª°à«‹àª²àª° àªªàª° àª†àª§àª¾àª°àª¿àª¤ àª›à«‡)
+      chewieController?.dispose();
       videoController?.setLooping(!currentLoop);
     }
     notifyListeners();
   }
 
-  // à«¨. MAIN ENTRY POINT: àª²àª¿àª¸à«àªŸ àª…àª¨à«‡ ID àª¦à«àªµàª¾àª°àª¾ àªªà«àª²à«‡ àª•àª°à«‹
   Future<void> initAndPlay({
     required List<AssetEntity> entities,
     required String selectedId,
@@ -123,17 +159,15 @@ class GlobalPlayer extends ChangeNotifier {
           currentIndex = newIndex;
           currentEntity = await AssetEntity.fromId(entities[newIndex].id);
 
-          // àª†àª–à«àª‚ àª¸à«‡àªŸàª…àªª àª«àª°à«€àª¥à«€ àª•àª°àªµàª¾àª¨à«‡ àª¬àª¦àª²à«‡ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àª¤à«‡ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªªàª° àªœàª¾àªµ
           await audioPlayer.seek(Duration.zero, index: currentIndex);
           audioPlayer.play();
 
           _isLoading = false;
           notifyListeners();
-          return; // àª…àª¹à«€àª‚àª¥à«€ àªœ àª¬àª¹àª¾àª° àª¨à«€àª•àª³à«€ àªœàª¾àªµ
+          return;
         }
         await _clearPreviousPlayer();
 
-        // à«ª. àª¡à«‡àªŸàª¾ àª¸à«‡àªŸ àª•àª°à«‹
         queue = await _convertEntitiesToMediaItems(entities);
         currentIndex = newIndex;
         currentType = queue[currentIndex].type;
@@ -141,7 +175,7 @@ class GlobalPlayer extends ChangeNotifier {
 
         if (currentType == 'audio') {
           print("ty is ===> ------>  audio");
-          await _setupAudioQueue(); // àª†àª®àª¾àª‚ initialIndex: currentIndex àª›à«‡ àªœ
+          await _setupAudioQueue();
           audioPlayer.play();
         } else {
           print("ty is ===> ------>  video");
@@ -168,27 +202,23 @@ class GlobalPlayer extends ChangeNotifier {
       );
     }).toList();
 
-    // àª…àª¹à«€àª‚ currentIndex àª¬àª°àª¾àª¬àª° àª¹à«‹àªµà«‹ àªœà«‹àªˆàª
     await audioPlayer.setAudioSource(
       ConcatenatingAudioSource(children: audioSources),
-      initialIndex: currentIndex, // àª† àª²àª¾àªˆàª¨ àª¬àª°àª¾àª¬àª° àª¹à«‹àªµà«€ àªœà«‹àªˆàª
+      initialIndex: currentIndex,
       initialPosition: Duration.zero,
     );
   }
 
-  // GlobalPlayer class àª¨à«€ àª…àª‚àª¦àª°
   Future<void> refreshCurrentEntity() async {
     if (currentEntity != null) {
-      // obtainForNewProperties() àª²à«‡àªŸà«‡àª¸à«àªŸ àª¸àª¿àª¸à«àªŸàª® àª¸à«àªŸà«‡àªŸ (Favorite status) àª²àª¾àªµàª¶à«‡
       final updatedEntity = await currentEntity!.obtainForNewProperties();
       if (updatedEntity != null) {
         currentEntity = updatedEntity;
-        notifyListeners(); // àª† MiniPlayer àª¨àª¾ AnimatedBuilder àª¨à«‡ àªŸà«àª°àª¿àª—àª° àª•àª°àª¶à«‡
+        notifyListeners();
       }
     }
   }
 
-  // à«©. Entity àª²àª¿àª¸à«àªŸàª¨à«‡ MediaItem àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª¬àª¦àª²à«‹ (Sequence àªœàª¾àª³àªµà«€àª¨à«‡)
   Future<List<my.MediaItem>> _convertEntitiesToMediaItems(
       List<AssetEntity> entities,
       ) async {
@@ -211,7 +241,6 @@ class GlobalPlayer extends ChangeNotifier {
     return items;
   }
 
-  // à«ª. Audio Player àª¸à«‡àªŸàª…àªª
   Future<void> _setupAudioPlayer() async {
     final audioSources = queue.map((item) {
       return AudioSource.uri(
@@ -234,7 +263,6 @@ class GlobalPlayer extends ChangeNotifier {
 
   LoopMode loopMode = LoopMode.off;
 
-  // à««. Video Player àª¸à«‡àªŸàª…àªª
   Future<void> _setupVideoPlayer(String path) async {
     videoController = VideoPlayerController.file(File(path));
     await videoController!.initialize();
@@ -271,12 +299,11 @@ class GlobalPlayer extends ChangeNotifier {
         videoController!.value.position >= videoController!.value.duration) {
       videoController!.removeListener(_videoListener);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentIndex != -1) playNext(); // àª«àª°à«€ àªšà«‡àª• àª•àª°à«‹
+        if (currentIndex != -1) playNext(); // Ã ÂªÂ«Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       });
     }
   }
 
-  // à«¬. àª¸àª¿àª‚àª• àª¸à«àªŸà«‡àªŸ (àªœà«àª¯àª¾àª°à«‡ àª—à«€àª¤ àª¬àª¦àª²àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡)
   void _syncStateWithIndex(int index) async {
     currentIndex = index;
     final item = queue[index];
@@ -284,9 +311,8 @@ class GlobalPlayer extends ChangeNotifier {
     notifyListeners();
   }
 
-  // à«­. àª¨à«‡àª•à«àª¸à«àªŸ/àªªà«àª°àª¿àªµàª¿àª¯àª¸ àª•àª‚àªŸà«àª°à«‹àª²
   Future<void> playNext() async {
-    if(currentType=="video"){
+    if (currentType == "video") {
       // dispose();
       Navigator.pop;
       return;
@@ -304,7 +330,6 @@ class GlobalPlayer extends ChangeNotifier {
     await _playMediaAtIndex(prevIndex);
   }
 
-  // Helper: àª•àª°àª‚àªŸ àªàª¨à«àªŸàª¿àªŸà«€ àª²àª¿àª¸à«àªŸ àªªàª¾àª›à«àª‚ àª®à«‡àª³àªµàªµàª¾ àª®àª¾àªŸà«‡ (àªµà«€àª¡àª¿àª¯à«‹ àª¸à«àªµàª¿àªšàª¿àª‚àª— àªµàª–àª¤à«‡ àª•àª¾àª® àª²àª¾àª—àª¶à«‡)
   Future<List<AssetEntity>> _getCurrentEntities() async {
     List<AssetEntity> list = [];
     for (var item in queue) {
@@ -314,20 +339,16 @@ class GlobalPlayer extends ChangeNotifier {
     return list;
   }
 
-  // à«®. àªªà«àª²à«‡àª¯àª° àª•à«àª²à«€àª¨àª…àªª
   Future<void> _clearPreviousPlayer({bool keepAudioSource = false}) async {
     if (videoController != null) {
-      // àª²àª¿àª¸àª¨àª° àªªàª¹à«‡àª²àª¾ àª¦à«‚àª° àª•àª°à«‹
       videoController!.removeListener(_videoListener);
 
-      // àª¸à«€àª§à«àª‚ àª¡àª¿àª¸à«àªªà«‹àª àª•àª°à«‹, pause() àª•àª°àªµàª¾àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€ àªœà«‹ àª¤àª®à«‡ àª¤à«‡àª¨à«‡ àª¤àª°àª¤ àªœ àª•àª¾àª¢à«€ àª¨àª¾àª–àªµàª¾àª¨àª¾ àª¹à«‹àªµ
       final oldVideoController = videoController;
       final oldChewieController = chewieController;
 
       videoController = null;
       chewieController = null;
 
-      // àª¡àª¿àª¸à«àªªà«‹àªàª¨à«‡ àª«à«àª°à«‡àª® àªªàª›à«€ àª°àª¨ àª•àª°à«‹ àªœà«‡àª¥à«€ àª¬àª¿àª²à«àª¡àª®àª¾àª‚ àª¨àª¡àª¤àª° àª¨ àª¥àª¾àª¯
       Future.delayed(Duration.zero, () {
         oldVideoController?.dispose();
         oldChewieController?.dispose();
@@ -339,7 +360,6 @@ class GlobalPlayer extends ChangeNotifier {
     }
   }
 
-  // à«¯. àª“àª¡àª¿àª¯à«‹ àª¸à«‡àª¶àª¨ (Interruption handle àª•àª°àªµàª¾)
   Future<void> _initAudioSession() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
@@ -351,13 +371,35 @@ class GlobalPlayer extends ChangeNotifier {
     });
   }
 
-  // àª•àª‚àªŸà«àª°à«‹àª²à«àª¸
   void pause() {
     currentType == 'audio' ? audioPlayer.pause() : videoController?.pause();
     notifyListeners();
   }
 
-  void resume() {
+  void resume() async {
+    bool isOnline = await NetworkInfo.isConnected();
+
+    if (!isOnline) {
+      final currentContext = NavigatorKey.root.currentContext;
+      // àªªà«àª²à«‡àª¯àª°àª¨à«‡ àªªà«àª²à«‡ àª•àª°àªµàª¾àª¨à«€ àªªàª°àªµàª¾àª¨àª—à«€ àªœ àª¨ àª†àªªà«‹
+      debugPrint("Resume blocked: No Internet");
+
+      // àª¨à«‹àªŸàª¿àª«àª¿àª•à«‡àª¶àª¨ àª¬àª¤àª¾àªµà«‹ (context àªµàª—àª° àª•àª¾àª® àª•àª°à«‡ àª¤à«‡àªµà«€ àª°à«€àª¤à«‡)
+      await AppNotificationService.showNoInternetNotification(
+        title: "${currentContext?.tr("noInternetTitle")}",
+        bodyTitle: "${currentContext?.tr("noInternetBody")}",
+      );
+
+      // àªœà«‹ àªŸà«‹àª¸à«àªŸ àª¬àª¤àª¾àªµàªµà«‹ àª¹à«‹àª¯ àª¤à«‹ NavigatorKey àª¥à«€ àª¬àª¤àª¾àªµà«‹
+      if (currentContext != null) {
+        AppToast.show(currentContext, "àª‡àª¨à«àªŸàª°àª¨à«‡àªŸ àª¬àª‚àª§ àª›à«‡, àªªà«àª²à«‡ àª¨ àª¥àªˆ àª¶àª•à«‡");
+      }
+
+      notifyListeners();
+      return; // àª…àª¹à«€àª‚àª¥à«€ àªœ àªªàª¾àª›àª¾ àªµàª³à«€ àªœàª¾àª“, audioPlayer.play() àª¸à«àª§à«€ àªªàª¹à«‹àª‚àªšàªµàª¾ àªœ àª¨ àª¦à«‹
+    }
+
+    // àªœà«‹ àª“àª¨àª²àª¾àª‡àª¨ àª¹à«‹àª¯ àª¤à«‹ àªœ àªªà«àª²à«‡ àª•àª°à«‹
     currentType == 'audio' ? audioPlayer.play() : videoController?.play();
     notifyListeners();
   }
@@ -382,6 +424,7 @@ class GlobalPlayer extends ChangeNotifier {
 
   @override
   void dispose() {
+    _networkSubscription?.cancel();
     audioPlayer.dispose();
     videoController?.dispose();
     chewieController?.dispose();
@@ -468,11 +511,9 @@ class GlobalPlayer extends ChangeNotifier {
 
     int targetIndex = index;
 
-    // à«§. àªœà«‹ àªàªª àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡àª®àª¾àª‚ àª¹à«‹àª¯, àª¤à«‹ àª²à«‚àªª àª«à«‡àª°àªµà«€àª¨à«‡ àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àª¨à«‡àª•à«àª¸à«àªŸ àª“àª¡àª¿àª¯à«‹ àª•à«àª¯àª¾àª‚ àª›à«‡
     if (_isAppInBackground()) {
       int itemsChecked = 0;
 
-      // àªœà«àª¯àª¾àª‚ àª¸à«àª§à«€ àªµàª¿àª¡àª¿àª¯à«‹ àª®àª³à«‡ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àª†àª—àª³ àªµàª§à«‹
       while (queue[targetIndex].type == 'video' &&
           itemsChecked < queue.length) {
         debugPrint("Background mode: Skipping video at index $targetIndex");
@@ -480,7 +521,6 @@ class GlobalPlayer extends ChangeNotifier {
         itemsChecked++;
       }
 
-      // àªœà«‹ àª†àª–àª¾ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª•à«àª¯àª¾àª‚àª¯ àª“àª¡àª¿àª¯à«‹ àª¨ àª®àª³à«‡, àª¤à«‹ àªªà«àª²à«‡àª¯àª° àª¸à«àªŸà«‹àªª àª•àª°à«‹
       if (itemsChecked >= queue.length) {
         debugPrint("No audio found to play in background. Stopping.");
         audioPlayer.stop();
@@ -490,39 +530,33 @@ class GlobalPlayer extends ChangeNotifier {
       }
     }
 
-    // à«¨. àª¹àªµà«‡ àª¸àª¾àªšà«‹ àªˆàª¨à«àª¡à«‡àª•à«àª¸ àª¸à«‡àªŸ àª•àª°à«‹
     currentIndex = targetIndex;
     final item = queue[currentIndex];
     currentType = item.type;
     currentEntity = await AssetEntity.fromId(item.id);
 
-    // à«©. àªªà«àª²à«‡àª¯àª° àª•à«àª²à«€àª¨àª…àªª
     await _clearPreviousPlayer(keepAudioSource: true);
 
     if (currentType == 'audio') {
-      // Just Audio àªªà«àª²à«‡àª¯àª°àª¨à«‡ àª¤à«‡ àªˆàª¨à«àª¡à«‡àª•à«àª¸ àªªàª° àª²àªˆ àªœàªˆàª¨à«‡ àªªà«àª²à«‡ àª•àª°à«‹
       await audioPlayer.seek(Duration.zero, index: currentIndex);
       audioPlayer.play();
     } else {
-      // àª† àª²àª¾àªˆàª¨ àª¤à«àª¯àª¾àª°à«‡ àªœ àª°àª¨ àª¥àª¶à«‡ àªœà«àª¯àª¾àª°à«‡ àªàªª àª«à«‹àª°àª—à«àª°àª¾àª‰àª¨à«àª¡àª®àª¾àª‚ àª¹àª¶à«‡
       await _setupVideoPlayer(item.path);
     }
 
     notifyListeners();
   }
 
-  // àªªà«àª²à«‡àª¯àª°àª¨à«àª‚ àª¸à«àªŸà«‡àªŸ àª¸à«‡àªµ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
   Future<void> savePlayerState() async {
     final box = Hive.box('player_state');
     if (currentIndex == -1) {
-      await box.clear(); // àªœà«‹ àªªà«àª²à«‡àª¯àª° àª¬àª‚àª§ àª¹à«‹àª¯ àª¤à«‹ àª¬àª§à«àª‚ àª¸àª¾àª« àª•àª°à«‹
+      await box.clear();
       return;
     }
     if (currentMediaItem != null) {
       await box.put('last_item_id', currentMediaItem!.id);
       await box.put('last_position', audioPlayer.position.inMilliseconds);
       await box.put('last_type', currentType);
-      // àª†àª–à«àª‚ àª²àª¿àª¸à«àªŸ àª¸à«‡àªµ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ àª¤àª®à«‡ IDs àª¨à«€ àª¯àª¾àª¦à«€ àª¸à«àªŸà«‹àª° àª•àª°à«€ àª¶àª•à«‹ àª›à«‹
     }
   }
 
@@ -532,31 +566,24 @@ class GlobalPlayer extends ChangeNotifier {
     final int? lastPos = box.get('last_position');
 
     if (lastId != null) {
-      // àª¤àª®àª¾àª°à«‡ àª¤àª®àª¾àª°à«€ àªàª¸à«‡àªŸà«àª¸àª®àª¾àª‚àª¥à«€ àª† ID àªµàª¾àª³à«€ àªàª¨à«àªŸàª¿àªŸà«€ àª¶à«‹àª§àªµà«€ àªªàª¡àª¶à«‡
-      // àª§àª¾àª°à«‹ àª•à«‡ àª¤àª®àª¾àª°à«€ àªªàª¾àª¸à«‡ àª¬àª§à«€ àªàª¸à«‡àªŸà«àª¸àª¨à«àª‚ àª²àª¿àª¸à«àªŸ àª›à«‡
       // AssetEntity? entity = ... find by id ...
 
-      // àªªà«àª²à«‡àª¯àª° àª²à«‹àª¡ àª•àª°à«‹ àªªàª£ àªªà«àª²à«‡ àª¨ àª•àª°à«‹ (àª®àª¾àª¤à«àª° àª¸à«‡àªŸàª…àªª àª•àª°à«‹)
       // await audioPlayer.setAudioSource(...);
       // await audioPlayer.seek(Duration(milliseconds: lastPos ?? 0));
       // notifyListeners();
     }
   }
 
-  // àªªà«àª°àª¾àª‡àªµà«‡àªŸ àªµà«‡àª°à«€àªàª¬àª²
   my.MediaItem? _currentMediaItem;
 
-  // Setter (àª† àª‰àª®à«‡àª°àªµàª¾àª¥à«€ àª­à«‚àª² àª¦à«‚àª° àª¥àª¶à«‡)
   set currentMediaItem(my.MediaItem? value) {
     _currentMediaItem = value;
     notifyListeners();
   }
 
-  // àª àªœ àª°à«€àª¤à«‡ currentEntity àª®àª¾àªŸà«‡ àªªàª£ Setter àª¬àª¨àª¾àªµà«€ àª²à«‹
   AssetEntity? _currentEntity;
 
   void stopAndClose() {
-    // à«§. àªµà«€àª¡àª¿àª¯à«‹ àª•àª‚àªŸà«àª°à«‹àª²àª°àª¨à«‡ àªªà«àª°à«‹àªªàª°àª²à«€ àª…àªŸàª•àª¾àªµà«‹
     if (videoController != null) {
       videoController!.removeListener(_videoListener);
       videoController!.pause();
@@ -568,18 +595,31 @@ class GlobalPlayer extends ChangeNotifier {
       chewieController!.dispose();
       chewieController = null;
     }
-
-    // à«¨. àª“àª¡àª¿àª¯à«‹ àªªà«àª²à«‡àª¯àª° àª•àª®à«àªªà«àª²à«€àªŸàª²à«€ àª¸à«àªŸà«‹àªª àª•àª°à«‹
     audioPlayer.stop();
-
-    // à«©. àª¡à«‡àªŸàª¾ àª•à«àª²àª¿àª¯àª° àª•àª°à«‹
     queue = [];
     currentIndex = -1;
     currentMediaItem = null;
     currentEntity = null;
     currentType = null;
 
-    // à«ª. àª²àª¿àª¸àª¨àª°à«àª¸àª¨à«‡ àª›à«‡àª²à«àª²à«€ àªµàª¾àª° àªœàª¾àª£ àª•àª°à«‹
     notifyListeners();
   }
 }
+
+/*
+<key>UIBackgroundModes</key>
+<array>
+    <string>audio</string>
+    <string>fetch</string>
+    <string>remote-notification</string>
+</array>
+ */
+
+/*
+<key>UIBackgroundModes</key>
+<array>
+    <string>audio</string>
+    <string>fetch</string>
+    <string>remote-notification</string>
+</array>
+ */

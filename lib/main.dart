@@ -2,12 +2,15 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/models/player_data.dart';
 import 'package:media_player/services/ads_service.dart';
 import 'package:media_player/services/connectivity_service.dart';
+import 'package:media_player/services/notification_service.dart';
 import 'package:media_player/utils/app_imports.dart';
 Offset position = Offset(245.4, 673.4);
 bool isPositionInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppNotificationService.init(); // àª† àª²àª¾àªˆàª¨ àª‰àª®à«‡àª°à«‹
+  await AppNotificationService.requestPermissions();
   await MobileAds.instance.initialize();
   AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
@@ -119,6 +122,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
           builder: (context, localeState) {
             final savedLang = HiveService.languageCode;
             return MaterialApp(
+              navigatorKey: NavigatorKey.root,
               builder: (context, child) {
                 return ConnectivityWrapper(child: child!);
               },
@@ -157,3 +161,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
       },
     );
   }}
+
+class NavigatorKey {
+  static final GlobalKey<NavigatorState> root = GlobalKey<NavigatorState>();
+}

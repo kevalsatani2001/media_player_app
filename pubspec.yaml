@@ -61,6 +61,7 @@ dependencies:
   flutter_secure_storage:
   connectivity_plus:
   app_settings:
+  flutter_local_notifications:
 #  google_fonts:
 
 dev_dependencies:

@@ -35,23 +35,23 @@ class AdHelper {
   static bool _isShowingAd = false;
   static DateTime? _appOpenLoadTime;
 
-  // AdHelper àª•à«àª²àª¾àª¸àª¨à«€ àª…àª‚àª¦àª° àª† àª‰àª®à«‡àª°à«‹:
+  // AdHelper Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¾Ã ÂªÂ¸Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° Ã Âªâ€  Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹:
 
-  static int _playCount = 0; // àªµàª¿àª¡àª¿àª¯à«‹ àª—àª£àªµàª¾ àª®àª¾àªŸà«‡
+  static int _playCount = 0; // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€”Ã ÂªÂ£Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
 
   static void playVideoWithAds(BuildContext context, VoidCallback startVideo) async {
     bool isOnline = await NetworkInfo.isConnected();
     _playCount++;
 
     if (isOnline) {
-      // --- àªœà«‹ àª“àª¨àª²àª¾àª‡àª¨ àª¹à«‹àª¯ àª¤à«‹: àª¦àª° à«© àªµàª¿àª¡àª¿àª¯à«‹àª Interstitial àªàª¡ ---
+      // --- Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ¨Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹: Ã ÂªÂ¦Ã ÂªÂ° Ã Â«Â© Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹Ã ÂªÂ Interstitial Ã ÂªÂÃ ÂªÂ¡ ---
       if (_playCount % 3 == 0) {
         showInterstitialAd(startVideo);
       } else {
         startVideo();
       }
     } else {
-      // --- àªœà«‹ àª“àª«àª²àª¾àª‡àª¨ àª¹à«‹àª¯ àª¤à«‹: à«©à«¦ àª¸à«‡àª•àª¨à«àª¡àª¨à«àª‚ àªµà«‡àªŸàª¿àª‚àª— àªŸàª¾àªˆàª®àª° ---
+      // --- Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ«Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹: Ã Â«Â©Ã Â«Â¦ Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã ÂªÂµÃ Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€” Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ®Ã ÂªÂ° ---
       _showOfflineTimerDialog(context, startVideo);
     }
   }
@@ -63,22 +63,22 @@ class AdHelper {
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          // àªŸàª¾àªˆàª®àª° àª¶àª°à«‚ àª•àª°à«‹
+          // Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ®Ã ÂªÂ° Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
           Timer.periodic(const Duration(seconds: 1), (timer) {
             if (timeLeft > 0) {
               if (context.mounted) setDialogState(() => timeLeft--);
             } else {
               timer.cancel();
               if (context.mounted) {
-                Navigator.pop(context); // àª¡àª¾àª¯àª²à«‹àª— àª¬àª‚àª§ àª•àª°à«‹
-                onFinish(); // àªµàª¿àª¡àª¿àª¯à«‹ àª¶àª°à«‚ àª•àª°à«‹
+                Navigator.pop(context); // Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€” Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+                onFinish(); // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
               }
             }
           });
 
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            title: const Text("Internet Required ðŸ“¶", style: TextStyle(color: Colors.red)),
+            title: const Text("Internet Required Ã°Å¸â€œÂ¶", style: TextStyle(color: Colors.red)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -108,6 +108,7 @@ class AdHelper {
   // --- 2. Adaptive Banner Ad Widget ---
   static Widget adaptiveBannerWidget(BuildContext context) {
     return FutureBuilder<AdSize?>(
+      // àª…àª¹à«€àª‚ àªµàª¿àª¡à«àª¥àª®àª¾àª‚àª¥à«€ àª®àª¾àª°à«àªœàª¿àª¨ àª¬àª¾àª¦ àª•àª°àªµàª¾àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€, AdSize àªªà«‹àª¤à«‡ àªàª¡àªœàª¸à«àªŸ àª•àª°àª¶à«‡
       future: AdSize.getAnchoredAdaptiveBannerAdSize(
         Orientation.portrait,
         MediaQuery.of(context).size.width.truncate(),
@@ -116,6 +117,7 @@ class AdHelper {
         if (snapshot.hasData && snapshot.data != null) {
           return BannerAdWidget(size: snapshot.data!);
         } else {
+          // àªœà«àª¯àª¾àª°à«‡ àª¡à«‡àªŸàª¾ àª²à«‹àª¡ àª¥àª¤à«‹ àª¹à«‹àª¯ àª¤à«àª¯àª¾àª°à«‡ àª¸à«‡àª« àª¸àª¾àªˆàª àª†àªªà«‹
           return BannerAdWidget(size: AdSize.banner);
         }
       },
@@ -179,7 +181,7 @@ class AdHelper {
 
   // --- 5. App Open Ad ---
   static void loadAppOpenAd() async {
-    // àªªàª¹à«‡àª²àª¾ àª¨à«‡àªŸ àªšà«‡àª• àª•àª°à«‹
+    // Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     final List<ConnectivityResult> results = await Connectivity().checkConnectivity();
     if (results.contains(ConnectivityResult.none)) return;
 
@@ -213,7 +215,7 @@ class AdHelper {
     }
 
     if (isFullScreenAdShowing) {
-      debugPrint("àª¬à«€àªœà«€ àªàª¡ àªšàª¾àª²à« àª›à«‡, App Open Ad àª¸à«àª•à«€àªª àª•àª°à«€.");
+      debugPrint("Ã ÂªÂ¬Ã Â«â‚¬Ã ÂªÅ“Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«Â Ã Âªâ€ºÃ Â«â€¡, App Open Ad Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«â‚¬Ã ÂªÂª Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬.");
       return;
     }
 
@@ -256,10 +258,10 @@ class AdHelper {
         onAdLoaded: (ad) {
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
-              isFullScreenAdShowing = true; // àª…àª—àª¤à«àª¯àª¨à«àª‚: àª…àª¹à«€àª‚ àªŸà«àª°à« àª•àª°àªµà«àª‚
+              isFullScreenAdShowing = true; // Ã Âªâ€¦Ã Âªâ€”Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š: Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«Â Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«ÂÃ Âªâ€š
             },
             onAdDismissedFullScreenContent: (ad) {
-              isFullScreenAdShowing = false; // àª…àª—àª¤à«àª¯àª¨à«àª‚: àª…àª¹à«€àª‚ àª«à«‹àª²à«àª¸ àª•àª°àªµà«àª‚
+              isFullScreenAdShowing = false; // Ã Âªâ€¦Ã Âªâ€”Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š: Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ«Ã Â«â€¹Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«ÂÃ Âªâ€š
               ad.dispose();
               onAdDismissed();
             },
@@ -317,7 +319,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     super.initState();
     _loadAd();
 
-    // à«§. àª¨à«‡àªŸàªµàª°à«àª• àª²àª¿àªàª¨àª° àªœà«‡àªµà«àª‚ àª¨à«‡àªŸ àª†àªµà«‡ àª•à«‡ àª¤àª°àª¤ àªœ àªàª¡ àª²à«‹àª¡ àª•àª°àª¶à«‡
+    // Ã Â«Â§. Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂµÃ ÂªÂ°Ã Â«ÂÃ Âªâ€¢ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂÃ ÂªÂ¨Ã ÂªÂ° Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€ Ã ÂªÂµÃ Â«â€¡ Ã Âªâ€¢Ã Â«â€¡ Ã ÂªÂ¤Ã ÂªÂ°Ã ÂªÂ¤ Ã ÂªÅ“ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
       bool isOnline = !results.contains(ConnectivityResult.none);
       if (isOnline && !_isLoaded) {
@@ -327,24 +329,33 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     });
   }
 
-  // à«¨. àªœà«‹ àªµàª¿àªœà«‡àªŸàª¨àª¾ àªªà«‡àª°àª¾àª®à«€àªŸàª° àª¬àª¦àª²àª¾àª¯ àª¤à«‹ àª«àª°à«€ àª²à«‹àª¡ àª•àª°à«‹
+  // Ã Â«Â¨. Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ°Ã ÂªÂ¾Ã ÂªÂ®Ã Â«â‚¬Ã ÂªÅ¸Ã ÂªÂ° Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ«Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
   @override
   void didUpdateWidget(covariant BannerAdWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_isLoaded) _loadAd();
+    if (oldWidget.size != widget.size) {
+      _loadAd();
+    }
   }
 
+  // Update your _loadAd method to this:
   void _loadAd() async {
-    // àª‡àª¨à«àªŸàª°àª¨à«‡àªŸ àªšà«‡àª• àª•àª°à«‹
     final results = await Connectivity().checkConnectivity();
     if (results.contains(ConnectivityResult.none)) {
       if (mounted) setState(() => _isError = true);
       return;
     }
 
-    // àªœà«‚àª¨à«€ àªàª¡ àª•à«àª²à«€àª¨ àª•àª°à«‹
+    // 1. Dispose previous ad before creating a new one
     await _bannerAd?.dispose();
-    _bannerAd = null;
+
+    // 2. Reset states so we don't try to build the AdWidget prematurely
+    if (mounted) {
+      setState(() {
+        _isLoaded = false;
+        _isError = false;
+      });
+    }
 
     _bannerAd = BannerAd(
       adUnitId: AdHelper.bannerId,
@@ -353,20 +364,28 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           debugPrint("Banner Ad Successfully Loaded!");
+          // 3. ONLY set _isLoaded to true here
           if (mounted) {
             setState(() {
               _isLoaded = true;
-              _isError = false;
             });
           }
         },
         onAdFailedToLoad: (ad, error) {
           debugPrint("Banner Ad Failed: ${error.message}");
           ad.dispose();
-          if (mounted) setState(() => _isError = true);
+          if (mounted) {
+            setState(() {
+              _isLoaded = false;
+              _isError = true;
+            });
+          }
         },
       ),
-    )..load();
+    );
+
+    // 4. Start loading
+    _bannerAd!.load();
   }
 
   @override
@@ -378,18 +397,21 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // If there's an error, show the promo
     if (_isError) return AdHelper._buildPromoBanner(context, widget.size);
 
+    // ONLY show AdWidget if _isLoaded is true AND _bannerAd is not null
     if (_isLoaded && _bannerAd != null) {
       return Container(
         alignment: Alignment.center,
         width: widget.size.width.toDouble(),
         height: widget.size.height.toDouble(),
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+        margin: const EdgeInsets.symmetric(vertical: 10),
         child: AdWidget(ad: _bannerAd!),
       );
     }
 
+    // While loading (or if load hasn't finished), show shimmer
     return AdHelper._buildShimmerPlaceholder(widget.size);
   }
 }

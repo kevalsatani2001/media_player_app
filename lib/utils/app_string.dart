@@ -10,27 +10,29 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      'noInternetTitle': 'No Internet Connection',
+      'noInternetBody': 'Please check your network settings.',
       "internetRequired": "Internet Required",
       "mandatoryInternetContent":
-          "To enjoy free services, an active internet connection is mandatory for loading ads.",
+      "To enjoy free services, an active internet connection is mandatory for loading ads.",
       "checkConnection": "Check Connection",
       "restoringConnection": "Connecting...",
       "renamePlaylist": "Rename Playlist",
       "yourMediaYourPrivacy": "1. Your Media, Your Privacy",
       "yourMediaYourPrivacyContent":
-          "This app only plays files (Videos and Music) that are already on your phone. We do not look at your private photos or other personal documents.",
+      "This app only plays files (Videos and Music) that are already on your phone. We do not look at your private photos or other personal documents.",
       "offlineExperience": "2. Offline Experience",
       "offlineExperienceContent":
-          "All your created Playlists and Favorites are saved directly on your device. We do not upload your files or data to any website or server.",
+      "All your created Playlists and Favorites are saved directly on your device. We do not upload your files or data to any website or server.",
       "noPersonalTracking": "3. No Personal Tracking",
       "noPersonalTrackingContent":
-          "We don't ask for your name, email, or phone number. You can use all features of this app without ever creating an account.",
+      "We don't ask for your name, email, or phone number. You can use all features of this app without ever creating an account.",
       "whyPermissions": "4. Why we need Permissions?",
       "whyPermissionsContent":
-          "We ask for 'Storage Permission' only so the app can find your music and videos to play them. Without this, the app won't be able to show your files.",
+      "We ask for 'Storage Permission' only so the app can find your music and videos to play them. Without this, the app won't be able to show your files.",
       "securePrivate": "5. Secure & Private",
       "securePrivateContent":
-          "Since everything is stored on your phone, your data is completely private. If you delete the app, your created playlists within the app will also be removed.",
+      "Since everything is stored on your phone, your data is completely private. If you delete the app, your created playlists within the app will also be removed.",
       "appVersion": "Version",
       "allRightsReserved": "All Rights Reserved",
       "viewAll": "View all",
@@ -45,7 +47,7 @@ class AppStrings {
       'language': 'English',
       'chooseLanguage': 'Choose the language',
       'selectPreferredLanguage':
-          'Select your preferred language for accurate translation and smooth usage.',
+      'Select your preferred language for accurate translation and smooth usage.',
       'welcome': 'Welcome',
       'organize': 'Organize',
       'skip': 'Skip',
@@ -89,7 +91,7 @@ class AppStrings {
       "showThumb500": "Show 500 size thumb",
       "howWouldYouLove": "How would you Love this app?",
       "areYouSureWantDeleteThisFile":
-          "Are you sure you want to delete this file?",
+      "Are you sure you want to delete this file?",
       "searchAnything": "Search anything....",
       "deleteThisFile": "Delete this file?",
       "searchVideosAudios": "Search videos and audios",
@@ -131,9 +133,9 @@ class AppStrings {
       "wtachPlayEnjoy": "Watch Play & Enjoy",
       "smoothPlayback": "Smooth Playback. Every Format Supported",
       "enjoyVideosMusic":
-          "Enjoy Videos, Music & HD Playback with Smart Controls",
+      "Enjoy Videos, Music & HD Playback with Smart Controls",
       "enjoyUltraHDVideos":
-          "Enjoy Ultra HD Videos with Lightning-Fast Performance & Zero Limits",
+      "Enjoy Ultra HD Videos with Lightning-Fast Performance & Zero Limits",
       "smoothPlaybackForEvery": "Smooth Playback for Every Video Format",
       "appFeedback": "App Feedback",
       "stars": "Stars",
@@ -179,27 +181,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "Add some videos or audio to see them here!",
     },
     'ar': {
+      'noInternetTitle': 'لا يوجد اتصال بالإنترنت',
+      'noInternetBody': 'يرجى التحقق من إعدادات الشبكة الخاصة بك.',
       "internetRequired": "الاتصال بالإنترنت مطلوب",
       "mandatoryInternetContent":
-          "للاستمتاع بالخدمات المجانية، يجب توفر اتصال نشط بالإنترنت لتحميل الإعلانات.",
+      "للاستمتاع بالخدمات المجانية، يجب توفر اتصال نشط بالإنترنت لتحميل الإعلانات.",
       "checkConnection": "تحقق من الاتصال",
       "restoringConnection": "جاري الاتصال...",
       "renamePlaylist": "إعادة تسمية قائمة التشغيل",
       "yourMediaYourPrivacy": "١. وسائطك، خصوصيتك",
       "yourMediaYourPrivacyContent":
-          "يشغل هذا التطبيق فقط الملفات (الفيديوهات والموسيقى) الموجودة بالفعل على هاتفك. نحن لا نطلع على صورك الخاصة أو مستنداتك الشخصية الأخرى.",
+      "يشغل هذا التطبيق فقط الملفات (الفيديوهات والموسيقى) الموجودة بالفعل على هاتفك. نحن لا نطلع على صورك الخاصة أو مستنداتك الشخصية الأخرى.",
       "offlineExperience": "٢. تجربة بدون إنترنت",
       "offlineExperienceContent":
-          "يتم حفظ جميع قوائم التشغيل والمفضلات التي أنشأتها مباشرة على جهازك. نحن لا نرفع ملفاتك أو بياناتك إلى أي موقع ويب أو خادم.",
+      "يتم حفظ جميع قوائم التشغيل والمفضلات التي أنشأتها مباشرة على جهازك. نحن لا نرفع ملفاتك أو بياناتك إلى أي موقع ويب أو خادم.",
       "noPersonalTracking": "٣. لا تتبع شخصي",
       "noPersonalTrackingContent":
-          "نحن لا نطلب اسمك أو بريدك الإلكتروني أو رقم هاتفك. يمكنك استخدام جميع ميزات هذا التطبيق دون إنشاء حساب.",
+      "نحن لا نطلب اسمك أو بريدك الإلكتروني أو رقم هاتفك. يمكنك استخدام جميع ميزات هذا التطبيق دون إنشاء حساب.",
       "whyPermissions": "٤. لماذا نحتاج إلى أذونات؟",
       "whyPermissionsContent":
-          "نطلب 'إذن التخزين' فقط حتى يتمكن التطبيق من العثور على الموسيقى والفيديوهات وتشغيلها. بدون ذلك، لن يتمكن التطبيق من عرض ملفاتك.",
+      "نطلب 'إذن التخزين' فقط حتى يتمكن التطبيق من العثور على الموسيقى والفيديوهات وتشغيلها. بدون ذلك، لن يتمكن التطبيق من عرض ملفاتك.",
       "securePrivate": "٥. آمن وخصوصي",
       "securePrivateContent":
-          "بما أن كل شيء مخزن على هاتفك، فإن بياناتك خاصة تمامًا. إذا قمت بحذف التطبيق، فسيتم أيضًا حذف قوائم التشغيل التي أنشأتها داخل التطبيق.",
+      "بما أن كل شيء مخزن على هاتفك، فإن بياناتك خاصة تمامًا. إذا قمت بحذف التطبيق، فسيتم أيضًا حذف قوائم التشغيل التي أنشأتها داخل التطبيق.",
       "appVersion": "الإصدار",
       "allRightsReserved": "جميع الحقوق محفوظة",
       "viewAll": "عرض الكل",
@@ -297,7 +301,7 @@ class AppStrings {
       "smoothPlayback": "تشغيل سلس. جميع الصيغ مدعومة",
       "enjoyVideosMusic": "استمتع بالفيديوهات والموسيقى وتشغيل HD مع تحكم ذكي",
       "enjoyUltraHDVideos":
-          "استمتع بفيديوهات Ultra HD بأداء فائق السرعة وبدون حدود",
+      "استمتع بفيديوهات Ultra HD بأداء فائق السرعة وبدون حدود",
       "smoothPlaybackForEvery": "تشغيل سلس لكل صيغ الفيديو",
       "appFeedback": "ملاحظات التطبيق",
       "stars": "نجوم",
@@ -343,27 +347,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "أضف بعض الفيديوهات أو الصوتيات لتظهر هنا!",
     },
     'my': {
+      'noInternetTitle': 'အင်တာနက်ချိတ်ဆက်မှုမရှိပါ',
+      'noInternetBody': 'သင်၏ကွန်ရက်ဆက်တင်များကို စစ်ဆေးပါ။',
       "internetRequired": "အင်တာနက်လိုအပ်သည်",
       "mandatoryInternetContent":
-          "အခမဲ့ဝန်ဆောင်မှုများကို အသုံးပြုရန် ကြော်ငြာများတင်ရန် အင်တာနက်ချိတ်ဆက်မှုရှိရန် လိုအပ်ပါသည်။",
+      "အခမဲ့ဝန်ဆောင်မှုများကို အသုံးပြုရန် ကြော်ငြာများတင်ရန် အင်တာနက်ချိတ်ဆက်မှုရှိရန် လိုအပ်ပါသည်။",
       "checkConnection": "ချိတ်ဆက်မှုကို စစ်ဆေးပါ",
       "restoringConnection": "ချိတ်ဆက်နေသည်...",
       "renamePlaylist": "ပလေးလစ်အမည်ပြောင်းရန်",
       "yourMediaYourPrivacy": "၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
       "yourMediaYourPrivacyContent":
-          "ဤအက်ပ်သည် သင့်ဖုန်းထဲတွင် ရှိပြီးသားဖိုင်များ (ဗီဒီယိုနှင့် သီချင်း) ကိုသာ ဖွင့်ပေးပါသည်။ သင်၏ ကိုယ်ပိုင်ဓာတ်ပုံများနှင့် အခြားကိုယ်ရေးကိုယ်တာ စာရွက်စာတမ်းများကို ကျွန်ုပ်တို့ မကြည့်ရှုပါ။",
+      "ဤအက်ပ်သည် သင့်ဖုန်းထဲတွင် ရှိပြီးသားဖိုင်များ (ဗီဒီယိုနှင့် သီချင်း) ကိုသာ ဖွင့်ပေးပါသည်။ သင်၏ ကိုယ်ပိုင်ဓာတ်ပုံများနှင့် အခြားကိုယ်ရေးကိုယ်တာ စာရွက်စာတမ်းများကို ကျွန်ုပ်တို့ မကြည့်ရှုပါ။",
       "offlineExperience": "၂။ အော့ဖ်လိုင်းအသုံးပြုမှု",
       "offlineExperienceContent":
-          "သင်ဖန်တီးထားသော ပလေးလစ်များနှင့် အကြိုက်ဆုံးများကို သင့်စက်ထဲတွင် တိုက်ရိုက်သိမ်းဆည်းထားပါသည်။ သင်၏ဖိုင်များ သို့မဟုတ် ဒေတာများကို မည်သည့်ဝဘ်ဆိုက် သို့မဟုတ် ဆာဗာသို့မှ တင်မည်မဟုတ်ပါ။",
+      "သင်ဖန်တီးထားသော ပလေးလစ်များနှင့် အကြိုက်ဆုံးများကို သင့်စက်ထဲတွင် တိုက်ရိုက်သိမ်းဆည်းထားပါသည်။ သင်၏ဖိုင်များ သို့မဟုတ် ဒေတာများကို မည်သည့်ဝဘ်ဆိုက် သို့မဟုတ် ဆာဗာသို့မှ တင်မည်မဟုတ်ပါ။",
       "noPersonalTracking": "၃။ ကိုယ်ရေးကိုယ်တာ ခြေရာခံခြင်းမရှိပါ",
       "noPersonalTrackingContent":
-          "သင့်အမည်၊ အီးမေးလ် သို့မဟုတ် ဖုန်းနံပါတ်တို့ကို ကျွန်ုပ်တို့ မတောင်းဆိုပါ။ အကောင့်ဖွင့်ရန်မလိုဘဲ ဤအက်ပ်၏ လုပ်ဆောင်ချက်အားလုံးကို အသုံးပြုနိုင်ပါသည်။",
+      "သင့်အမည်၊ အီးမေးလ် သို့မဟုတ် ဖုန်းနံပါတ်တို့ကို ကျွန်ုပ်တို့ မတောင်းဆိုပါ။ အကောင့်ဖွင့်ရန်မလိုဘဲ ဤအက်ပ်၏ လုပ်ဆောင်ချက်အားလုံးကို အသုံးပြုနိုင်ပါသည်။",
       "whyPermissions": "၄။ ကျွန်ုပ်တို့ အဘယ်ကြောင့် ခွင့်ပြုချက်လိုအပ်သနည်း။",
       "whyPermissionsContent":
-          "အက်ပ်က သင့်သီချင်းနှင့် ဗီဒီယိုများကို ရှာဖွေဖွင့်နိုင်ရန် 'Storage Permission' ကိုသာ တောင်းဆိုခြင်းဖြစ်သည်။ ဤခွင့်ပြုချက်မရှိလျှင် အက်ပ်က သင့်ဖိုင်များကို ပြသနိုင်မည်မဟုတ်ပါ။",
+      "အက်ပ်က သင့်သီချင်းနှင့် ဗီဒီယိုများကို ရှာဖွေဖွင့်နိုင်ရန် 'Storage Permission' ကိုသာ တောင်းဆိုခြင်းဖြစ်သည်။ ဤခွင့်ပြုချက်မရှိလျှင် အက်ပ်က သင့်ဖိုင်များကို ပြသနိုင်မည်မဟုတ်ပါ။",
       "securePrivate": "၅။ လုံခြုံစိတ်ချရပြီး သီးသန့်ဖြစ်ခြင်း",
       "securePrivateContent":
-          "အရာအားလုံးကို သင့်ဖုန်းပေါ်တွင်သာ သိမ်းဆည်းထားသောကြောင့် သင့်ဒေတာသည် လုံးဝသီးသန့်ဖြစ်သည်။ အကယ်၍ သင်သည် အက်ပ်ကို ဖျက်လိုက်ပါက၊ အက်ပ်အတွင်း သင်ဖန်တီးထားသော ပလေးလစ်များလည်း ပျက်သွားမည်ဖြစ်သည်။",
+      "အရာအားလုံးကို သင့်ဖုန်းပေါ်တွင်သာ သိမ်းဆည်းထားသောကြောင့် သင့်ဒေတာသည် လုံးဝသီးသန့်ဖြစ်သည်။ အကယ်၍ သင်သည် အက်ပ်ကို ဖျက်လိုက်ပါက၊ အက်ပ်အတွင်း သင်ဖန်တီးထားသော ပလေးလစ်များလည်း ပျက်သွားမည်ဖြစ်သည်။",
       "appVersion": "ဗားရှင်း",
       "allRightsReserved": "မူပိုင်ခွင့်အားလုံး လက်ဝယ်ရှိသည်",
       "viewAll": "အားလုံးကြည့်ရန်",
@@ -442,7 +448,7 @@ class AppStrings {
       "choosePlaylist": "ပလေးလစ် ရွေးချယ်ရန်",
       "newPlaylistCreated": "ပလေးလစ် အသစ် ဖန်တီးပြီးပါပြီ",
       "pleaseSelectEnterPlaylistName":
-          "ပလေးလစ် အမည် ရွေးပါ သို့မဟုတ် ရိုက်ထည့်ပါ",
+      "ပလေးလစ် အမည် ရွေးပါ သို့မဟုတ် ရိုက်ထည့်ပါ",
       "alreadyExistIn": "ဤနေရာတွင် ရှိနှင့်ပြီးသားဖြစ်သည် -",
       "alreadyExists": "ရှိနှင့်ပြီးသားဖြစ်သည်",
       "addedTo": "ထဲသို့ ထည့်ပြီးပါပြီ",
@@ -461,17 +467,17 @@ class AppStrings {
       "wtachPlayEnjoy": "ကြည့်ရှုပါ၊ ဖွင့်ပါ၊ ပျော်ရွှင်ပါ",
       "smoothPlayback": "ချောမွေ့စွာဖွင့်နိုင်သည်။ ပုံစံအားလုံးထောက်ပံ့သည်",
       "enjoyVideosMusic":
-          "ဗီဒီယို၊ တေးဂီတနှင့် HD ဗီဒီယိုများကို စမတ်ထိန်းချုပ်မှုများဖြင့် ခံစားပါ",
+      "ဗီဒီယို၊ တေးဂီတနှင့် HD ဗီဒီယိုများကို စမတ်ထိန်းချုပ်မှုများဖြင့် ခံစားပါ",
       "enjoyUltraHDVideos":
-          "Ultra HD ဗီဒီယိုများကို မြန်ဆန်သောစွမ်းဆောင်ရည်နှင့် အကန့်အသတ်မဲ့ခံစားပါ",
+      "Ultra HD ဗီဒီယိုများကို မြန်ဆန်သောစွမ်းဆောင်ရည်နှင့် အကန့်အသတ်မဲ့ခံစားပါ",
       "smoothPlaybackForEvery":
-          "ဗီဒီယိုပုံစံတိုင်းအတွက် ချောမွေ့သောဖွင့်ဆိုမှု",
+      "ဗီဒီယိုပုံစံတိုင်းအတွက် ချောမွေ့သောဖွင့်ဆိုမှု",
       "appFeedback": "အက်ပ်တုံ့ပြန်ချက်",
       "stars": "ကြယ်ပွင့်များ",
       "hiIGave": "မင်္ဂလာပါ၊ ကျွန်ုပ်ပေးခဲ့သည်မှာ",
       "hereIsMyFeedback:": "ဤသည်မှာ ကျွန်ုပ်၏တုံ့ပြန်ချက်ဖြစ်သည် -",
       "checkOutThisAmazing":
-          "ဤအံ့သြဖွယ်ကောင်းသော ဗီဒီယိုနှင့် တေးဂီတဖွင့်စက်ကို ကြည့်လိုက်ပါ!",
+      "ဤအံ့သြဖွယ်ကောင်းသော ဗီဒီယိုနှင့် တေးဂီတဖွင့်စက်ကို ကြည့်လိုက်ပါ!",
       "downloadItNowFrom": "Play Store မှ ယခုပင်ဒေါင်းလုဒ်လုပ်ပါ -",
       "downloadMediaPlayer": "Media Player ကိုဒေါင်းလုဒ်လုပ်ပါ",
       "appearance": "အသွင်အပြင်",
@@ -509,30 +515,32 @@ class AppStrings {
       "deleteTheAsset": "ဖိုင်ကိုဖျက်ပါ",
       "noFavouriteYet": "စိတ်ကြိုက်များ မရှိသေးပါ။",
       "addSomeVideosOrAudio":
-          "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
+      "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
     },
     'fil': {
+      'noInternetTitle': 'Walang Koneksyon sa Internet',
+      'noInternetBody': 'Pakisuri ang iyong mga setting ng network.',
       "internetRequired": "Kailangan ng Internet",
       "mandatoryInternetContent":
-          "Upang tamasahin ang mga libreng serbisyo, ang isang aktibong koneksyon sa internet ay sapilitan para sa paglo-load ng mga ad.",
+      "Upang tamasahin ang mga libreng serbisyo, ang isang aktibong koneksyon sa internet ay sapilitan para sa paglo-load ng mga ad.",
       "checkConnection": "Suriin ang Koneksyon",
       "restoringConnection": "Kumokonekta...",
       "renamePlaylist": "Palitan ang pangalan ng Playlist",
       "yourMediaYourPrivacy": "1. Iyong Media, Iyong Privacy",
       "yourMediaYourPrivacyContent":
-          "Pinapatugtog lamang ng app na ito ang mga file (Video at Musika) na nasa iyong telepono na. Hindi namin tinitingnan ang iyong mga pribadong larawan o iba pang personal na dokumento.",
+      "Pinapatugtog lamang ng app na ito ang mga file (Video at Musika) na nasa iyong telepono na. Hindi namin tinitingnan ang iyong mga pribadong larawan o iba pang personal na dokumento.",
       "offlineExperience": "2. Offline na Karanasan",
       "offlineExperienceContent":
-          "Ang lahat ng iyong ginawang Playlist at Paborito ay direktang nakaimbak sa iyong device. Hindi namin ina-upload ang iyong mga file o data sa anumang website o server.",
+      "Ang lahat ng iyong ginawang Playlist at Paborito ay direktang nakaimbak sa iyong device. Hindi namin ina-upload ang iyong mga file o data sa anumang website o server.",
       "noPersonalTracking": "3. Walang Personal na Pagsubaybay",
       "noPersonalTrackingContent":
-          "Hindi namin hinihingi ang iyong pangalan, email, o numero ng telepono. Magagamit mo ang lahat ng feature ng app na ito nang hindi gumagawa ng account.",
+      "Hindi namin hinihingi ang iyong pangalan, email, o numero ng telepono. Magagamit mo ang lahat ng feature ng app na ito nang hindi gumagawa ng account.",
       "whyPermissions": "4. Bakit kailangan namin ng mga Permisyon?",
       "whyPermissionsContent":
-          "Hinihingi namin ang 'Storage Permission' para lamang mahanap ng app ang iyong musika at mga video para patugtugin ang mga ito. Kung wala ito, hindi maipapakita ng app ang iyong mga file.",
+      "Hinihingi namin ang 'Storage Permission' para lamang mahanap ng app ang iyong musika at mga video para patugtugin ang mga ito. Kung wala ito, hindi maipapakita ng app ang iyong mga file.",
       "securePrivate": "5. Ligtas at Pribado",
       "securePrivateContent":
-          "Dahil ang lahat ay nakaimbak sa iyong telepono, ang iyong data ay ganap na pribado. Kung tatanggalin mo ang app, mabubura rin ang iyong mga playlist na ginawa sa loob ng app.",
+      "Dahil ang lahat ay nakaimbak sa iyong telepono, ang iyong data ay ganap na pribado. Kung tatanggalin mo ang app, mabubura rin ang iyong mga playlist na ginawa sa loob ng app.",
       "appVersion": "Bersyon",
       "allRightsReserved": "All Rights Reserved",
       "viewAll": "Tingnan lahat",
@@ -589,7 +597,7 @@ class AppStrings {
       "showThumb500": "Ipakita ang thumb size 500",
       "howWouldYouLove": "Gaano mo nagustuhan ang app na ito?",
       "areYouSureWantDeleteThisFile":
-          "Sigurado ka bang gusto mong i-delete ang file na ito?",
+      "Sigurado ka bang gusto mong i-delete ang file na ito?",
       "searchAnything": "Maghanap ng kahit ano....",
       "deleteThisFile": "I-delete ang file na ito?",
       "searchVideosAudios": "Maghanap ng mga video at audio",
@@ -612,7 +620,7 @@ class AppStrings {
       "choosePlaylist": "Pumili ng Playlist",
       "newPlaylistCreated": "Bagong Playlist ay Nilikha",
       "pleaseSelectEnterPlaylistName":
-          "Mangyaring pumili o magpasok ng pangalan ng playlist",
+      "Mangyaring pumili o magpasok ng pangalan ng playlist",
       "alreadyExistIn": "Umiiral na sa",
       "alreadyExists": "umiiral na",
       "addedTo": "Idinagdag sa",
@@ -631,16 +639,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Manood, Mag-play at Mag-enjoy",
       "smoothPlayback": "Smooth Playback. Suportado ang Lahat ng Format",
       "enjoyVideosMusic":
-          "Mag-enjoy sa Mga Video, Musika at HD Playback gamit ang Smart Controls",
+      "Mag-enjoy sa Mga Video, Musika at HD Playback gamit ang Smart Controls",
       "enjoyUltraHDVideos":
-          "Mag-enjoy sa Ultra HD Videos na may Mabilis na Performance at Walang Limitasyon",
+      "Mag-enjoy sa Ultra HD Videos na may Mabilis na Performance at Walang Limitasyon",
       "smoothPlaybackForEvery": "Smooth Playback para sa Bawat Video Format",
       "appFeedback": "Feedback ng App",
       "stars": "Mga Bituin",
       "hiIGave": "Hi, nagbigay ako ng",
       "hereIsMyFeedback:": "Narito ang aking feedback:",
       "checkOutThisAmazing":
-          "Tingnan ang kamangha-manghang Video & Music Player app na ito!",
+      "Tingnan ang kamangha-manghang Video & Music Player app na ito!",
       "downloadItNowFrom": "I-download ito ngayon mula sa Play Store:",
       "downloadMediaPlayer": "I-download ang Media Player",
       "appearance": "Appearance",
@@ -678,30 +686,32 @@ class AppStrings {
       "deleteTheAsset": "I-delete ang asset",
       "noFavouriteYet": "Wala pang paborito.",
       "addSomeVideosOrAudio":
-          "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
+      "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
     },
     'fr': {
+      'noInternetTitle': 'Pas de connexion Internet',
+      'noInternetBody': 'Veuillez vérifier vos paramètres réseau.',
       "internetRequired": "Internet requis",
       "mandatoryInternetContent":
-          "Pour profiter des services gratuits, une connexion Internet active est obligatoire pour charger les publicités.",
+      "Pour profiter des services gratuits, une connexion Internet active est obligatoire pour charger les publicités.",
       "checkConnection": "Vérifier la connexion",
       "restoringConnection": "Connexion en cours...",
       "renamePlaylist": "Renommer la liste de lecture",
       "yourMediaYourPrivacy": "1. Vos Médias, Votre Vie Privée",
       "yourMediaYourPrivacyContent":
-          "Cette application ne lit que les fichiers (Vidéos et Musique) déjà présents sur votre téléphone. Nous ne consultons pas vos photos privées ou autres documents personnels.",
+      "Cette application ne lit que les fichiers (Vidéos et Musique) déjà présents sur votre téléphone. Nous ne consultons pas vos photos privées ou autres documents personnels.",
       "offlineExperience": "2. Expérience Hors Ligne",
       "offlineExperienceContent":
-          "Toutes vos listes de lecture et vos favoris sont enregistrés directement sur votre appareil. Nous ne téléchargeons pas vos fichiers ou données sur un site Web ou un serveur.",
+      "Toutes vos listes de lecture et vos favoris sont enregistrés directement sur votre appareil. Nous ne téléchargeons pas vos fichiers ou données sur un site Web ou un serveur.",
       "noPersonalTracking": "3. Pas de Suivi Personnel",
       "noPersonalTrackingContent":
-          "Nous ne demandons ni votre nom, ni votre e-mail, ni votre numéro de téléphone. Vous pouvez utiliser toutes les fonctionnalités de cette application sans jamais créer de compte.",
+      "Nous ne demandons ni votre nom, ni votre e-mail, ni votre numéro de téléphone. Vous pouvez utiliser toutes les fonctionnalités de cette application sans jamais créer de compte.",
       "whyPermissions": "4. Pourquoi avons-nous besoin de permissions ?",
       "whyPermissionsContent":
-          "Nous demandons la 'Permission de Stockage' uniquement pour que l'application puisse trouver votre musique et vos vidéos afin de les lire. Sans cela, l'application ne pourra pas afficher vos fichiers.",
+      "Nous demandons la 'Permission de Stockage' uniquement pour que l'application puisse trouver votre musique et vos vidéos afin de les lire. Sans cela, l'application ne pourra pas afficher vos fichiers.",
       "securePrivate": "5. Sécurisé et Privé",
       "securePrivateContent":
-          "Comme tout est stocké sur votre téléphone, vos données sont totalement privées. Si vous supprimez l'application, vos listes de lecture créées dans l'application seront également supprimées.",
+      "Comme tout est stocké sur votre téléphone, vos données sont totalement privées. Si vous supprimez l'application, vos listes de lecture créées dans l'application seront également supprimées.",
       "appVersion": "Version",
       "allRightsReserved": "Tous droits réservés",
       "viewAll": "Voir tout",
@@ -758,7 +768,7 @@ class AppStrings {
       "showThumb500": "Afficher la miniature taille 500",
       "howWouldYouLove": "Comment aimez-vous cette application ?",
       "areYouSureWantDeleteThisFile":
-          "Êtes-vous sûr de vouloir supprimer ce fichier ?",
+      "Êtes-vous sûr de vouloir supprimer ce fichier ?",
       "searchAnything": "Rechercher n'importe quoi....",
       "deleteThisFile": "Supprimer ce fichier ?",
       "searchVideosAudios": "Rechercher des vidéos et des audios",
@@ -799,16 +809,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Regardez, Jouez et Profitez",
       "smoothPlayback": "Lecture fluide. Tous formats supportés",
       "enjoyVideosMusic":
-          "Profitez des vidéos, de la musique et de la HD avec des commandes intelligentes",
+      "Profitez des vidéos, de la musique et de la HD avec des commandes intelligentes",
       "enjoyUltraHDVideos":
-          "Profitez de vidéos Ultra HD avec des performances ultra-rapides sans limites",
+      "Profitez de vidéos Ultra HD avec des performances ultra-rapides sans limites",
       "smoothPlaybackForEvery": "Lecture fluide pour chaque format vidéo",
       "appFeedback": "Commentaires sur l'application",
       "stars": "Étoiles",
       "hiIGave": "Salut, j'ai donné",
       "hereIsMyFeedback:": "Voici mon avis :",
       "checkOutThisAmazing":
-          "Découvrez cette incroyable application de lecteur vidéo et musique !",
+      "Découvrez cette incroyable application de lecteur vidéo et musique !",
       "downloadItNowFrom": "Téléchargez-la dès maintenant sur le Play Store :",
       "downloadMediaPlayer": "Télécharger le lecteur média",
       "appearance": "Apparence",
@@ -846,30 +856,32 @@ class AppStrings {
       "deleteTheAsset": "Supprimer le fichier",
       "noFavouriteYet": "Pas encore de favoris.",
       "addSomeVideosOrAudio":
-          "Ajoutez des vidéos ou du son pour les voir ici !",
+      "Ajoutez des vidéos ou du son pour les voir ici !",
     },
     'de': {
+      'noInternetTitle': 'Keine Internetverbindung',
+      'noInternetBody': 'Bitte überprüfen Sie Ihre Netzwerkeinstellungen.',
       "internetRequired": "Internet erforderlich",
       "mandatoryInternetContent":
-          "Um kostenlose Dienste nutzen zu können, ist eine aktive Internetverbindung zum Laden von Werbung zwingend erforderlich.",
+      "Um kostenlose Dienste nutzen zu können, ist eine aktive Internetverbindung zum Laden von Werbung zwingend erforderlich.",
       "checkConnection": "Verbindung prüfen",
       "restoringConnection": "Verbinden...",
       "renamePlaylist": "Playlist umbenennen",
       "yourMediaYourPrivacy": "1. Ihre Medien, Ihre Privatsphäre",
       "yourMediaYourPrivacyContent":
-          "Diese App spielt nur Dateien (Videos und Musik) ab, die sich bereits auf Ihrem Telefon befinden. Wir sehen uns keine privaten Fotos oder andere persönliche Dokumente an.",
+      "Diese App spielt nur Dateien (Videos und Musik) ab, die sich bereits auf Ihrem Telefon befinden. Wir sehen uns keine privaten Fotos oder andere persönliche Dokumente an.",
       "offlineExperience": "2. Offline-Erfahrung",
       "offlineExperienceContent":
-          "Alle von Ihnen erstellten Playlists und Favoriten werden direkt auf Ihrem Gerät gespeichert. Wir laden Ihre Dateien oder Daten nicht auf Websites oder Server hoch.",
+      "Alle von Ihnen erstellten Playlists und Favoriten werden direkt auf Ihrem Gerät gespeichert. Wir laden Ihre Dateien oder Daten nicht auf Websites oder Server hoch.",
       "noPersonalTracking": "3. Kein persönliches Tracking",
       "noPersonalTrackingContent":
-          "Wir fragen nicht nach Ihrem Namen, Ihrer E-Mail-Adresse oder Ihrer Telefonnummer. Sie können alle Funktionen dieser App nutzen, ohne jemals ein Konto zu erstellen.",
+      "Wir fragen nicht nach Ihrem Namen, Ihrer E-Mail-Adresse oder Ihrer Telefonnummer. Sie können alle Funktionen dieser App nutzen, ohne jemals ein Konto zu erstellen.",
       "whyPermissions": "4. Warum benötigen wir Berechtigungen?",
       "whyPermissionsContent":
-          "Wir bitten nur um die 'Speicherberechtigung', damit die App Ihre Musik und Videos finden und abspielen kann. Ohne diese Berechtigung kann die App Ihre Dateien nicht anzeigen.",
+      "Wir bitten nur um die 'Speicherberechtigung', damit die App Ihre Musik und Videos finden und abspielen kann. Ohne diese Berechtigung kann die App Ihre Dateien nicht anzeigen.",
       "securePrivate": "5. Sicher und privat",
       "securePrivateContent":
-          "Da alles auf Ihrem Telefon gespeichert ist, sind Ihre Daten absolut privat. Wenn Sie die App löschen, werden auch die in der App erstellten Playlists entfernt.",
+      "Da alles auf Ihrem Telefon gespeichert ist, sind Ihre Daten absolut privat. Wenn Sie die App löschen, werden auch die in der App erstellten Playlists entfernt.",
       "appVersion": "Version",
       "allRightsReserved": "Alle Rechte vorbehalten",
       "viewAll": "Alle ansehen",
@@ -926,7 +938,7 @@ class AppStrings {
       "showThumb500": "Vorschau in Größe 500 anzeigen",
       "howWouldYouLove": "Wie gefällt Ihnen diese App?",
       "areYouSureWantDeleteThisFile":
-          "Sind Sie sicher, dass Sie diese Datei löschen möchten?",
+      "Sind Sie sicher, dass Sie diese Datei löschen möchten?",
       "searchAnything": "Alles suchen....",
       "deleteThisFile": "Diese Datei löschen?",
       "searchVideosAudios": "Videos und Audios suchen",
@@ -949,7 +961,7 @@ class AppStrings {
       "choosePlaylist": "Playlist auswählen",
       "newPlaylistCreated": "Neue Playlist erstellt",
       "pleaseSelectEnterPlaylistName":
-          "Bitte Playlist-Namen wählen oder eingeben",
+      "Bitte Playlist-Namen wählen oder eingeben",
       "alreadyExistIn": "Bereits vorhanden in",
       "alreadyExists": "existiert bereits",
       "addedTo": "Hinzugefügt zu",
@@ -968,16 +980,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Ansehen, Abspielen & Genießen",
       "smoothPlayback": "Flüssige Wiedergabe. Alle Formate unterstützt",
       "enjoyVideosMusic":
-          "Videos, Musik & HD-Wiedergabe mit Smart-Steuerung genießen",
+      "Videos, Musik & HD-Wiedergabe mit Smart-Steuerung genießen",
       "enjoyUltraHDVideos":
-          "Ultra-HD-Videos mit blitzschneller Performance und ohne Limits genießen",
+      "Ultra-HD-Videos mit blitzschneller Performance und ohne Limits genießen",
       "smoothPlaybackForEvery": "Flüssige Wiedergabe für jedes Videoformat",
       "appFeedback": "App-Feedback",
       "stars": "Sterne",
       "hiIGave": "Hallo, ich habe",
       "hereIsMyFeedback:": "Hier ist mein Feedback:",
       "checkOutThisAmazing":
-          "Schau dir diese tolle Video- & Musik-Player-App an!",
+      "Schau dir diese tolle Video- & Musik-Player-App an!",
       "downloadItNowFrom": "Jetzt im Play Store herunterladen:",
       "downloadMediaPlayer": "Media Player herunterladen",
       "appearance": "Erscheinungsbild",
@@ -1015,30 +1027,32 @@ class AppStrings {
       "deleteTheAsset": "Datei löschen",
       "noFavouriteYet": "Noch keine Favoriten.",
       "addSomeVideosOrAudio":
-          "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
+      "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
     },
     'gu': {
+      'noInternetTitle': 'ઇન્ટરનેટ કનેક્શન નથી',
+      'noInternetBody': 'મહેરબાની કરીને તમારા નેટવર્ક સેટિંગ્સ તપાસો.',
       "internetRequired": "ઇન્ટરનેટ જરૂરી છે",
       "mandatoryInternetContent":
-          "મફત સેવાઓનો આનંદ માણવા માટે, જાહેરાતો લોડ કરવા માટે સક્રિય ઇન્ટરનેટ કનેક્શન ફરજિયાત છે.",
+      "મફત સેવાઓનો આનંદ માણવા માટે, જાહેરાતો લોડ કરવા માટે સક્રિય ઇન્ટરનેટ કનેક્શન ફરજિયાત છે.",
       "checkConnection": "કનેક્શન તપાસો",
       "restoringConnection": "કનેક્ટ થઈ રહ્યું છે...",
       "renamePlaylist": "પ્લેલિસ્ટનું નામ બદલો",
       "yourMediaYourPrivacy": "૧. તમારું મીડિયા, તમારી ગોપનીયતા",
       "yourMediaYourPrivacyContent":
-          "આ એપ ફક્ત તમારા ફોનમાં પહેલેથી જ હોય તેવા ફાઇલો (વીડિયો અને મ્યુઝિક) વગાડે છે. અમે તમારા ખાનગી ફોટા કે અન્ય વ્યક્તિગત દસ્તાવેજો જોતા નથી.",
+      "આ એપ ફક્ત તમારા ફોનમાં પહેલેથી જ હોય તેવા ફાઇલો (વીડિયો અને મ્યુઝિક) વગાડે છે. અમે તમારા ખાનગી ફોટા કે અન્ય વ્યક્તિગત દસ્તાવેજો જોતા નથી.",
       "offlineExperience": "૨. ઓફલાઇન અનુભવ",
       "offlineExperienceContent":
-          "તમારી બધી બનાવેલી પ્લેલિસ્ટ્સ અને ફેવરિટ્સ સીધા તમારા ઉપકરણ પર સેવ થાય છે. અમે તમારી ફાઇલો અથવા ડેટા કોઈ પણ વેબસાઇટ કે સર્વર પર અપલોડ કરતા નથી.",
+      "તમારી બધી બનાવેલી પ્લેલિસ્ટ્સ અને ફેવરિટ્સ સીધા તમારા ઉપકરણ પર સેવ થાય છે. અમે તમારી ફાઇલો અથવા ડેટા કોઈ પણ વેબસાઇટ કે સર્વર પર અપલોડ કરતા નથી.",
       "noPersonalTracking": "૩. કોઈ વ્યક્તિગત ટ્રેકિંગ નથી",
       "noPersonalTrackingContent":
-          "અમે તમારું નામ, ઇમેઇલ કે ફોન નંબર માંગતા નથી. તમે એકાઉન્ટ બનાવ્યા વગર આ એપની તમામ સુવિધાઓનો ઉપયોગ કરી શકો છો.",
+      "અમે તમારું નામ, ઇમેઇલ કે ફોન નંબર માંગતા નથી. તમે એકાઉન્ટ બનાવ્યા વગર આ એપની તમામ સુવિધાઓનો ઉપયોગ કરી શકો છો.",
       "whyPermissions": "૪. અમને પરવાનગીની જરૂર કેમ છે?",
       "whyPermissionsContent":
-          "અમે ફક્ત 'સ્ટોરેજ પરમિશન' માંગીએ છીએ જેથી એપ તમારા મ્યુઝિક અને વીડિયો શોધી શકે અને વગાડી શકે. આના વગર, એપ તમારી ફાઇલો બતાવી શકશે નહીં.",
+      "અમે ફક્ત 'સ્ટોરેજ પરમિશન' માંગીએ છીએ જેથી એપ તમારા મ્યુઝિક અને વીડિયો શોધી શકે અને વગાડી શકે. આના વગર, એપ તમારી ફાઇલો બતાવી શકશે નહીં.",
       "securePrivate": "૫. સુરક્ષિત અને ખાનગી",
       "securePrivateContent":
-          "બધું તમારા ફોન પર સ્ટોર હોવાથી, તમારો ડેટા સંપૂર્ણપણે ખાનગી છે. જો તમે એપ ડિલીટ કરો છો, તો એપમાં બનાવેલી તમારી પ્લેલિસ્ટ્સ પણ નીકળી જશે.",
+      "બધું તમારા ફોન પર સ્ટોર હોવાથી, તમારો ડેટા સંપૂર્ણપણે ખાનગી છે. જો તમે એપ ડિલીટ કરો છો, તો એપમાં બનાવેલી તમારી પ્લેલિસ્ટ્સ પણ નીકળી જશે.",
       "appVersion": "સંસ્કરણ",
       "allRightsReserved": "સર્વાધિકાર સુરક્ષિત",
       "viewAll": "બધું જુઓ",
@@ -1095,7 +1109,7 @@ class AppStrings {
       "showThumb500": "500 સાઈઝની થંબ બતાવો",
       "howWouldYouLove": "તમને આ એપ કેવી લાગી?",
       "areYouSureWantDeleteThisFile":
-          "શું તમે ખરેખર આ ફાઈલ ડિલીટ કરવા માંગો છો?",
+      "શું તમે ખરેખર આ ફાઈલ ડિલીટ કરવા માંગો છો?",
       "searchAnything": "કંઈપણ શોધો....",
       "deleteThisFile": "આ ફાઈલ ડિલીટ કરવી છે?",
       "searchVideosAudios": "વિડિઓ અને ઓડિયો શોધો",
@@ -1118,7 +1132,7 @@ class AppStrings {
       "choosePlaylist": "પ્લેલિસ્ટ પસંદ કરો",
       "newPlaylistCreated": "નવી પ્લેલિસ્ટ બનાવવામાં આવી",
       "pleaseSelectEnterPlaylistName":
-          "કૃપા કરીને પ્લેલિસ્ટનું નામ પસંદ કરો અથવા લખો",
+      "કૃપા કરીને પ્લેલિસ્ટનું નામ પસંદ કરો અથવા લખો",
       "alreadyExistIn": "પહેલેથી જ આમાં છે:",
       "alreadyExists": "પહેલેથી જ અસ્તિત્વમાં છે",
       "addedTo": "આમાં ઉમેરવામાં આવ્યું:",
@@ -1137,9 +1151,9 @@ class AppStrings {
       "wtachPlayEnjoy": "જુઓ, વગાડો અને આનંદ માણો",
       "smoothPlayback": "સ્મૂધ પ્લેબેક. દરેક ફોર્મેટ સપોર્ટેડ છે",
       "enjoyVideosMusic":
-          "સ્માર્ટ કંટ્રોલ સાથે વીડિયો, મ્યુઝિક અને HD પ્લેબેકનો આનંદ માણો",
+      "સ્માર્ટ કંટ્રોલ સાથે વીડિયો, મ્યુઝિક અને HD પ્લેબેકનો આનંદ માણો",
       "enjoyUltraHDVideos":
-          "વીજળી જેવી ઝડપી કામગીરી અને શૂન્ય મર્યાદા સાથે અલ્ટ્રા HD વીડિયોનો આનંદ માણો",
+      "વીજળી જેવી ઝડપી કામગીરી અને શૂન્ય મર્યાદા સાથે અલ્ટ્રા HD વીડિયોનો આનંદ માણો",
       "smoothPlaybackForEvery": "દરેક વીડિયો ફોર્મેટ માટે સ્મૂધ પ્લેબેક",
       "appFeedback": "એપ્લિકેશન પ્રતિસાદ",
       "stars": "તારા",
@@ -1183,30 +1197,32 @@ class AppStrings {
       "deleteTheAsset": "ફાઇલ કાઢી નાખો",
       "noFavouriteYet": "હજુ સુધી કોઈ મનપસંદ નથી.",
       "addSomeVideosOrAudio":
-          "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
+      "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
     },
     'hi': {
+      'noInternetTitle': 'कोई इंटरनेट कनेक्शन नहीं',
+      'noInternetBody': 'कृपया अपनी नेटवर्क सेटिंग्स जांचें।',
       "internetRequired": "इंटरनेट आवश्यक है",
       "mandatoryInternetContent":
-          "मुफ़्त सेवाओं का आनंद लेने के लिए, विज्ञापનો लोड करने के लिए एक सक्रिय इंटरनेट कनेक्शन अनिवार्य है।",
+      "मुफ़्त सेवाओं का आनंद लेने के लिए, विज्ञापનો लोड करने के लिए एक सक्रिय इंटरनेट कनेक्शन अनिवार्य है।",
       "checkConnection": "कनेक्शन जांचें",
       "restoringConnection": "कनेक्ट हो रहा है...",
       "renamePlaylist": "प्लेलिस्ट का नाम बदलें",
       "yourMediaYourPrivacy": "१. आपका मीडिया, आपकी गोपनीयता",
       "yourMediaYourPrivacyContent":
-          "यह ऐप केवल उन्हीं फाइलों (वीडियो और संगीत) को चलाता है जो पहले से ही आपके फोन पर हैं। हम आपकी निजी तस्वीरों या अन्य व्यक्तिगत दस्तावेजों को नहीं देखते हैं।",
+      "यह ऐप केवल उन्हीं फाइलों (वीडियो और संगीत) को चलाता है जो पहले से ही आपके फोन पर हैं। हम आपकी निजी तस्वीरों या अन्य व्यक्तिगत दस्तावेजों को नहीं देखते हैं।",
       "offlineExperience": "२. ऑफलाइन अनुभव",
       "offlineExperienceContent":
-          "आपकी सभी बनाई गई प्लेलिस्ट और पसंदीदा सीधे आपके डिवाइस पर सहेजे जाते हैं। हम आपकी फ़ाइलों या डेटा को किसी भी वेबसाइट या सर्वर पर अपलोड नहीं करते हैं।",
+      "आपकी सभी बनाई गई प्लेलिस्ट और पसंदीदा सीधे आपके डिवाइस पर सहेजे जाते हैं। हम आपकी फ़ाइलों या डेटा को किसी भी वेबसाइट या सर्वर पर अपलोड नहीं करते हैं।",
       "noPersonalTracking": "३. कोई व्यक्तिगत ट्रैकिंग नहीं",
       "noPersonalTrackingContent":
-          "हम आपका नाम, ईमेल या फोन नंबर नहीं मांगते हैं। आप बिना खाता बनाए इस ऐप की सभी सुविधाओं का उपयोग कर सकते हैं।",
+      "हम आपका नाम, ईमेल या फोन नंबर नहीं मांगते हैं। आप बिना खाता बनाए इस ऐप की सभी सुविधाओं का उपयोग कर सकते हैं।",
       "whyPermissions": "४. हमें अनुमति की आवश्यकता क्यों है?",
       "whyPermissionsContent":
-          "हम केवल 'स्टोरेज अनुमति' मांगते हैं ताकि ऐप आपके संगीत और वीडियो को ढूंढ सके और उन्हें चला सके। इसके बिना, ऐप आपकी फ़ाइलें नहीं दिखा पाएगा।",
+      "हम केवल 'स्टोरेज अनुमति' मांगते हैं ताकि ऐप आपके संगीत और वीडियो को ढूंढ सके और उन्हें चला सके। इसके बिना, ऐप आपकी फ़ाइलें नहीं दिखा पाएगा।",
       "securePrivate": "५. सुरक्षित और निजी",
       "securePrivateContent":
-          "चूंकि सब कुछ आपके फोन पर संग्रहीत है, इसलिए आपका डेटा पूरी तरह से निजी है। यदि आप ऐप को हटा देते हैं, तो ऐप के भीतर आपकी बनाई गई प्लेलिस्ट भी हटा दी जाएगी।",
+      "चूंकि सब कुछ आपके फोन पर संग्रहीत है, इसलिए आपका डेटा पूरी तरह से निजी है। यदि आप ऐप को हटा देते हैं, तो ऐप के भीतर आपकी बनाई गई प्लेलिस्ट भी हटा दी जाएगी।",
       "appVersion": "संस्करण",
       "allRightsReserved": "सर्वाधिकार सुरक्षित",
       "viewAll": "सभी देखें",
@@ -1263,7 +1279,7 @@ class AppStrings {
       "showThumb500": "500 आकार का थंब दिखाएं",
       "howWouldYouLove": "आपको यह ऐप कैसा लगा?",
       "areYouSureWantDeleteThisFile":
-          "क्या आप वाकई इस फाइल को हटाना चाहते हैं?",
+      "क्या आप वाकई इस फाइल को हटाना चाहते हैं?",
       "searchAnything": "कुछ भी खोजें....",
       "deleteThisFile": "इस फाइल को हटाएं?",
       "searchVideosAudios": "वीडियो और ऑडियो खोजें",
@@ -1286,7 +1302,7 @@ class AppStrings {
       "choosePlaylist": "प्लेलिस्ट चुनें",
       "newPlaylistCreated": "नई प्लेलिस्ट बनाई गई",
       "pleaseSelectEnterPlaylistName":
-          "कृपया प्लेलिस्ट का नाम चुनें या दर्ज करें",
+      "कृपया प्लेलिस्ट का नाम चुनें या दर्ज करें",
       "alreadyExistIn": "पहले से ही इसमें मौजूद है:",
       "alreadyExists": "पहले से मौजूद है",
       "addedTo": "इसमें जोड़ा गया:",
@@ -1305,9 +1321,9 @@ class AppStrings {
       "wtachPlayEnjoy": "देखें, चलाएं और आनंद लें",
       "smoothPlayback": "स्मूथ प्लेबैक। सभी फॉर्मेट समर्थित हैं",
       "enjoyVideosMusic":
-          "स्मार्ट कंट्रोल के साथ वीडियो, संगीत और एचडी प्लेबैक का आनंद लें",
+      "स्मार्ट कंट्रोल के साथ वीडियो, संगीत और एचडी प्लेबैक का आनंद लें",
       "enjoyUltraHDVideos":
-          "बिजली की गति और शून्य सीमा के साथ अल्ट्रा एचडी वीडियो का आनंद लें",
+      "बिजली की गति और शून्य सीमा के साथ अल्ट्रा एचडी वीडियो का आनंद लें",
       "smoothPlaybackForEvery": "हर वीडियो फॉर्मेट के लिए स्मूथ प्लेबैक",
       "appFeedback": "ऐप फीडबैक",
       "stars": "सितारे",
@@ -1351,30 +1367,32 @@ class AppStrings {
       "deleteTheAsset": "फ़ाइल हटाएं",
       "noFavouriteYet": "अभी तक कोई पसंदीदा नहीं है।",
       "addSomeVideosOrAudio":
-          "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
+      "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
     },
     'id': {
+      'noInternetTitle': 'Tidak Ada Koneksi Internet',
+      'noInternetBody': 'Silakan periksa pengaturan jaringan Anda.',
       "internetRequired": "Koneksi Internet Diperlukan",
       "mandatoryInternetContent":
-          "Untuk menikmati layanan gratis, koneksi internet aktif wajib diperlukan untuk memuat iklan.",
+      "Untuk menikmati layanan gratis, koneksi internet aktif wajib diperlukan untuk memuat iklan.",
       "checkConnection": "Periksa Koneksi",
       "restoringConnection": "Menghubungkan...",
       "renamePlaylist": "Ubah Nama Daftar Putar",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
-          "Aplikasi ini hanya memutar file (Video dan Musik) yang sudah ada di ponsel Anda. Kami tidak melihat foto pribadi atau dokumen pribadi lainnya.",
+      "Aplikasi ini hanya memutar file (Video dan Musik) yang sudah ada di ponsel Anda. Kami tidak melihat foto pribadi atau dokumen pribadi lainnya.",
       "offlineExperience": "2. Pengalaman Offline",
       "offlineExperienceContent":
-          "Semua Daftar Putar dan Favorit yang Anda buat disimpan langsung di perangkat Anda. Kami tidak mengunggah file atau data Anda ke situs web atau server mana pun.",
+      "Semua Daftar Putar dan Favorit yang Anda buat disimpan langsung di perangkat Anda. Kami tidak mengunggah file atau data Anda ke situs web atau server mana pun.",
       "noPersonalTracking": "3. Tanpa Pelacakan Pribadi",
       "noPersonalTrackingContent":
-          "Kami tidak meminta nama, email, atau nomor telepon Anda. Anda dapat menggunakan semua fitur aplikasi ini tanpa perlu membuat akun.",
+      "Kami tidak meminta nama, email, atau nomor telepon Anda. Anda dapat menggunakan semua fitur aplikasi ini tanpa perlu membuat akun.",
       "whyPermissions": "4. Mengapa kami membutuhkan Izin?",
       "whyPermissionsContent":
-          "Kami meminta 'Izin Penyimpanan' hanya agar aplikasi dapat menemukan musik dan video Anda untuk diputar. Tanpa izin ini, aplikasi tidak akan dapat menampilkan file Anda.",
+      "Kami meminta 'Izin Penyimpanan' hanya agar aplikasi dapat menemukan musik dan video Anda untuk diputar. Tanpa izin ini, aplikasi tidak akan dapat menampilkan file Anda.",
       "securePrivate": "5. Aman & Pribadi",
       "securePrivateContent":
-          "Karena semuanya disimpan di ponsel Anda, data Anda sepenuhnya pribadi. Jika Anda menghapus aplikasi, daftar putar yang Anda buat di dalam aplikasi juga akan dihapus.",
+      "Karena semuanya disimpan di ponsel Anda, data Anda sepenuhnya pribadi. Jika Anda menghapus aplikasi, daftar putar yang Anda buat di dalam aplikasi juga akan dihapus.",
       "appVersion": "Versi",
       "allRightsReserved": "Hak Cipta Dilindungi",
       "viewAll": "Lihat semua",
@@ -1431,7 +1449,7 @@ class AppStrings {
       "showThumb500": "Tampilkan thumb ukuran 500",
       "howWouldYouLove": "Seberapa Anda menyukai aplikasi ini?",
       "areYouSureWantDeleteThisFile":
-          "Apakah Anda yakin ingin menghapus file ini?",
+      "Apakah Anda yakin ingin menghapus file ini?",
       "searchAnything": "Cari apa saja....",
       "deleteThisFile": "Hapus file ini?",
       "searchVideosAudios": "Cari video dan audio",
@@ -1454,7 +1472,7 @@ class AppStrings {
       "choosePlaylist": "Pilih Daftar Putar",
       "newPlaylistCreated": "Daftar Putar Baru Dibuat",
       "pleaseSelectEnterPlaylistName":
-          "Silakan pilih atau masukkan nama daftar putar",
+      "Silakan pilih atau masukkan nama daftar putar",
       "alreadyExistIn": "Sudah ada di",
       "alreadyExists": "sudah ada",
       "addedTo": "Ditambahkan ke",
@@ -1473,16 +1491,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Tonton, Putar & Nikmati",
       "smoothPlayback": "Pemutaran Lancar. Semua Format Didukung",
       "enjoyVideosMusic":
-          "Nikmati Video, Musik & Pemutaran HD dengan Kontrol Pintar",
+      "Nikmati Video, Musik & Pemutaran HD dengan Kontrol Pintar",
       "enjoyUltraHDVideos":
-          "Nikmati Video Ultra HD dengan Performa Kilat & Tanpa Batas",
+      "Nikmati Video Ultra HD dengan Performa Kilat & Tanpa Batas",
       "smoothPlaybackForEvery": "Pemutaran Lancar untuk Setiap Format Video",
       "appFeedback": "Umpan Balik Aplikasi",
       "stars": "Bintang",
       "hiIGave": "Halo, saya memberikan",
       "hereIsMyFeedback:": "Berikut adalah umpan balik saya:",
       "checkOutThisAmazing":
-          "Lihat aplikasi Pemutar Video & Musik yang luar biasa ini!",
+      "Lihat aplikasi Pemutar Video & Musik yang luar biasa ini!",
       "downloadItNowFrom": "Unduh sekarang dari Play Store:",
       "downloadMediaPlayer": "Unduh Media Player",
       "appearance": "Tampilan",
@@ -1520,30 +1538,32 @@ class AppStrings {
       "deleteTheAsset": "Hapus aset",
       "noFavouriteYet": "Belum ada favorit.",
       "addSomeVideosOrAudio":
-          "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
+      "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
     },
     'it': {
+      'noInternetTitle': 'Nessuna connessione Internet',
+      'noInternetBody': 'Controlla le impostazioni di rete.',
       "internetRequired": "Internet richiesto",
       "mandatoryInternetContent":
-          "Per usufruire dei servizi gratuiti, è obbligatoria una connessione Internet attiva per caricare gli annunci.",
+      "Per usufruire dei servizi gratuiti, è obbligatoria una connessione Internet attiva per caricare gli annunci.",
       "checkConnection": "Controlla connessione",
       "restoringConnection": "Connessione in corso...",
       "renamePlaylist": "Rinomina playlist",
       "yourMediaYourPrivacy": "1. I Tuoi Media, La Tua Privacy",
       "yourMediaYourPrivacyContent":
-          "Questa app riproduce solo i file (Video e Musica) che sono già sul tuo telefono. Non guardiamo le tue foto private o altri documenti personali.",
+      "Questa app riproduce solo i file (Video e Musica) che sono già sul tuo telefono. Non guardiamo le tue foto private o altri documenti personali.",
       "offlineExperience": "2. Esperienza Offline",
       "offlineExperienceContent":
-          "Tutte le tue playlist e i tuoi preferiti creati sono salvati direttamente sul tuo dispositivo. Non carichiamo i tuoi file o dati su alcun sito web o server.",
+      "Tutte le tue playlist e i tuoi preferiti creati sono salvati direttamente sul tuo dispositivo. Non carichiamo i tuoi file o dati su alcun sito web o server.",
       "noPersonalTracking": "3. Nessun Tracciamento Personale",
       "noPersonalTrackingContent":
-          "Non chiediamo il tuo nome, email o numero di telefono. Puoi usare tutte le funzioni di questa app senza mai creare un account.",
+      "Non chiediamo il tuo nome, email o numero di telefono. Puoi usare tutte le funzioni di questa app senza mai creare un account.",
       "whyPermissions": "4. Perché abbiamo bisogno dei permessi?",
       "whyPermissionsContent":
-          "Chiediamo il 'Permesso di Archiviazione' solo affinché l'app possa trovare la tua musica e i tuoi video per riprodurli. Senza questo, l'app non potrà mostrare i tuoi file.",
+      "Chiediamo il 'Permesso di Archiviazione' solo affinché l'app possa trovare la tua musica e i tuoi video per riprodurli. Senza questo, l'app non potrà mostrare i tuoi file.",
       "securePrivate": "5. Sicuro e Privato",
       "securePrivateContent":
-          "Poiché tutto è memorizzato sul tuo telefono, i tuoi dati sono completamente privati. Se elimini l'app, verranno rimosse anche le playlist create all'interno dell'app.",
+      "Poiché tutto è memorizzato sul tuo telefono, i tuoi dati sono completamente privati. Se elimini l'app, verranno rimosse anche le playlist create all'interno dell'app.",
       "appVersion": "Versione",
       "allRightsReserved": "Tutti i diritti riservati",
       "viewAll": "Visualizza tutto",
@@ -1600,7 +1620,7 @@ class AppStrings {
       "showThumb500": "Mostra anteprima dimensione 500",
       "howWouldYouLove": "Quanto ti piace questa app?",
       "areYouSureWantDeleteThisFile":
-          "Sei sicuro di voler eliminare questo file?",
+      "Sei sicuro di voler eliminare questo file?",
       "searchAnything": "Cerca qualsiasi cosa....",
       "deleteThisFile": "Eliminare questo file?",
       "searchVideosAudios": "Cerca video e audio",
@@ -1623,7 +1643,7 @@ class AppStrings {
       "choosePlaylist": "Scegli Playlist",
       "newPlaylistCreated": "Nuova Playlist Creata",
       "pleaseSelectEnterPlaylistName":
-          "Seleziona o inserisci il nome della playlist",
+      "Seleziona o inserisci il nome della playlist",
       "alreadyExistIn": "Esiste già in",
       "alreadyExists": "esiste già",
       "addedTo": "Aggiunto a",
@@ -1631,7 +1651,7 @@ class AppStrings {
       "fileDeletedSuccessfully": "File eliminato con successo",
       "errorSharingFile": "Errore nella condivisione del file",
       "fileCanNotBeLoaded":
-          "Il file non può essere caricato per la condivisione",
+      "Il file non può essere caricato per la condivisione",
       "fileNotFound": "File non trovato",
       "sharing": "Condivisione:",
       "mediaFile": "File Multimediale",
@@ -1643,16 +1663,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Guarda, Riproduci e Divertiti",
       "smoothPlayback": "Riproduzione fluida. Tutti i formati supportati",
       "enjoyVideosMusic":
-          "Goditi video, musica e riproduzione HD con controlli intelligenti",
+      "Goditi video, musica e riproduzione HD con controlli intelligenti",
       "enjoyUltraHDVideos":
-          "Goditi video Ultra HD con prestazioni fulminee e zero limiti",
+      "Goditi video Ultra HD con prestazioni fulminee e zero limiti",
       "smoothPlaybackForEvery": "Riproduzione fluida per ogni formato video",
       "appFeedback": "Feedback dell'app",
       "stars": "Stelle",
       "hiIGave": "Ciao, ho dato",
       "hereIsMyFeedback:": "Ecco il mio feedback:",
       "checkOutThisAmazing":
-          "Dai un'occhiata a questa incredibile app per video e musica!",
+      "Dai un'occhiata a questa incredibile app per video e musica!",
       "downloadItNowFrom": "Scaricala ora dal Play Store:",
       "downloadMediaPlayer": "Scarica Media Player",
       "appearance": "Aspetto",
@@ -1692,27 +1712,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "Aggiungi video o audio per vederli qui!",
     },
     'ja': {
+      'noInternetTitle': 'インターネット接続がありません',
+      'noInternetBody': 'ネットワーク設定を確認してください।',
       "internetRequired": "インターネットが必要です",
       "mandatoryInternetContent":
-          "無料サービスを利用するには、広告を読み込むためにアクティブなインターネット接続が必須です。",
+      "無料サービスを利用するには、広告を読み込むためにアクティブなインターネット接続が必須です。",
       "checkConnection": "接続を確認",
       "restoringConnection": "接続中...",
       "renamePlaylist": "プレイリスト名を変更",
       "yourMediaYourPrivacy": "1. あなたのメディア、あなたのプライバシー",
       "yourMediaYourPrivacyContent":
-          "このアプリは、すでに携帯電話にあるファイル（ビデオと音楽）のみを再生します。お客様のプライベートな写真やその他の個人的なドキュメントを閲覧することはありません。",
+      "このアプリは、すでに携帯電話にあるファイル（ビデオと音楽）のみを再生します。お客様のプライベートな写真やその他の個人的なドキュメントを閲覧することはありません。",
       "offlineExperience": "2. オフライン体験",
       "offlineExperienceContent":
-          "作成したすべてのプレイリストとお気に入りは、デバイスに直接保存されます。お客様のファイルやデータをウェブサイトやサーバーにアップロードすることはありません。",
+      "作成したすべてのプレイリストとお気に入りは、デバイスに直接保存されます。お客様のファイルやデータをウェブサイトやサーバーにアップロードすることはありません。",
       "noPersonalTracking": "3. 個人情報の追跡なし",
       "noPersonalTrackingContent":
-          "名前、メールアドレス、電話番号を尋ねることはありません。アカウントを作成することなく、このアプリのすべての機能を使用できます。",
+      "名前、メールアドレス、電話番号を尋ねることはありません。アカウントを作成することなく、このアプリのすべての機能を使用できます。",
       "whyPermissions": "4. 権限が必要な理由",
       "whyPermissionsContent":
-          "アプリが音楽やビデオを見つけて再生できるように、「ストレージ権限」のみをリクエストします。これがなければ、アプリはファイルを表示できません。",
+      "アプリが音楽やビデオを見つけて再生できるように、「ストレージ権限」のみをリクエストします。これがなければ、アプリはファイルを表示できません。",
       "securePrivate": "5. 安全でプライベート",
       "securePrivateContent":
-          "すべてが携帯電話に保存されるため、データは完全にプライベートです。アプリを削除すると、アプリ内で作成したプレイリストも削除されます。",
+      "すべてが携帯電話に保存されるため、データは完全にプライベートです。アプリを削除すると、アプリ内で作成したプレイリストも削除されます。",
       "appVersion": "バージョン",
       "allRightsReserved": "無断複写・転載を禁じます",
       "viewAll": "すべて表示",
@@ -1855,6 +1877,8 @@ class AppStrings {
       "addSomeVideosOrAudio": "ビデオやオーディオを追加してここに表示しましょう！",
     },
     'ko': {
+      'noInternetTitle': '인터넷 연결 없음',
+      'noInternetBody': '네트워크 설정을 확인해 주세요.',
       "internetRequired": "인터넷 연결 필요",
       "mandatoryInternetContent": "무료 서비스를 이용하려면 광고 로드를 위해 활성 인터넷 연결이 필수입니다.",
       "checkConnection": "연결 확인",
@@ -1862,19 +1886,19 @@ class AppStrings {
       "renamePlaylist": "재생목록 이름 바꾸기",
       "yourMediaYourPrivacy": "1. 귀하의 미디어, 귀하의 개인정보",
       "yourMediaYourPrivacyContent":
-          "이 앱은 휴대폰에 이미 있는 파일(동영상 및 음악)만 재생합니다. 귀하의 개인 사진이나 기타 개인 문서를 열람하지 않습니다.",
+      "이 앱은 휴대폰에 이미 있는 파일(동영상 및 음악)만 재생합니다. 귀하의 개인 사진이나 기타 개인 문서를 열람하지 않습니다.",
       "offlineExperience": "2. 오프라인 환경",
       "offlineExperienceContent":
-          "사용자가 만든 모든 재생 목록과 즐겨찾기는 장치에 직접 저장됩니다. 당사는 귀하의 파일이나 데이터를 어떠한 웹사이트나 서버에도 업로드하지 않습니다.",
+      "사용자가 만든 모든 재생 목록과 즐겨찾기는 장치에 직접 저장됩니다. 당사는 귀하의 파일이나 데이터를 어떠한 웹사이트나 서버에도 업로드하지 않습니다.",
       "noPersonalTracking": "3. 개인 추적 없음",
       "noPersonalTrackingContent":
-          "이름, 이메일 또는 전화번호를 요구하지 않습니다. 계정을 만들지 않고도 이 앱의 모든 기능을 사용할 수 있습니다.",
+      "이름, 이메일 또는 전화번호를 요구하지 않습니다. 계정을 만들지 않고도 이 앱의 모든 기능을 사용할 수 있습니다.",
       "whyPermissions": "4. 권한이 필요한 이유는 무엇인가요?",
       "whyPermissionsContent":
-          "앱이 음악과 동영상을 찾아 재생할 수 있도록 '저장소 권한'만 요청합니다. 이 권한이 없으면 앱에서 파일을 표시할 수 없습니다.",
+      "앱이 음악과 동영상을 찾아 재생할 수 있도록 '저장소 권한'만 요청합니다. 이 권한이 없으면 앱에서 파일을 표시할 수 없습니다.",
       "securePrivate": "5. 안전 및 보안",
       "securePrivateContent":
-          "모든 것이 휴대폰에 저장되므로 데이터는 완전히 비공개입니다. 앱을 삭제하면 앱 내에서 만든 재생 목록도 삭제됩니다.",
+      "모든 것이 휴대폰에 저장되므로 데이터는 완전히 비공개입니다. 앱을 삭제하면 앱 내에서 만든 재생 목록도 삭제됩니다.",
       "appVersion": "버전",
       "allRightsReserved": "모든 권리 보유",
       "viewAll": "모두 보기",
@@ -2017,27 +2041,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "여기에 표시할 비디오나 오디오를 추가하세요!",
     },
     'ms': {
+      'noInternetTitle': 'Tiada Sambungan Internet',
+      'noInternetBody': 'Sila semak tetapan rangkaian anda.',
       "internetRequired": "Internet Diperlukan",
       "mandatoryInternetContent":
-          "Untuk menikmati perkhidmatan percuma, sambungan internet yang aktif adalah wajib untuk memuatkan iklan.",
+      "Untuk menikmati perkhidmatan percuma, sambungan internet yang aktif adalah wajib untuk memuatkan iklan.",
       "checkConnection": "Semak Sambungan",
       "restoringConnection": "Menghubungkan...",
       "renamePlaylist": "Namakan semula Senarai Main",
       "yourMediaYourPrivacy": "1. Media Anda, Privasi Anda",
       "yourMediaYourPrivacyContent":
-          "Aplikasi ini hanya memainkan fail (Video dan Muzik) yang sudah ada dalam telefon anda. Kami tidak melihat foto peribadi atau dokumen peribadi anda yang lain.",
+      "Aplikasi ini hanya memainkan fail (Video dan Muzik) yang sudah ada dalam telefon anda. Kami tidak melihat foto peribadi atau dokumen peribadi anda yang lain.",
       "offlineExperience": "2. Pengalaman Luar Talian",
       "offlineExperienceContent":
-          "Semua Senarai Main dan Kegemaran yang anda buat disimpan terus pada peranti anda. Kami tidak memuat naik fail atau data anda ke mana-mana tapak web atau pelayan.",
+      "Semua Senarai Main dan Kegemaran yang anda buat disimpan terus pada peranti anda. Kami tidak memuat naik fail atau data anda ke mana-mana tapak web atau pelayan.",
       "noPersonalTracking": "3. Tiada Penjejakan Peribadi",
       "noPersonalTrackingContent":
-          "Kami tidak meminta nama, e-mel atau nombor telefon anda. Anda boleh menggunakan semua ciri aplikasi ini tanpa perlu membuat akaun.",
+      "Kami tidak meminta nama, e-mel atau nombor telefon anda. Anda boleh menggunakan semua ciri aplikasi ini tanpa perlu membuat akaun.",
       "whyPermissions": "4. Mengapa kami memerlukan Kebenaran?",
       "whyPermissionsContent":
-          "Kami meminta 'Kebenaran Storan' hanya supaya aplikasi dapat mencari muzik dan video anda untuk dimainkan. Tanpa ini, aplikasi tidak akan dapat menunjukkan fail anda.",
+      "Kami meminta 'Kebenaran Storan' hanya supaya aplikasi dapat mencari muzik dan video anda untuk dimainkan. Tanpa ini, aplikasi tidak akan dapat menunjukkan fail anda.",
       "securePrivate": "5. Selamat & Peribadi",
       "securePrivateContent":
-          "Oleh kerana semuanya disimpan dalam telefon anda, data anda adalah sulit sepenuhnya. Jika anda memadamkan aplikasi, senarai main yang anda buat dalam aplikasi juga akan dikeluarkan.",
+      "Oleh kerana semuanya disimpan dalam telefon anda, data anda adalah sulit sepenuhnya. Jika anda memadamkan aplikasi, senarai main yang anda buat dalam aplikasi juga akan dikeluarkan.",
       "appVersion": "Versi",
       "allRightsReserved": "Hak Cipta Terpelihara",
       "viewAll": "Lihat semua",
@@ -2094,7 +2120,7 @@ class AppStrings {
       "showThumb500": "Tunjukkan thumb saiz 500",
       "howWouldYouLove": "Sejauh mana anda menyukai aplikasi ini?",
       "areYouSureWantDeleteThisFile":
-          "Adakah anda pasti mahu memadam fail ini?",
+      "Adakah anda pasti mahu memadam fail ini?",
       "searchAnything": "Cari apa sahaja....",
       "deleteThisFile": "Padam fail ini?",
       "searchVideosAudios": "Cari video dan audio",
@@ -2117,7 +2143,7 @@ class AppStrings {
       "choosePlaylist": "Pilih Senarai Main",
       "newPlaylistCreated": "Senarai Main Baru Dicipta",
       "pleaseSelectEnterPlaylistName":
-          "Sila pilih atau masukkan nama senarai main",
+      "Sila pilih atau masukkan nama senarai main",
       "alreadyExistIn": "Sudah wujud dalam",
       "alreadyExists": "sudah wujud",
       "addedTo": "Ditambah ke",
@@ -2136,16 +2162,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Tonton, Main & Nikmati",
       "smoothPlayback": "Main Semula Lancar. Semua Format Disokong",
       "enjoyVideosMusic":
-          "Nikmati Video, Muzik & Main Semula HD dengan Kawalan Pintar",
+      "Nikmati Video, Muzik & Main Semula HD dengan Kawalan Pintar",
       "enjoyUltraHDVideos":
-          "Nikmati Video Ultra HD dengan Prestasi Sangat Pantas & Tanpa Had",
+      "Nikmati Video Ultra HD dengan Prestasi Sangat Pantas & Tanpa Had",
       "smoothPlaybackForEvery": "Main Semula Lancar untuk Setiap Format Video",
       "appFeedback": "Maklum Balas Apl",
       "stars": "Bintang",
       "hiIGave": "Hai, saya berikan",
       "hereIsMyFeedback:": "Berikut adalah maklum balas saya:",
       "checkOutThisAmazing":
-          "Lihat apl Pemain Video & Muzik yang menakjubkan ini!",
+      "Lihat apl Pemain Video & Muzik yang menakjubkan ini!",
       "downloadItNowFrom": "Muat turun sekarang dari Play Store:",
       "downloadMediaPlayer": "Muat Turun Media Player",
       "appearance": "Penampilan",
@@ -2183,30 +2209,32 @@ class AppStrings {
       "deleteTheAsset": "Padam aset",
       "noFavouriteYet": "Belum ada kegemaran.",
       "addSomeVideosOrAudio":
-          "Tambah beberapa video atau audio untuk melihatnya di sini!",
+      "Tambah beberapa video atau audio untuk melihatnya di sini!",
     },
     'mr': {
+      'noInternetTitle': 'इंटरनेट कनेक्शन नाही',
+      'noInternetBody': 'कृपया तुमचे नेटवर्क सेटिंग्ज तपासा.',
       "internetRequired": "इंटरनेट आवश्यक आहे",
       "mandatoryInternetContent":
-          "विनामूल्य सेवांचा आनंद घेण्यासाठी, जाहिराती लोड करण्यासाठी सक्रिय इंटरनेट कनेक्शन अनिवार्य आहे.",
+      "विनामूल्य सेवांचा आनंद घेण्यासाठी, जाहिराती लोड करण्यासाठी सक्रिय इंटरनेट कनेक्शन अनिवार्य आहे.",
       "checkConnection": "कनेक्शन तपासा",
       "restoringConnection": "कनेक्ट होत आहे...",
       "renamePlaylist": "प्लेलिस्टचे नाव बदला",
       "yourMediaYourPrivacy": "१. तुमचे मीडिया, तुमची गोपनीयता",
       "yourMediaYourPrivacyContent":
-          "हे ॲप फक्त तुमच्या फोनवर आधीपासून असलेल्या फायली (व्हिडिओ आणि संगीत) प्ले करते. आम्ही तुमचे खाजगी फोटो किंवा इतर वैयक्तिक दस्तऐवज पाहत नाही.",
+      "हे ॲप फक्त तुमच्या फोनवर आधीपासून असलेल्या फायली (व्हिडिओ आणि संगीत) प्ले करते. आम्ही तुमचे खाजगी फोटो किंवा इतर वैयक्तिक दस्तऐवज पाहत नाही.",
       "offlineExperience": "२. ऑफलाइन अनुभव",
       "offlineExperienceContent":
-          "तुमच्या सर्व तयार केलेल्या प्लेलिस्ट आणि आवडी थेट तुमच्या डिव्हाइसवर जतन केल्या जातात. आम्ही तुमच्या फायली किंवा डेटा कोणत्याही वेबसाइट किंवा सर्व्हरवर अपलोड करत नाही.",
+      "तुमच्या सर्व तयार केलेल्या प्लेलिस्ट आणि आवडी थेट तुमच्या डिव्हाइसवर जतन केल्या जातात. आम्ही तुमच्या फायली किंवा डेटा कोणत्याही वेबसाइट किंवा सर्व्हरवर अपलोड करत नाही.",
       "noPersonalTracking": "३. कोणतीही वैयक्तिक ट्रॅकिंग नाही",
       "noPersonalTrackingContent":
-          "आम्ही तुमचे नाव, ईमेल किंवा फोन नंबर मागत नाही. तुम्ही खाते न तयार करता या ॲपची सर्व वैशिष्ट्ये वापरू शकता.",
+      "आम्ही तुमचे नाव, ईमेल किंवा फोन नंबर मागत नाही. तुम्ही खाते न तयार करता या ॲपची सर्व वैशिष्ट्ये वापरू शकता.",
       "whyPermissions": "४. आम्हाला परवानगीची गरज का आहे?",
       "whyPermissionsContent":
-          "आम्ही फक्त 'स्टोरेज परवानगी' मागतो जेणेकरून ॲप तुमचे संगीत आणि व्हिडिओ शोधू शकेल आणि ते प्ले करू शकेल. याशिवाय, ॲप तुमच्या फायली दाखवू शकणार नाही.",
+      "आम्ही फक्त 'स्टोरेज परवानगी' मागतो जेणेकरून ॲप तुमचे संगीत आणि व्हिडिओ शोधू शकेल आणि ते प्ले करू शकेल. याशिवाय, ॲप तुमच्या फायली दाखवू शकणार नाही.",
       "securePrivate": "५. सुरक्षित आणि खाजगी",
       "securePrivateContent":
-          "सर्व काही तुमच्या फोनवर स्टोअर असल्यामुळे, तुमचा डेटा पूर्णपणे खाजगी आहे. तुम्ही ॲप हटवल्यास, ॲपमध्ये तयार केलेल्या तुमच्या प्लेलिस्ट देखील काढून टाकल्या जातील.",
+      "सर्व काही तुमच्या फोनवर स्टोअर असल्यामुळे, तुमचा डेटा पूर्णपणे खाजगी आहे. तुम्ही ॲप हटवल्यास, ॲपमध्ये तयार केलेल्या तुमच्या प्लेलिस्ट देखील काढून टाकल्या जातील.",
       "appVersion": "आवृत्ती",
       "allRightsReserved": "सर्व हक्क राखीव",
       "viewAll": "सर्व पहा",
@@ -2263,7 +2291,7 @@ class AppStrings {
       "showThumb500": "५०० आकाराचा थंब दाखवा",
       "howWouldYouLove": "तुम्हाला हे अ‍ॅप कसे वाटले?",
       "areYouSureWantDeleteThisFile":
-          "तुम्हाला खात्री आहे की तुम्ही ही फाईल हटवू इच्छिता?",
+      "तुम्हाला खात्री आहे की तुम्ही ही फाईल हटवू इच्छिता?",
       "searchAnything": "काहीही शोधा....",
       "deleteThisFile": "ही फाईल हटवायची?",
       "searchVideosAudios": "व्हिडिओ आणि ऑडिओ शोधा",
@@ -2286,7 +2314,7 @@ class AppStrings {
       "choosePlaylist": "प्लेलिस्ट निवडा",
       "newPlaylistCreated": "नवीन प्लेलिस्ट तयार केली",
       "pleaseSelectEnterPlaylistName":
-          "कृपया प्लेलिस्टचे नाव निवडा किंवा प्रविष्ट करा",
+      "कृपया प्लेलिस्टचे नाव निवडा किंवा प्रविष्ट करा",
       "alreadyExistIn": "आधीच यामध्ये आहे:",
       "alreadyExists": "आधीच अस्तित्वात आहे",
       "addedTo": "मध्ये जोडले गेले:",
@@ -2305,9 +2333,9 @@ class AppStrings {
       "wtachPlayEnjoy": "पहा, वाजवा आणि आनंद घ्या",
       "smoothPlayback": "स्मूथ प्लेबॅक. प्रत्येक फॉरमॅट समर्थित आहे",
       "enjoyVideosMusic":
-          "स्मार्ट कंट्रोलसह व्हिडिओ, संगीत आणि एचडी प्लेबॅकचा आनंद घ्या",
+      "स्मार्ट कंट्रोलसह व्हिडिओ, संगीत आणि एचडी प्लेबॅकचा आनंद घ्या",
       "enjoyUltraHDVideos":
-          "वीजवेगाची कामगिरी आणि शून्य मर्यादेसह अल्ट्रा एचडी व्हिडिओचा आनंद घ्या",
+      "वीजवेगाची कामगिरी आणि शून्य मर्यादेसह अल्ट्रा एचडी व्हिडिओचा आनंद घ्या",
       "smoothPlaybackForEvery": "प्रत्येक व्हिडिओ फॉरमॅटसाठी स्मूथ प्लेबॅक",
       "appFeedback": "अॅप फीडबॅक",
       "stars": "तारे",
@@ -2351,30 +2379,32 @@ class AppStrings {
       "deleteTheAsset": "फाईल हटवा",
       "noFavouriteYet": "अद्याप कोणतेही आवडते नाही.",
       "addSomeVideosOrAudio":
-          "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
+      "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
     },
     'fa': {
+      'noInternetTitle': 'اتصال اینترنت برقرار نیست',
+      'noInternetBody': 'لطفاً تنظیمات شبکه خود را بررسی کنید.',
       "internetRequired": "اتصال به اینترنت الزامی است",
       "mandatoryInternetContent":
-          "برای بهره‌مندی از خدمات رایگان، داشتن اتصال اینترنت فعال جهت بارگذاری تبلیغات اجباری است.",
+      "برای بهره‌مندی از خدمات رایگان، داشتن اتصال اینترنت فعال جهت بارگذاری تبلیغات اجباری است.",
       "checkConnection": "بررسی اتصال",
       "restoringConnection": "در حال اتصال...",
       "renamePlaylist": "تغییر نام لیست پخش",
       "yourMediaYourPrivacy": "۱. رسانه شما، حریم خصوصی شما",
       "yourMediaYourPrivacyContent":
-          "این برنامه فقط فایل‌هایی (ویدیو و موسیقی) را پخش می‌کند که از قبل در گوشی شما هستند. ما به عکس‌های خصوصی یا سایر اسناد شخصی شما نگاه نمی‌کنیم.",
+      "این برنامه فقط فایل‌هایی (ویدیو و موسیقی) را پخش می‌کند که از قبل در گوشی شما هستند. ما به عکس‌های خصوصی یا سایر اسناد شخصی شما نگاه نمی‌کنیم.",
       "offlineExperience": "۲. تجربه آفلاین",
       "offlineExperienceContent":
-          "تمام لیست‌های پخش و موارد دلخواه ایجاد شده شما مستقیماً در دستگاهتان ذخیره می‌شوند. ما فایل‌ها یا داده‌های شما را در هیچ وب‌سایت یا سروری آپلود نمی‌کنیم.",
+      "تمام لیست‌های پخش و موارد دلخواه ایجاد شده شما مستقیماً در دستگاهتان ذخیره می‌شوند. ما فایل‌ها یا داده‌های شما را در هیچ وب‌سایت یا سروری آپلود نمی‌کنیم.",
       "noPersonalTracking": "۳. بدون ردیابی شخصی",
       "noPersonalTrackingContent":
-          "ما نام، ایمیل یا شماره تلفن شما را نمی‌خواهیم. شما می‌توانید بدون ایجاد حساب کاربری از تمام امکانات این برنامه استفاده کنید.",
+      "ما نام، ایمیل یا شماره تلفن شما را نمی‌خواهیم. شما می‌توانید بدون ایجاد حساب کاربری از تمام امکانات این برنامه استفاده کنید.",
       "whyPermissions": "۴. چرا به مجوز نیاز داریم؟",
       "whyPermissionsContent":
-          "ما فقط «مجوز دسترسی به حافظه» را می‌خواهیم تا برنامه بتواند موسیقی و ویدیوهای شما را پیدا و پخش کند. بدون این مجوز، برنامه نمی‌تواند فایل‌های شما را نشان دهد.",
+      "ما فقط «مجوز دسترسی به حافظه» را می‌خواهیم تا برنامه بتواند موسیقی و ویدیوهای شما را پیدا و پخش کند. بدون این مجوز، برنامه نمی‌تواند فایل‌های شما را نشان دهد.",
       "securePrivate": "۵. امن و خصوصی",
       "securePrivateContent":
-          "از آنجایی که همه چیز در گوشی شما ذخیره می‌شود، داده‌های شما کاملاً خصوصی است. اگر برنامه را حذف کنید، لیست‌های پخش ایجاد شده شما در برنامه نیز حذف خواهند شد.",
+      "از آنجایی که همه چیز در گوشی شما ذخیره می‌شود، داده‌های شما کاملاً خصوصی است. اگر برنامه را حذف کنید، لیست‌های پخش ایجاد شده شما در برنامه نیز حذف خواهند شد.",
       "appVersion": "نسخه",
       "allRightsReserved": "تمامی حقوق محفوظ است",
       "viewAll": "مشاهده همه",
@@ -2431,7 +2461,7 @@ class AppStrings {
       "showThumb500": "نمایش تصویر بندانگشتی سایز 500",
       "howWouldYouLove": "چقدر این برنامه را دوست دارید؟",
       "areYouSureWantDeleteThisFile":
-          "آیا مطمئن هستید که می‌خواهید این فایل را حذف کنید؟",
+      "آیا مطمئن هستید که می‌خواهید این فایل را حذف کنید؟",
       "searchAnything": "جستجوی هر چیزی....",
       "deleteThisFile": "این فایل حذف شود؟",
       "searchVideosAudios": "جستجوی ویدیوها و فایل‌های صوتی",
@@ -2454,7 +2484,7 @@ class AppStrings {
       "choosePlaylist": "انتخاب لیست پخش",
       "newPlaylistCreated": "لیست پخش جدید ایجاد شد",
       "pleaseSelectEnterPlaylistName":
-          "لطفاً نام لیست پخش را انتخاب یا وارد کنید",
+      "لطفاً نام لیست پخش را انتخاب یا وارد کنید",
       "alreadyExistIn": "از قبل موجود است در",
       "alreadyExists": "از قبل وجود دارد",
       "addedTo": "اضافه شد به",
@@ -2473,16 +2503,16 @@ class AppStrings {
       "wtachPlayEnjoy": "تماشا کنید، پخش کنید و لذت ببرید",
       "smoothPlayback": "پخش روان. پشتیبانی از تمامی فرمت‌ها",
       "enjoyVideosMusic":
-          "از ویدیوها، موسیقی و پخش HD با کنترل‌های هوشمند لذت ببرید",
+      "از ویدیوها، موسیقی و پخش HD با کنترل‌های هوشمند لذت ببرید",
       "enjoyUltraHDVideos":
-          "از ویدیوهای Ultra HD با عملکرد فوق‌سریع و بدون محدودیت لذت ببرید",
+      "از ویدیوهای Ultra HD با عملکرد فوق‌سریع و بدون محدودیت لذت ببرید",
       "smoothPlaybackForEvery": "پخش روان برای هر فرمت ویدیویی",
       "appFeedback": "بازخورد برنامه",
       "stars": "ستاره",
       "hiIGave": "سلام، من دادم",
       "hereIsMyFeedback:": "این بازخورد من است:",
       "checkOutThisAmazing":
-          "این برنامه پخش‌کننده ویدیو و موسیقی شگفت‌انگیز را بررسی کنید!",
+      "این برنامه پخش‌کننده ویدیو و موسیقی شگفت‌انگیز را بررسی کنید!",
       "downloadItNowFrom": "همین حالا از پلی استور دانلود کنید:",
       "downloadMediaPlayer": "دانلود مدیا پلیر",
       "appearance": "ظاهر",
@@ -2522,27 +2552,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "تعدادی ویدیو یا صدا اضافه کنید تا اینجا ببینید!",
     },
     'pl': {
+      'noInternetTitle': 'Brak połączenia z Internetem',
+      'noInternetBody': 'Sprawdź ustawienia sieciowe.',
       "internetRequired": "Wymagany internet",
       "mandatoryInternetContent":
-          "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
+      "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
       "checkConnection": "Sprawdź połączenie",
       "restoringConnection": "Łączenie...",
       "renamePlaylist": "Zmień nazwę playlisty",
       "yourMediaYourPrivacy": "1. Twoje multimedia, Twoja prywatność",
       "yourMediaYourPrivacyContent":
-          "Ta aplikacja odtwarza tylko pliki (filmy i muzykę), które są już w telefonie. Nie przeglądamy Twoich prywatnych zdjęć ani innych osobistych dokumentów.",
+      "Ta aplikacja odtwarza tylko pliki (filmy i muzykę), które są już w telefonie. Nie przeglądamy Twoich prywatnych zdjęć ani innych osobistych dokumentów.",
       "offlineExperience": "2. Działanie offline",
       "offlineExperienceContent":
-          "Wszystkie utworzone playlisty i ulubione są zapisywane bezpośrednio na urządzeniu. Nie przesyłamy Twoich plików ani danych na żadną stronę internetową ani serwer.",
+      "Wszystkie utworzone playlisty i ulubione są zapisywane bezpośrednio na urządzeniu. Nie przesyłamy Twoich plików ani danych na żadną stronę internetową ani serwer.",
       "noPersonalTracking": "3. Brak śledzenia osobistego",
       "noPersonalTrackingContent":
-          "Nie pytamy o imię, e-mail ani numer telefonu. Możesz korzystać ze wszystkich funkcji tej aplikacji bez tworzenia konta.",
+      "Nie pytamy o imię, e-mail ani numer telefonu. Możesz korzystać ze wszystkich funkcji tej aplikacji bez tworzenia konta.",
       "whyPermissions": "4. Dlaczego potrzebujemy uprawnień?",
       "whyPermissionsContent":
-          "Prosimy o „Uprawnienie do pamięci” tylko po to, aby aplikacja mogła znaleźć Twoją muzykę i filmy, aby je odtworzyć. Bez tego aplikacja nie będzie mogła wyświetlić Twoich plików.",
+      "Prosimy o „Uprawnienie do pamięci” tylko po to, aby aplikacja mogła znaleźć Twoją muzykę i filmy, aby je odtworzyć. Bez tego aplikacja nie będzie mogła wyświetlić Twoich plików.",
       "securePrivate": "5. Bezpieczeństwo i prywatność",
       "securePrivateContent":
-          "Ponieważ wszystko jest przechowywane w telefonie, Twoje dane są całkowicie prywatne. Jeśli usuniesz aplikację, Twoje playlisty utworzone w aplikacji również zostaną usunięte.",
+      "Ponieważ wszystko jest przechowywane w telefonie, Twoje dane są całkowicie prywatne. Jeśli usuniesz aplikację, Twoje playlisty utworzone w aplikacji również zostaną usunięte.",
       "appVersion": "Wersja",
       "allRightsReserved": "Wszelkie prawa zastrzeżone",
       "viewAll": "Pokaż wszystko",
@@ -2639,16 +2671,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Oglądaj, odtwarzaj i ciesz się",
       "smoothPlayback": "Płynne odtwarzanie. Wszystkie formaty wspierane",
       "enjoyVideosMusic":
-          "Ciesz się wideo, muzyką i jakością HD dzięki inteligentnemu sterowaniu",
+      "Ciesz się wideo, muzyką i jakością HD dzięki inteligentnemu sterowaniu",
       "enjoyUltraHDVideos":
-          "Ciesz się wideo Ultra HD z błyskawiczną wydajnością i bez limitów",
+      "Ciesz się wideo Ultra HD z błyskawiczną wydajnością i bez limitów",
       "smoothPlaybackForEvery": "Płynne odtwarzanie każdego formatu wideo",
       "appFeedback": "Opinia o aplikacji",
       "stars": "Gwiazdki",
       "hiIGave": "Cześć, dałem",
       "hereIsMyFeedback:": "Oto moja opinia:",
       "checkOutThisAmazing":
-          "Sprawdź tę niesamowitą aplikację do odtwarzania wideo i muzyki!",
+      "Sprawdź tę niesamowitą aplikację do odtwarzania wideo i muzyki!",
       "downloadItNowFrom": "Pobierz ją teraz ze Sklepu Play:",
       "downloadMediaPlayer": "Pobierz Media Player",
       "appearance": "Wygląd",
@@ -2688,27 +2720,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "Dodaj wideo lub dźwięk, aby zobaczyć je tutaj!",
     },
     'pt': {
+      'noInternetTitle': 'Sem Conexão com a Internet',
+      'noInternetBody': 'Por favor, verifique suas configurações de rede.',
       "internetRequired": "Wymagany internet",
       "mandatoryInternetContent":
-          "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
+      "Aby korzystać z bezpłatnych usług, aktywne połączenie internetowe jest obowiązkowe do ładowania reklam.",
       "checkConnection": "Sprawdź połączenie",
       "restoringConnection": "Łączenie...",
       "renamePlaylist": "Renomear Playlist",
       "yourMediaYourPrivacy": "1. Sua Mídia, Sua Privacidade",
       "yourMediaYourPrivacyContent":
-          "Este aplicativo apenas reproduz arquivos (vídeos e músicas) que já estão no seu telefone. Não acessamos suas fotos privadas ou outros documentos pessoais.",
+      "Este aplicativo apenas reproduz arquivos (vídeos e músicas) que já estão no seu telefone. Não acessamos suas fotos privadas ou outros documentos pessoais.",
       "offlineExperience": "2. Experiência Offline",
       "offlineExperienceContent":
-          "Todas as suas listas de reprodução e favoritos criados são salvos diretamente no seu dispositivo. No enviamos seus arquivos ou dados para nenhum site ou servidor.",
+      "Todas as suas listas de reprodução e favoritos criados são salvos diretamente no seu dispositivo. No enviamos seus arquivos ou dados para nenhum site ou servidor.",
       "noPersonalTracking": "3. Sem Rastreamento Pessoal",
       "noPersonalTrackingContent":
-          "Não solicitamos seu nome, e-mail ou número de telefone. Você pode usar todos os recursos deste aplicativo sem precisar criar uma conta.",
+      "Não solicitamos seu nome, e-mail ou número de telefone. Você pode usar todos os recursos deste aplicativo sem precisar criar uma conta.",
       "whyPermissions": "4. Por que precisamos de permissões?",
       "whyPermissionsContent":
-          "Pedimos 'Permissão de Armazenamento' apenas para que o aplicativo possa encontrar suas músicas e vídeos para reproduzi-los. Sem isso, o aplicativo não conseguirá mostrar seus arquivos.",
+      "Pedimos 'Permissão de Armazenamento' apenas para que o aplicativo possa encontrar suas músicas e vídeos para reproduzi-los. Sem isso, o aplicativo não conseguirá mostrar seus arquivos.",
       "securePrivate": "5. Seguro e Privado",
       "securePrivateContent":
-          "Como tudo está armazenado no seu telefone, seus dados são completamente privados. Se você excluir o aplicativo, suas listas de reprodução criadas dentro do aplicativo também serão removidas.",
+      "Como tudo está armazenado no seu telefone, seus dados são completamente privados. Se você excluir o aplicativo, suas listas de reprodução criadas dentro do aplicativo também serão removidas.",
       "appVersion": "Versão",
       "allRightsReserved": "Todos os direitos reservados",
       "viewAll": "Ver tudo",
@@ -2765,7 +2799,7 @@ class AppStrings {
       "showThumb500": "Mostrar miniatura tamanho 500",
       "howWouldYouLove": "O quanto você gosta deste aplicativo?",
       "areYouSureWantDeleteThisFile":
-          "Tem certeza de que deseja excluir este arquivo?",
+      "Tem certeza de que deseja excluir este arquivo?",
       "searchAnything": "Pesquisar qualquer coisa....",
       "deleteThisFile": "Excluir este arquivo?",
       "searchVideosAudios": "Pesquisar vídeos e áudios",
@@ -2788,7 +2822,7 @@ class AppStrings {
       "choosePlaylist": "Escolher Playlist",
       "newPlaylistCreated": "Nova Playlist Criada",
       "pleaseSelectEnterPlaylistName":
-          "Por favor, selecione ou insira o nome da playlist",
+      "Por favor, selecione ou insira o nome da playlist",
       "alreadyExistIn": "Já existe em",
       "alreadyExists": "já existe",
       "addedTo": "Adicionado a",
@@ -2796,7 +2830,7 @@ class AppStrings {
       "fileDeletedSuccessfully": "Arquivo excluído com sucesso",
       "errorSharingFile": "Erro ao compartilhar arquivo",
       "fileCanNotBeLoaded":
-          "O arquivo não pode ser carregado para compartilhamento",
+      "O arquivo não pode ser carregado para compartilhamento",
       "fileNotFound": "Arquivo não encontrado",
       "sharing": "Compartilhando:",
       "mediaFile": "Arquivo de Mídia",
@@ -2808,16 +2842,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Assista, Reproduza e Divirta-se",
       "smoothPlayback": "Reprodução suave. Todos os formatos suportados",
       "enjoyVideosMusic":
-          "Desfrute de vídeos, música e reprodução HD com controlos inteligentes",
+      "Desfrute de vídeos, música e reprodução HD com controlos inteligentes",
       "enjoyUltraHDVideos":
-          "Desfrute de vídeos Ultra HD com desempenho ultra-rápido e zero limites",
+      "Desfrute de vídeos Ultra HD com desempenho ultra-rápido e zero limites",
       "smoothPlaybackForEvery": "Reprodução suave para cada formato de vídeo",
       "appFeedback": "Feedback da aplicação",
       "stars": "Estrelas",
       "hiIGave": "Olá, eu dei",
       "hereIsMyFeedback:": "Aqui está o meu feedback:",
       "checkOutThisAmazing":
-          "Veja esta incrível aplicação de reprodução de vídeo e música!",
+      "Veja esta incrível aplicação de reprodução de vídeo e música!",
       "downloadItNowFrom": "Descarregue agora na Play Store:",
       "downloadMediaPlayer": "Descarregar Media Player",
       "appearance": "Aparência",
@@ -2855,30 +2889,32 @@ class AppStrings {
       "deleteTheAsset": "Eliminar ficheiro",
       "noFavouriteYet": "Ainda sem favoritos.",
       "addSomeVideosOrAudio":
-          "Adicione alguns vídeos ou áudio para os ver aqui!",
+      "Adicione alguns vídeos ou áudio para os ver aqui!",
     },
     'es': {
+      'noInternetTitle': 'Sin conexión a Internet',
+      'noInternetBody': 'Por favor, comprueba tu configuración de red.',
       "internetRequired": "Internet requerido",
       "mandatoryInternetContent":
-          "Para disfrutar de los servicios gratuitos, es obligatoria una conexión a Internet activa para cargar los anuncios.",
+      "Para disfrutar de los servicios gratuitos, es obligatoria una conexión a Internet activa para cargar los anuncios.",
       "checkConnection": "Comprobar conexión",
       "restoringConnection": "Conectando...",
       "renamePlaylist": "Cambiar nombre de la lista",
       "yourMediaYourPrivacy": "1. Tus medios, tu privacidad",
       "yourMediaYourPrivacyContent":
-          "Esta aplicación solo reproduce archivos (videos y música) que ya están en tu teléfono. No miramos tus fotos privadas ni otros documentos personales.",
+      "Esta aplicación solo reproduce archivos (videos y música) que ya están en tu teléfono. No miramos tus fotos privadas ni otros documentos personales.",
       "offlineExperience": "2. Experiencia sin conexión",
       "offlineExperienceContent":
-          "Todas tus listas de reproducción y favoritos creados se guardan directamente en tu dispositivo. No subimos tus archivos o datos a ningún sitio web o servidor.",
+      "Todas tus listas de reproducción y favoritos creados se guardan directamente en tu dispositivo. No subimos tus archivos o datos a ningún sitio web o servidor.",
       "noPersonalTracking": "3. Sin seguimiento personal",
       "noPersonalTrackingContent":
-          "No solicitamos tu nombre, correo electrónico ni número de teléfono. Puedes usar todas las funciones de esta aplicación sin tener que crear una cuenta.",
+      "No solicitamos tu nombre, correo electrónico ni número de teléfono. Puedes usar todas las funciones de esta aplicación sin tener que crear una cuenta.",
       "whyPermissions": "4. ¿Por qué necesitamos permisos?",
       "whyPermissionsContent":
-          "Pedimos 'Permiso de almacenamiento' solo para que la aplicación pueda encontrar tu música y videos para reproducirlos. Sin esto, la aplicación no podrá mostrar tus archivos.",
+      "Pedimos 'Permiso de almacenamiento' solo para que la aplicación pueda encontrar tu música y videos para reproducirlos. Sin esto, la aplicación no podrá mostrar tus archivos.",
       "securePrivate": "5. Seguro y privado",
       "securePrivateContent":
-          "Como todo está guardado en tu teléfono, tus datos son completamente privados. Si eliminas la aplicación, tus listas de reproducción creadas dentro de la aplicación también se eliminarán.",
+      "Como todo está guardado en tu teléfono, tus datos son completamente privados. Si eliminas la aplicación, tus listas de reproducción creadas dentro de la aplicación también se eliminarán.",
       "appVersion": "Versión",
       "allRightsReserved": "Todos los derechos reservados",
       "viewAll": "Ver todo",
@@ -2935,7 +2971,7 @@ class AppStrings {
       "showThumb500": "Mostrar miniatura tamaño 500",
       "howWouldYouLove": "¿Qué te parece esta aplicación?",
       "areYouSureWantDeleteThisFile":
-          "¿Estás seguro de que quieres eliminar este archivo?",
+      "¿Estás seguro de que quieres eliminar este archivo?",
       "searchAnything": "Buscar cualquier cosa....",
       "deleteThisFile": "¿Eliminar este archivo?",
       "searchVideosAudios": "Buscar videos y audios",
@@ -2958,7 +2994,7 @@ class AppStrings {
       "choosePlaylist": "Elegir lista de reproducción",
       "newPlaylistCreated": "Nueva lista creada",
       "pleaseSelectEnterPlaylistName":
-          "Por favor seleccione o ingrese un nombre",
+      "Por favor seleccione o ingrese un nombre",
       "alreadyExistIn": "Ya existe en",
       "alreadyExists": "ya existe",
       "addedTo": "Agregado a",
@@ -2977,17 +3013,17 @@ class AppStrings {
       "wtachPlayEnjoy": "Mira, Reproduce y Disfruta",
       "smoothPlayback": "Reproducción fluida. Todos los formatos soportados",
       "enjoyVideosMusic":
-          "Disfruta de videos, música y reproducción HD con controles inteligentes",
+      "Disfruta de videos, música y reproducción HD con controles inteligentes",
       "enjoyUltraHDVideos":
-          "Disfruta de videos Ultra HD con rendimiento ultrarrápido y cero límites",
+      "Disfruta de videos Ultra HD con rendimiento ultrarrápido y cero límites",
       "smoothPlaybackForEvery":
-          "Reproducción fluida para cada formato de video",
+      "Reproducción fluida para cada formato de video",
       "appFeedback": "Comentarios de la aplicación",
       "stars": "Estrellas",
       "hiIGave": "Hola, le di",
       "hereIsMyFeedback:": "Aquí están mis comentarios:",
       "checkOutThisAmazing":
-          "¡Mira esta increíble aplicación de reproductor de video y música!",
+      "¡Mira esta increíble aplicación de reproductor de video y música!",
       "downloadItNowFrom": "Descárgala ahora desde Play Store:",
       "downloadMediaPlayer": "Descargar Reproductor Multimedia",
       "appearance": "Apariencia",
@@ -3025,30 +3061,32 @@ class AppStrings {
       "deleteTheAsset": "Eliminar archivo",
       "noFavouriteYet": "Aún no hay favoritos.",
       "addSomeVideosOrAudio":
-          "¡Agrega algunos videos o audio para verlos aquí!",
+      "¡Agrega algunos videos o audio para verlos aquí!",
     },
     'sv': {
+      'noInternetTitle': 'Ingen internetanslutning',
+      'noInternetBody': 'Kontrollera dina nätverksinställningar.',
       "internetRequired": "Internet krävs",
       "mandatoryInternetContent":
-          "För att kunna använda gratistjänster krävs en aktiv internetanslutning för att ladda annonser.",
+      "För att kunna använda gratistjänster krävs en aktiv internetanslutning för att ladda annonser.",
       "checkConnection": "Kontrollera anslutning",
       "restoringConnection": "Ansluter...",
       "renamePlaylist": "Byt namn på spellista",
       "yourMediaYourPrivacy": "1. Din media, din integritet",
       "yourMediaYourPrivacyContent":
-          "Den här appen spelar bara filer (videor och musik) som redan finns på din telefon. Vi tittar inte på dina privata foton eller andra personliga dokument.",
+      "Den här appen spelar bara filer (videor och musik) som redan finns på din telefon. Vi tittar inte på dina privata foton eller andra personliga dokument.",
       "offlineExperience": "2. Offlineupplevelse",
       "offlineExperienceContent":
-          "Alla dina skapade spellistor och favoriter sparas direkt på din enhet. Vi laddar inte upp dina filer eller data till någon webbplats eller server.",
+      "Alla dina skapade spellistor och favoriter sparas direkt på din enhet. Vi laddar inte upp dina filer eller data till någon webbplats eller server.",
       "noPersonalTracking": "3. Ingen personlig spårning",
       "noPersonalTrackingContent":
-          "Vi ber inte om ditt namn, e-postadress eller telefonnummer. Du kan använda alla funktioner i den här appen utan att någonsin skapa ett konto.",
+      "Vi ber inte om ditt namn, e-postadress eller telefonnummer. Du kan använda alla funktioner i den här appen utan att någonsin skapa ett konto.",
       "whyPermissions": "4. Varför behöver vi behörigheter?",
       "whyPermissionsContent":
-          "Vi ber om 'Lagringsbehörighet' endast för att appen ska kunna hitta din musik och dina videor för att spela upp dem. Utan detta kommer appen inte att kunna visa dina filer.",
+      "Vi ber om 'Lagringsbehörighet' endast för att appen ska kunna hitta din musik och dina videor för att spela upp dem. Utan detta kommer appen inte att kunna visa dina filer.",
       "securePrivate": "5. Säkert och privat",
       "securePrivateContent":
-          "Eftersom allt lagras på din telefon är din data helt privat. Om du tar bort appen kommer dina skapade spellistor i appen också att tas bort.",
+      "Eftersom allt lagras på din telefon är din data helt privat. Om du tar bort appen kommer dina skapade spellistor i appen också att tas bort.",
       "appVersion": "Version",
       "allRightsReserved": "Alla rättigheter förbehållna",
       "viewAll": "Visa alla",
@@ -3105,7 +3143,7 @@ class AppStrings {
       "showThumb500": "Visa miniatyr storlek 500",
       "howWouldYouLove": "Hur mycket gillar du den här appen?",
       "areYouSureWantDeleteThisFile":
-          "Är du säker på att du vill radera den här filen?",
+      "Är du säker på att du vill radera den här filen?",
       "searchAnything": "Sök vad som helst....",
       "deleteThisFile": "Radera den här filen?",
       "searchVideosAudios": "Sök videor och ljud",
@@ -3146,16 +3184,16 @@ class AppStrings {
       "wtachPlayEnjoy": "Titta, spela och njut",
       "smoothPlayback": "Smidig uppspelning. Alla format stöds",
       "enjoyVideosMusic":
-          "Njut av videor, musik och HD-uppspelning med smarta kontroller",
+      "Njut av videor, musik och HD-uppspelning med smarta kontroller",
       "enjoyUltraHDVideos":
-          "Njut av Ultra HD-videor med blixtsnabb prestanda och noll gränser",
+      "Njut av Ultra HD-videor med blixtsnabb prestanda och noll gränser",
       "smoothPlaybackForEvery": "Smidig uppspelning för varje videoformat",
       "appFeedback": "App-feedback",
       "stars": "Stjärnor",
       "hiIGave": "Hej, jag gav",
       "hereIsMyFeedback:": "Här är min feedback:",
       "checkOutThisAmazing":
-          "Kolla in den här fantastiska video- och musikspelaren!",
+      "Kolla in den här fantastiska video- och musikspelaren!",
       "downloadItNowFrom": "Ladda ner den nu från Play Store:",
       "downloadMediaPlayer": "Ladda ner Media Player",
       "appearance": "Utseende",
@@ -3195,27 +3233,29 @@ class AppStrings {
       "addSomeVideosOrAudio": "Lägg till videor eller ljud för att se dem här!",
     },
     'ta': {
+      'noInternetTitle': 'இணைய இணைப்பு இல்லை',
+      'noInternetBody': 'உங்கள் நெட்வર્ક அமைப்புகளைச் சரிபார்க்கவும்.',
       "internetRequired": "இணையம் தேவை",
       "mandatoryInternetContent":
-          "இலவச சேவைகளை அனுபவிக்க, விளம்பரங்களை ஏற்றுவதற்கு செயலில் உள்ள இணைய இணைப்பு கட்டாயமாகும்.",
+      "இலவச சேவைகளை அனுபவிக்க, விளம்பரங்களை ஏற்றுவதற்கு செயலில் உள்ள இணைய இணைப்பு கட்டாயமாகும்.",
       "checkConnection": "இணைப்பைச் சரிபார்க்கவும்",
       "restoringConnection": "இணைக்கப்படுகிறது...",
       "renamePlaylist": "பிளேலிஸ்ட்டை மறுபெயரிடு",
       "yourMediaYourPrivacy": "1. உங்கள் மீடியா, உங்கள் தனியுரிமை",
       "yourMediaYourPrivacyContent":
-          "இந்த ஆப் உங்கள் போனில் ஏற்கனவே உள்ள கோப்புகளை (வீடியோக்கள் மற்றும் இசை) மட்டுமே இயக்குகிறது. உங்கள் தனிப்பட்ட புகைப்படங்கள் அல்லது பிற தனிப்பட்ட ஆவணங்களை நாங்கள் பார்ப்பதில்லை.",
+      "இந்த ஆப் உங்கள் போனில் ஏற்கனவே உள்ள கோப்புகளை (வீடியோக்கள் மற்றும் இசை) மட்டுமே இயக்குகிறது. உங்கள் தனிப்பட்ட புகைப்படங்கள் அல்லது பிற தனிப்பட்ட ஆவணங்களை நாங்கள் பார்ப்பதில்லை.",
       "offlineExperience": "2. ஆஃப்லைன் அனுபவம்",
       "offlineExperienceContent":
-          "நீங்கள் உருவாக்கிய அனைத்து பிளேலிஸ்ட்டுகளும் விருப்பமானவைகளும் நேரடியாக உங்கள் சாதனத்தில் சேமிக்கப்படும். உங்கள் கோப்புகளை அல்லது தரவை நாங்கள் எந்த இணையதளத்திற்கும் அல்லது சர்வருக்கும் பதிவேற்றுவதில்லை.",
+      "நீங்கள் உருவாக்கிய அனைத்து பிளேலிஸ்ட்டுகளும் விருப்பமானவைகளும் நேரடியாக உங்கள் சாதனத்தில் சேமிக்கப்படும். உங்கள் கோப்புகளை அல்லது தரவை நாங்கள் எந்த இணையதளத்திற்கும் அல்லது சர்வருக்கும் பதிவேற்றுவதில்லை.",
       "noPersonalTracking": "3. தனிப்பட்ட கண்காணிப்பு இல்லை",
       "noPersonalTrackingContent":
-          "உங்கள் பெயர், மின்னஞ்சல் அல்லது தொலைபேசி எண்ணை நாங்கள் கேட்பதில்லை. கணக்கை உருவாக்காமலேயே இந்த ஆப்-இன் அனைத்து அம்சங்களையும் நீங்கள் பயன்படுத்தலாம்.",
+      "உங்கள் பெயர், மின்னஞ்சல் அல்லது தொலைபேசி எண்ணை நாங்கள் கேட்பதில்லை. கணக்கை உருவாக்காமலேயே இந்த ஆப்-இன் அனைத்து அம்சங்களையும் நீங்கள் பயன்படுத்தலாம்.",
       "whyPermissions": "4. அனுமதி ஏன் தேவை?",
       "whyPermissionsContent":
-          "உங்கள் இசை மற்றும் வீடியோக்களை ஆப் கண்டறிந்து இயக்குவதற்காக மட்டுமே நாங்கள் 'ஸ்டோரேજ அனுமதி' கேட்கிறோம். இது இல்லாமல், ஆப்-ஆல் உங்கள் கோப்புகளைக் காட்ட முடியாது.",
+      "உங்கள் இசை மற்றும் வீடியோக்களை ஆப் கண்டறிந்து இயக்குவதற்காக மட்டுமே நாங்கள் 'ஸ்டோரேજ அனுமதி' கேட்கிறோம். இது இல்லாமல், ஆப்-ஆல் உங்கள் கோப்புகளைக் காட்ட முடியாது.",
       "securePrivate": "5. பாதுகாப்பானது & தனிப்பட்டது",
       "securePrivateContent":
-          "அனைத்தும் உங்கள் போனில் சேமிக்கப்படுவதால், உங்கள் தரவு முற்றிலும் தனிப்பட்டது. நீங்கள் ஆப்பை நீக்கினால், ஆப்பிற்குள் நீங்கள் உருவாக்கிய பிளேலிஸ்ட்டுகளும் நீக்கப்படும்.",
+      "அனைத்தும் உங்கள் போனில் சேமிக்கப்படுவதால், உங்கள் தரவு முற்றிலும் தனிப்பட்டது. நீங்கள் ஆப்பை நீக்கினால், ஆப்பிற்குள் நீங்கள் உருவாக்கிய பிளேலிஸ்ட்டுகளும் நீக்கப்படும்.",
       "appVersion": "பதிப்பு",
       "allRightsReserved": "அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை",
       "viewAll": "அனைத்தையும் பார்க்கவும்",
@@ -3294,7 +3334,7 @@ class AppStrings {
       "choosePlaylist": "பிளேலிஸ்ட்டைத் தேர்வுசெய்க",
       "newPlaylistCreated": "புதிய பிளேலிஸ்ட் உருவாக்கப்பட்டது",
       "pleaseSelectEnterPlaylistName":
-          "பிளேலிஸ்ட் பெயரைத் தேர்ந்தெடுக்கவும் அல்லது உள்ளிடவும்",
+      "பிளேலிஸ்ட் பெயரைத் தேர்ந்தெடுக்கவும் அல்லது உள்ளிடவும்",
       "alreadyExistIn": "ஏற்கனவே இதில் உள்ளது:",
       "alreadyExists": "ஏற்கனவே உள்ளது",
       "addedTo": "இதில் சேர்க்கப்பட்டது:",
@@ -3312,18 +3352,18 @@ class AppStrings {
       "instantPlayback": "உடனடி இயக்கம், எல்லைகள் இல்லை",
       "wtachPlayEnjoy": "பாருங்கள், இயக்குங்கள் மற்றும் மகிழுங்கள்",
       "smoothPlayback":
-          "தடையற்ற இயக்கம். அனைத்து வடிவங்களும் ஆதரிக்கப்படுகின்றன",
+      "தடையற்ற இயக்கம். அனைத்து வடிவங்களும் ஆதரிக்கப்படுகின்றன",
       "enjoyVideosMusic":
-          "ஸ்மார்ட் கட்டுப்பாடுகளுடன் வீடியோக்கள், இசை மற்றும் HD இயக்கத்தை அனுபவிக்கவும்",
+      "ஸ்மார்ட் கட்டுப்பாடுகளுடன் வீடியோக்கள், இசை மற்றும் HD இயக்கத்தை அனுபவிக்கவும்",
       "enjoyUltraHDVideos":
-          "மின்னல் வேக செயல்திறன் மற்றும் எல்லைகள் இன்றி அல்ட்ரா HD வீடியோக்களை அனுபவிக்கவும்",
+      "மின்னல் வேக செயல்திறன் மற்றும் எல்லைகள் இன்றி அல்ட்ரா HD வீடியோக்களை அனுபவிக்கவும்",
       "smoothPlaybackForEvery": "ஒவ்வொரு வீடியோ வடிவத்திற்கும் தடையற்ற இயக்கம்",
       "appFeedback": "செயலி கருத்து",
       "stars": "நட்சத்திரங்கள்",
       "hiIGave": "வணக்கம், நான் வழங்கியவை",
       "hereIsMyFeedback:": "இதோ எனது கருத்து:",
       "checkOutThisAmazing":
-          "இந்த அற்புதமான வீடியோ மற்றும் மியூசிக் பிளேயர் செயலியைப் பாருங்கள்!",
+      "இந்த அற்புதமான வீடியோ மற்றும் மியூசிக் பிளேயர் செயலியைப் பாருங்கள்!",
       "downloadItNowFrom": "Play Store இலிருந்து இப்போதே பதிவிறக்கவும்:",
       "downloadMediaPlayer": "மீடியா பிளேயரை பதிவிறக்கவும்",
       "appearance": "தோற்றம்",
@@ -3361,30 +3401,32 @@ class AppStrings {
       "deleteTheAsset": "கோப்பை நீக்கு",
       "noFavouriteYet": "இன்னும் பிடித்தவை எதுவும் இல்லை.",
       "addSomeVideosOrAudio":
-          "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
+      "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
     },
     'ur': {
+      'noInternetTitle': 'انٹرنیٹ کنکشن نہیں ہے',
+      'noInternetBody': 'براہ کرم اپنے نیٹ ورک کی ترتیبات چیک کریں۔',
       "internetRequired": "انٹرنیٹ درکار ہے",
       "mandatoryInternetContent":
-          "مفت سروسز سے لطف اندوز ہونے کے لیے، اشتہارات لوڈ کرنے کی خاطر فعال انٹرنیٹ کنکشن لازمی ہے۔",
+      "مفت سروسز سے لطف اندوز ہونے کے لیے، اشتہارات لوڈ کرنے کی خاطر فعال انٹرنیٹ کنکشن لازمی ہے۔",
       "checkConnection": "کنکشن چیک کریں",
       "restoringConnection": "کنیکٹ ہو رہا ہے...",
       "renamePlaylist": "پلے لسٹ کا نام تبدیل کریں",
       "yourMediaYourPrivacy": "١. آپ کا میڈیا، آپ کی رازداری",
       "yourMediaYourPrivacyContent":
-          "یہ ایپ صرف ان فائلوں (ویڈیوز اور موسیقی) کو چلاتی ہے جو پہلے سے آپ کے فون پر موجود ہیں۔ ہم آپ کی نجی تصاویر یا دیگر ذاتی دستاویزات کو نہیں دیکھتے۔",
+      "یہ ایپ صرف ان فائلوں (ویڈیوز اور موسیقی) کو چلاتی ہے جو پہلے سے آپ کے فون پر موجود ہیں۔ ہم آپ کی نجی تصاویر یا دیگر ذاتی دستاویزات کو نہیں دیکھتے۔",
       "offlineExperience": "٢. آف لائن تجربہ",
       "offlineExperienceContent":
-          "آپ کی تمام تخلیق کردہ پلے لسٹس اور پسندیدہ براہ راست آپ کے آلے پر محفوظ ہوتے ہیں۔ ہم آپ کی فائلیں یا ڈیٹا کسی ویب سائٹ یا سرور پر اپ لوڈ نہیں کرتے۔",
+      "آپ کی تمام تخلیق کردہ پلے لسٹس اور پسندیدہ براہ راست آپ کے آلے پر محفوظ ہوتے ہیں۔ ہم آپ کی فائلیں یا ڈیٹا کسی ویب سائٹ یا سرور پر اپ لوڈ نہیں کرتے۔",
       "noPersonalTracking": "٣. کوئی ذاتی ٹریکنگ نہیں",
       "noPersonalTrackingContent":
-          "ہم آپ کا نام، ای میل، یا فون نمبر نہیں مانگتے۔ آپ اکاؤنٹ بنائے بغیر اس ایپ کی تمام خصوصیات استعمال کر سکتے ہیں۔",
+      "ہم آپ کا نام، ای میل، یا فون نمبر نہیں مانگتے۔ آپ اکاؤنٹ بنائے بغیر اس ایپ کی تمام خصوصیات استعمال کر سکتے ہیں۔",
       "whyPermissions": "٤. ہمیں اجازت کی ضرورت کیوں ہے؟",
       "whyPermissionsContent":
-          "ہم صرف 'اسٹوریج کی اجازت' مانگتے ہیں تاکہ ایپ آپ کی موسیقی اور ویڈیوز تلاش کر کے انہیں چلا سکے۔ اس کے بغیر، ایپ آپ کی فائلیں نہیں دکھ سکے گی۔",
+      "ہم صرف 'اسٹوریج کی اجازت' مانگتے ہیں تاکہ ایپ آپ کی موسیقی اور ویڈیوز تلاش کر کے انہیں چلا سکے۔ اس کے بغیر، ایپ آپ کی فائلیں نہیں دکھ سکے گی۔",
       "securePrivate": "٥. محفوظ اور نجی",
       "securePrivateContent":
-          "چونکہ سب کچھ آپ کے فون پر محفوظ ہے، اس لیے آپ کا ڈیٹا مکمل طور پر نجی ہے۔ اگر آپ ایپ کو ڈیلیٹ کر دیتے ہیں، تو ایپ کے اندر بنائی گئی پلے لسٹس بھی ختم ہو جائیں گی۔",
+      "چونکہ سب کچھ آپ کے فون پر محفوظ ہے، اس لیے آپ کا ڈیٹا مکمل طور پر نجی ہے۔ اگر آپ ایپ کو ڈیلیٹ کر دیتے ہیں، تو ایپ کے اندر بنائی گئی پلے لسٹس بھی ختم ہو جائیں گی۔",
       "appVersion": "ورژن",
       "allRightsReserved": "جملہ حقوق محفوظ ہیں",
       "viewAll": "سب دیکھیں",
@@ -3441,7 +3483,7 @@ class AppStrings {
       "showThumb500": "500 سائز کا تھمب دکھائیں",
       "howWouldYouLove": "آپ کو یہ ایپ کیسی لگی؟",
       "areYouSureWantDeleteThisFile":
-          "کیا آپ واقعی اس فائل کو حذف کرنا چاہتے ہیں؟",
+      "کیا آپ واقعی اس فائل کو حذف کرنا چاہتے ہیں؟",
       "searchAnything": "کچھ بھی تلاش کریں....",
       "deleteThisFile": "اس فائل کو حذف کریں؟",
       "searchVideosAudios": "ویڈیو اور آڈیو تلاش کریں",
@@ -3464,7 +3506,7 @@ class AppStrings {
       "choosePlaylist": "پلے لسٹ منتخب کریں",
       "newPlaylistCreated": "نئی پلے لسٹ بن گئی",
       "pleaseSelectEnterPlaylistName":
-          "براہ کرم پلے لسٹ کا نام منتخب کریں یا درج کریں",
+      "براہ کرم پلے لسٹ کا نام منتخب کریں یا درج کریں",
       "alreadyExistIn": "پہلے سے موجود ہے میں",
       "alreadyExists": "پہلے سے موجود ہے",
       "addedTo": "میں شامل کر دیا گیا",
@@ -3483,16 +3525,16 @@ class AppStrings {
       "wtachPlayEnjoy": "دیکھیں، چلائیں اور لطف اٹھائیں",
       "smoothPlayback": "ہموار پلے بیک۔ تمام فارمیٹس سپورٹڈ ہیں",
       "enjoyVideosMusic":
-          "سمارٹ کنٹرولز کے ساتھ ویڈیوز، موسیقی اور ایچ ڈی پلے بیک سے لطف اندوز ہوں",
+      "سمارٹ کنٹرولز کے ساتھ ویڈیوز، موسیقی اور ایچ ڈی پلے بیک سے لطف اندوز ہوں",
       "enjoyUltraHDVideos":
-          "بجلی کی سی رفتار اور صفر حدود کے ساتھ الٹرا ایچ ڈی ویڈیوز کا لطف اٹھائیں",
+      "بجلی کی سی رفتار اور صفر حدود کے ساتھ الٹرا ایچ ڈی ویڈیوز کا لطف اٹھائیں",
       "smoothPlaybackForEvery": "ہر ویڈیو فارمیٹ کے لیے ہموار پلے بیک",
       "appFeedback": "ایپ فیڈ بیک",
       "stars": "ستارے",
       "hiIGave": "ہیلو، میں نے دیے",
       "hereIsMyFeedback:": "یہ میرا فیڈ بیک ہے:",
       "checkOutThisAmazing":
-          "اس حیرت انگیز ویڈیو اور میوزک پلیئر ایپ کو دیکھیں!",
+      "اس حیرت انگیز ویڈیو اور میوزک پلیئر ایپ کو دیکھیں!",
       "downloadItNowFrom": "ابھی پلے اسٹور سے ڈاؤن لوڈ کریں:",
       "downloadMediaPlayer": "میڈیا پلیئر ڈاؤن لوڈ کریں",
       "appearance": "ظاہری شکل",
@@ -3530,19 +3572,21 @@ class AppStrings {
       "deleteTheAsset": "فائل حذف کریں",
       "noFavouriteYet": "ابھی تک کوئی پسندیدہ نہیں ہے۔",
       "addSomeVideosOrAudio":
-          "انہیں یہاں دیکھنے کے لیے کچھ ویڈیوز یا آڈیو شامل کریں!",
+      "انہیں یہاں دیکھنے کے لیے کچھ ویڈیوز یا آڈیو شامل کریں!",
     },
   };
 
   String tr(String key) =>
       translations[locale.languageCode]?[key] ??
-      translations['en']![key] ??
-      key;
+          translations['en']![key] ??
+          key;
 
   static const LocalizationsDelegate<AppStrings> delegate = _AppLocDelegate();
 
   static String get(BuildContext context, String key) {
-    final locale = Localizations.localeOf(context).languageCode;
+    final locale = Localizations
+        .localeOf(context)
+        .languageCode;
     return translations[locale]?[key] ?? translations['en']![key] ?? key;
   }
 }

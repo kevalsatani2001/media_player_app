@@ -28,7 +28,7 @@ class _FolderScreenState extends State<FolderScreen> {
 
     final List<AssetPathEntity> galleryList =
     await PhotoManager.getAssetPathList(
-      type: RequestType.common, // Audio + Video Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+      type: RequestType.common, // Audio + Video ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¬ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã‚Â¸ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡
       filterOption: FilterOptionGroup(),
     );
 
@@ -36,7 +36,7 @@ class _FolderScreenState extends State<FolderScreen> {
 
     setState(() {
       folderList = galleryList;
-      _isLoading = false; // Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬â€ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡
+      _isLoading = false; // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡
     });
   }
 
@@ -76,22 +76,25 @@ class _FolderScreenState extends State<FolderScreen> {
                   childAspectRatio: 1.0,
                 ),
                 itemBuilder: (context, index) {
-                  // âœ¨ àªàª¡ àª¬àª¤àª¾àªµàªµàª¾àª¨à«àª‚ àª²à«‹àªœàª¿àª•
                   if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
-                    // Grid àª®àª¾àª‚ àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡ àª¤à«‡àª¨à«‡ 'Sliver' àª…àª¥àªµàª¾ àª†àª–àª¾ Row àª®àª¾àª‚ àª²à«‡àªµà«€ àªªàª¡à«‡
-                    // àªœà«‹ GridView àªµàª¾àªªàª°àª¤àª¾ àª¹à«‹àªµ àª¤à«‹ àªàª¡àª¨à«‡ àªàª• Grid Item àª¤àª°à«€àª•à«‡ àª¬àª¤àª¾àªµà«€ àª¶àª•àª¾àª¯
-                    return Container(
+                    return  Container(
                       decoration: BoxDecoration(
-                        color: colors.cardBackground,
+                        color: Colors.white, // Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ³ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¹Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÅ¸ Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã ÂªÂ¶Ã Â«â€¡
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.withOpacity(0.2)), // Ã Âªâ€ Ã Âªâ€°Ã ÂªÅ¸Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨
                       ),
-                      child: Center(
-                        child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Center(
+                          child: FittedBox(
+                            fit: BoxFit.contain, // Ã Âªâ€  Ã ÂªÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â€¹Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ«Ã ÂªÂ¿Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
+                            child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                          ),
+                        ),
                       ),
                     );
                   }
 
-                  // àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸
                   final int actualIndex = index - (index ~/ (adInterval + 1));
                   if (actualIndex >= folderList.length) return const SizedBox.shrink();
 
@@ -103,7 +106,7 @@ class _FolderScreenState extends State<FolderScreen> {
                 },
               ),
             ),
-            // âœ¨ àª¹àª‚àª®à«‡àª¶àª¾ àª¨à«€àªšà«‡ àª¦à«‡àª–àª¾àª¤à«€ àªàª¡
+            // Ã¢Å“Â¨ Ã ÂªÂ¹Ã Âªâ€šÃ ÂªÂ®Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¾ Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂ¡
             AdHelper.bannerAdWidget(size: AdSize.banner),
           ],
         ),

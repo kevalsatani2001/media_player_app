@@ -30,13 +30,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // routeObserver àª¨à«‡ àª¸àª¬à«àª¸à«àª•à«àª°àª¾àª‡àª¬ àª•àª°à«‹
+    // routeObserver Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¸Ã ÂªÂ¬Ã Â«ÂÃ ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¬ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     routeObserver.subscribe(this, ModalRoute.of(context) as PageRoute);
   }
 
   @override
   void didPopNext() {
-    // àªœà«àª¯àª¾àª°à«‡ àª¬à«€àªœàª¾ àªªà«‡àªœ àªªàª°àª¥à«€ àª¹à«‹àª® àªªàª° àªªàª¾àª›àª¾ àª†àªµà«‹ àª¤à«àª¯àª¾àª°à«‡ àª† àª«àª¾àª¯àª° àª¥àª¶à«‡
+    // Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â‚¬Ã ÂªÅ“Ã ÂªÂ¾ Ã ÂªÂªÃ Â«â€¡Ã ÂªÅ“ Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ® Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã Âªâ€ Ã ÂªÂµÃ Â«â€¹ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã Âªâ€  Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ° Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡
     debugPrint("Home Screen: Refreshing counts...");
     context.read<HomeCountBloc>().add(LoadCounts());
     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
@@ -56,13 +56,51 @@ class _HomePageState extends State<HomePage> with RouteAware {
   // HomePage build method ma aa mujab logic rakho:
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return BlocListener<HomeTabBloc, HomeTabState>(
       listener: (context, state) {
         context.read<HomeCountBloc>().add(LoadCounts());
       },
       child: Stack(
         children: [
-          Column(children: [Expanded(child: _buildHomePageWidget())]),
+          Column(
+            children: [
+              CommonAppBar(
+                title: "videMusicPlayer",
+                subTitle: "mediaPlayer",
+                actionWidget: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+                    );
+                  },
+                  child: TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0.8, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    builder: (context, double val, child) =>
+                        Transform.scale(scale: val, child: child),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: colors.textFieldFill,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: AppImage(
+                          src: AppSvg.searchIcon,
+                          color: colors.blackColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Divider(color: colors.dividerColor),
+              Expanded(child: _buildHomePageWidget()),
+              // SizedBox(height: 16),
+            ],
+          ),
           const SmartMiniPlayer(forceMiniMode: true),
         ],
       ),
@@ -74,49 +112,22 @@ class _HomePageState extends State<HomePage> with RouteAware {
     return BlocBuilder<HomeCountBloc, HomeCountState>(
       builder: (context, state) {
         return CustomScrollView(
-          // SingleChildScrollView àª¨à«‡ àª¬àª¦àª²à«‡ CustomScrollView
+          // SingleChildScrollView Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¡ CustomScrollView
           slivers: [
             SliverToBoxAdapter(
               child: Column(
                 children: [
-                  CommonAppBar(
-                    title: "videMusicPlayer",
-                    subTitle: "mediaPlayer",
-                    actionWidget: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const SearchScreen(),
-                          ),
-                        );
-                      },
-                      child: TweenAnimationBuilder(
-                        tween: Tween<double>(begin: 0.8, end: 1.0),
-                        duration: const Duration(milliseconds: 500),
-                        builder: (context, double val, child) =>
-                            Transform.scale(scale: val, child: child),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: colors.textFieldFill,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: AppImage(
-                              src: AppSvg.searchIcon,
-                              color: colors.blackColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  AdHelper.adaptiveBannerWidget(context),
+                  SizedBox(height: 8),
                   // Adaptive Banner
-                  Container(
-                    height: 60, // àª«àª¿àª•à«àª¸ àª¹àª¾àªˆàªŸ àªœà«‡àª¥à«€ UI àªœàª®à«àªª àª¨ àª•àª°à«‡
-                    child: AdHelper.adaptiveBannerWidget(context),
-                  ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(left: 9,right: 9,bottom: 15),
+                  //   child: Center(
+                  //     child: Container(
+                  //      child: AdHelper.adaptiveBannerWidget(context),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -125,7 +136,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
               sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    _buildGridCards(state), // àª•àª¾àª°à«àª¡à«àª¸ àª®àª¾àªŸà«‡ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
+                    _buildGridCards(state),
+                    // Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÂ¡Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã Âªâ€¦Ã ÂªÂ²Ã Âªâ€” Ã ÂªÂ«Ã Âªâ€šÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¶Ã ÂªÂ¨
                     const SizedBox(height: 20),
                     // Native Ad with Placeholder
                     Container(
@@ -143,7 +155,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 ),
               ),
             ),
-            // àªŸà«‡àª¬ àª®à«àªœàª¬àª¨à«àª‚ àª²àª¿àª¸à«àªŸ
+            // Ã ÂªÅ¸Ã Â«â€¡Ã ÂªÂ¬ Ã ÂªÂ®Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¬Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸
             BlocBuilder<HomeTabBloc, HomeTabState>(
               builder: (context, tabState) {
                 return tabState.selectedIndex == 0
@@ -246,7 +258,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
               final isFolderTab = tabState.selectedIndex == 1;
 
               bool showButton = false;
-              if (isVideoTab && state.videoCount > 6) {
+              if (isVideoTab && state.videoCount > 4) {
                 showButton = true;
               } else if (isFolderTab && folderList.length > 4) {
                 showButton = true;
@@ -482,12 +494,12 @@ class _HomePageState extends State<HomePage> with RouteAware {
       List<AssetEntity> allEntities,
       int currentIndex,
       ) async {
-    // 1. àª«àª¾àªˆàª² àªšà«‡àª• àª•àª°à«‹
+    // 1. Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ² Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     final entity = allEntities[currentIndex];
     final file = await entity.file;
     if (file == null || !file.existsSync()) return;
 
-    // 2. àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª«àª‚àª•à«àª¶àª¨ (àªœà«‡ àªàª¡ àªªàª›à«€ àª…àª¥àªµàª¾ àªàª¡ àªµàª—àª° àª•à«‹àª² àª¥àª¶à«‡)
+    // 2. Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂµÃ ÂªÂ¿Ã Âªâ€”Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¨ Ã ÂªÂ«Ã Âªâ€šÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¶Ã ÂªÂ¨ (Ã ÂªÅ“Ã Â«â€¡ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã Âªâ€¦Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂµÃ Âªâ€”Ã ÂªÂ° Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ² Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡)
     void openPlayer() {
       Navigator.push(
         context,
@@ -514,19 +526,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
       });
     }
 
-    // 3. àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸàª° àªµàª§àª¾àª°à«‹
     _videoClickCount++;
 
-    // 4. àªàª¡ àª²à«‹àªœàª¿àª• (àª¦àª° 3 àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹)
     if (_videoClickCount % 3 == 0) {
       debugPrint("Showing Interstitial Ad before navigation...");
 
-      // Callback àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°à«€àª¨à«‡ àªàª¡ àª¬àª¤àª¾àªµà«‹
       AdHelper.showInterstitialAd(() {
-        openPlayer(); // àªàª¡ àª¬àª‚àª§ àª¥àª¾àª¯ àªªàª›à«€ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+        openPlayer();
       });
     } else {
-      // àªœà«‹ 3 àª•à«àª²àª¿àª• àª¨ àª¥àªˆ àª¹à«‹àª¯ àª¤à«‹ àª¸à«€àª§à«àª‚ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
       openPlayer();
     }
   }
@@ -542,6 +550,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }
 
     final displayCount = folderList.length > 4 ? 4 : folderList.length;
+    const int adInterval = 2;
+    int totalCount = displayCount + (displayCount ~/ adInterval);
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -550,22 +560,50 @@ class _HomePageState extends State<HomePage> with RouteAware {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 15,
-          childAspectRatio: 1.05,
+          childAspectRatio: 1.0,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
-          final item = folderList[index];
+          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+                // Ã Âªâ€ Ã Âªâ€°Ã ÂªÅ¸Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    // Ã Âªâ€  Ã ÂªÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â€¹Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ«Ã ÂªÂ¿Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
+                    child: AdHelper.bannerAdWidget(
+                      size: AdSize.mediumRectangle,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          final int actualIndex = index - (index ~/ (adInterval + 1));
+          if (actualIndex >= folderList.length) return const SizedBox.shrink();
+
+          final item = folderList[actualIndex];
+
+          // final item = folderList[index];
           return AppTransition(
             index: index + 5,
             columnCount: 2,
             child: GalleryItemWidget(path: item, setState: setState),
           );
-        }, childCount: displayCount),
+        }, childCount: totalCount),
       ),
     );
   }
 
   Widget _buildSliverVideoList() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
+    const int adInterval = 2;
     return BlocBuilder<VideoBloc, VideoState>(
       builder: (context, state) {
         if (state is VideoLoading) {
@@ -582,12 +620,28 @@ class _HomePageState extends State<HomePage> with RouteAware {
             );
           }
 
-          // àª¹à«‹àª® àªªà«‡àªœ àªªàª° àª²àª¿àª®àª¿àªŸà«‡àª¡ àª†àªˆàªŸàª®à«àª¸ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
           final displayCount = entities.length > 6 ? 6 : entities.length;
 
           return SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              final entity = entities[index];
+
+              bool isAdPosition =
+              (index != 0 && (index + 1) % (adInterval + 1) == 0);
+              bool isLastAdForSmallList =
+              (entities.length < adInterval && index == entities.length);
+
+              if (isAdPosition || isLastAdForSmallList) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: AdHelper.bannerAdWidget(size: AdSize.banner),
+                );
+              }
+
+              final int actualIndex = index - (index ~/ (adInterval + 1));
+
+              if (actualIndex >= entities.length) return const SizedBox.shrink();
+              final entity = entities[actualIndex];
+              // final entity = entities[index];
               return AppTransition(
                 index: index + 5,
                 child: Padding(
@@ -647,7 +701,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     option: const ThumbnailOption(
                       size: ThumbnailSize.square(
                         150,
-                      ), // àª¸àª¾àªˆàª àª˜àªŸàª¾àª¡à«€ (àª¸à«àª®à«‚àª¥àª¨à«‡àª¸ àª®àª¾àªŸà«‡)
+                      ), // Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ Ã ÂªËœÃ ÂªÅ¸Ã ÂªÂ¾Ã ÂªÂ¡Ã Â«â‚¬ (Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ®Ã Â«â€šÃ ÂªÂ¥Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡)
                     ),
                   ),
                 ),
