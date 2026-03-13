@@ -10,6 +10,9 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      "systemDefaults": "(System Default)",
+      "yourSystemLanguage": "Your system language (",
+      "isNotSupported": ") is not supported yet.",
       'noInternetTitle': 'No Internet Connection',
       'noInternetBody': 'Please check your network settings.',
       "internetRequired": "Internet Required",
@@ -181,6 +184,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "Add some videos or audio to see them here!",
     },
     'ar': {
+      "systemDefaults": "(النظام الافتراضي)",
+      "yourSystemLanguage": "لغة نظامك (",
+      "isNotSupported": ") غير مدعومة بعد.",
       'noInternetTitle': 'لا يوجد اتصال بالإنترنت',
       'noInternetBody': 'يرجى التحقق من إعدادات الشبكة الخاصة بك.',
       "internetRequired": "الاتصال بالإنترنت مطلوب",
@@ -347,6 +353,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "أضف بعض الفيديوهات أو الصوتيات لتظهر هنا!",
     },
     'my': {
+      "systemDefaults": "(စနစ်အခြေခံရွေးချယ်မှု)",
+      "yourSystemLanguage": "သင်၏စနစ်ဘာသာစကား (",
+      "isNotSupported": ") ကိုမပံ့ပိုးသေးပါ။",
       'noInternetTitle': 'အင်တာနက်ချိတ်ဆက်မှုမရှိပါ',
       'noInternetBody': 'သင်၏ကွန်ရက်ဆက်တင်များကို စစ်ဆေးပါ။',
       "internetRequired": "အင်တာနက်လိုအပ်သည်",
@@ -518,6 +527,9 @@ class AppStrings {
       "ဤနေရာတွင် မြင်တွေ့နိုင်ရန် ဗီဒီယો သို့မဟုတ် အော်ဒီယိုအချို့ ထည့်သွင်းပါ!",
     },
     'fil': {
+      "systemDefaults": "(Default ng System)",
+      "yourSystemLanguage": "Ang wika ng iyong system (",
+      "isNotSupported": ") ay hindi pa suportado.",
       'noInternetTitle': 'Walang Koneksyon sa Internet',
       'noInternetBody': 'Pakisuri ang iyong mga setting ng network.',
       "internetRequired": "Kailangan ng Internet",
@@ -689,6 +701,9 @@ class AppStrings {
       "Magdagdag ng ilang mga video o audio para makita ang mga ito rito!",
     },
     'fr': {
+      "systemDefaults": "(Par défaut)",
+      "yourSystemLanguage": "La langue de votre système (",
+      "isNotSupported": ") n'est pas encore prise en charge.",
       'noInternetTitle': 'Pas de connexion Internet',
       'noInternetBody': 'Veuillez vérifier vos paramètres réseau.',
       "internetRequired": "Internet requis",
@@ -859,6 +874,9 @@ class AppStrings {
       "Ajoutez des vidéos ou du son pour les voir ici !",
     },
     'de': {
+      "systemDefaults": "(Systemstandard)",
+      "yourSystemLanguage": "Ihre Systemsprache (",
+      "isNotSupported": ") wird noch nicht unterstützt.",
       'noInternetTitle': 'Keine Internetverbindung',
       'noInternetBody': 'Bitte überprüfen Sie Ihre Netzwerkeinstellungen.',
       "internetRequired": "Internet erforderlich",
@@ -1030,6 +1048,9 @@ class AppStrings {
       "Füge Videos oder Audio hinzu, um sie hier zu sehen!",
     },
     'gu': {
+      "systemDefaults": "(સિસ્ટમ ડિફોલ્ટ)",
+      "yourSystemLanguage": "તમારી સિસ્ટમ ભાષા (",
+      "isNotSupported": ") હજુ સપોર્ટેડ નથી.",
       'noInternetTitle': 'ઇન્ટરનેટ કનેક્શન નથી',
       'noInternetBody': 'મહેરબાની કરીને તમારા નેટવર્ક સેટિંગ્સ તપાસો.',
       "internetRequired": "ઇન્ટરનેટ જરૂરી છે",
@@ -1200,6 +1221,9 @@ class AppStrings {
       "તેમને અહીં જોવા માટે કેટલાક વીડિયો અથવા ઓડિયો ઉમેરો!",
     },
     'hi': {
+      "systemDefaults": "(सिस्टम डिफॉल्ट)",
+      "yourSystemLanguage": "आपकी सिस्टम भाषा (",
+      "isNotSupported": ") अभी समर्थित नहीं है।",
       'noInternetTitle': 'कोई इंटरनेट कनेक्शन नहीं',
       'noInternetBody': 'कृपया अपनी नेटवर्क सेटिंग्स जांचें।',
       "internetRequired": "इंटरनेट आवश्यक है",
@@ -1370,6 +1394,9 @@ class AppStrings {
       "उन्हें यहाँ देखने के लिए कुछ वीडियो या ऑडियो जोड़ें!",
     },
     'id': {
+      "systemDefaults": "(Default Sistem)",
+      "yourSystemLanguage": "Bahasa sistem Anda (",
+      "isNotSupported": ") belum didukung.",
       'noInternetTitle': 'Tidak Ada Koneksi Internet',
       'noInternetBody': 'Silakan periksa pengaturan jaringan Anda.',
       "internetRequired": "Koneksi Internet Diperlukan",
@@ -1541,6 +1568,9 @@ class AppStrings {
       "Tambahkan beberapa video atau audio untuk melihatnya di sini!",
     },
     'it': {
+      "systemDefaults": "(Predefinito di sistema)",
+      "yourSystemLanguage": "La lingua del tuo sistema (",
+      "isNotSupported": ") non è ancora supportata.",
       'noInternetTitle': 'Nessuna connessione Internet',
       'noInternetBody': 'Controlla le impostazioni di rete.',
       "internetRequired": "Internet richiesto",
@@ -1712,6 +1742,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "Aggiungi video o audio per vederli qui!",
     },
     'ja': {
+      "systemDefaults": "(システムデフォルト)",
+      "yourSystemLanguage": "システムの言語 (",
+      "isNotSupported": ") はまだサポートされていません。",
       'noInternetTitle': 'インターネット接続がありません',
       'noInternetBody': 'ネットワーク設定を確認してください।',
       "internetRequired": "インターネットが必要です",
@@ -1877,6 +1910,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "ビデオやオーディオを追加してここに表示しましょう！",
     },
     'ko': {
+      "systemDefaults": "(시스템 기본값)",
+      "yourSystemLanguage": "시스템 언어 (",
+      "isNotSupported": ")는 아직 지원되지 않습니다.",
       'noInternetTitle': '인터넷 연결 없음',
       'noInternetBody': '네트워크 설정을 확인해 주세요.',
       "internetRequired": "인터넷 연결 필요",
@@ -2041,6 +2077,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "여기에 표시할 비디오나 오디오를 추가하세요!",
     },
     'ms': {
+      "systemDefaults": "(Lalai Sistem)",
+      "yourSystemLanguage": "Bahasa sistem anda (",
+      "isNotSupported": ") belum disokong.",
       'noInternetTitle': 'Tiada Sambungan Internet',
       'noInternetBody': 'Sila semak tetapan rangkaian anda.',
       "internetRequired": "Internet Diperlukan",
@@ -2212,6 +2251,9 @@ class AppStrings {
       "Tambah beberapa video atau audio untuk melihatnya di sini!",
     },
     'mr': {
+      "systemDefaults": "(सिस्टम डिफॉल्ट)",
+      "yourSystemLanguage": "तुमची सिस्टम भाषा (",
+      "isNotSupported": ") अद्याप समर्थित नाही.",
       'noInternetTitle': 'इंटरनेट कनेक्शन नाही',
       'noInternetBody': 'कृपया तुमचे नेटवर्क सेटिंग्ज तपासा.',
       "internetRequired": "इंटरनेट आवश्यक आहे",
@@ -2382,6 +2424,9 @@ class AppStrings {
       "ते येथे पाहण्यासाठी काही व्हिडिओ किंवा ऑडिओ जोडा!",
     },
     'fa': {
+      "systemDefaults": "(پیش‌فرض سیستم)",
+      "yourSystemLanguage": "زبان سیستم شما (",
+      "isNotSupported": ") هنوز پشتیبانی نمی‌شود.",
       'noInternetTitle': 'اتصال اینترنت برقرار نیست',
       'noInternetBody': 'لطفاً تنظیمات شبکه خود را بررسی کنید.',
       "internetRequired": "اتصال به اینترنت الزامی است",
@@ -2552,6 +2597,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "تعدادی ویدیو یا صدا اضافه کنید تا اینجا ببینید!",
     },
     'pl': {
+      "systemDefaults": "(Domyślne systemu)",
+      "yourSystemLanguage": "Język Twojego systemu (",
+      "isNotSupported": ") nie jest jeszcze obsługiwany.",
       'noInternetTitle': 'Brak połączenia z Internetem',
       'noInternetBody': 'Sprawdź ustawienia sieciowe.',
       "internetRequired": "Wymagany internet",
@@ -2720,6 +2768,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "Dodaj wideo lub dźwięk, aby zobaczyć je tutaj!",
     },
     'pt': {
+      "systemDefaults": "(Padrão do sistema)",
+      "yourSystemLanguage": "O idioma do seu sistema (",
+      "isNotSupported": ") ainda não é suportado.",
       'noInternetTitle': 'Sem Conexão com a Internet',
       'noInternetBody': 'Por favor, verifique suas configurações de rede.',
       "internetRequired": "Wymagany internet",
@@ -2892,6 +2943,9 @@ class AppStrings {
       "Adicione alguns vídeos ou áudio para os ver aqui!",
     },
     'es': {
+      "systemDefaults": "(Predeterminado del sistema)",
+      "yourSystemLanguage": "El idioma de su sistema (",
+      "isNotSupported": ") aún no es compatible.",
       'noInternetTitle': 'Sin conexión a Internet',
       'noInternetBody': 'Por favor, comprueba tu configuración de red.',
       "internetRequired": "Internet requerido",
@@ -3064,6 +3118,9 @@ class AppStrings {
       "¡Agrega algunos videos o audio para verlos aquí!",
     },
     'sv': {
+      "systemDefaults": "(Systemstandard)",
+      "yourSystemLanguage": "Ditt systemspråk (",
+      "isNotSupported": ") stöds inte ännu.",
       'noInternetTitle': 'Ingen internetanslutning',
       'noInternetBody': 'Kontrollera dina nätverksinställningar.',
       "internetRequired": "Internet krävs",
@@ -3233,6 +3290,9 @@ class AppStrings {
       "addSomeVideosOrAudio": "Lägg till videor eller ljud för att se dem här!",
     },
     'ta': {
+      "systemDefaults": "(முறைமை இயல்ぶநிலை)",
+      "yourSystemLanguage": "உங்கள் கணினி மொழி (",
+      "isNotSupported": ") இன்னும் ஆதரிக்கப்படவில்லை.",
       'noInternetTitle': 'இணைய இணைப்பு இல்லை',
       'noInternetBody': 'உங்கள் நெட்வર્ક அமைப்புகளைச் சரிபார்க்கவும்.',
       "internetRequired": "இணையம் தேவை",
@@ -3404,6 +3464,9 @@ class AppStrings {
       "இங்கே காண சில வீடியோக்கள் அல்லது ஆடியோவைச் சேர்க்கவும்!",
     },
     'ur': {
+      "systemDefaults": "(سسٹم ڈیفالٹ)",
+      "yourSystemLanguage": "آپ کے سسٹم کی زبان (",
+      "isNotSupported": ") ابھی تعاون یافتہ نہیں ہے۔",
       'noInternetTitle': 'انٹرنیٹ کنکشن نہیں ہے',
       'noInternetBody': 'براہ کرم اپنے نیٹ ورک کی ترتیبات چیک کریں۔',
       "internetRequired": "انٹرنیٹ درکار ہے",

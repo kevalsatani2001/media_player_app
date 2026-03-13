@@ -1,10 +1,3 @@
-
-// flutter_secure_storage:
-
-/*
-
- */
-
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -101,7 +94,8 @@ class HiveService {
   static set themeMode(String value) => settingsBox.put('themeMode', value);
 
   /// Application localization settings
-  static String get languageCode => settingsBox.get('languageCode', defaultValue: 'en');
+  static String get languageCode => settingsBox.get('languageCode', defaultValue: "");
+  // static String get languageCode => settingsBox.get('languageCode', defaultValue: 'en');
   static set languageCode(String value) => settingsBox.put('languageCode', value);
 
   /// Persists the selected locale
@@ -117,6 +111,8 @@ class HiveService {
 
   /// Updates the language settings in the box
   static Future<void> saveLanguage(String code) async {
-    await settingsBox.put('language', code);
+    // Ahiya key 'languageCode' rakho, 'language' nahi.
+    // Jethi GET ane SET banne ek j jagya e thay.
+    await settingsBox.put('languageCode', code);
   }
 }

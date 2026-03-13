@@ -1,9 +1,5 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import '../core/constants.dart';
-import '../services/ads_service.dart';
-import '../utils/app_imports.dart'; // Tamari badhi files aama hase j
+
+import '../utils/app_imports.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,28 +12,27 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   final Box settingsBox = Hive.box('settings');
 
-  final String _fullText = 'Media Player';
+  String _fullText = '';
   String _visibleText = '';
   int _index = 0;
   Timer? _timer;
   late AnimationController _sliderController;
   late Animation<double> _sliderAnimation;
+  bool _isInitialized = false; // Add this flag
 
   @override
   void initState() {
     super.initState();
-
-    _startTyping();
 
     _sliderController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
     );
 
-    _sliderAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_sliderController)
+    _sliderAnimation =
+    Tween<double>(begin: 0.0, end: 1.0).animate(_sliderController)
       ..addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          // Ã°Å¸Å¡â‚¬ Slider Ã ÂªÂªÃ ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ad Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Navigate Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
           _showAdAndNavigate();
         }
       });
@@ -45,12 +40,18 @@ class _SplashScreenState extends State<SplashScreen>
     _sliderController.forward();
   }
 
-  // Ã°Å¸Å¸Â¢ 2. Ad Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â‚¬Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Âªâ€ºÃ Â«â‚¬ Ã Âªâ€ Ã Âªâ€”Ã ÂªÂ³ Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Logic
-  void _showAdAndNavigate() {
-    // AdHelper ma jaine check karo ke ad ready che?
-    // Jo hoy to batavo, dismiss thaya pachi navigate thase.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    // Ad show thava mate thodo samay apiye jethi AppOpenAd handle kari shake
+    if (!_isInitialized) {
+      _fullText = context.tr("mediaPlayerApp");
+      _startTyping();
+      _isInitialized = true;
+    }
+  }
+
+  void _showAdAndNavigate() {
     Future.delayed(const Duration(milliseconds: 500), () {
       navigateNext();
     });
@@ -70,16 +71,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> navigateNext() async {
-    // Jo AppOpenAd screen par chalti hoy (isShowingAd), to navigate na karo
-    // Pan apane safer side mate 1 second delayed navigation rakhiye
-
     final selectedLang = settingsBox.get('languageCode');
+    final isNewApp = settingsBox.get('isNewApp', defaultValue: true);
     String route;
-
-    if (selectedLang == null) {
+    print("isnewapp is ===> $isNewApp");
+    if (selectedLang == null || isNewApp) {
       route = '/language';
     } else {
-      final seenOnboarding = settingsBox.get('seenOnboarding', defaultValue: false);
+      final seenOnboarding = settingsBox.get(
+        'seenOnboarding',
+        defaultValue: false,
+      );
       route = !seenOnboarding ? '/onboarding' : '/';
     }
 
@@ -117,7 +119,6 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
             const Spacer(),
-            // Slider UI jem che tem j...
             _buildSlider(colors),
           ],
         ),
@@ -149,16 +150,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 // import 'dart:async';
 //
@@ -204,7 +195,7 @@ class _SplashScreenState extends State<SplashScreen>
 //         Tween<double>(begin: 0.0, end: 1.0).animate(_sliderController)
 //           ..addStatusListener((status) {
 //             if (status == AnimationStatus.completed) {
-//               navigateNext(); // ðŸš€ CALL AFTER SLIDER COMPLETES
+//               navigateNext(); // Ã°Å¸Å¡â‚¬ CALL AFTER SLIDER COMPLETES
 //             }
 //           });
 //
@@ -265,7 +256,7 @@ class _SplashScreenState extends State<SplashScreen>
 //             Spacer(),
 //             Center(child: AppImage(src: AppSvg.appLogo, height: 120)),
 //
-//             /// ðŸ”¹ Animated text ONLY
+//             /// Ã°Å¸â€Â¹ Animated text ONLY
 //             Padding(
 //               padding: const EdgeInsets.only(top: 13),
 //               child: AppText(
@@ -295,7 +286,7 @@ class _SplashScreenState extends State<SplashScreen>
 //                         ),
 //                         overlayShape: SliderComponentShape.noOverlay,
 //
-//                         /// â­ IMPORTANT PART
+//                         /// Ã¢Â­Â IMPORTANT PART
 //                         disabledActiveTrackColor: colors.primary,
 //                         disabledInactiveTrackColor: colors.primary.withOpacity(
 //                           0.5,

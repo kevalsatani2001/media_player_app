@@ -9,7 +9,7 @@ bool isPositionInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppNotificationService.init(); // àª† àª²àª¾àªˆàª¨ àª‰àª®à«‡àª°à«‹
+  await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
   await MobileAds.instance.initialize();
   AdHelper.loadAppOpenAd();
@@ -36,6 +36,39 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
   await PhotoManager.requestPermissionExtend();
+  // final String initialLang = HiveService.languageCode.isEmpty
+  //     ? PlatformDispatcher.instance.locale.languageCode
+  //     : HiveService.languageCode;
+
+  // 1. Hive mathi saved language check karo
+  String savedLang = HiveService.languageCode;
+
+  // 2. System ni current language melvo
+  final String systemLang = PlatformDispatcher.instance.locale.languageCode;
+  final List<String> supported = AppStrings.translations.keys.toList();
+
+  String finalLang;
+
+  // STEP A: Jo Hive ma pela thi kai save hoy to e j lo
+  if (savedLang.isNotEmpty) {
+    finalLang = savedLang;
+  }
+  // STEP B: Jo Hive khali hoy, to system language check karo
+  else if (supported.contains(systemLang)) {
+    finalLang = systemLang;
+    // System language support ma chhe, to save kari do jethi next time khali na male
+    HiveService.saveLanguage(finalLang);
+  }
+  // STEP C: Jo kai na male to English (Default)
+  else {
+    finalLang = 'en';
+    HiveService.saveLanguage(finalLang);
+  }
+
+  // CRITICAL: Jo 'en' pan supported list ma na hoy (bhul thi), to pepli key upadi lo
+  if (!supported.contains(finalLang)) {
+    finalLang = supported.isNotEmpty ? supported.first : 'en';
+  }
 
   runApp(
     MultiBlocProvider(
@@ -43,16 +76,18 @@ void main() async {
         BlocProvider<FavouriteBloc>(
           lazy: false,
           create: (context) => FavouriteBloc(Hive.box('favourites'))..add(LoadFavourite()),
+        ), BlocProvider<LocaleBloc>(
+          create: (context) => LocaleBloc()..add(ChangeLocale(Locale(finalLang))),
         ),
         BlocProvider<HomeCountBloc>(
           create: (context) => HomeCountBloc()..add(LoadCounts()),
         ),
         ChangeNotifierProvider(create: (_) => GlobalPlayer()),
         BlocProvider(create: (_) => ThemeBloc()),
-        BlocProvider(
-          create: (_) =>
-          LocaleBloc()..add(ChangeLocale(Locale(HiveService.languageCode))),
-        ),
+        // BlocProvider(
+        //   create: (_) =>
+        //   LocaleBloc()..add(ChangeLocale(Locale(HiveService.languageCode))),
+        // ),
         // BlocProvider(create: (_) => FavouriteChangeBloc()),
         BlocProvider<FavouriteChangeBloc>(create: (_) => FavouriteChangeBloc()),
         BlocProvider<VideoBloc>(
@@ -111,6 +146,34 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
 
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       GlobalPlayer().savePlayerState();
+    }
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    super.didChangeLocales(locales);
+
+    if (locales != null && locales.isNotEmpty) {
+      final newLocale = locales.first;
+      final String langCode = newLocale.languageCode;
+      final List<String> supported = AppStrings.translations.keys.toList();
+
+      if (supported.contains(langCode)) {
+        // Support che to change karo
+        context.read<LocaleBloc>().add(ChangeLocale(newLocale));
+        HiveService.saveLanguage(langCode);
+      } else {
+        // Support nathi to Toast batavo (Fluttertoast package vapri ne)
+        print("cccc   ===> $langCode");
+        Fluttertoast.showToast(
+          msg: "Language '$langCode' is not supported. Falling back to English.",
+          toastLength: Toast.LENGTH_SHORT,
+        );
+
+        // Default 'en' set kari do
+        context.read<LocaleBloc>().add(ChangeLocale(const Locale('en')));
+        HiveService.saveLanguage('en');
+      }
     }
   }
 
