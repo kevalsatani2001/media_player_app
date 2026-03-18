@@ -62,6 +62,11 @@ dependencies:
   connectivity_plus:
   app_settings:
   flutter_local_notifications:
+  better_player_plus:
+  flick_video_player:
+  visibility_detector:
+  screen_brightness:
+  volume_controller: ^2.0.3
 #  google_fonts:
 
 dev_dependencies:

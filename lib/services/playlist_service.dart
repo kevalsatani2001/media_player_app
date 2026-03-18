@@ -41,7 +41,13 @@ class FavouriteChanged extends FavouriteChangeState {
 class PlaylistService {
   PlaylistService();
 
-  static Box get _box => Hive.box('playlists');
+  // static Box get _box => Hive.box('playlists');
+  static Box<PlaylistModel> get _box => Hive.box<PlaylistModel>('playlists');
+
+  // âœ… àªŸàª¾àªˆàªª àª®à«àªœàª¬ àª«àª¿àª²à«àªŸàª° àª•àª°à«‡àª²à«€ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª®à«‡àª³àªµà«‹
+  static List<PlaylistModel> getPlaylistsByType(String type) {
+    return _box.values.where((playlist) => playlist.type == type).toList();
+  }
 
   static List getPlaylists() => _box.values.toList();
   static final Box favBox = Hive.box('favourites');
@@ -60,7 +66,7 @@ class PlaylistService {
     final key = file.path;
     final bool isCurrentlyFav = favBox.containsKey(key);
 
-    // 1️⃣ Update Hive favourites
+    // 1ï¸âƒ£ Update Hive favourites
     if (isCurrentlyFav) {
       await favBox.delete(key);
     } else {
@@ -72,7 +78,7 @@ class PlaylistService {
       });
     }
 
-    // 2️⃣ Update system gallery favourite
+    // 2ï¸âƒ£ Update system gallery favourite
     if (PlatformUtils.isOhos) {
       await PhotoManager.editor.ohos.favoriteAsset(
         entity: entity,
@@ -90,7 +96,7 @@ class PlaylistService {
       );
     }
 
-    // 3️⃣ Update playlists: mark matching MediaItems as favourite or not
+    // 3ï¸âƒ£ Update playlists: mark matching MediaItems as favourite or not
     for (int i = 0; i < _box.length; i++) {
       final playlist = _box.getAt(i);
       if (playlist == null) continue;
@@ -109,7 +115,7 @@ class PlaylistService {
       }
     }
 
-    // 4️⃣ Notify listeners
+    // 4ï¸âƒ£ Notify listeners
     favouriteChangeBloc.add(FavouriteUpdated(entity));
 
     return !isCurrentlyFav;
@@ -131,23 +137,31 @@ class PlaylistService {
     }
   }
 
-  void addToPlaylist(String playlistName, MediaItem item) {
+  void addToPlaylist(String playlistName, MediaItem item, String mediaType) {
     final box = Hive.box<PlaylistModel>('playlists');
 
-    // Check if playlist exists
+    // àªŸàª¾àªˆàªŸàª² àª…àª¨à«‡ àªŸàª¾àªˆàªª àª¬àª‚àª¨à«‡ àª®à«‡àªš àª¥àªµàª¾ àªœà«‹àªˆàª
     final playlistKey = box.keys.firstWhere(
-            (k) => box.get(k)?.name == playlistName,
-        orElse: () => null);
+          (k) {
+        final p = box.get(k);
+        return p?.name == playlistName && p?.type == mediaType;
+      },
+      orElse: () => null,
+    );
 
     if (playlistKey != null) {
       final playlist = box.get(playlistKey)!;
       if (!playlist.items.any((e) => e.path == item.path)) {
         playlist.items.add(item);
-        box.put(playlistKey, playlist); // update
+        playlist.save(); // âœ… box.put àª•àª°àª¤àª¾ playlist.save() àªµàª§àª¾àª°à«‡ àª¸àª¾àª°à«àª‚ àª›à«‡
       }
     } else {
-      // Create new playlist
-      final newPlaylist = PlaylistModel(name: playlistName, items: [item]);
+      // àª¨àªµà«€ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµà«‹ àª¤à«àª¯àª¾àª°à«‡ àªŸàª¾àªˆàªª àª†àªªà«‹
+      final newPlaylist = PlaylistModel(
+        name: playlistName,
+        items: [item],
+        type: mediaType, // âœ… 'audio' àª…àª¥àªµàª¾ 'video'
+      );
       box.add(newPlaylist);
     }
   }

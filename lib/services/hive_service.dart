@@ -23,6 +23,7 @@ class HiveService {
     await _openSecureBox('favourites');
     await _openSecureBox('recents');
     await _openSecureBox('playlists');
+    await _openSecureBox('last_played');
   }
 
   /// Fetches a secure key from Android Keystore or iOS Keychain.

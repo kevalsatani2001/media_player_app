@@ -5,6 +5,7 @@
 
 
 import 'dart:ui' as ui;
+import '../models/media_item.dart' as my;
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
@@ -126,7 +127,7 @@ class _VideoScreenState extends State<VideoScreen> {
               children: [
                 Column(
                   children: [
-                    /// Ã°Å¸Å¸Â¢ 1. TOP ADAPTIVE BANNER
+                    /// ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ 1. TOP ADAPTIVE BANNER
                     AdHelper.adaptiveBannerWidget(context),
                     Expanded(child: _buildVideoPage()),
                   ],
@@ -164,7 +165,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 ),
               ),
               Divider(color: colors.dividerColor),
-              /// Ã°Å¸Å¸Â¢ 2. TOP BANNER FOR TAB VIEW
+              /// ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ 2. TOP BANNER FOR TAB VIEW
               AdHelper.adaptiveBannerWidget(context),
 
               Expanded(child: _buildVideoPage()),
@@ -212,7 +213,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.02), // ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂµÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡
+                    begin: const Offset(0.0, 0.02), // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂµÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -239,10 +240,10 @@ class _VideoScreenState extends State<VideoScreen> {
 
 
   _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    // Ã°Å¸Å¸Â¢ Darek 5 item pachi ek Ad (Interval 2 bahu vadhare thai jase, 5-6 best rahese)
+    // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Darek 5 item pachi ek Ad (Interval 2 bahu vadhare thai jase, 5-6 best rahese)
     const int adIndexInterval = 5;
 
-    // Ã°Å¸Å¸Â¢ Sacho ItemCount: Videos + Ads + Loader
+    // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Sacho ItemCount: Videos + Ads + Loader
     int totalItems = entitiesToShow.length + (entitiesToShow.length ~/ adIndexInterval);
     if (hasMore) totalItems++;
 
@@ -265,20 +266,20 @@ class _VideoScreenState extends State<VideoScreen> {
           return const Center(child: CustomLoader());
         }
 
-        // _buildGridView àª¨àª¾ itemBuilder àª…àª‚àª¦àª° AD LOGIC àªµàª¾àª³à«‹ àª­àª¾àª— àª† àª°à«€àª¤à«‡ àª¬àª¦àª²à«‹:
+        // _buildGridView Ã ÂªÂ¨Ã ÂªÂ¾ itemBuilder Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° AD LOGIC Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã Â«â€¹ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€” Ã Âªâ€  Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¹:
 
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+              color: Colors.white, // Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ³ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¹Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÅ¸ Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã ÂªÂ¶Ã Â«â€¡
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+              border: Border.all(color: Colors.grey.withOpacity(0.2)), // Ã Âªâ€ Ã Âªâ€°Ã ÂªÅ¸Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Center(
                 child: FittedBox(
-                  fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+                  fit: BoxFit.contain, // Ã Âªâ€  Ã ÂªÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â€¹Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ«Ã ÂªÂ¿Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
                   child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
                 ),
               ),
@@ -286,7 +287,7 @@ class _VideoScreenState extends State<VideoScreen> {
           );
         }
 
-        // Ã°Å¸Å¸Â¢ 3. ACTUAL INDEX CALCULATION (Bau mukhya chhe)
+        // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ 3. ACTUAL INDEX CALCULATION (Bau mukhya chhe)
         final int actualIndex = index - (index ~/ (adIndexInterval + 1));
 
         if (actualIndex >= entitiesToShow.length) return const SizedBox.shrink();
@@ -298,14 +299,18 @@ class _VideoScreenState extends State<VideoScreen> {
           columnCount: 2,
           child: GestureDetector(
             onTap: () async {
-              // Ã°Å¸Å¸Â¢ Ahiya 'actualIndex' vapro, 'index' nahi
               if (entity is AssetEntity) {
                 List<AssetEntity> videoList = entitiesToShow
                     .whereType<AssetEntity>()
                     .toList();
 
-                int playerIndex = videoList.indexOf(entity);
-                _navigateToPlayer(context, videoList, playerIndex, entity);
+                final entity = entitiesToShow[actualIndex];
+                _navigateToPlayer(
+                    context,
+                    videoList, // àª†àª–à«€ àª²àª¿àª¸à«àªŸ àª®à«‹àª•àª²à«‹ (àª®àª¿àª•à«àª¸ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª®àª¾àªŸà«‡)
+                    actualIndex,    // àª¸àª¾àªšà«‹ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸
+                    entity
+                );
               }},
             child: Padding(
               padding: const EdgeInsets.all(4.0),
@@ -387,25 +392,19 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   _buildListView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    // Ã°Å¸Å¸Â¢ Ad frequency: Darek 5 items pachi ek ad
     const int adIndexInterval = 5;
 
     return ListView.builder(
       key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
-      // Ã°Å¸Å¸Â¢ Item count ma ads ni sankhya add karvi padse
       itemCount: (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
           (entitiesToShow.length ~/ adIndexInterval),
       itemBuilder: (context, index) {
-        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ FIRST CHECK LOADER
-
-        // Ã°Å¸Å¸Â¢ Logic: Check karo ke aa ad ni jagya chhe?
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
           return AdHelper.bannerAdWidget(size: AdSize.banner); // Nano banner list ni vachma
         }
 
-        // Ã°Å¸Å¸Â¢ Actual data index calculate karo (Ads ne bad karye pachi no index)
         final int actualIndex = index - (index ~/ (adIndexInterval + 1));
         if (actualIndex >= entitiesToShow.length) {
           return const Padding(
@@ -540,7 +539,6 @@ class _VideoScreenState extends State<VideoScreen> {
 
     final key = file.path;
 
-    // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
       AppToast.show(
@@ -580,7 +578,7 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Reload entity
+    // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
@@ -591,53 +589,57 @@ class _VideoScreenState extends State<VideoScreen> {
 
   void _navigateToPlayer(
       BuildContext context,
-      List<AssetEntity> allEntities,
+      List<dynamic> allEntities, // dynamic àª•àª¾àª°àª£ àª•à«‡ àª†àª®àª¾àª‚ AssetEntity àª…àª¥àªµàª¾ MediaItem (Audio) àª¹à«‹àªˆ àª¶àª•à«‡
       int currentIndex,
-      AssetEntity video,
+      dynamic currentItem,
       ) async {
 
-    // àª† àª«àª‚àª•à«àª¶àª¨ àªªà«àª²à«‡àª¯àª° àª¸à«àª•à«àª°à«€àª¨ àªªàª° àª²àªˆ àªœàª¶à«‡
     void moveNext() async {
-      final file = await video.file;
-      if (file == null || !file.existsSync()) return;
+      // à«§. àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àª† àª†àªˆàªŸàª® Video àª›à«‡ àª•à«‡ Audio
+      bool isAudio = false;
+      if (currentItem is AssetEntity) {
+        isAudio = currentItem.type == AssetType.audio;
+      } else if (currentItem is my.MediaItem) {
+        isAudio = currentItem.type == 'audio';
+      }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PlayerScreen(
-            entityList: allEntities,
-            entity: video,
-            item: MediaItem(
-              isFavourite: video.isFavorite,
-              id: video.id,
-              path: file.path,
-              isNetwork: false,
-              type: 'video',
+      if (isAudio) {
+        // --- AUDIO PLAYER MATE ---
+        // àª…àª—àª¾àª‰ àª†àªªàª£à«‡ àªµàª¾àª¤ àª•àª°à«€ àª¤à«‡àª® GlobalPlayer àª¸àª°à«àªµàª¿àª¸ àªµàª¾àªªàª°à«‹
+        final audioPlayer = GlobalPlayer();
+
+        // àªœà«‹ àª¤àª®àª¾àª°à«€ àªªàª¾àª¸à«‡ List<AssetEntity> àª¹à«‹àª¯ àª¤à«‹ àª¤à«‡àª¨à«‡ àªªà«àª²à«‡àª°àª®àª¾àª‚ àª®à«‹àª•àª²à«‹
+        List<AssetEntity> entities = allEntities.whereType<AssetEntity>().toList();
+
+        await audioPlayer.initAndPlay(
+          entities: entities,
+          selectedId: (currentItem is AssetEntity) ? currentItem.id : currentItem.id,
+        );
+
+        // àª¤àª®àª¾àª°à«€ Audio Player Screen àªªàª° àª¨à«‡àªµàª¿àª—à«‡àªŸ àª•àª°à«‹
+        // Navigator.push(context, MaterialPageRoute(builder: (_) => YourAudioScreen()));
+
+      } else {
+        // --- VIDEO PLAYER MATE ---
+        // àª…àª¹à«€àª‚ àª¤àª®àª¾àª°à«€ PlayerScreen (àªœà«‡ àª®à«‡àª‚ àªªàª¹à«‡àª²àª¾ àª¬àª¨àª¾àªµà«€ àª†àªªà«€ àª¹àª¤à«€) àª¤à«‡ àª–à«àª²àª¶à«‡
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PlayerScreen(
+              entityList: allEntities.cast<AssetEntity>(),
+              entity: currentItem as AssetEntity,
+              index: currentIndex,
             ),
-            index: currentIndex, // àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªªàª¾àª¸ àª•àª°àªµà«‹ àªœàª°à«‚àª°à«€ àª›à«‡ àªœà«‹ àªªà«àª²à«‡àª¯àª°àª®àª¾àª‚ àª¨à«‡àª•à«àª¸à«àªŸ/àªªà«àª°àª¿àªµàª¿àª¯àª¸ àª•àª°àªµà«àª‚ àª¹à«‹àª¯ àª¤à«‹
           ),
-        ),
-      ).then((_) {
-        if (context.mounted) {
-          context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-        }
-      });
+        );
+      }
     }
 
-    // àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸ àªµàª§àª¾àª°à«‹
+    // Ad Logic (àª¤àª®àª¾àª°à«àª‚ àªœà«‡ àª›à«‡ àª¤à«‡ àªœ)
     _videoClickCount++;
-
-    // àª¦àª° 3 àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
     if (_videoClickCount % 3 == 0) {
-      debugPrint("Showing Interstitial Ad on count: $_videoClickCount");
-
-      AdHelper.showInterstitialAd(() {
-        // àªàª¡ àªªà«‚àª°à«€ àª¥àª¯àª¾ àªªàª›à«€ àª…àª¥àªµàª¾ àªàª¡ àª²à«‹àª¡ àª¨ àª¥àª¾àª¯ àª¤à«‹ àª† àª•à«‹àª²àª¬à«‡àª• àª°àª¨ àª¥àª¶à«‡
-        moveNext();
-      });
+      AdHelper.showInterstitialAd(() => moveNext());
     } else {
-      // àªœà«‹ 3 àª•à«àª²àª¿àª• àª¨ àª¥àªˆ àª¹à«‹àª¯, àª¤à«‹ àª¸à«€àª§à«àª‚ àªœ àªµà«€àª¡àª¿àª¯à«‹ àªªà«àª²à«‡ àª•àª°à«‹
-      debugPrint("Skipping Ad, Current count: $_videoClickCount");
       moveNext();
     }
   }

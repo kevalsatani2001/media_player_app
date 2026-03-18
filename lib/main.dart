@@ -212,7 +212,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
                 '/audio': (_) => AudioScreen(),
                 '/playlist': (_) => PlaylistScreen(),
                 '/favourite': (_) => const FavouriteScreen(),
-                '/recent': (_) => const RecentScreen(),
+                // '/recent': (_) => const RecentScreen(),
                 '/splash': (_) => const SplashScreen(),
                 '/language': (_) => LanguageScreen(),
                 '/onboarding': (_) => const OnboardingScreen(),

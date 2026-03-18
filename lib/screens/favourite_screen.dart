@@ -176,13 +176,13 @@ class _FavouriteGrid extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => PlayerScreen(
             entity: entity,
-            item: MediaItem(
-              isFavourite: entity.isFavorite,
-              id: entity.id,
-              path: file.path,
-              isNetwork: false,
-              type: entity.type == AssetType.audio ? "audio" : "video",
-            ),
+            // item: MediaItem(
+            //   isFavourite: entity.isFavorite,
+            //   id: entity.id,
+            //   path: file.path,
+            //   isNetwork: false,
+            //   type: entity.type == AssetType.audio ? "audio" : "video",
+            // ),
             index: currentIndex,
             entityList: allEntities,
           ),

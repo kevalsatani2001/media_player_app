@@ -82,12 +82,10 @@ class _SearchScreenState extends State<SearchScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    // --- àªàª¡à«àª¸ àª®àª¾àªŸà«‡àª¨à«€ àª—àª£àª¤àª°à«€ (Build àª®à«‡àª¥àª¡àª¨à«€ àª¶àª°à«‚àª†àª¤àª®àª¾àª‚) ---
     const int adInterval = 5;
     int adCount = 0;
     if (_results.isNotEmpty) {
       adCount = (_results.length ~/ adInterval);
-      // àªœà«‹ 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯, àª¤à«‹ àª›à«‡àª²à«àª²à«‡ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
       if (_results.length < adInterval) {
         adCount = 1;
       }
@@ -185,17 +183,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       children: [
                         const AppText("noDataFound", fontSize: 18),
                         const SizedBox(height: 20),
-                        // àª–àª¾àª²à«€ àª¸à«àª•à«àª°à«€àª¨ àªªàª° àªàª¡
                         AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
                       ],
                     ),
                   )
                       : ListView.builder(
-                    // âœ¨ àª®àª¹àª¤à«àªµàª¨à«àª‚: àª²àª¿àª¸à«àªŸàª¨à«€ àª²àª‚àª¬àª¾àªˆ + àªàª¡à«àª¸àª¨à«€ àª¸àª‚àª–à«àª¯àª¾
                     itemCount: totalItemCount,
                     itemBuilder: (_, i) {
-                      // à«§. àªàª¡ àª¬àª¤àª¾àªµàªµàª¾àª¨à«àª‚ àª²à«‹àªœàª¿àª•
-                      // àª¦àª° 5 àª†àªˆàªŸàª®à«‡ àª…àª¥àªµàª¾ àªœà«‹ àª²àª¿àª¸à«àªŸ àª¨àª¾àª¨à«àª‚ àª¹à«‹àª¯ àª¤à«‹ àª›à«‡àª²à«àª²à«‡
                       bool showAdHere = (i != 0 && (i + 1) % (adInterval + 1) == 0) ||
                           (_results.length < adInterval && i == _results.length);
 
@@ -207,7 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         );
                       }
 
-                      // à«¨. àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
+                      // Ã Â«Â¨. Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÅ¡Ã Â«â€¹ Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂ¶Ã Â«â€¹Ã ÂªÂ§Ã Â«â€¹
                       final int actualIndex = i - (i ~/ (adInterval + 1));
                       if (actualIndex >= _results.length) return const SizedBox.shrink();
 
@@ -260,8 +254,22 @@ class _SearchScreenState extends State<SearchScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => PlayerScreen(
-                                          item: item,
+                                        builder: (_) =>
+                                        //     PlayerScreen(
+                                        //   item: item,
+                                        //   entity: AssetEntity(
+                                        //     id: item.id,
+                                        //     typeInt: item.type == "audio" ? 3 : 2,
+                                        //     width: 200,
+                                        //     height: 200,
+                                        //     isFavorite: item.isFavourite,
+                                        //     title: item.path.split("/").last,
+                                        //     relativePath: item.path,
+                                        //   ),
+                                        // ),
+
+                                        PlayerScreen(
+                                          // entityList: entities, // àª†àª–à«àª‚ àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ
                                           entity: AssetEntity(
                                             id: item.id,
                                             typeInt: item.type == "audio" ? 3 : 2,
@@ -270,7 +278,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                             isFavorite: item.isFavourite,
                                             title: item.path.split("/").last,
                                             relativePath: item.path,
-                                          ),
+                                          ),      // àª…àª¤à«àª¯àª¾àª°à«‡ àªœà«‡ àªªà«àª²à«‡ àª•àª°àªµàª¾àª¨à«àª‚ àª›à«‡ àª¤à«‡
+                                          index: actualIndex, entityList: [], // àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª¤à«‡àª¨à«‹ àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸
+                                          // item: item, entityList: [],
                                         ),
                                       ),
                                     );

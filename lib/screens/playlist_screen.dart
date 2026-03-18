@@ -1,5 +1,6 @@
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
+import 'audio_player_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
   int _clickCounter = 0;
@@ -11,275 +12,272 @@ class PlaylistScreen extends StatelessWidget {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final box = Hive.box('playlists');
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.all(16),
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: AppImage(
-              src: AppSvg.backArrowIcon,
-              height: 20,
-              width: 20,
-              color: colors.blackColor,
+    return DefaultTabController(
+      length: 2,
+      // àª¬à«‡ àªŸà«‡àª¬: àªµàª¿àª¡àª¿àª¯à«‹ àª…àª¨à«‡ àª“àª¡àª¿àª¯à«‹
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: AppText("playlist", fontSize: 20, fontWeight: FontWeight.w500),
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(
+                src: AppSvg.backArrowIcon,
+                height: 20,
+                width: 20,
+                color: colors.blackColor,
+              ),
             ),
           ),
-        ),
-        title: AppText("playlist", fontSize: 20, fontWeight: FontWeight.w500),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: SearchButton(),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: SearchButton(),
+            ),
+          ],
+
+          // âœ… AppBar àª¨à«€ àª¨à«€àªšà«‡ Tabs àª‰àª®à«‡àª°à«‹
+          bottom: TabBar(
+            indicatorColor: colors.primary,
+            labelColor: colors.primary,
+            unselectedLabelColor: colors.textFieldBorder,
+            tabs: [
+              Tab(text: context.tr("video")),
+              Tab(text: context.tr("audio")),
+            ],
           ),
-        ],
+        ),
+        body: TabBarView(
+          children: [
+            _buildPlaylistList(box, "video", colors, context),
+            // àªµàª¿àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ
+            _buildPlaylistList(box, "audio", colors, context),
+            // àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                ValueListenableBuilder(
-                  valueListenable: box.listenable(),
-                  builder: (_, Box box, __) {
-                    final List<PlaylistModel> playlists = box.values
-                        .cast<PlaylistModel>()
-                        .toList();
+    );
+  }
 
-                    if (playlists.isEmpty) {
-                      return const Center(child: AppText("noPlaylistsFound"));
-                    }
+  // âœ… àª…àª²àª— àªµàª¿àªœà«‡àªŸ àª¬àª¨àª¾àªµà«‹ àªœà«‡ àªŸàª¾àªˆàªª àª®à«àªœàª¬ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª«àª¿àª²à«àªŸàª° àª•àª°à«‡
+  Widget _buildPlaylistList(
+    Box box,
+    String type,
+    AppThemeColors colors,
+    BuildContext context,
+  ) {
+    return ValueListenableBuilder(
+      valueListenable: box.listenable(),
+      builder: (_, Box box, __) {
+        // àª…àª¹à«€àª‚ àª®àª¾àª¤à«àª° àª¤à«‡ àªœ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª«àª¿àª²à«àªŸàª° àª¥àª¶à«‡ àªœà«‡àª¨à«‹ àªŸàª¾àªˆàªª àª®à«‡àªš àª¥àª¾àª¯ àª›à«‡
+        final List<PlaylistModel> playlists = box.values
+            .cast<PlaylistModel>()
+            .where((p) => p.type == type)
+            .toList();
 
-                    const int adInterval = 4;
-                    int totalCount =
-                        playlists.length + (playlists.length ~/ adInterval);
+        if (playlists.isEmpty) {
+          return Center(
+            child: AppText(
+              "no${type == 'audio' ? 'Audio' : 'Video'}PlaylistsFound",
+            ),
+          );
+        }
 
-                    return ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 15),
-                      itemCount: totalCount,
-                      // itemCount: playlists.length,
-                      itemBuilder: (_, index) {
-                        // Ã°Å¸Å¸Â¢ AD CHECK: Darek 5mi position par (index 4, 9, 14...)
-                        // 1. àªàª¡ àªšà«‡àª• (àª¦àª° 5àª®à«€ àªªà«‹àªàª¿àª¶àª¨ àªªàª°)
-                        if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: AdHelper.bannerAdWidget(size: AdSize.banner),
-                          );
-                        }
+        const int adInterval = 4;
+        int totalCount = playlists.length + (playlists.length ~/ adInterval);
 
-                        // 2. àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª•à«‡àª²à«àª•à«àª¯à«àª²à«‡àª¶àª¨
-                        final int actualIndex =
-                            index - (index ~/ (adInterval + 1));
-                        if (actualIndex >= playlists.length)
-                          return const SizedBox.shrink();
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          itemCount: playlists.length,
+          // àªàª¡ àª²à«‹àªœàª¿àª• àª¤àª®à«‡ àª…àª‚àª¦àª° àªàª¡ àª•àª°à«€ àª¶àª•à«‹ àª›à«‹
+          itemBuilder: (context, index) {
+            if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: AdHelper.bannerAdWidget(size: AdSize.banner),
+              );
+            }
 
-                        final playlist = playlists[actualIndex];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 7.5),
-                          child: AppTransition(
-                            index: index,
-                            child: GestureDetector(
-                              onTap: () {
-                                _clickCounter++;
+            final int actualIndex = index - (index ~/ (adInterval + 1));
+            if (actualIndex >= playlists.length) return const SizedBox.shrink();
 
-                                // àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª«àª‚àª•à«àª¶àª¨
-                                void goToPlaylist() {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PlaylistItemsScreen(
-                                        name: playlist.name,
-                                        items: playlist.items,
-                                      ),
-                                    ),
-                                  );
-                                }
+            final playlist = playlists[actualIndex];
+            return _buildPlaylistItem(playlist, index, colors, context, box);
+          },
+        );
+      },
+    );
+  }
 
-                                // àª¦àª° 3 àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
-                                if (_clickCounter % 3 == 0) {
-                                  // àª…àª¹àª¿àª¯àª¾àª‚ Callback àªªàª¾àª¸ àª•àª°àªµà«‹ àªœàª°à«‚àª°à«€ àª›à«‡
-                                  AdHelper.showInterstitialAd(() {
-                                    goToPlaylist();
-                                  });
-                                } else {
-                                  goToPlaylist();
-                                }
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: colors.cardBackground,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                // height: 100,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 10,
-                                    top: 10,
-                                    bottom: 10,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Row(
-                                          children: [
-                                            // Row Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â¾ Thumbnail Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡
-                                            Container(
-                                              width: 80,
-                                              height: 60,
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                BorderRadius.circular(8),
-                                                color: colors.primary
-                                                    .withOpacity(0.1),
-                                              ),
-                                              clipBehavior: Clip.antiAlias,
-                                              child: Icon(
-                                                Icons.playlist_play,
-                                                color: colors.primary,
-                                                size: 30,
-                                              ),
-                                            ),
-                                            SizedBox(width: 13),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                                children: [
-                                                  AppText(
-                                                    playlist.name,
-                                                    maxLines: 1,
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                  SizedBox(height: 7),
-                                                  AppText(
-                                                    "${playlist.items.length} ${context.tr("items")}",
-                                                    maxLines: 1,
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w400,
-                                                    color:
-                                                    colors.textFieldBorder,
-                                                  ),
-                                                  SizedBox(height: 7),
-                                                ],
-                                              ),
-                                            ),
-                                            SizedBox(width: 13),
-                                          ],
-                                        ),
-                                      ),
-                                      PopupMenuButton<PlaylistMenuAction>(
-                                        elevation: 15,
-                                        color: colors.dropdownBg,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        shadowColor: Colors.black.withOpacity(
-                                          0.60,
-                                        ),
-                                        offset: Offset(0, 0),
-                                        // splashRadius: 15,
-                                        icon: AppImage(
-                                          src: AppSvg.dropDownMenuDot,
-                                          color: colors.blackColor,
-                                        ),
-                                        menuPadding: EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                        ),
-                                        onSelected: (action) {
-                                          switch (action) {
-                                            case PlaylistMenuAction.rename:
-                                              _showRenameDialog(
-                                                context,
-                                                box,
-                                                index,
-                                                playlist.name,
-                                              );
-                                              break;
-                                            case PlaylistMenuAction.delete:
-                                              _confirmDelete(
-                                                context,
-                                                box,
-                                                index,
-                                                playlist.name,
-                                              );
-                                              break;
-                                            case PlaylistMenuAction.share:
-                                              _sharePlaylist(context, playlist);
-                                              break;
-                                          }
-                                        },
-                                        itemBuilder: (context) => [
-                                          PopupMenuItem(
-                                            value: PlaylistMenuAction.rename,
-                                            child: Center(
-                                              child: AppText(
-                                                'rename',
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: colors.appBarTitleColor,
-                                              ),
-                                            ),
-                                          ),
-                                          const PopupMenuDivider(height: 0.5),
-                                          PopupMenuItem(
-                                            value: PlaylistMenuAction.share,
-                                            child: Center(
-                                              child: AppText(
-                                                'share',
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: colors.appBarTitleColor,
-                                              ),
-                                            ),
-                                          ),
-                                          const PopupMenuDivider(height: 0.5),
-                                          PopupMenuItem(
-                                            value: PlaylistMenuAction.delete,
-                                            child: Center(
-                                              child: AppText(
-                                                'delete',
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                color: colors.appBarTitleColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+  // àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®àª¨à«€ àª¡àª¿àªàª¾àª‡àª¨ (àª¤àª®àª¾àª°à«‹ àªœà«‚àª¨à«‹ Container àª•à«‹àª¡ àª…àª¹à«€àª‚ àª†àªµàª¶à«‡)
+  Widget _buildPlaylistItem(
+    PlaylistModel playlist,
+    int index,
+    AppThemeColors colors,
+    BuildContext context,
+    Box box,
+  ) {
+    bool isAudio = playlist.type == "audio";
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7.5),
+      child: GestureDetector(
+        onTap: () {
+          _clickCounter++;
+
+          void goToPlaylist() {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PlaylistItemsScreen(
+                  name: playlist.name,
+                  items: playlist.items,
                 ),
-                const SmartMiniPlayer(forceMiniMode: true),
+              ),
+            );
+          }
+
+          if (_clickCounter % 3 == 0) {
+            AdHelper.showInterstitialAd(() {
+              goToPlaylist();
+            });
+          } else {
+            goToPlaylist();
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: colors.primary.withOpacity(0.1),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Icon(
+                          isAudio ? Icons.music_note : Icons.playlist_play,
+                          color: colors.primary,
+                        ),
+                      ),
+                      SizedBox(width: 13),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText(
+                              playlist.name,
+                              maxLines: 1,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            SizedBox(height: 7),
+                            AppText(
+                              "${playlist.items.length} ${context.tr("items")}",
+                              maxLines: 1,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: colors.textFieldBorder,
+                            ),
+                            SizedBox(height: 7),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 13),
+                    ],
+                  ),
+                ),
+                PopupMenuButton<PlaylistMenuAction>(
+                  elevation: 15,
+                  color: colors.dropdownBg,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  shadowColor: Colors.black.withOpacity(0.60),
+                  offset: Offset(0, 0),
+                  // splashRadius: 15,
+                  icon: AppImage(
+                    src: AppSvg.dropDownMenuDot,
+                    color: colors.blackColor,
+                  ),
+                  menuPadding: EdgeInsets.symmetric(horizontal: 10),
+                  onSelected: (action) {
+                    switch (action) {
+                      case PlaylistMenuAction.rename:
+                        _showRenameDialog(context, box, index, playlist.name);
+                        break;
+                      case PlaylistMenuAction.delete:
+                        _confirmDelete(context, box, index, playlist.name);
+                        break;
+                      case PlaylistMenuAction.share:
+                        _sharePlaylist(context, playlist);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: PlaylistMenuAction.rename,
+                      child: Center(
+                        child: AppText(
+                          'rename',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.appBarTitleColor,
+                        ),
+                      ),
+                    ),
+                    const PopupMenuDivider(height: 0.5),
+                    PopupMenuItem(
+                      value: PlaylistMenuAction.share,
+                      child: Center(
+                        child: AppText(
+                          'share',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.appBarTitleColor,
+                        ),
+                      ),
+                    ),
+                    const PopupMenuDivider(height: 0.5),
+                    PopupMenuItem(
+                      value: PlaylistMenuAction.delete,
+                      child: Center(
+                        child: AppText(
+                          'delete',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colors.appBarTitleColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          // Ã°Å¸Å¸Â¢ BOTTOM STICKY AD (Optional: Jo vadhare revenue joie to)
-          // AdHelper.adaptiveBannerWidget(context),
-        ],
+        ),
       ),
     );
   }
 
   void _showRenameDialog(
-      BuildContext context,
-      Box box,
-      int index,
-      String oldName,
-      ) {
+    BuildContext context,
+    Box box,
+    int index,
+    String oldName,
+  ) {
     final controller = TextEditingController(text: oldName);
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     showDialog(
@@ -352,7 +350,7 @@ class PlaylistScreen extends StatelessWidget {
                         playlist.name = newName;
                         playlist.save();
                         Navigator.pop(context);
-                        // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Success Toast
+                        // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Success Toast
                         AppToast.show(
                           context,
                           "${context.tr("playlistRenamedTo")} $newName",
@@ -445,18 +443,16 @@ class PlaylistScreen extends StatelessWidget {
   }
 
   Future<void> _sharePlaylist(
-      BuildContext context,
-      PlaylistModel playlist,
-      ) async {
+    BuildContext context,
+    PlaylistModel playlist,
+  ) async {
     final List<XFile> files = [];
 
     for (final item in playlist.items) {
-      // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
       final file = File(item.path);
       if (item.path.isNotEmpty && file.existsSync()) {
         files.add(XFile(item.path));
       } else {
-        // Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¥ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â³Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹ AssetEntity Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â² Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â³Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â‚¬Â¹
         final entity = AssetEntity(
           id: item.id,
           typeInt: item.type == "audio" ? 3 : 2,
@@ -478,7 +474,6 @@ class PlaylistScreen extends StatelessWidget {
       );
       return;
     }
-    // WhatsApp Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡ max 10 Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â²
     final shareableFiles = files.length > 10 ? files.sublist(0, 10) : files;
 
     await Share.shareXFiles(
@@ -537,23 +532,22 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           ? const Center(child: AppText("playlistEmpty", fontSize: 16))
           : GlobalPlayer().currentType == "video"
           ? Stack(
-        children: [
-          _buildItemList(),
-          const SmartMiniPlayer(forceMiniMode: true),
-        ],
-      )
+              children: [
+                _buildItemList(),
+                const SmartMiniPlayer(forceMiniMode: true),
+              ],
+            )
           : Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(child: _buildItemList()),
-              // àªœà«‹ àª¤àª®àª¾àª°à«‡ àª¨à«€àªšà«‡ àª¬à«‡àª¨àª° àªàª¡ àª¬àª¤àª¾àªµàªµà«€ àª¹à«‹àª¯ àª¤à«‹ àª…àª¹à«€àª‚ àª®à«‚àª•à«€ àª¶àª•àª¾àª¯
-              AdHelper.bannerAdWidget(),
-            ],
-          ),
-          const SmartMiniPlayer(forceMiniMode: true),
-        ],
-      ),
+              children: [
+                Column(
+                  children: [
+                    Expanded(child: _buildItemList()),
+                    AdHelper.bannerAdWidget(),
+                  ],
+                ),
+                const SmartMiniPlayer(forceMiniMode: true),
+              ],
+            ),
     );
   }
 
@@ -566,7 +560,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       itemCount: totalCount,
       padding: const EdgeInsets.only(top: 10),
       itemBuilder: (_, i) {
-        // àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡àª¨à«€ àª•àª¨à«àª¡àª¿àª¶àª¨
         if (i != 0 && (i + 1) % (adInterval + 1) == 0) {
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 0),
@@ -575,7 +568,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           );
         }
 
-        // àª“àª°àª¿àªœàª¿àª¨àª² àª¡à«‡àªŸàª¾àª¨à«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
         final int actualIndex = i - (i ~/ (adInterval + 1));
         if (actualIndex >= widget.items.length) return const SizedBox.shrink();
 
@@ -589,11 +581,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   Widget _buildMediaCard(
-      BuildContext context,
-      MediaItem item,
-      AppThemeColors colors,
-      int index,
-      ) {
+    BuildContext context,
+    MediaItem item,
+    AppThemeColors colors,
+    int index,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 15),
       child: GestureDetector(
@@ -606,9 +598,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Row(
-              // Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡
               children: [
-                // Ãƒ Ã‚Â«Ã‚Â§. Thumbnail Image (Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¸ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¥)
                 Container(
                   width: 80,
                   height: 60,
@@ -627,12 +617,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                 ),
                 const SizedBox(width: 13),
 
-                // Ãƒ Ã‚Â«Ã‚Â¨. Details (Expanded Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â§Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ…â€œ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¡)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    // Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡
                     children: [
                       AppText(
                         item.path.split('/').last,
@@ -660,8 +648,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                     ],
                   ),
                 ),
-
-                // Ãƒ Ã‚Â«Ã‚Â©. PopupMenuButton (Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡)
                 PopupMenuButton<MediaMenuAction>(
                   elevation: 15,
                   color: colors.dropdownBg,
@@ -731,10 +717,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   Future<void> _toggleFavourite(
-      BuildContext context,
-      AssetEntity entity,
-      int index,
-      ) async {
+    BuildContext context,
+    AssetEntity entity,
+    int index,
+  ) async {
     final file = await entity.file;
     if (file == null) {
       AppToast.show(
@@ -762,10 +748,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   PopupMenuItem<MediaMenuAction> _buildPopupItem(
-      MediaMenuAction action,
-      String title,
-      AppThemeColors colors,
-      ) {
+    MediaMenuAction action,
+    String title,
+    AppThemeColors colors,
+  ) {
     return PopupMenuItem(
       value: action,
       child: Center(
@@ -783,7 +769,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     final playlistBox = Hive.box('playlists');
     final playlistList = playlistBox.values.toList();
     final int playlistIndex = playlistList.indexWhere(
-          (element) => element.name == widget.name,
+      (element) => element.name == widget.name,
     );
 
     if (playlistIndex != -1) {
@@ -795,7 +781,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         currentItems.removeAt(index);
       });
 
-      // ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ SnackBar Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â Toast
+      // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ SnackBar ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€¦Ã¢â‚¬Å“ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â Toast
       AppToast.show(
         context,
         "${context.tr("removedFromPlaylist")}",
@@ -808,12 +794,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   Widget _buildDuration(MediaItem item, AppThemeColors colors) {
     return FutureBuilder<AssetEntity?>(
       future: AssetEntity.fromId(item.id),
-      // ID Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const AppText("00:00", fontSize: 10);
 
         final entity = snapshot.data!;
-        // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â³Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡
         return AppText(
           formatDuration(entity.duration),
           fontSize: 10,
@@ -826,10 +810,10 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 
   // File Size Helper
   Widget _buildFileSize(
-      MediaItem item,
-      AppThemeColors colors,
-      BuildContext context,
-      ) {
+    MediaItem item,
+    AppThemeColors colors,
+    BuildContext context,
+  ) {
     return FutureBuilder<File?>(
       future: AssetEntity(
         id: item.id ?? "",
@@ -853,17 +837,17 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   void _handlePlay(BuildContext context, MediaItem item) {
-    _playClickCount++; // àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸ àªµàª§àª¾àª°à«‹
+    _playClickCount++;
 
-    // àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª®àª¾àªŸà«‡àª¨à«àª‚ àª«àª‚àª•à«àª¶àª¨
-    void startNavigation() {
+    void startNavigation() async {
       int index = widget.items.indexOf(item);
-      final player = Provider.of<GlobalPlayer>(context, listen: false);
 
+      // à«§. MediaItem àª²àª¿àª¸à«àªŸ àª®àª¾àª‚àª¥à«€ AssetEntity àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµàªµà«àª‚
       List<AssetEntity> entityList = widget.items.map((media) {
         return AssetEntity(
           id: media.id,
-          typeInt: media.type == "video" ? 2 : (media.type == "audio" ? 3 : 1),
+          // àª“àª¡àª¿àª¯à«‹ àª¹à«‹àª¯ àª¤à«‹ 3, àªµàª¿àª¡àª¿àª¯à«‹ àª¹à«‹àª¯ àª¤à«‹ 2
+          typeInt: media.type == "audio" ? 3 : 2,
           width: 0,
           height: 0,
           duration: 0,
@@ -871,42 +855,60 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         );
       }).toList();
 
-      player.currentIndex = index;
+      if (!mounted) return;
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PlayerScreen(
-            item: item,
-            index: index,
-            entityList: entityList,
-            isPlaylist: true,
-            entity: entityList[index],
+      // à«¨. âœ… àªŸàª¾àª‡àªª àªšà«‡àª• àª•àª°à«€àª¨à«‡ àª…àª²àª— àªªà«‡àªœ àªªàª° àª®à«‹àª•àª²à«‹
+      if (item.type == "audio") {
+        // ðŸŽ¶ àª“àª¡àª¿àª¯à«‹ àª®àª¾àªŸà«‡ AudioPlayerScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AudioPlayerScreen(
+              entityList: entityList,
+              entity: entityList[index],
+              item: widget.items[index],
+              index: index,
+              isPlaylist:
+                  true, // àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª®àª¾àª‚àª¥à«€ àª†àªµà«‡ àª›à«‡ àªàªŸàª²à«‡ true
+            ),
           ),
-        ),
-      );
+        ).then((_) {
+          if (mounted) setState(() {});
+        });
+      } else {
+        // ðŸŽ¥ àªµàª¿àª¡àª¿àª¯à«‹ àª®àª¾àªŸà«‡ PlayerScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PlayerScreen(
+              entityList: entityList,
+              entity: entityList[index],
+              index: index,
+            ),
+          ),
+        ).then((_) {
+          if (mounted) setState(() {});
+        });
+      }
     }
 
-    // àª¦àª° 3 àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
+    // àª¦àª° à«© àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµàªµà«€
     if (_playClickCount % 3 == 0) {
-      AdHelper.showInterstitialAd(() {
-        startNavigation(); // àªàª¡ àª¬àª‚àª§ àª¥àª¾àª¯ àªªàª›à«€ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
-      });
+      AdHelper.showInterstitialAd(() => startNavigation());
     } else {
-      startNavigation(); // àª¸à«€àª§à«àª‚ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+      startNavigation();
     }
   }
 
   Future<void> routeToDetailPage(
-      BuildContext context,
-      AssetEntity entity,
-      ) async {
+    BuildContext context,
+    AssetEntity entity,
+  ) async {
     Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
     );
   }
 
-  // PlaylistItemsScreen Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹/Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â§Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
   Future<void> _shareSingleItem(AssetEntity entity) async {
     try {
       final File? file = await entity.file;
@@ -914,7 +916,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         await Share.shareXFiles(
           [XFile(file.path)],
           text:
-          '${context.tr("sharing")} ${entity.title ?? "${context.tr("mediaFile")}"}',
+              '${context.tr("sharing")} ${entity.title ?? "${context.tr("mediaFile")}"}',
         );
       } else {
         AppToast.show(

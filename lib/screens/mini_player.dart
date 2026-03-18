@@ -155,7 +155,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         if (player.currentMediaItem == null) return;
         Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerScreen(
           entity: player.currentEntity!,
-          item: player.currentMediaItem!,
+          // item: player.currentMediaItem!,
           index: player.currentIndex,
           entityList: const [],
         )));
@@ -554,7 +554,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
               MaterialPageRoute(
                 builder: (_) => PlayerScreen(
                   entity: player.currentEntity!,
-                  item: item,
+                  // item: item,
                   index: player.currentIndex,
                   entityList: const [],
                 ),
@@ -677,7 +677,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
               entity: player.currentEntity!,
-              item: item,
+              // item: item,
               index: player.currentIndex,
               entityList: const [],
             ),

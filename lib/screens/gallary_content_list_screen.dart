@@ -204,23 +204,23 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       },
       onTap: () async {
         final file = await entity.file;
-        if (file == null || !file.existsSync()) return;
+     if (file == null || !file.existsSync()) return;
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PlayerScreen(
-              entity: entity,
-              item: MediaItem(
-                path: file.path,
-                isNetwork: false,
-                type: 'video',
-                id: entity.id,
-                isFavourite: entity.isFavorite,
-              ),
-            ),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (_) => PlayerScreen(
+        //       entity: entity, entityList: [], index: null,
+        //       // item: MediaItem(
+        //       //   path: file.path,
+        //       //   isNetwork: false,
+        //       //   type: 'video',
+        //       //   id: entity.id,
+        //       //   isFavourite: entity.isFavorite,
+        //       // ),
+        //     ),
+        //   ),
+        // );
       },
     );
   }

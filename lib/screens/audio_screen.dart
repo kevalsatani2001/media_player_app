@@ -1,5 +1,6 @@
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
+import 'audio_player_screen.dart';
 
 int _audioClickCount = 0;
 
@@ -266,15 +267,14 @@ class _AudioBodyState extends State<_AudioBody>
   Widget _buildAudioList(List<AssetEntity> entities) {
     const int adInterval = 5;
 
-    // à«§. àªàª¡àª¨à«€ àª¸àª‚àª–à«àª¯àª¾ àª¨àª•à«àª•à«€ àª•àª°à«‹
+
     int adCount = entities.length ~/ adInterval;
 
-    // àªœà«‹ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª†àªˆàªŸàª® àª¹à«‹àª¯ àªªàª£ 5 àª¥à«€ àª“àª›à«€ àª¹à«‹àª¯, àª¤à«‹ àª›à«‡àª²à«àª²à«‡ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
     if (entities.isNotEmpty && entities.length < adInterval) {
       adCount = 1;
     }
 
-    // à«¨. Total count: Audio + Ads + Bottom Spacer
+    // Ã Â«Â¨. Total count: Audio + Ads + Bottom Spacer
     int totalCount = entities.length + adCount + 1;
 
     return AnimationLimiter(
@@ -285,14 +285,11 @@ class _AudioBodyState extends State<_AudioBody>
         // itemCount: entities.length,
         itemBuilder: (context, index) {
           final colors = Theme.of(context).extension<AppThemeColors>()!;
-          // à«©. Bottom Spacer (MiniPlayer àª®àª¾àªŸà«‡)
+
           if (index == totalCount - 1) {
-            return const SizedBox(height: 100); // àª¥à«‹àª¡à«àª‚ àªµàª§àª¾àª°à«‡ àªªà«‡àª¡àª¿àª‚àª—
+            return const SizedBox(height: 100); // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ¡Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€”
           }
 
-          // à«ª. AD LOGIC
-          // àªœà«‹ 5 àª¥à«€ àªµàª§à« àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª¦àª° 6àª à«àª à«€ àªªà«‹àªàª¿àª¶àª¨ àªªàª°,
-          // àª…àª¥àªµàª¾ àªœà«‹ 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª²àª¿àª¸à«àªŸàª¨àª¾ àª…àª‚àª¤à«‡ (index == entities.length)
           bool isAdPosition =
           (index != 0 && (index + 1) % (adInterval + 1) == 0);
           bool isLastAdForSmallList =
@@ -305,11 +302,9 @@ class _AudioBodyState extends State<_AudioBody>
             );
           }
 
-          // à««. ACTUAL DATA INDEX Calculation
-          // àªœà«‹ àªàª¡ àªªà«‹àªàª¿àª¶àª¨ àª¨àª¥à«€, àª¤à«‹ àªœ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª—àª£àªµà«‹
+
           final int actualIndex = index - (index ~/ (adInterval + 1));
 
-          // àª¸à«‡àª«à«àªŸà«€ àªšà«‡àª•: àªœà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª²àª¿àª¸à«àªŸàª¨à«€ àª¬àª¹àª¾àª° àªœàª¤à«‹ àª¹à«‹àª¯
           if (actualIndex >= entities.length) return const SizedBox.shrink();
 
           final audio = entities[actualIndex];
@@ -383,12 +378,12 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
-    // à«§. àªªà«àª²à«‡àª¯àª° àª–à«‹àª²àªµàª¾ àª®àª¾àªŸà«‡àª¨à«àª‚ àª…àª²àª— àª«àª‚àª•à«àª¶àª¨
+
     void openAudioPlayer() {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => PlayerScreen(
+          builder: (_) => AudioPlayerScreen(
             entityList: entities,
             entity: audio,
             item: MediaItem(
@@ -407,20 +402,20 @@ class _AudioBodyState extends State<_AudioBody>
       });
     }
 
-    // à«¨. àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸ àªµàª§àª¾àª°à«‹
+    // Ã Â«Â¨. Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹
     _audioClickCount++;
 
-    // à«©. àªàª¡ àª²à«‹àªœàª¿àª•: àª¦àª° 4 àª¥à«€ àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
+    // Ã Â«Â©. Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÅ“Ã ÂªÂ¿Ã Âªâ€¢: Ã ÂªÂ¦Ã ÂªÂ° 4 Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹
     if (_audioClickCount % 4 == 0) {
       debugPrint("Showing Interstitial Ad before audio player...");
 
-      // AdHelper àª®àª¾àª‚ àª†àªªàª£à«‡ àªœà«‡ Callback àª¸à«‡àªŸ àª•àª°à«àª¯à«‹ àª›à«‡ àª¤à«‡àª¨à«‹ àª‰àªªàª¯à«‹àª— àª•àª°à«‹
+      // AdHelper Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã Âªâ€ Ã ÂªÂªÃ ÂªÂ£Ã Â«â€¡ Ã ÂªÅ“Ã Â«â€¡ Callback Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«ÂÃ ÂªÂ¯Ã Â«â€¹ Ã Âªâ€ºÃ Â«â€¡ Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       AdHelper.showInterstitialAd(() {
-        // àª† àª•à«‹àª¡ àª¤à«àª¯àª¾àª°à«‡ àªœ àªšàª¾àª²àª¶à«‡ àªœà«àª¯àª¾àª°à«‡ àªàª¡ àª¬àª‚àª§ àª¥àª¶à«‡ àª…àª¥àªµàª¾ àª²à«‹àª¡ àª¨àª¹à«€àª‚ àª¥àª¾àª¯
+        // Ã Âªâ€  Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÅ“ Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã ÂªÂ¶Ã Â«â€¡ Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡ Ã Âªâ€¦Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ¥Ã ÂªÂ¾Ã ÂªÂ¯
         openAudioPlayer();
       });
     } else {
-      // àªœà«‹ 4 àª¥à«€ àª•à«àª²àª¿àª• àª¨àª¥à«€, àª¤à«‹ àª¸à«€àª§à«àª‚ àªœ àªªà«àª²à«‡àª¯àª° àª–à«‹àª²à«‹
+      // Ã ÂªÅ“Ã Â«â€¹ 4 Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬, Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ¸Ã Â«â‚¬Ã ÂªÂ§Ã Â«ÂÃ Âªâ€š Ã ÂªÅ“ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã Âªâ€“Ã Â«â€¹Ã ÂªÂ²Ã Â«â€¹
       openAudioPlayer();
     }
   }
