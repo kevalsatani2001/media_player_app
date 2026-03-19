@@ -274,7 +274,6 @@ class _AudioBodyState extends State<_AudioBody>
       adCount = 1;
     }
 
-    // Ã Â«Â¨. Total count: Audio + Ads + Bottom Spacer
     int totalCount = entities.length + adCount + 1;
 
     return AnimationLimiter(
@@ -287,7 +286,7 @@ class _AudioBodyState extends State<_AudioBody>
           final colors = Theme.of(context).extension<AppThemeColors>()!;
 
           if (index == totalCount - 1) {
-            return const SizedBox(height: 100); // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«ÂÃ Âªâ€š Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ¡Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€”
+            return const SizedBox(height: 100);
           }
 
           bool isAdPosition =
@@ -402,20 +401,15 @@ class _AudioBodyState extends State<_AudioBody>
       });
     }
 
-    // Ã Â«Â¨. Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹
-    _audioClickCount++;
+     _audioClickCount++;
 
-    // Ã Â«Â©. Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÅ“Ã ÂªÂ¿Ã Âªâ€¢: Ã ÂªÂ¦Ã ÂªÂ° 4 Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹
-    if (_audioClickCount % 4 == 0) {
+     if (_audioClickCount % 4 == 0) {
       debugPrint("Showing Interstitial Ad before audio player...");
 
-      // AdHelper Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã Âªâ€ Ã ÂªÂªÃ ÂªÂ£Ã Â«â€¡ Ã ÂªÅ“Ã Â«â€¡ Callback Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«ÂÃ ÂªÂ¯Ã Â«â€¹ Ã Âªâ€ºÃ Â«â€¡ Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ¯Ã Â«â€¹Ã Âªâ€” Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-      AdHelper.showInterstitialAd(() {
-        // Ã Âªâ€  Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÅ“ Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã ÂªÂ¶Ã Â«â€¡ Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡ Ã Âªâ€¦Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ¥Ã ÂªÂ¾Ã ÂªÂ¯
+       AdHelper.showInterstitialAd(() {
         openAudioPlayer();
       });
     } else {
-      // Ã ÂªÅ“Ã Â«â€¹ 4 Ã ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬, Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ¸Ã Â«â‚¬Ã ÂªÂ§Ã Â«ÂÃ Âªâ€š Ã ÂªÅ“ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ° Ã Âªâ€“Ã Â«â€¹Ã ÂªÂ²Ã Â«â€¹
       openAudioPlayer();
     }
   }

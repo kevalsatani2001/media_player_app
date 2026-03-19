@@ -1,53 +1,34 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
-import 'package:media_player/blocs/theme/theme_event.dart';
 import 'package:media_player/core/constants.dart';
 import 'package:media_player/screens/audio_screen.dart';
 import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/screens/video_screen.dart';
 import 'package:media_player/widgets/image_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
-
 import '../blocs/bottom_nav/bottom_nav_event.dart';
 import '../blocs/bottom_nav/bottom_nav_state.dart';
 import '../blocs/bottom_nav/botton_nav_bloc.dart';
 import '../blocs/home/home_tab_bloc.dart';
-import '../blocs/home/home_tab_event.dart';
-import '../blocs/home/home_tab_state.dart';
 import '../blocs/local/local_bloc.dart';
 import '../blocs/local/local_event.dart';
 import '../blocs/local/local_state.dart';
-import '../blocs/theme/theme_bloc.dart';
-import '../blocs/theme/theme_state.dart';
 import '../blocs/video/video_event.dart';
-import '../blocs/video/video_state.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_string.dart';
-import '../widgets/add_to_playlist.dart';
 import '../widgets/app_button.dart';
 import '../widgets/custom_loader.dart';
 import '../widgets/gallary_item_widget.dart';
-import '../widgets/home_card.dart';
 import '../blocs/video/video_bloc.dart';
-import '../widgets/image_item_widget.dart';
-import '../models/media_item.dart';
 import '../widgets/text_widget.dart';
-import 'detail_screen.dart';
 import 'home_screen.dart';
-import 'player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
