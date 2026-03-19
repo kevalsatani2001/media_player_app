@@ -6,16 +6,16 @@ export 'dart:io';
 export 'dart:typed_data';
 export 'dart:ui'
     hide
-    Gradient,
-    Image,
-    BoxHeightStyle,
-    BoxWidthStyle,
-    decodeImageFromList,
-    TextStyle,
-    StrutStyle,
-    TextHeightBehavior,
-    Paint,
-    ImageDecoderCallback;
+        Gradient,
+        Image,
+        BoxHeightStyle,
+        BoxWidthStyle,
+        decodeImageFromList,
+        TextStyle,
+        StrutStyle,
+        TextHeightBehavior,
+        Paint,
+        ImageDecoderCallback;
 
 export 'package:flutter/material.dart';
 export 'package:flutter/cupertino.dart'
@@ -37,6 +37,14 @@ export 'package:just_audio/just_audio.dart';
 export 'package:audio_session/audio_session.dart';
 export 'package:video_player/video_player.dart';
 export 'package:chewie/chewie.dart';
+export 'package:gal/gal.dart';
+export 'package:path_provider/path_provider.dart';
+export 'package:video_trimmer/video_trimmer.dart';
+export 'package:video_thumbnail/video_thumbnail.dart';
+export 'package:media_player/screens/video_trim_screen.dart';
+export 'package:flutter/rendering.dart';
+export 'package:screen_brightness/screen_brightness.dart';
+export 'package:volume_controller/volume_controller.dart';
 
 // Media & Storage
 export 'package:photo_manager/photo_manager.dart';

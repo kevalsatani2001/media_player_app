@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager/platform_utils.dart';
 import '../../models/media_item.dart';
+import '../../models/playlist_model.dart';
 import 'favourite_state.dart';
 
 part 'favourite_event.dart';
@@ -23,39 +24,31 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
   Future<void> _onToggleFavourite(
       ToggleFavourite event,
       Emitter<FavouriteState> emit,
-      ) async {
+      ) async
+  {
     if (state is! FavouriteLoaded) return;
 
     final current = state as FavouriteLoaded;
     final entity = event.entity;
+    final file = await entity.file;
+    if (file == null) return;
 
     final updatedEntities = List<AssetEntity>.from(current.entities);
+    final existingIndex = updatedEntities.indexWhere((e) => e.id == entity.id);
 
-    final existingIndex =
-    updatedEntities.indexWhere((e) => e.id == entity.id);
+    // àª¨àªµà«€ àª«à«‡àªµàª°àª¿àªŸ àªµà«‡àª²à«àª¯à« (àªœà«‹ àª…àª¤à«àª¯àª¾àª°à«‡ àª«à«‡àªµàª°àª¿àªŸ àª¹à«‹àª¯ àª¤à«‹ àª¹àªµà«‡ false àª¥àª¶à«‡)
+    final bool newFavouriteStatus = !entity.isFavorite;
 
-    // ðŸ§  If unfavourite â†’ remove
+    // 1ï¸âƒ£ UI Update (Favourite Screen àª®àª¾àªŸà«‡)
     if (entity.isFavorite) {
-      if (existingIndex != -1) {
-        updatedEntities.removeAt(existingIndex);
-      }
+      if (existingIndex != -1) updatedEntities.removeAt(existingIndex);
     } else {
-      // â¤ï¸ Favourite
-      if (existingIndex == -1) {
-        updatedEntities.add(entity.copyWith(isFavorite: true));
-      } else {
-        updatedEntities[existingIndex] =
-            entity.copyWith(isFavorite: true);
-      }
+      if (existingIndex == -1) updatedEntities.add(entity.copyWith(isFavorite: true));
     }
-
-    // âœ… Instant UI update
     emit(current.copyWith(entities: updatedEntities));
 
     try {
-      final file = await entity.file;
-      if (file == null) return;
-
+      // 2ï¸âƒ£ Favourites Box Update
       if (entity.isFavorite) {
         box.delete(file.path);
       } else {
@@ -66,39 +59,47 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
         });
       }
 
-      // ðŸ” Sync system favourite silently
-      if (PlatformUtils.isOhos) {
-        await PhotoManager.editor.ohos.favoriteAsset(
-          entity: entity,
-          favorite: !entity.isFavorite,
-        );
-      } else if (Platform.isAndroid) {
-        await PhotoManager.editor.android.favoriteAsset(
-          entity: entity,
-          favorite: !entity.isFavorite,
-        );
-      } else {
-        await PhotoManager.editor.darwin.favoriteAsset(
-          entity: entity,
-          favorite: !entity.isFavorite,
-        );
+      // 3ï¸âƒ£ ðŸ”¥ àª…àª—àª¤à«àª¯àª¨à«àª‚: Playlists Box Update àª•àª°à«‹
+      final playlistBox = Hive.box('playlists');
+      for (var playlist in playlistBox.values) {
+        if (playlist is PlaylistModel) {
+          bool needsSaving = false;
+          for (var item in playlist.items) {
+            if (item.path == file.path) {
+              item.isFavourite = newFavouriteStatus; // àª…àª¹à«€àª‚ àª¸à«àªŸà«‡àªŸàª¸ àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
+              needsSaving = true;
+            }
+          }
+          if (needsSaving) {
+            await playlist.save(); // àªªà«àª²à«‡àª²àª¿àª¸à«àªŸàª¨à«‡ àª¸à«‡àªµ àª•àª°à«‹
+          }
+        }
       }
+
+      // 4ï¸âƒ£ Sync system favourite
+      if (PlatformUtils.isOhos) {
+        await PhotoManager.editor.ohos.favoriteAsset(entity: entity, favorite: newFavouriteStatus);
+      } else if (Platform.isAndroid) {
+        await PhotoManager.editor.android.favoriteAsset(entity: entity, favorite: newFavouriteStatus);
+      } else {
+        await PhotoManager.editor.darwin.favoriteAsset(entity: entity, favorite: newFavouriteStatus);
+      }
+
     } catch (_) {
-      // ðŸ”™ rollback
-      emit(current);
+      emit(current); // Rollback if error
     }
   }
 
 
   Future<void> _onLoadFavourite(LoadFavourite event, Emitter<FavouriteState> emit) async {
-    print("Load fav STARTING... ðŸš€"); // àª† àªªà«àª°àª¿àª¨à«àªŸ àªšà«‡àª• àª•àª°à«‹
+    print("Load fav STARTING... Ã°Å¸Å¡â‚¬"); // Ã Âªâ€  Ã ÂªÂªÃ Â«ÂÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
 
     try {
-      // àªªàª°àª®àª¿àª¶àª¨ àªšà«‡àª•
+      // Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ®Ã ÂªÂ¿Ã ÂªÂ¶Ã ÂªÂ¨ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢
       final PermissionState ps = await PhotoManager.requestPermissionExtend();
       if (!ps.hasAccess) return;
 
-      // 'Recent' àª†àª²à«àª¬àª® àª²à«‹
+      // 'Recent' Ã Âªâ€ Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¬Ã ÂªÂ® Ã ÂªÂ²Ã Â«â€¹
       final paths = await PhotoManager.getAssetPathList(
         onlyAll: true,
         type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
@@ -109,19 +110,19 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
       final recentPath = paths.first;
       final int totalCount = await recentPath.assetCountAsync;
 
-      // âœ¨ àª¯à«àª•à«àª¤àª¿: à«¨à«¦ àª¨à«‡ àª¬àª¦àª²à«‡ àª®à«‹àªŸàª¾ àª­àª¾àª—àª¨à«‹ àª¡à«‡àªŸàª¾ àªàª•àª¸àª¾àª¥à«‡ àªšà«‡àª• àª•àª°à«‹ (àª®àª¾àª¤à«àª° àª®à«‡àªŸàª¾àª¡à«‡àªŸàª¾ àª›à«‡, àª²à«‹àª¡ àª¨àª¹à«€àª‚ àªªàª¡à«‡)
-      // àªœà«‹ àª¤àª®àª¾àª°à«€ àªªàª¾àª¸à«‡ à«§à«¦à«¦à«¦ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àª…àª¹à«€àª‚ à«§à«¦à«¦à«¦ àª²àª–à«‹
+      // Ã¢Å“Â¨ Ã ÂªÂ¯Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¤Ã ÂªÂ¿: Ã Â«Â¨Ã Â«Â¦ Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¡ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã ÂªÂ¾ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€”Ã ÂªÂ¨Ã Â«â€¹ Ã ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¾ Ã ÂªÂÃ Âªâ€¢Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â€¡ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹ (Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ° Ã ÂªÂ®Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¾ Ã Âªâ€ºÃ Â«â€¡, Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡)
+      // Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¸Ã Â«â€¡ Ã Â«Â§Ã Â«Â¦Ã Â«Â¦Ã Â«Â¦ Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ® Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã Â«Â§Ã Â«Â¦Ã Â«Â¦Ã Â«Â¦ Ã ÂªÂ²Ã Âªâ€“Ã Â«â€¹
       final List<AssetEntity> allEntities = await recentPath.getAssetListRange(
         start: 0,
         end: totalCount,
       );
 
-      // àª¸àª¿àª¸à«àªŸàª® àª«à«‡àªµàª°àª¿àªŸ àª«àª¿àª²à«àªŸàª° àª•àª°à«‹
+      // Ã ÂªÂ¸Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ® Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂµÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ¸ Ã ÂªÂ«Ã ÂªÂ¿Ã ÂªÂ²Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       final List<AssetEntity> favouriteEntities = allEntities
           .where((e) => e.isFavorite)
           .toList();
 
-      // Hive àª¸àª¿àª‚àª• àª•àª°à«‹
+      // Hive Ã ÂªÂ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
       await box.clear();
       await _saveToHive(favouriteEntities);
 
@@ -155,7 +156,7 @@ class FavouriteBloc extends Bloc<FavouriteEvent, FavouriteState> {
       size: 20,
     );
 
-    // ðŸ”¹ Filter favourites ONLY
+    // Ã°Å¸â€Â¹ Filter favourites ONLY
     final List<AssetEntity> favouriteEntities = pageEntities
         .where((e) => e.isFavorite)
         .toList();

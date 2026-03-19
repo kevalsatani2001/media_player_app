@@ -42,22 +42,24 @@ class PlaylistService {
   PlaylistService();
 
   // static Box get _box => Hive.box('playlists');
-  static Box<PlaylistModel> get _box => Hive.box<PlaylistModel>('playlists');
-
-  // âœ… àªŸàª¾àªˆàªª àª®à«àªœàª¬ àª«àª¿àª²à«àªŸàª° àª•àª°à«‡àª²à«€ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª®à«‡àª³àªµà«‹
+  static Box get _box => Hive.box('playlists');
+  static final Box favBox = Hive.box('favourites');
+  // âœ… àªŸàª¾àªˆàªª àª®à«àªœàª¬ àª«àª¿àª²à«àªŸàª° àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ cast àªµàª¾àªªàª°à«‹
   static List<PlaylistModel> getPlaylistsByType(String type) {
-    return _box.values.where((playlist) => playlist.type == type).toList();
+    return _box.values
+        .where((p) => p is PlaylistModel && p.type == type)
+        .cast<PlaylistModel>()
+        .toList();
   }
 
   static List getPlaylists() => _box.values.toList();
-  static final Box favBox = Hive.box('favourites');
 
 
 
   /// Toggle favourite in playlist & sync with device
   /// Returns new favourite state
   Future<bool> toggleFavourite(AssetEntity entity) async {
-    // Use the global FavouriteChangeBloc instead of creating a new one each time
+    // àª¨à«‹àª‚àª§: àª…àª¹à«€àª‚ àª—à«àª²à«‹àª¬àª² Bloc àªµàª¾àªªàª°àªµà«‹ àªœà«‹àªˆàª, àª¨àªµà«‹ àª‡àª¨à«àª¸à«àªŸàª¨à«àª¸ àª¨àª¹à«€àª‚
     FavouriteChangeBloc favouriteChangeBloc = FavouriteChangeBloc();
 
     final file = await entity.file;
@@ -79,45 +81,36 @@ class PlaylistService {
     }
 
     // 2ï¸âƒ£ Update system gallery favourite
-    if (PlatformUtils.isOhos) {
-      await PhotoManager.editor.ohos.favoriteAsset(
-        entity: entity,
-        favorite: !isCurrentlyFav,
-      );
-    } else if (Platform.isAndroid) {
-      await PhotoManager.editor.android.favoriteAsset(
-        entity: entity,
-        favorite: !isCurrentlyFav,
-      );
-    } else {
-      await PhotoManager.editor.darwin.favoriteAsset(
-        entity: entity,
-        favorite: !isCurrentlyFav,
-      );
+    try {
+      if (PlatformUtils.isOhos) {
+        await PhotoManager.editor.ohos.favoriteAsset(entity: entity, favorite: !isCurrentlyFav);
+      } else if (Platform.isAndroid) {
+        await PhotoManager.editor.android.favoriteAsset(entity: entity, favorite: !isCurrentlyFav);
+      } else {
+        await PhotoManager.editor.darwin.favoriteAsset(entity: entity, favorite: !isCurrentlyFav);
+      }
+    } catch (e) {
+      debugPrint("System Favourite Error: $e");
     }
 
-    // 3ï¸âƒ£ Update playlists: mark matching MediaItems as favourite or not
-    for (int i = 0; i < _box.length; i++) {
-      final playlist = _box.getAt(i);
-      if (playlist == null) continue;
-
-      bool updated = false;
-      for (var item in playlist.items) {
-        if (item.path == file.path) {
-          item.isFavourite = !isCurrentlyFav;
-          updated = true;
+    // 3ï¸âƒ£ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª°àª¹à«‡àª²à«€ àª†àªˆàªŸàª®à«àª¸àª¨à«‡ àª…àªªàª¡à«‡àªŸ àª•àª°à«‹
+    for (var playlist in _box.values) {
+      if (playlist is PlaylistModel) {
+        bool updated = false;
+        for (var item in playlist.items) {
+          if (item.path == file.path) {
+            item.isFavourite = !isCurrentlyFav;
+            updated = true;
+          }
         }
-      }
-
-      if (updated) {
-        // Save playlist back to Hive
-        playlist.save();
+        if (updated) {
+          await playlist.save();
+        }
       }
     }
 
     // 4ï¸âƒ£ Notify listeners
     favouriteChangeBloc.add(FavouriteUpdated(entity));
-
     return !isCurrentlyFav;
   }
 
@@ -125,12 +118,12 @@ class PlaylistService {
     _box.add(playlist);
   }
 
-  static void deletePlaylist(int index) {
-    _box.deleteAt(index);
+  static void deletePlaylist(dynamic key) {
+    _box.delete(key);
   }
 
-  static void renamePlaylist(int index, String newName) {
-    final playlist = _box.getAt(index);
+  static void renamePlaylist(dynamic key, String newName) {
+    final playlist = _box.get(key);
     if (playlist != null) {
       playlist.name = newName;
       playlist.save();
@@ -140,7 +133,7 @@ class PlaylistService {
   void addToPlaylist(String playlistName, MediaItem item, String mediaType) {
     final box = Hive.box<PlaylistModel>('playlists');
 
-    // àªŸàª¾àªˆàªŸàª² àª…àª¨à«‡ àªŸàª¾àªˆàªª àª¬àª‚àª¨à«‡ àª®à«‡àªš àª¥àªµàª¾ àªœà«‹àªˆàª
+    // Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ² Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂª Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÅ¡ Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÅ“Ã Â«â€¹Ã ÂªË†Ã ÂªÂ
     final playlistKey = box.keys.firstWhere(
           (k) {
         final p = box.get(k);
@@ -153,14 +146,14 @@ class PlaylistService {
       final playlist = box.get(playlistKey)!;
       if (!playlist.items.any((e) => e.path == item.path)) {
         playlist.items.add(item);
-        playlist.save(); // âœ… box.put àª•àª°àª¤àª¾ playlist.save() àªµàª§àª¾àª°à«‡ àª¸àª¾àª°à«àª‚ àª›à«‡
+        playlist.save(); // Ã¢Å“â€¦ box.put Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¤Ã ÂªÂ¾ playlist.save() Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã Âªâ€ºÃ Â«â€¡
       }
     } else {
-      // àª¨àªµà«€ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµà«‹ àª¤à«àª¯àª¾àª°à«‡ àªŸàª¾àªˆàªª àª†àªªà«‹
+      // Ã ÂªÂ¨Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¬Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂª Ã Âªâ€ Ã ÂªÂªÃ Â«â€¹
       final newPlaylist = PlaylistModel(
         name: playlistName,
         items: [item],
-        type: mediaType, // âœ… 'audio' àª…àª¥àªµàª¾ 'video'
+        type: mediaType, // Ã¢Å“â€¦ 'audio' Ã Âªâ€¦Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ 'video'
       );
       box.add(newPlaylist);
     }

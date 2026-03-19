@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
@@ -17,6 +18,7 @@
     <application
         android:label="media_player"
         android:allowBackup="false"
+        android:requestLegacyExternalStorage="true"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data
@@ -73,3 +75,31 @@
         </intent>
     </queries>
 </manifest>
+
+
+    <!--<key>NSPhotoLibraryUsageDescription</key>-->
+    <!--<string>We need access to your photo library to save trimmed videos.</string>-->
+    <!--<key>NSPhotoLibraryAddUsageDescription</key>-->
+    <!--<string>We need access to your photo library to save trimmed videos.</string>-->
+
+    <!--    platform :ios, '13.0'-->
+
+
+    <!--    url_launcher:-->
+    <!--    rating_dialog:-->
+    <!--    flutter_staggered_animations:-->
+    <!--    google_mobile_ads:-->
+    <!--    shimmer:-->
+    <!--    lottie:-->
+    <!--    flutter_secure_storage:-->
+    <!--    connectivity_plus:-->
+    <!--    app_settings:-->
+    <!--    flutter_local_notifications:-->
+    <!--    better_player_plus:-->
+    <!--    flick_video_player:-->
+    <!--    visibility_detector:-->
+    <!--    screen_brightness:-->
+    <!--    volume_controller: ^2.0.3-->
+<!--        gal:-->
+<!--        video_trimmer:-->
+<!--        video_thumbnail:-->

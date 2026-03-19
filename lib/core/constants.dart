@@ -51,6 +51,15 @@ class AppSvg {
   static const String radioSelect = '$_svgPath/radio_icon_selected.svg';
   static const String radioUnSelect = '$_svgPath/radio_icon_unselected.svg';
 
+  static const String icCamera = '$_svgPath/ic_camera.svg';
+  static const String icABRepeat = '$_svgPath/ic_ab_repeat.svg';
+  static const String icSwapVert = '$_svgPath/ic_swap_vert.svg';
+  static const String icSwapHor = '$_svgPath/ic_swap_hor.svg';
+  static const String icShuffleActive = '$_svgPath/ic_shuffle_active.svg';
+  static const String icLoopActive = '$_svgPath/ic_loop_active.svg';
+  static const String icZoomOut = '$_svgPath/ic_zoomout.svg';
+  static const String icZoomIn = '$_svgPath/ic_zoomin.svg';
+
   // ===========================================================================
   // SEARCH FUNCTIONALITY
   // ===========================================================================

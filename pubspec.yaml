@@ -67,6 +67,9 @@ dependencies:
   visibility_detector:
   screen_brightness:
   volume_controller: ^2.0.3
+  gal:
+  video_trimmer:
+  video_thumbnail:
 #  google_fonts:
 
 dev_dependencies:

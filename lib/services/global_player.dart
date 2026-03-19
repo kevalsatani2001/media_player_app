@@ -14,7 +14,7 @@ import 'package:photo_manager/photo_manager.dart';
 
 class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
-  VoidCallback? _currentListener; // àª²àª¿àª¸àª¨àª°àª¨à«‡ àª¸à«àªŸà«‹àª° àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+  VoidCallback? _currentListener; // Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã ÂªÂ¨Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã Â«â€¹Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
   factory GlobalPlayerService() => _instance;
   GlobalPlayerService._internal();
 
@@ -30,7 +30,6 @@ class GlobalPlayerService {
   bool isMuted = false;
   double playbackSpeed = 1.0;
 
-  // global_player.dart àª®àª¾àª‚ àª† àª®à«‡àª¥àª¡ àª‰àª®à«‡àª°à«‹
   Future<void> saveLastPlayed() async {
     if (controller == null || !isInitialized) return;
 
@@ -38,7 +37,6 @@ class GlobalPlayerService {
         ? Hive.box('last_played')
         : await Hive.openBox('last_played');
 
-    // àª†àªªàª£à«‡ àª®àª¾àª¤à«àª° àª›à«‡àª²à«àª²à«‡ àª•àª¯à«‹ àªµàª¿àª¡àª¿àª¯à«‹ àª¹àª¤à«‹ àª¤à«‡àª¨à«‹ 'id' àª…àª¨à«‡ 'position' àª¸à«‡àªµ àª•àª°à«€àª¶à«àª‚
     await box.put('last_id', playlist[currentIndex].id);
     await box.put('last_position', controller!.value.position.inMilliseconds);
     await box.put('last_index', currentIndex);
@@ -51,12 +49,10 @@ class GlobalPlayerService {
       return;
     }
     playlist = list;
-    // àª–àª¾àª¤àª°à«€ àª•àª°à«‹ àª•à«‡ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª²àª¿àª¸à«àªŸàª¨à«€ àª°à«‡àª¨à«àªœàª®àª¾àª‚ àªœ àª›à«‡
     currentIndex = index < list.length ? index : 0;
     await loadVideo(onUpdate,seekToMs: seekToMs);
   }
 
-  // global_player.dart àª®àª¾àª‚ loadVideo àª®à«‡àª¥àª¡
   Future<void> loadVideo(Function onUpdate, {int? seekToMs}) async {
     if (playlist.isEmpty) return;
 
@@ -67,18 +63,29 @@ class GlobalPlayerService {
     isInitialized = false;
 
     if (controller != null) {
-      // àªœà«‚àª¨àª¾ àª²àª¿àª¸àª¨àª°àª¨à«‡ àªªàª¹à«‡àª²àª¾ àª¦à«‚àª° àª•àª°à«‹
       if (_currentListener != null) {
         controller!.removeListener(_currentListener!);
       }
       await controller!.dispose();
-      controller = null; // àª¸à«‡àª«à«àªŸà«€ àª®àª¾àªŸà«‡ null àª•àª°à«‹
+      controller = null;
     }
 
     controller = VideoPlayerController.file(file);
 
-    // àª¨àªµà«‹ àª²àª¿àª¸àª¨àª° àª¸à«‡àªŸ àª•àª°à«‹
     _currentListener = () {
+      // --- àª† àª¨àªµà«‹ àª­àª¾àª— àª‰àª®à«‡àª°à«‹ ---
+      if (isInitialized && controller != null) {
+        // àªœà«‹ àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‚àª°à«‹ àª¥àªˆ àª—àª¯à«‹ àª¹à«‹àª¯
+        if (controller!.value.position >= controller!.value.duration &&
+            !controller!.value.isPlaying &&
+            controller!.value.isInitialized) {
+
+          // àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‚àª°à«‹ àª¥àª¤àª¾ àªœ àª†àª—àª²à«‹ àªµàª¿àª¡àª¿àª¯à«‹ àªªà«àª²à«‡ àª•àª°à«‹
+          playNext(onUpdate);
+          return; // àª¬àª¾àª•à«€àª¨à«àª‚ àª…àªªàª¡à«‡àªŸ àª¸à«àª•à«€àªª àª•àª°à«‹
+        }
+      }
+      // -----------------------
       onUpdate();
     };
 
@@ -90,15 +97,13 @@ class GlobalPlayerService {
 
     isInitialized = true;
     controller!.setVolume(isMuted ? 0 : volume);
+    controller!.setLooping(isLooping); // àª²à«‚àªªàª¿àª‚àª— àª¸à«àªŸà«‡àªŸ àª¸à«‡àªŸ àª•àª°à«‹
     controller!.play();
 
     controller!.addListener(_currentListener!);
-
-    // àª¶àª°à«‚àª†àª¤àª®àª¾àª‚ àªàª•àªµàª¾àª° àª…àªªàª¡à«‡àªŸ àª†àªªà«‹
     onUpdate();
   }
 
-  // àªœà«àª¯àª¾àª°à«‡ àª¸à«àª•à«àª°à«€àª¨ àª›à«‹àª¡à«‹ àª¤à«àª¯àª¾àª°à«‡ àª²àª¿àª¸àª¨àª° àª•à«àª²à«€àª¨ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
   void clearListener() {
     if (controller != null && _currentListener != null) {
       controller!.removeListener(_currentListener!);
@@ -114,10 +119,10 @@ class GlobalPlayerService {
     } else if (currentIndex < playlist.length - 1) {
       currentIndex++;
     } else {
-      currentIndex = 0; // àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª«àª°à«€àª¥à«€ àª¶àª°à«‚ àª¥àª¶à«‡
+      currentIndex = 0;
     }
 
-    // àªµàª¿àª¡àª¿àª¯à«‹ àª²à«‹àª¡ àª•àª°àª¤àª¾ àªªàª¹à«‡àª²àª¾ àªœà«‚àª¨àª¾ àª²àª¿àª¸àª¨àª° àª•àª¾àª¢à«€ àª¨àª¾àª–àªµàª¾
+
     clearListener();
     loadVideo(onUpdate);
   }
@@ -147,11 +152,9 @@ extension SaveState on GlobalPlayerService {
     await box.put('video_data', {
       'index': currentIndex,
       'position': controller!.value.position.inMilliseconds,
-      'playlist_ids': playlist.map((e) => e.id).toList(), // IDs àª¸à«àªŸà«‹àª° àª•àª°àªµàª¾
+      'playlist_ids': playlist.map((e) => e.id).toList(), // IDs Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã Â«â€¹Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾
     });
 
-    // àª†àª–àª¾ àª²àª¿àª¸à«àªŸàª¨à«‡ àªªàª£ àª¬à«€àªœàª¾ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª¸à«àªŸà«‹àª° àª•àª°à«€ àª¶àª•àª¾àª¯ àªœà«‹ àªœàª°à«‚àª° àª¹à«‹àª¯
-    // àª…àª¥àªµàª¾ àª¸à«€àª§à«àª‚ entityList àªªàª¾àª¸ àª•àª°à«€ àª¶àª•àª¾àª¯
   }
 }
 
@@ -229,11 +232,8 @@ class GlobalPlayer extends ChangeNotifier {
         bool isOnline = await NetworkInfo.isConnected();
         if (!isOnline) {
           final currentContext = NavigatorKey.root.currentContext;
-          // Ã Â«Â§. Ã ÂªÂ¤Ã ÂªÂ°Ã ÂªÂ¤ Ã ÂªÅ“ Ã ÂªÂªÃ Â«â€¹Ã ÂªÂ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
           await audioPlayer.pause();
 
-          // Ã Â«Â¨. Ã ÂªÂªÃ Â«â€¹Ã ÂªÂÃ ÂªÂ¿Ã ÂªÂ¶Ã ÂªÂ¨Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÅ“ Ã ÂªÂ²Ã ÂªË† Ã ÂªÅ“Ã ÂªÂ¾Ã Âªâ€œ Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã ÂªÂ¤Ã Â«â‚¬ (Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã Â«Â§ Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã Âªâ€ Ã Âªâ€”Ã ÂªÂ³ Ã ÂªÂ¨ Ã ÂªÂµÃ ÂªÂ§Ã Â«â€¡)
-          // Ã Âªâ€ Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ²Ã Â«â‚¬ Ã Â«Â§ Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã ÂªÂ¸Ã ÂªÂ° Ã ÂªÅ“Ã ÂªÂ¤Ã Â«â‚¬ Ã ÂªÂ°Ã ÂªÂ¹Ã Â«â€¡Ã ÂªÂ¶Ã Â«â€¡
           await audioPlayer.seek(audioPlayer.position);
 
           await AppNotificationService.showNoInternetNotification(
@@ -448,7 +448,7 @@ class GlobalPlayer extends ChangeNotifier {
         videoController!.value.position >= videoController!.value.duration) {
       videoController!.removeListener(_videoListener);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentIndex != -1) playNext(); // Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
+        if (currentIndex != -1) playNext();
       });
     }
   }
@@ -530,25 +530,20 @@ class GlobalPlayer extends ChangeNotifier {
 
     if (!isOnline) {
       final currentContext = NavigatorKey.root.currentContext;
-      // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Âªâ€”Ã Â«â‚¬ Ã ÂªÅ“ Ã ÂªÂ¨ Ã Âªâ€ Ã ÂªÂªÃ Â«â€¹
       debugPrint("Resume blocked: No Internet");
 
-      // Ã ÂªÂ¨Ã Â«â€¹Ã ÂªÅ¸Ã ÂªÂ¿Ã ÂªÂ«Ã ÂªÂ¿Ã Âªâ€¢Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¨ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹ (context Ã ÂªÂµÃ Âªâ€”Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ® Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡)
       await AppNotificationService.showNoInternetNotification(
         title: "${currentContext?.tr("noInternetTitle")}",
         bodyTitle: "${currentContext?.tr("noInternetBody")}",
       );
 
-      // Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÅ¸Ã Â«â€¹Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ ÂªÂµÃ Â«â€¹ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ NavigatorKey Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â€¹
       if (currentContext != null) {
-        AppToast.show(currentContext, "Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸ Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€ºÃ Â«â€¡, Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã ÂªÂ¨ Ã ÂªÂ¥Ã ÂªË† Ã ÂªÂ¶Ã Âªâ€¢Ã Â«â€¡");
+        AppToast.show(currentContext, "Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â§ Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‹â€  Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¡");
       }
 
       notifyListeners();
-      return; // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÅ“ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ¾ Ã ÂªÂµÃ ÂªÂ³Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ¾Ã Âªâ€œ, audioPlayer.play() Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ§Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¹Ã Âªâ€šÃ ÂªÅ¡Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÅ“ Ã ÂªÂ¨ Ã ÂªÂ¦Ã Â«â€¹
+      return;
     }
-
-    // Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ¨Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÅ“ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
     currentType == 'audio' ? audioPlayer.play() : videoController?.play();
     notifyListeners();
   }
