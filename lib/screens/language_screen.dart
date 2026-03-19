@@ -52,7 +52,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
               _buildHeader(context, colors),
               const SizedBox(height: 8),
               _buildLanguageList(settingsBox, colors),
-              // ÃƒÂ¢Ã…â€œÃ‚Â¨ Sticky Banner Ad
               Container(
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -287,7 +286,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 final langNameEnglish =
                     AppStrings.translations[langCode]?['languageName'] ?? '';
 
-                // Display string banavo: e.g., "àª—à«àªœàª°àª¾àª¤à«€ (Gujarati) (System Default)"
                 String displayText = '$langName ($langNameEnglish)';
                 if (isSystemDefault) {
                   displayText += " ${context.tr("systemDefaults")}";
@@ -373,113 +371,3 @@ class _LanguageScreenState extends State<LanguageScreen> {
     });
   }
 }
-
-final data = [
-  {
-    "en": {
-      "systemDefault": "(System Default)",
-      "yourSystemLanguage": "Your system language (",
-      "isNotSupported": ") is not supported yet.",
-    },
-    "ar": {
-      "systemDefault": "(Ø§Ù„Ù†Ø¸Ø§Ù… Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠ)",
-      "yourSystemLanguage": "Ù„ØºØ© Ù†Ø¸Ø§Ù…Ùƒ (",
-      "isNotSupported": ") ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…Ø© Ø¨Ø¹Ø¯.",
-    },
-    "my": {
-      "systemDefault": "(á€…á€”á€…á€ºá€¡á€á€¼á€±á€á€¶á€›á€½á€±á€¸á€á€»á€šá€ºá€™á€¾á€¯)",
-      "yourSystemLanguage": "á€žá€„á€ºáá€…á€”á€…á€ºá€˜á€¬á€žá€¬á€…á€€á€¬á€¸ (",
-      "isNotSupported": ") á€€á€­á€¯á€™á€•á€¶á€·á€•á€­á€¯á€¸á€žá€±á€¸á€•á€«á‹",
-    },
-    "fil": {
-      "systemDefault": "(Default ng System)",
-      "yourSystemLanguage": "Ang wika ng iyong system (",
-      "isNotSupported": ") ay hindi pa suportado.",
-    },
-    "fr": {
-      "systemDefault": "(Par dÃ©faut)",
-      "yourSystemLanguage": "La langue de votre systÃ¨me (",
-      "isNotSupported": ") n'est pas encore prise en charge.",
-    },
-    "de": {
-      "systemDefault": "(Systemstandard)",
-      "yourSystemLanguage": "Ihre Systemsprache (",
-      "isNotSupported": ") wird noch nicht unterstÃ¼tzt.",
-    },
-    "gu": {
-      "systemDefault": "(àª¸àª¿àª¸à«àªŸàª® àª¡àª¿àª«à«‹àª²à«àªŸ)",
-      "yourSystemLanguage": "àª¤àª®àª¾àª°à«€ àª¸àª¿àª¸à«àªŸàª® àª­àª¾àª·àª¾ (",
-      "isNotSupported": ") àª¹àªœà« àª¸àªªà«‹àª°à«àªŸà«‡àª¡ àª¨àª¥à«€.",
-    },
-    "hi": {
-      "systemDefault": "(à¤¸à¤¿à¤¸à¥à¤Ÿà¤® à¤¡à¤¿à¤«à¥‰à¤²à¥à¤Ÿ)",
-      "yourSystemLanguage": "à¤†à¤ªà¤•à¥€ à¤¸à¤¿à¤¸à¥à¤Ÿà¤® à¤­à¤¾à¤·à¤¾ (",
-      "isNotSupported": ") à¤…à¤­à¥€ à¤¸à¤®à¤°à¥à¤¥à¤¿à¤¤ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆà¥¤",
-    },
-    "id": {
-      "systemDefault": "(Default Sistem)",
-      "yourSystemLanguage": "Bahasa sistem Anda (",
-      "isNotSupported": ") belum didukung.",
-    },
-    "it": {
-      "systemDefault": "(Predefinito di sistema)",
-      "yourSystemLanguage": "La lingua del tuo sistema (",
-      "isNotSupported": ") non Ã¨ ancora supportata.",
-    },
-    "ja": {
-      "systemDefault": "(ã‚·ã‚¹ãƒ†ãƒ ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ)",
-      "yourSystemLanguage": "ã‚·ã‚¹ãƒ†ãƒ ã®è¨€èªž (",
-      "isNotSupported": ") ã¯ã¾ã ã‚µãƒãƒ¼ãƒˆã•ã‚Œã¦ã„ã¾ã›ã‚“ã€‚",
-    },
-    "ko": {
-      "systemDefault": "(ì‹œìŠ¤í…œ ê¸°ë³¸ê°’)",
-      "yourSystemLanguage": "ì‹œìŠ¤í…œ ì–¸ì–´ (",
-      "isNotSupported": ")ëŠ” ì•„ì§ ì§€ì›ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤.",
-    },
-    "ms": {
-      "systemDefault": "(Lalai Sistem)",
-      "yourSystemLanguage": "Bahasa sistem anda (",
-      "isNotSupported": ") belum disokong.",
-    },
-    "mr": {
-      "systemDefault": "(à¤¸à¤¿à¤¸à¥à¤Ÿà¤® à¤¡à¤¿à¤«à¥‰à¤²à¥à¤Ÿ)",
-      "yourSystemLanguage": "à¤¤à¥à¤®à¤šà¥€ à¤¸à¤¿à¤¸à¥à¤Ÿà¤® à¤­à¤¾à¤·à¤¾ (",
-      "isNotSupported": ") à¤…à¤¦à¥à¤¯à¤¾à¤ª à¤¸à¤®à¤°à¥à¤¥à¤¿à¤¤ à¤¨à¤¾à¤¹à¥€.",
-    },
-    "fa": {
-      "systemDefault": "(Ù¾ÛŒØ´â€ŒÙØ±Ø¶ Ø³ÛŒØ³ØªÙ…)",
-      "yourSystemLanguage": "Ø²Ø¨Ø§Ù† Ø³ÛŒØ³ØªÙ… Ø´Ù…Ø§ (",
-      "isNotSupported": ") Ù‡Ù†ÙˆØ² Ù¾Ø´ØªÛŒØ¨Ø§Ù†ÛŒ Ù†Ù…ÛŒâ€ŒØ´ÙˆØ¯.",
-    },
-    "pl": {
-      "systemDefault": "(DomyÅ›lne systemu)",
-      "yourSystemLanguage": "JÄ™zyk Twojego systemu (",
-      "isNotSupported": ") nie jest jeszcze obsÅ‚ugiwany.",
-    },
-    "pt": {
-      "systemDefault": "(PadrÃ£o do sistema)",
-      "yourSystemLanguage": "O idioma do seu sistema (",
-      "isNotSupported": ") ainda nÃ£o Ã© suportado.",
-    },
-    "es": {
-      "systemDefault": "(Predeterminado del sistema)",
-      "yourSystemLanguage": "El idioma de su sistema (",
-      "isNotSupported": ") aÃºn no es compatible.",
-    },
-    "sv": {
-      "systemDefault": "(Systemstandard)",
-      "yourSystemLanguage": "Ditt systemsprÃ¥k (",
-      "isNotSupported": ") stÃ¶ds inte Ã¤nnu.",
-    },
-    "ta": {
-      "systemDefault": "(à®®à¯à®±à¯ˆà®®à¯ˆ à®‡à®¯à®²à¯ã¶à®¨à®¿à®²à¯ˆ)",
-      "yourSystemLanguage": "à®‰à®™à¯à®•à®³à¯ à®•à®£à®¿à®©à®¿ à®®à¯Šà®´à®¿ (",
-      "isNotSupported": ") à®‡à®©à¯à®©à¯à®®à¯ à®†à®¤à®°à®¿à®•à¯à®•à®ªà¯à®ªà®Ÿà®µà®¿à®²à¯à®²à¯ˆ.",
-    },
-    "ur": {
-      "systemDefault": "(Ø³Ø³Ù¹Ù… ÚˆÛŒÙØ§Ù„Ù¹)",
-      "yourSystemLanguage": "Ø¢Ù¾ Ú©Û’ Ø³Ø³Ù¹Ù… Ú©ÛŒ Ø²Ø¨Ø§Ù† (",
-      "isNotSupported": ") Ø§Ø¨Ú¾ÛŒ ØªØ¹Ø§ÙˆÙ† ÛŒØ§ÙØªÛ Ù†ÛÛŒÚº ÛÛ’Û”",
-    },
-  },
-];

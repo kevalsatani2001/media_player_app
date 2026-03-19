@@ -2,7 +2,6 @@ import 'package:media_player/screens/playlist_item_screen.dart';
 
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
-import 'audio_player_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
   int _clickCounter = 0;
@@ -16,7 +15,6 @@ class PlaylistScreen extends StatelessWidget {
 
     return DefaultTabController(
       length: 2,
-      // Ã ÂªÂ¬Ã Â«â€¡ Ã ÂªÅ¸Ã Â«â€¡Ã ÂªÂ¬: Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€¦Ã ÂªÂ¨Ã Â«â€¡ Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
@@ -40,8 +38,7 @@ class PlaylistScreen extends StatelessWidget {
             ),
           ],
 
-          // Ã¢Å“â€¦ AppBar Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡ Tabs Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹
-          bottom: TabBar(
+           bottom: TabBar(
             indicatorColor: colors.primary,
             labelColor: colors.primary,
             unselectedLabelColor: colors.textFieldBorder,
@@ -340,11 +337,10 @@ class PlaylistScreen extends StatelessWidget {
                         return;
                       }
 
-                      // àª¸à«àª§àª¾àª°à«‹: getAt àª¨à«‡ àª¬àª¦àª²à«‡ àª¸à«€àª§à«àª‚ get(key) àªµàª¾àªªàª°à«‹
                       final playlist = box.get(playlistKey) as PlaylistModel?;
                       if (playlist != null) {
                         playlist.name = newName;
-                        box.put(playlistKey, playlist); // àª•à«€ àª¸àª¾àª¥à«‡ àª¸à«‡àªµ àª•àª°à«‹
+                        box.put(playlistKey, playlist);
                         Navigator.pop(context);
                         AppToast.show(
                           context,

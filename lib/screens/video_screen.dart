@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import 'dart:ui' as ui;
 import '../models/media_item.dart' as my;
 import '../services/ads_service.dart';
@@ -30,7 +24,6 @@ class _VideoScreenState extends State<VideoScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-
   }
 
   void _onScroll() {
@@ -47,6 +40,7 @@ class _VideoScreenState extends State<VideoScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+
   final GlobalPlayer player = GlobalPlayer();
 
   @override
@@ -56,8 +50,8 @@ class _VideoScreenState extends State<VideoScreen> {
     if (widget.isComeHomeScreen)
       return BlocProvider(
         create: (_) =>
-        VideoBloc(Hive.box('videos'))
-          ..add(LoadVideosFromGallery(showLoading: false)),
+            VideoBloc(Hive.box('videos'))
+              ..add(LoadVideosFromGallery(showLoading: false)),
         child: Scaffold(
           appBar: AppBar(
             leading: Padding(
@@ -123,7 +117,7 @@ class _VideoScreenState extends State<VideoScreen> {
             ],
           ),
           body: SafeArea(
-            child:   Stack(
+            child: Stack(
               children: [
                 Column(
                   children: [
@@ -132,13 +126,13 @@ class _VideoScreenState extends State<VideoScreen> {
                     Expanded(child: _buildVideoPage()),
                   ],
                 ),
-                SmartMiniPlayer(forceMiniMode: true) // Aa widget potani rite handle karshe
+                SmartMiniPlayer(forceMiniMode: true),
+                // Aa widget potani rite handle karshe
               ],
             ),
           ),
         ),
       );
-
     else
       return Stack(
         children: [
@@ -165,6 +159,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 ),
               ),
               Divider(color: colors.dividerColor),
+
               /// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ 2. TOP BANNER FOR TAB VIEW
               AdHelper.adaptiveBannerWidget(context),
 
@@ -172,7 +167,7 @@ class _VideoScreenState extends State<VideoScreen> {
               // Audio chaltu hoy to niche space khali karva mate:
             ],
           ),
-          SmartMiniPlayer(forceMiniMode: true)
+          SmartMiniPlayer(forceMiniMode: true),
         ],
       );
   }
@@ -180,7 +175,7 @@ class _VideoScreenState extends State<VideoScreen> {
   Widget _buildVideoPage() {
     return BlocBuilder<VideoBloc, VideoState>(
       buildWhen: (previous, current) =>
-      current is VideoLoaded ||
+          current is VideoLoaded ||
           current is VideoLoading ||
           current is VideoError,
       builder: (context, state) {
@@ -196,11 +191,11 @@ class _VideoScreenState extends State<VideoScreen> {
           final entitiesToShow = _searchQuery.isEmpty
               ? state.entities
               : state.entities.where((e) {
-            final name = (e is AssetEntity)
-                ? (e.title ?? '')
-                : (e as MediaItem).path.split('/').last;
-            return name.toLowerCase().contains(_searchQuery);
-          }).toList();
+                  final name = (e is AssetEntity)
+                      ? (e.title ?? '')
+                      : (e as MediaItem).path.split('/').last;
+                  return name.toLowerCase().contains(_searchQuery);
+                }).toList();
 
           if (entitiesToShow.isEmpty && _searchQuery.isNotEmpty) {
             return const Center(child: AppText("noResultFound"));
@@ -213,7 +208,7 @@ class _VideoScreenState extends State<VideoScreen> {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween<Offset>(
-                    begin: const Offset(0.0, 0.02), // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â° ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂµÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡
+                    begin: const Offset(0.0, 0.02),
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,
@@ -222,15 +217,15 @@ class _VideoScreenState extends State<VideoScreen> {
             },
             child: _isGridView
                 ? _buildGridView(
-              entitiesToShow,
-              state.hasMore,
-              key: const ValueKey('grid'),
-            )
+                    entitiesToShow,
+                    state.hasMore,
+                    key: const ValueKey('grid'),
+                  )
                 : _buildListView(
-              entitiesToShow,
-              state.hasMore,
-              key: const ValueKey('list'),
-            ),
+                    entitiesToShow,
+                    state.hasMore,
+                    key: const ValueKey('list'),
+                  ),
           );
         }
         return const SizedBox();
@@ -238,13 +233,11 @@ class _VideoScreenState extends State<VideoScreen> {
     );
   }
 
-
   _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ Darek 5 item pachi ek Ad (Interval 2 bahu vadhare thai jase, 5-6 best rahese)
     const int adIndexInterval = 5;
 
-    // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ Sacho ItemCount: Videos + Ads + Loader
-    int totalItems = entitiesToShow.length + (entitiesToShow.length ~/ adIndexInterval);
+    int totalItems =
+        entitiesToShow.length + (entitiesToShow.length ~/ adIndexInterval);
     if (hasMore) totalItems++;
 
     return GridView.builder(
@@ -258,28 +251,26 @@ class _VideoScreenState extends State<VideoScreen> {
         childAspectRatio: 1.05,
       ),
 
-      itemCount:totalItems,
+      itemCount: totalItems,
       // itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-// 1. Loader check
+        // 1. Loader check
         if (hasMore && index == totalItems - 1) {
           return const Center(child: CustomLoader());
         }
 
-        // _buildGridView Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â¾ itemBuilder Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â° AD LOGIC Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â³Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â­Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬â€ Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹:
-
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
           return Container(
             decoration: BoxDecoration(
-              color: Colors.white, // Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚ÂªÃ‚Â³ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+              color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)), // Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Center(
                 child: FittedBox(
-                  fit: BoxFit.contain, // Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+                  fit: BoxFit.contain,
                   child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
                 ),
               ),
@@ -287,10 +278,10 @@ class _VideoScreenState extends State<VideoScreen> {
           );
         }
 
-        // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ 3. ACTUAL INDEX CALCULATION (Bau mukhya chhe)
         final int actualIndex = index - (index ~/ (adIndexInterval + 1));
 
-        if (actualIndex >= entitiesToShow.length) return const SizedBox.shrink();
+        if (actualIndex >= entitiesToShow.length)
+          return const SizedBox.shrink();
 
         final entity = entitiesToShow[actualIndex];
 
@@ -305,13 +296,9 @@ class _VideoScreenState extends State<VideoScreen> {
                     .toList();
 
                 final entity = entitiesToShow[actualIndex];
-                _navigateToPlayer(
-                    context,
-                    videoList, // Ã Âªâ€ Ã Âªâ€“Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹ (Ã ÂªÂ®Ã ÂªÂ¿Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡)
-                    actualIndex,    // Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÅ¡Ã Â«â€¹ Ã ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¾ Ã Âªâ€¡Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸
-                    entity
-                );
-              }},
+                _navigateToPlayer(context, videoList, actualIndex, entity);
+              }
+            },
             child: Padding(
               padding: const EdgeInsets.all(4.0),
               child: Column(
@@ -320,67 +307,67 @@ class _VideoScreenState extends State<VideoScreen> {
                   Expanded(
                     child: entity is AssetEntity
                         ? ImageItemWidget(
-                      onMenuSelected: (action) async {
-                        switch (action) {
-                          case MediaMenuAction.detail:
-                            routeToDetailPage(context, entity);
-                            break;
+                            onMenuSelected: (action) async {
+                              switch (action) {
+                                case MediaMenuAction.detail:
+                                  routeToDetailPage(context, entity);
+                                  break;
 
-                          case MediaMenuAction.info:
-                            showInfoDialog(context, entity);
-                            break;
+                                case MediaMenuAction.info:
+                                  showInfoDialog(context, entity);
+                                  break;
 
-                          case MediaMenuAction.thumb:
-                            showThumb(entity, 500);
-                            break;
+                                case MediaMenuAction.thumb:
+                                  showThumb(entity, 500);
+                                  break;
 
-                          case MediaMenuAction.share:
-                            shareItem(context, entity);
-                            break;
+                                case MediaMenuAction.share:
+                                  shareItem(context, entity);
+                                  break;
 
-                          case MediaMenuAction.delete:
-                            deleteCurrentItem(context, entity);
-                            break;
+                                case MediaMenuAction.delete:
+                                  deleteCurrentItem(context, entity);
+                                  break;
 
-                          case MediaMenuAction.addToFavourite:
-                            await _toggleFavourite(
-                              context,
-                              entity,
-                              index,
-                            );
-                            break;
-                          case MediaMenuAction.addToPlaylist:
-                            final file = await entity.file;
-                            addToPlaylist(
-                              MediaItem(
-                                path: file!.path,
-                                isNetwork: false,
-                                type: entity.type == AssetType.audio
-                                    ? "audio"
-                                    : "video",
-                                id: entity.id,
-                                isFavourite: entity.isFavorite,
-                              ),
-                              context,
-                            );
-                            break;
-                        }
-                      },
-                      onTap: null,
-                      entity: entity,
-                      option: const ThumbnailOption(
-                        size: ThumbnailSize.square(150),
-                      ),
-                    )
+                                case MediaMenuAction.addToFavourite:
+                                  await _toggleFavourite(
+                                    context,
+                                    entity,
+                                    index,
+                                  );
+                                  break;
+                                case MediaMenuAction.addToPlaylist:
+                                  final file = await entity.file;
+                                  addToPlaylist(
+                                    MediaItem(
+                                      path: file!.path,
+                                      isNetwork: false,
+                                      type: entity.type == AssetType.audio
+                                          ? "audio"
+                                          : "video",
+                                      id: entity.id,
+                                      isFavourite: entity.isFavorite,
+                                    ),
+                                    context,
+                                  );
+                                  break;
+                              }
+                            },
+                            onTap: null,
+                            entity: entity,
+                            option: const ThumbnailOption(
+                              size: ThumbnailSize.square(150),
+                            ),
+                          )
                         : Container(
-                      color: Colors.black12,
-                      child: Center(
-                        child: Text(
-                          (entity as MediaItem).path.split('/').last,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
+                            color: Colors.black12,
+                            child: Center(
+                              child: Text(
+                                (entity as MediaItem).path.split('/').last,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
                   ),
                 ],
               ),
@@ -398,11 +385,14 @@ class _VideoScreenState extends State<VideoScreen> {
       key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
-      itemCount: (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
+      itemCount:
+          (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
           (entitiesToShow.length ~/ adIndexInterval),
       itemBuilder: (context, index) {
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
-          return AdHelper.bannerAdWidget(size: AdSize.banner); // Nano banner list ni vachma
+          return AdHelper.bannerAdWidget(
+            size: AdSize.banner,
+          ); // Nano banner list ni vachma
         }
 
         final int actualIndex = index - (index ~/ (adIndexInterval + 1));
@@ -526,11 +516,10 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   Future<void> _toggleFavourite(
-      BuildContext context,
-      AssetEntity entity,
-      int index,
-      ) async
-  {
+    BuildContext context,
+    AssetEntity entity,
+    int index,
+  ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -578,7 +567,6 @@ class _VideoScreenState extends State<VideoScreen> {
       );
     }
 
-    // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
@@ -588,14 +576,12 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   void _navigateToPlayer(
-      BuildContext context,
-      List<dynamic> allEntities, // dynamic Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ°Ã ÂªÂ£ Ã Âªâ€¢Ã Â«â€¡ Ã Âªâ€ Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š AssetEntity Ã Âªâ€¦Ã ÂªÂ¥Ã ÂªÂµÃ ÂªÂ¾ MediaItem (Audio) Ã ÂªÂ¹Ã Â«â€¹Ã ÂªË† Ã ÂªÂ¶Ã Âªâ€¢Ã Â«â€¡
-      int currentIndex,
-      dynamic currentItem,
-      ) async {
-
+    BuildContext context,
+    List<dynamic> allEntities,
+    int currentIndex,
+    dynamic currentItem,
+  ) async {
     void moveNext() async {
-      // Ã Â«Â§. Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹ Ã Âªâ€¢Ã Â«â€¡ Ã Âªâ€  Ã Âªâ€ Ã ÂªË†Ã ÂªÅ¸Ã ÂªÂ® Video Ã Âªâ€ºÃ Â«â€¡ Ã Âªâ€¢Ã Â«â€¡ Audio
       bool isAudio = false;
       if (currentItem is AssetEntity) {
         isAudio = currentItem.type == AssetType.audio;
@@ -605,18 +591,19 @@ class _VideoScreenState extends State<VideoScreen> {
 
       if (isAudio) {
         // --- AUDIO PLAYER MATE ---
-        // Ã Âªâ€¦Ã Âªâ€”Ã ÂªÂ¾Ã Âªâ€° Ã Âªâ€ Ã ÂªÂªÃ ÂªÂ£Ã Â«â€¡ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¤ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂ® GlobalPlayer Ã ÂªÂ¸Ã ÂªÂ°Ã Â«ÂÃ ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¸ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂªÃ ÂªÂ°Ã Â«â€¹
         final audioPlayer = GlobalPlayer();
 
-        // Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¸Ã Â«â€¡ List<AssetEntity> Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ°Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹
-        List<AssetEntity> entities = allEntities.whereType<AssetEntity>().toList();
+        List<AssetEntity> entities = allEntities
+            .whereType<AssetEntity>()
+            .toList();
 
         await audioPlayer.initAndPlay(
           entities: entities,
-          selectedId: (currentItem is AssetEntity) ? currentItem.id : currentItem.id,
+          selectedId: (currentItem is AssetEntity)
+              ? currentItem.id
+              : currentItem.id,
         );
-
-        } else {
+      } else {
         // --- VIDEO PLAYER MATE ---
         Navigator.push(
           context,
@@ -631,7 +618,7 @@ class _VideoScreenState extends State<VideoScreen> {
       }
     }
 
-     _videoClickCount++;
+    _videoClickCount++;
     if (_videoClickCount % 3 == 0) {
       AdHelper.showInterstitialAd(() => moveNext());
     } else {

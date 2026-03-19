@@ -300,7 +300,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         currentItems.removeAt(index);
       });
 
-      // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ SnackBar ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Toast
       AppToast.show(
         context,
         "${context.tr("removedFromPlaylist")}",
@@ -361,11 +360,9 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     void startNavigation() async {
       int index = widget.items.indexOf(item);
 
-      // Ã Â«Â§. MediaItem Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ AssetEntity Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¬Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂµÃ ÂªÂµÃ Â«ÂÃ Âªâ€š
       List<AssetEntity> entityList = widget.items.map((media) {
         return AssetEntity(
           id: media.id,
-          // Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ 3, Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ 2
           typeInt: media.type == "audio" ? 3 : 2,
           width: 0,
           height: 0,
@@ -376,10 +373,8 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 
       if (!mounted) return;
 
-      // Ã Â«Â¨. Ã¢Å“â€¦ Ã ÂªÅ¸Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂª Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨Ã Â«â€¡ Ã Âªâ€¦Ã ÂªÂ²Ã Âªâ€” Ã ÂªÂªÃ Â«â€¡Ã ÂªÅ“ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂ®Ã Â«â€¹Ã Âªâ€¢Ã ÂªÂ²Ã Â«â€¹
       if (item.type == "audio") {
-        // Ã°Å¸Å½Â¶ Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ AudioPlayerScreen
-        Navigator.push(
+         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => AudioPlayerScreen(
@@ -388,15 +383,14 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
               item: widget.items[index],
               index: index,
               isPlaylist:
-              true, // Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã Âªâ€ Ã ÂªÂµÃ Â«â€¡ Ã Âªâ€ºÃ Â«â€¡ Ã ÂªÂÃ ÂªÅ¸Ã ÂªÂ²Ã Â«â€¡ true
+              true,
             ),
           ),
         ).then((_) {
           if (mounted) setState(() {});
         });
       } else {
-        // Ã°Å¸Å½Â¥ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ PlayerScreen
-        Navigator.push(
+         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
@@ -411,7 +405,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       }
     }
 
-    // Ã ÂªÂ¦Ã ÂªÂ° Ã Â«Â© Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¿Ã Âªâ€¢ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ ÂªÂµÃ Â«â‚¬
     if (_playClickCount % 3 == 0) {
       AdHelper.showInterstitialAd(() => startNavigation());
     } else {

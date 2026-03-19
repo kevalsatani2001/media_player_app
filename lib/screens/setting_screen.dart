@@ -1,7 +1,4 @@
-// import 'package:media_player/screens/privacy_poimport '
 import 'package:media_player/screens/privacy_policy_screen.dart';
-// package:media_player/screens/privacy_policy_screen.dart';
-
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
@@ -39,7 +36,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Widget _buildSettingsTab() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return SingleChildScrollView( // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Scrollable rakho jethi nani screen ma ad dhankay nahi
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

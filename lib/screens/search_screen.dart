@@ -65,7 +65,6 @@ class _SearchScreenState extends State<SearchScreen> {
           (pl) => MediaItem(
         id: pl.name,
         path: pl.name,
-        // àª…àª—àª¤à«àª¯àª¨à«‹ àª¸à«àª§àª¾àª°à«‹: type àª®àª¾àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸàª¨à«‹ àª¸àª¾àªšà«‹ àªªà«àª°àª•àª¾àª° àª²àª–à«‹
         type: pl.type == 'audio' ? 'playlist_audio' : 'playlist_video',
         isNetwork: false,
         isFavourite: false,
@@ -237,7 +236,6 @@ class _SearchScreenState extends State<SearchScreen> {
                           ? 'audio'
                           : 'video';
 
-                      // àª¨àª¾àª® àª…àª¨à«‡ àªŸàª¾àª‡àªª àª¬àª‚àª¨à«‡ àªšà«‡àª• àª•àª°à«‹ àªœà«‡àª¥à«€ àª¡à«àªªà«àª²à«€àª•à«‡àªŸ àª¨àª¾àª®àª®àª¾àª‚ àªªà«àª°à«‹àª¬à«àª²à«‡àª® àª¨àª¾ àª¥àª¾àª¯
                       playlist = playlistBox.values
                           .cast<PlaylistModel>()
                           .firstWhere(
@@ -258,7 +256,6 @@ class _SearchScreenState extends State<SearchScreen> {
                           onTap: () async {
                             AdHelper.showInterstitialAd(() async {
                               if (isPlaylist) {
-                                // àª‰àªªàª° àªœà«‡ àª²à«‹àªœàª¿àª•àª¥à«€ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¶à«‹àª§à«àª¯à«àª‚ àª¤à«‡ àªœ àª…àª¹à«€àª‚ àªµàª¾àªªàª°à«‹
                                 final targetType =
                                 item.type == 'playlist_audio'
                                     ? 'audio'
@@ -308,7 +305,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                     //   ),
                                     // ),
                                     PlayerScreen(
-                                      // entityList: entities, // Ã Âªâ€ Ã Âªâ€“Ã Â«ÂÃ Âªâ€š Ã Âªâ€œÃ ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸
                                       entity: AssetEntity(
                                         id: item.id,
                                         typeInt: item.type == "audio"

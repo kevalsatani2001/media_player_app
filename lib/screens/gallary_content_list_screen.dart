@@ -89,10 +89,9 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
             const int adInterval = 5;
             int listLength = p.showItemCount;
 
-            // àªàª¡àª¨à«€ àª¸àª‚àª–à«àª¯àª¾ àª—àª£à«‹
-            int adCount = listLength ~/ adInterval;
+             int adCount = listLength ~/ adInterval;
             if (listLength > 0 && listLength < adInterval) {
-              adCount = 1; // àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àªªàª£ à«§ àªàª¡ àª—à«àª°à«€àª¡àª®àª¾àª‚
+              adCount = 1;
             }
 
             return CustomScrollView(
@@ -100,22 +99,21 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
                 SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                      // à«§. àª—à«àª°à«€àª¡ àªàª¡ àª•àª¨à«àª¡àª¿àª¶àª¨
                       bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
                       bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
 
                       if (isAdPosition || isLastAdForSmallList) {
                         return Container(
                           decoration: BoxDecoration(
-                            color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+                            border: Border.all(color: Colors.grey.withOpacity(0.2)),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Center(
                               child: FittedBox(
-                                fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+                                fit: BoxFit.contain,
                                 child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
                               ),
                             ),
@@ -123,7 +121,6 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
                         );
                       }
 
-                      // à«¨. àª¸àª¾àªšà«‹ àª¡à«‡àªŸàª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸
                       final int actualIndex = index - (index ~/ (adInterval + 1));
                       if (actualIndex >= listLength) return const SizedBox.shrink();
 
@@ -226,22 +223,21 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
   }
 
   Widget _buildItemWithAd(BuildContext context, int index, int adInterval, int listLength) {
-    // à«§. àªàª¡ àª•à«àª¯àª¾àª°à«‡ àª¬àª¤àª¾àªµàªµà«€ àª¤à«‡àª¨à«€ àª•àª¨à«àª¡àª¿àª¶àª¨
     bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
     bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
 
     if (isAdPosition || isLastAdForSmallList) {
       return Container(
         decoration: BoxDecoration(
-          color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Center(
             child: FittedBox(
-              fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
+              fit: BoxFit.contain,
               child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
             ),
           ),
@@ -249,10 +245,8 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       );
     }
 
-    // à«¨. àª¸àª¾àªšà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª—àª£à«‹
     final int actualIndex = index - (index ~/ (adInterval + 1));
 
-    // àª¸à«‡àª«à«àªŸà«€ àªšà«‡àª•
     if (actualIndex >= listLength) return const SizedBox.shrink();
 
     return _buildItem(context, actualIndex);
@@ -322,7 +316,6 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
 
     final key = file.path;
 
-    // Ã°Å¸â€Â¹ Update Hive
     if (isFavorite) {
       favBox.delete(key);
     } else {
@@ -349,11 +342,9 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
       );
     }
 
-    // Ã°Å¸â€Â¹ Reload entity
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
     if (!mounted || newEntity == null) return;
 
-    // Ã°Å¸â€Â¹ Update UI list
     readPathProvider(context).list[index] = newEntity;
     setState(() {});
   }

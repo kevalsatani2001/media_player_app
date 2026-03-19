@@ -53,11 +53,11 @@ class _PlayerScreenState extends State<PlayerScreen>
   bool _isExtraControlsExpanded = false;
 
   String?
-  _overlayText; // àªµàªšà«àªšà«‡ àª¦à«‡àª–àª¾àª¡àªµàª¾ àª®àª¾àªŸà«‡àª¨à«àª‚ àª²àª–àª¾àª£
+  _overlayText;
   Timer?
-  _overlayTextTimer; // àª²àª–àª¾àª£àª¨à«‡ àª—àª¾àª¯àª¬ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡àª¨à«àª‚ àªŸàª¾àªˆàª®àª°
+  _overlayTextTimer;
   Duration?
-  _seekDuration; // àª¸à«àªµàª¾àª‡àªª àª•àª°àª¤à«€ àªµàª–àª¤à«‡ àª•à«‡àªŸàª²à«‹ àª¸àª®àª¯ àª¬àª¦àª²àª¾àª¯à«‹ àª¤à«‡ àª¸à«àªŸà«‹àª° àª•àª°àªµàª¾
+  _seekDuration;
   String _activeGestureType = 'none'; // 'none', 'seek', 'vertical'
 
   void _checkABRepeat() {
@@ -126,13 +126,11 @@ class _PlayerScreenState extends State<PlayerScreen>
     final controller = playerService.controller;
     if (controller == null || !controller.value.isInitialized) return;
 
-    // àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‚àª°à«‹ àª¥àªµàª¾àª¨à«€ àª¤à«ˆàª¯àª¾àª°à«€àª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«àª¯àª¾àª°à«‡ (àª›à«‡àª²à«àª²à«€ 500ms)
-    final bool isFinished =
+     final bool isFinished =
         controller.value.position >=
         (controller.value.duration - const Duration(milliseconds: 500));
 
     if (isFinished && !controller.value.isPlaying && !playerService.isLooping) {
-      // àª…àª—àª¤à«àª¯àª¨à«àª‚: àª¨à«‡àª•à«àª¸à«àªŸ àªµàª¿àª¡àª¿àª¯à«‹ àªªà«àª²à«‡ àª•àª°àª¤àª¾ àªªàª¹à«‡àª²àª¾ àª•àª°àª¨à«àªŸ àª²àª¿àª¸àª¨àª° àª•àª¾àª¢à«€ àª¨àª¾àª–àªµà«‹
       controller.removeListener(_videoListener);
 
       playerService.playNext(() {
@@ -335,8 +333,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // àª‰àªªàª° àª†àªˆàª•à«‹àª¨
-              Icon(
+               Icon(
                 _isBrightnessGesture
                     ? (_gestureValue! > 0.5
                           ? Icons.brightness_7

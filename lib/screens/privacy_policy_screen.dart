@@ -40,7 +40,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
-      body: CustomScrollView( // Scrolling Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂµÃ ÂªÂ§Ã Â«Â Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ®Ã Â«â€šÃ ÂªÂ§ Ã ÂªÂ¬Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂµÃ ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+      body: CustomScrollView(
         slivers: [
           // 1. Attractive AppBar with flexible space
           SliverAppBar(

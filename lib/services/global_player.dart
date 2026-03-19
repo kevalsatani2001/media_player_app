@@ -6,15 +6,9 @@ import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 import 'notification_service.dart';
 
-
-
-import 'dart:async';
-import 'package:video_player/video_player.dart';
-import 'package:photo_manager/photo_manager.dart';
-
 class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
-  VoidCallback? _currentListener; // Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã ÂªÂ¨Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã Â«â€¹Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+  VoidCallback? _currentListener;
   factory GlobalPlayerService() => _instance;
   GlobalPlayerService._internal();
 
@@ -80,9 +74,8 @@ class GlobalPlayerService {
             !controller!.value.isPlaying &&
             controller!.value.isInitialized) {
 
-          // àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‚àª°à«‹ àª¥àª¤àª¾ àªœ àª†àª—àª²à«‹ àªµàª¿àª¡àª¿àª¯à«‹ àªªà«àª²à«‡ àª•àª°à«‹
-          playNext(onUpdate);
-          return; // àª¬àª¾àª•à«€àª¨à«àª‚ àª…àªªàª¡à«‡àªŸ àª¸à«àª•à«€àªª àª•àª°à«‹
+           playNext(onUpdate);
+          return;
         }
       }
       // -----------------------
@@ -97,7 +90,7 @@ class GlobalPlayerService {
 
     isInitialized = true;
     controller!.setVolume(isMuted ? 0 : volume);
-    controller!.setLooping(isLooping); // àª²à«‚àªªàª¿àª‚àª— àª¸à«àªŸà«‡àªŸ àª¸à«‡àªŸ àª•àª°à«‹
+    controller!.setLooping(isLooping);
     controller!.play();
 
     controller!.addListener(_currentListener!);
@@ -152,7 +145,7 @@ extension SaveState on GlobalPlayerService {
     await box.put('video_data', {
       'index': currentIndex,
       'position': controller!.value.position.inMilliseconds,
-      'playlist_ids': playlist.map((e) => e.id).toList(), // IDs Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã Â«â€¹Ã ÂªÂ° Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾
+      'playlist_ids': playlist.map((e) => e.id).toList(),
     });
 
   }
@@ -538,7 +531,11 @@ class GlobalPlayer extends ChangeNotifier {
       );
 
       if (currentContext != null) {
-        AppToast.show(currentContext, "Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â§ Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚ÂªÃ‹â€  Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¡");
+        AppToast.show(
+          currentContext,
+          "Internet connection lost. Video cannot be played.",
+          type: ToastType.error, // જો તમારી એપમાં type સપોર્ટ કરતું હોય તો
+        );
       }
 
       notifyListeners();
