@@ -150,6 +150,6 @@ export 'package:media_player/widgets/image_item_widget.dart';
 export 'package:media_player/widgets/gallary_item_widget.dart';
 export 'package:media_player/widgets/shimmer_effect.dart';
 export 'package:media_player/widgets/customa_shape.dart';
-export 'package:media_player/widgets/diaalogue_helper.dart';
+export 'package:media_player/widgets/dialogue_helper.dart';
 export 'package:media_player/blocs/media/media_event.dart';
 export 'package:media_player/blocs/media/media_state.dart';

@@ -94,41 +94,78 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
   void _loadVideo() async {
     try {
-      // àªµàª¿àª¡àª¿àª¯à«‹ àª²à«‹àª¡ àª•àª°àªµàª¾àª¨à«àª‚ àª¶àª°à«‚ àª•àª°à«‹
       await _trimmer.loadVideo(videoFile: widget.file);
 
-      // àª•àª‚àªŸà«àª°à«‹àª²àª° àª¤à«ˆàª¯àª¾àª° àª¥àª¾àª¯ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àª°àª¾àª¹ àªœà«àª“
-      int retryCount = 0;
-      while (_trimmer.videoPlayerController == null ||
-          !_trimmer.videoPlayerController!.value.isInitialized) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        retryCount++;
-        if (retryCount > 25) break; // 5 àª¸à«‡àª•àª¨à«àª¡ àªªàª›à«€ àª…àªŸàª•à«€ àªœàª¶à«‡
+      // કંટ્રોલર ઈનીશિયલાઈઝ થાય ત્યાં સુધી વેઈટ કરો
+      int retry = 0;
+      while (_trimmer.videoPlayerController == null && retry < 50) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        retry++;
       }
 
-      final controller = _trimmer.videoPlayerController;
-      if (controller != null && mounted) {
+      if (_trimmer.videoPlayerController != null) {
+        final controller = _trimmer.videoPlayerController!;
+
+        // આ લાઈન મહત્વની છે: વિડિયોને થોડો આગળ લઈ જઈને પાછો લાવો
+        await controller.seekTo(const Duration(milliseconds: 100));
+        await controller.pause(); // શરૂઆતમાં પોઝ રાખો
+        await controller.seekTo(Duration.zero);
+
         final num bytes = await widget.file.length();
-        final duration = controller.value.duration;
 
         setState(() {
           _originalFileSizeBytes = bytes.toDouble();
-          _totalDurationMs = duration.inMilliseconds.toDouble();
+          _totalDurationMs = controller.value.duration.inMilliseconds.toDouble();
           _endValue = _totalDurationMs;
+          _isPlaying = false;
 
-          // Bitrate & Resolution
-          double mbps = (bytes * 8) / (duration.inSeconds * 1024 * 1024);
-          _bitRate = "${mbps.toStringAsFixed(2)} Mbps";
-          _resolution =
-          "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
-          _fileSize =
-          "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+          // બાકીની વિગતો...
+          _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
+          _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
         });
       }
     } catch (e) {
-      debugPrint("Error loading video: $e");
+      debugPrint("Error: $e");
     }
   }
+
+  // void _loadVideo() async {
+  //   try {
+  //     // àªµàª¿àª¡àª¿àª¯à«‹ àª²à«‹àª¡ àª•àª°àªµàª¾àª¨à«àª‚ àª¶àª°à«‚ àª•àª°à«‹
+  //     await _trimmer.loadVideo(videoFile: widget.file);
+  //
+  //     // àª•àª‚àªŸà«àª°à«‹àª²àª° àª¤à«ˆàª¯àª¾àª° àª¥àª¾àª¯ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àª°àª¾àª¹ àªœà«àª“
+  //     int retryCount = 0;
+  //     while (_trimmer.videoPlayerController == null ||
+  //         !_trimmer.videoPlayerController!.value.isInitialized) {
+  //       await Future.delayed(const Duration(milliseconds: 200));
+  //       retryCount++;
+  //       if (retryCount > 25) break; // 5 àª¸à«‡àª•àª¨à«àª¡ àªªàª›à«€ àª…àªŸàª•à«€ àªœàª¶à«‡
+  //     }
+  //
+  //     final controller = _trimmer.videoPlayerController;
+  //     if (controller != null && mounted) {
+  //       final num bytes = await widget.file.length();
+  //       final duration = controller.value.duration;
+  //
+  //       setState(() {
+  //         _originalFileSizeBytes = bytes.toDouble();
+  //         _totalDurationMs = duration.inMilliseconds.toDouble();
+  //         _endValue = _totalDurationMs;
+  //
+  //         // Bitrate & Resolution
+  //         double mbps = (bytes * 8) / (duration.inSeconds * 1024 * 1024);
+  //         _bitRate = "${mbps.toStringAsFixed(2)} Mbps";
+  //         _resolution =
+  //         "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
+  //         _fileSize =
+  //         "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+  //       });
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error loading video: $e");
+  //   }
+  // }
 
   String _getEstimateSize() {
     if (_trimmer.videoPlayerController == null) return _fileSize;
@@ -181,14 +218,14 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             _buildTopBar(),
             // build àª®à«‡àª¥àª¡àª¨à«€ àª…àª‚àª¦àª°:
             Expanded(
-              child:
-              _trimmer.videoPlayerController != null &&
-                  _trimmer.videoPlayerController!.value.isInitialized
-                  ? RepaintBoundary(child: VideoViewer(trimmer: _trimmer))
-                  : const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.blueAccent,
-                ),
+              child: Center(
+                child: (_trimmer.videoPlayerController != null &&
+                    _trimmer.videoPlayerController!.value.isInitialized)
+                    ? VideoViewer(
+                  key: UniqueKey(), // આ ઉમેરવાથી બ્લેક સ્ક્રીન કે લોડરનો પ્રોબ્લેમ સોલ્વ થશે
+                  trimmer: _trimmer,
+                )
+                    : const CircularProgressIndicator(),
               ),
             ),
             SizedBox(height: 16),
@@ -245,13 +282,17 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       //   ),
                       // const SizedBox(width: 20),
                       GestureDetector(
+                        // પ્લે બટન માટે આ લોજિક ટ્રાય કરો:
                         onTap: () async {
-                          bool playbackState = await _trimmer
-                              .videoPlaybackControl(
-                            startValue: _startValue,
-                            endValue: _endValue,
-                          );
-                          setState(() => _isPlaying = playbackState);
+                          final controller = _trimmer.videoPlayerController;
+                          if (controller != null && controller.value.isInitialized) {
+                            if (controller.value.isPlaying) {
+                              await controller.pause();
+                            } else {
+                              await controller.play();
+                            }
+                            // setState કરવાની જરૂર નથી કારણ કે આપણે controller.addListener ઉમેર્યું છે
+                          }
                         },
                         child: AppImage(
                           src: _isPlaying ? AppSvg.pauseVid : AppSvg.playVid,
@@ -378,7 +419,21 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
           const Spacer(),
           TextButton(
-            onPressed: (!_isTrimmed || _isSaving) ? null : _showAdDialog,
+            // onPressed: (!_isTrimmed || _isSaving) ? null : _showAdDialog,
+            onPressed: (!_isTrimmed || _isSaving) ? null :()async{
+
+
+                final controller = _trimmer.videoPlayerController;
+                if (controller != null && controller.value.isInitialized) {
+                  if (controller.value.isPlaying) {
+                    await controller.pause();
+                  } else {
+                    await controller.play();
+                  }
+                  // setState કરવાની જરૂર નથી કારણ કે આપણે controller.addListener ઉમેર્યું છે
+                }
+              _showAdDialog();},
+
             child: Text(
               "SAVE",
               style: TextStyle(
