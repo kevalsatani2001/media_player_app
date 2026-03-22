@@ -28,9 +28,15 @@ class _VideoScreenState extends State<VideoScreen> {
 
   void _onScroll() {
     if (_scrollController.position.extentAfter < 500) {
-      final state = context.read<VideoBloc>().state;
-      if (state is VideoLoaded && state.hasMore) {
-        context.read<VideoBloc>().add(LoadMoreVideos());
+      // àª…àª¹àª¿àª‚ Context àª¬àª°àª¾àª¬àª° àª®àª³à«‡ àª›à«‡ àª•à«‡ àª¨àª¹à«€àª‚ àª¤à«‡ àªšà«‡àª• àª•àª°à«‹
+      try {
+        final state = context.read<VideoBloc>().state;
+        if (state is VideoLoaded && state.hasMore) {
+          print("--- Loading More Videos ---"); // àª† àªªà«àª°àª¿àª¨à«àªŸ àªšà«‡àª• àª•àª°à«‹
+          context.read<VideoBloc>().add(LoadMoreVideos());
+        }
+      } catch (e) {
+        print("Error in scroll: $e");
       }
     }
   }
@@ -47,92 +53,100 @@ class _VideoScreenState extends State<VideoScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final box = Hive.box('videos');
-    if (widget.isComeHomeScreen)
-      return BlocProvider(
-        create: (_) =>
-            VideoBloc(Hive.box('videos'))
-              ..add(LoadVideosFromGallery(showLoading: false)),
-        child: Scaffold(
-          appBar: AppBar(
-            leading: Padding(
-              padding: const EdgeInsets.all(16),
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: AppImage(
-                  src: AppSvg.backArrowIcon,
-                  color: colors.blackColor,
-                  height: 20,
-                  width: 20,
-                ),
-              ),
-            ),
-            centerTitle: true,
-            title: AppText("videos", fontSize: 20, fontWeight: FontWeight.w500),
 
-            actions: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SearchScreen()),
-                  );
-                },
-                child: Container(
-                  height: 24,
-                  width: 24,
-                  child: Padding(
-                    padding: const EdgeInsets.all(2),
+
+    if (widget.isComeHomeScreen) {
+      return BlocProvider(
+        create: (_) => VideoBloc(Hive.box('videos'))
+          ..add(LoadVideosFromGallery(showLoading: false)),
+        child: Builder( // Builder àªµàª¾àªªàª°àªµà«‹ àªœàª°à«‚àª°à«€ àª›à«‡ àªœà«‡àª¥à«€ àª¨àªµà«‹ Context àª®àª³à«‡
+          builder: (context) {
+            return Scaffold(
+              appBar: AppBar(
+                leading: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
                     child: AppImage(
-                      src: "assets/svg_icon/search_icon.svg",
-                      height: 24,
-                      width: 24,
+                      src: AppSvg.backArrowIcon,
                       color: colors.blackColor,
+                      height: 20,
+                      width: 20,
                     ),
                   ),
                 ),
+                centerTitle: true,
+                title: AppText("videos", fontSize: 20, fontWeight: FontWeight.w500),
+
+                actions: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                      );
+                    },
+                    child: Container(
+                      height: 24,
+                      width: 24,
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
+                        child: AppImage(
+                          src: "assets/svg_icon/search_icon.svg",
+                          height: 24,
+                          width: 24,
+                          color: colors.blackColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Builder(builder: (context) {
+                  //   return IconButton(
+                  //     icon: const Icon(Icons.add),
+                  //     onPressed: () {
+                  //       context.read<VideoBloc>().add(
+                  //         PickVideos(() async {}),
+                  //       );
+                  //     },
+                  //   );
+                  // }),
+                  SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isGridView = !_isGridView;
+                      });
+                    },
+                    child: AppImage(
+                      src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                      color: colors.blackColor,
+                    ),
+                  ),
+                  SizedBox(width: 15),
+                ],
               ),
-              // Builder(builder: (context) {
-              //   return IconButton(
-              //     icon: const Icon(Icons.add),
-              //     onPressed: () {
-              //       context.read<VideoBloc>().add(
-              //         PickVideos(() async {}),
-              //       );
-              //     },
-              //   );
-              // }),
-              SizedBox(width: 12),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isGridView = !_isGridView;
-                  });
-                },
-                child: AppImage(
-                  src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
-                  color: colors.blackColor,
-                ),
-              ),
-              SizedBox(width: 15),
-            ],
-          ),
-          body: SafeArea(
-            child: Stack(
-              children: [
-                Column(
+              body: SafeArea(
+                child: Stack(
                   children: [
-                    /// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ 1. TOP ADAPTIVE BANNER
-                    AdHelper.adaptiveBannerWidget(context),
-                    Expanded(child: _buildVideoPage()),
+                    Column(
+                      children: [
+                        /// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ 1. TOP ADAPTIVE BANNER
+                        AdHelper.adaptiveBannerWidget(context),
+                        Expanded(child: _buildVideoPage()),
+                      ],
+                    ),
+                    SmartMiniPlayer(forceMiniMode: true),
+                    // Aa widget potani rite handle karshe
                   ],
                 ),
-                SmartMiniPlayer(forceMiniMode: true),
-                // Aa widget potani rite handle karshe
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       );
+    }
+
+
     else
       return Stack(
         children: [
@@ -160,7 +174,7 @@ class _VideoScreenState extends State<VideoScreen> {
               ),
               Divider(color: colors.dividerColor),
 
-              /// ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ 2. TOP BANNER FOR TAB VIEW
+              /// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ 2. TOP BANNER FOR TAB VIEW
               AdHelper.adaptiveBannerWidget(context),
 
               Expanded(child: _buildVideoPage()),
@@ -175,7 +189,7 @@ class _VideoScreenState extends State<VideoScreen> {
   Widget _buildVideoPage() {
     return BlocBuilder<VideoBloc, VideoState>(
       buildWhen: (previous, current) =>
-          current is VideoLoaded ||
+      current is VideoLoaded ||
           current is VideoLoading ||
           current is VideoError,
       builder: (context, state) {
@@ -191,15 +205,39 @@ class _VideoScreenState extends State<VideoScreen> {
           final entitiesToShow = _searchQuery.isEmpty
               ? state.entities
               : state.entities.where((e) {
-                  final name = (e is AssetEntity)
-                      ? (e.title ?? '')
-                      : (e as MediaItem).path.split('/').last;
-                  return name.toLowerCase().contains(_searchQuery);
-                }).toList();
+            final name = (e is AssetEntity)
+                ? (e.title ?? '')
+                : (e as MediaItem).path.split('/').last;
+            return name.toLowerCase().contains(_searchQuery);
+          }).toList();
 
           if (entitiesToShow.isEmpty && _searchQuery.isNotEmpty) {
             return const Center(child: AppText("noResultFound"));
           }
+
+
+          return NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification scrollInfo) {
+              // àªœà«‹ àª¯à«àªàª° àª›à«‡àª²à«àª²à«‡ àªªàª¹à«‹àª‚àªšà«‡ (80% àª¸à«àª•à«àª°à«àª°à«‹àª² àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àªœ àª²à«‹àª¡ àª•àª°à«‹)
+              if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                if (state.hasMore) {
+                  context.read<VideoBloc>().add(LoadMoreVideos());
+                }
+              }
+              return true;
+            },
+            child: _isGridView
+                ? _buildGridView(
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('grid'),
+            )
+                : _buildListView(
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('list'),
+            ),
+          );
 
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),
@@ -217,15 +255,15 @@ class _VideoScreenState extends State<VideoScreen> {
             },
             child: _isGridView
                 ? _buildGridView(
-                    entitiesToShow,
-                    state.hasMore,
-                    key: const ValueKey('grid'),
-                  )
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('grid'),
+            )
                 : _buildListView(
-                    entitiesToShow,
-                    state.hasMore,
-                    key: const ValueKey('list'),
-                  ),
+              entitiesToShow,
+              state.hasMore,
+              key: const ValueKey('list'),
+            ),
           );
         }
         return const SizedBox();
@@ -234,11 +272,15 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    const int adIndexInterval = 5;
+    const int adIndexInterval = 4; // àª¦àª° 4 àªµàª¿àª¡àª¿àª¯à«‹ àªªàª›à«€ àªàª• àªàª¡ (àª•à«àª² 5 àª®à«‹ àª†àªˆàªŸàª®)
 
-    int totalItems =
-        entitiesToShow.length + (entitiesToShow.length ~/ adIndexInterval);
-    if (hasMore) totalItems++;
+    // àªàª¡à«àª¸àª¨à«€ àª¸àª‚àª–à«àª¯àª¾ àª—àª£àªµàª¾ àª®àª¾àªŸà«‡:
+    int adCount = entitiesToShow.length ~/ adIndexInterval;
+    int totalItems = entitiesToShow.length + adCount;
+
+    // 3. àªœà«‹ àª¹àªœà«€ àªµàª§àª¾àª°à«‡ àª¡à«‡àªŸàª¾ àª¹à«‹àª¯ (Pagination), àª¤à«‹ àªœ àª²à«‹àª¡àª° àª®àª¾àªŸà«‡ +1 àª•àª°à«‹
+    // àªªàª£ àªœà«‹ àª¬àª§àª¾ 24 àªµàª¿àª¡àª¿àª¯à«‹ àª²à«‹àª¡ àª¥àªˆ àª—àª¯àª¾ àª¹à«‹àª¯, àª¤à«‹ hasMore 'false' àª¹à«‹àªµà«àª‚ àªœà«‹àªˆàª
+    int finalItemCount = hasMore ? totalItems + 1 : totalItems;
 
     return GridView.builder(
       key: key,
@@ -254,11 +296,18 @@ class _VideoScreenState extends State<VideoScreen> {
       itemCount: totalItems,
       // itemCount: hasMore ? entitiesToShow.length + 1 : entitiesToShow.length,
       itemBuilder: (context, index) {
-        // 1. Loader check
-        if (hasMore && index == totalItems - 1) {
-          return const Center(child: CustomLoader());
+        // ðŸ’¡ àª®àª¹àª¤à«àªµàª¨à«‹ àª¸à«àª§àª¾àª°à«‹: àªœà«‹ àª† àª›à«‡àª²à«àª²à«‹ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª…àª¨à«‡ hasMore àª¸àª¾àªšà«àª‚ àª¹à«‹àª¯ àª¤à«‹ àªœ àª²à«‹àª¡àª° àª¬àª¤àª¾àªµà«‹
+        if (hasMore && index == finalItemCount - 1) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CustomLoader(), // àª…àª¥àªµàª¾ CircularProgressIndicator()
+            ),
+          );
         }
 
+        // 2. àªàª¡ àª•à«àª¯àª¾àª°à«‡ àª¬àª¤àª¾àªµàªµà«€ àª¤à«‡àª¨à«€ àª²à«‹àªœàª¿àª• (àª¦àª° 5àª®à«‹ àª†àªˆàªŸàª® àªàª¡ àª¹àª¶à«‡ àªœà«‹ Interval 4 àª¹à«‹àª¯)
+        // (index + 1) % 5 == 0 -> 4, 9, 14... àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªªàª° àªàª¡ àª†àªµàª¶à«‡
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
           return Container(
             decoration: BoxDecoration(
@@ -278,10 +327,14 @@ class _VideoScreenState extends State<VideoScreen> {
           );
         }
 
+        // 3. àª¸àª¾àªšà«‹ àªµàª¿àª¡àª¿àª¯à«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ (actualIndex) àª¶à«‹àª§àªµàª¾ àª®àª¾àªŸà«‡
+        // àª…àª¤à«àª¯àª¾àª° àª¸à«àª§à«€ àª•à«‡àªŸàª²à«€ àªàª¡à«àª¸ àª†àªµà«€ àª—àªˆ àª›à«‡ àª¤à«‡ àª¬àª¾àª¦ àª•àª°à«‹
         final int actualIndex = index - (index ~/ (adIndexInterval + 1));
 
-        if (actualIndex >= entitiesToShow.length)
+        // àª¸à«àª°àª•à«àª·àª¾ àªšà«‡àª•: àªœà«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª²àª¿àª¸à«àªŸàª¨à«€ àª¬àª¹àª¾àª° àªœàª¤à«‹ àª¹à«‹àª¯ àª¤à«‹ àª–àª¾àª²à«€ àªœàª—à«àª¯àª¾ àª¬àª¤àª¾àªµà«‹
+        if (actualIndex >= entitiesToShow.length) {
           return const SizedBox.shrink();
+        }
 
         final entity = entitiesToShow[actualIndex];
 
@@ -307,67 +360,67 @@ class _VideoScreenState extends State<VideoScreen> {
                   Expanded(
                     child: entity is AssetEntity
                         ? ImageItemWidget(
-                            onMenuSelected: (action) async {
-                              switch (action) {
-                                case MediaMenuAction.detail:
-                                  routeToDetailPage(context, entity);
-                                  break;
+                      onMenuSelected: (action) async {
+                        switch (action) {
+                          case MediaMenuAction.detail:
+                            routeToDetailPage(context, entity);
+                            break;
 
-                                case MediaMenuAction.info:
-                                  showInfoDialog(context, entity);
-                                  break;
+                          case MediaMenuAction.info:
+                            showInfoDialog(context, entity);
+                            break;
 
-                                case MediaMenuAction.thumb:
-                                  showThumb(entity, 500);
-                                  break;
+                          case MediaMenuAction.thumb:
+                            showThumb(entity, 500);
+                            break;
 
-                                case MediaMenuAction.share:
-                                  shareItem(context, entity);
-                                  break;
+                          case MediaMenuAction.share:
+                            shareItem(context, entity);
+                            break;
 
-                                case MediaMenuAction.delete:
-                                  deleteCurrentItem(context, entity);
-                                  break;
+                          case MediaMenuAction.delete:
+                            deleteCurrentItem(context, entity);
+                            break;
 
-                                case MediaMenuAction.addToFavourite:
-                                  await _toggleFavourite(
-                                    context,
-                                    entity,
-                                    index,
-                                  );
-                                  break;
-                                case MediaMenuAction.addToPlaylist:
-                                  final file = await entity.file;
-                                  addToPlaylist(
-                                    MediaItem(
-                                      path: file!.path,
-                                      isNetwork: false,
-                                      type: entity.type == AssetType.audio
-                                          ? "audio"
-                                          : "video",
-                                      id: entity.id,
-                                      isFavourite: entity.isFavorite,
-                                    ),
-                                    context,
-                                  );
-                                  break;
-                              }
-                            },
-                            onTap: null,
-                            entity: entity,
-                            option: const ThumbnailOption(
-                              size: ThumbnailSize.square(150),
-                            ),
-                          )
-                        : Container(
-                            color: Colors.black12,
-                            child: Center(
-                              child: Text(
-                                (entity as MediaItem).path.split('/').last,
-                                textAlign: TextAlign.center,
+                          case MediaMenuAction.addToFavourite:
+                            await _toggleFavourite(
+                              context,
+                              entity,
+                              index,
+                            );
+                            break;
+                          case MediaMenuAction.addToPlaylist:
+                            final file = await entity.file;
+                            addToPlaylist(
+                              MediaItem(
+                                path: file!.path,
+                                isNetwork: false,
+                                type: entity.type == AssetType.audio
+                                    ? "audio"
+                                    : "video",
+                                id: entity.id,
+                                isFavourite: entity.isFavorite,
                               ),
-                            ),
-                          ),
+                              context,
+                            );
+                            break;
+                        }
+                      },
+                      onTap: null,
+                      entity: entity,
+                      option: const ThumbnailOption(
+                        size: ThumbnailSize.square(150),
+                      ),
+                    )
+                        : Container(
+                      color: Colors.black12,
+                      child: Center(
+                        child: Text(
+                          (entity as MediaItem).path.split('/').last,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -386,7 +439,7 @@ class _VideoScreenState extends State<VideoScreen> {
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
       itemCount:
-          (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
+      (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
           (entitiesToShow.length ~/ adIndexInterval),
       itemBuilder: (context, index) {
         if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
@@ -516,10 +569,10 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   Future<void> _toggleFavourite(
-    BuildContext context,
-    AssetEntity entity,
-    int index,
-  ) async {
+      BuildContext context,
+      AssetEntity entity,
+      int index,
+      ) async {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -576,11 +629,11 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   void _navigateToPlayer(
-    BuildContext context,
-    List<dynamic> allEntities,
-    int currentIndex,
-    dynamic currentItem,
-  ) async {
+      BuildContext context,
+      List<dynamic> allEntities,
+      int currentIndex,
+      dynamic currentItem,
+      ) async {
     void moveNext() async {
       bool isAudio = false;
       if (currentItem is AssetEntity) {

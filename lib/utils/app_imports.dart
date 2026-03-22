@@ -36,7 +36,7 @@ export 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 export 'package:just_audio/just_audio.dart';
 export 'package:audio_session/audio_session.dart';
 export 'package:video_player/video_player.dart';
-export 'package:chewie/chewie.dart';
+// export 'package:chewie/chewie.dart';
 export 'package:gal/gal.dart';
 export 'package:path_provider/path_provider.dart';
 export 'package:video_trimmer/video_trimmer.dart';
@@ -150,6 +150,6 @@ export 'package:media_player/widgets/image_item_widget.dart';
 export 'package:media_player/widgets/gallary_item_widget.dart';
 export 'package:media_player/widgets/shimmer_effect.dart';
 export 'package:media_player/widgets/customa_shape.dart';
-
+export 'package:media_player/widgets/diaalogue_helper.dart';
 export 'package:media_player/blocs/media/media_event.dart';
 export 'package:media_player/blocs/media/media_state.dart';

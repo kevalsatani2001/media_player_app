@@ -401,12 +401,12 @@ class _AudioBodyState extends State<_AudioBody>
       });
     }
 
-     _audioClickCount++;
+    _audioClickCount++;
 
-     if (_audioClickCount % 4 == 0) {
+    if (_audioClickCount % 4 == 0) {
       debugPrint("Showing Interstitial Ad before audio player...");
 
-       AdHelper.showInterstitialAd(() {
+      AdHelper.showInterstitialAd(() {
         openAudioPlayer();
       });
     } else {

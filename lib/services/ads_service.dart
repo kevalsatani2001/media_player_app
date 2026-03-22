@@ -1,8 +1,4 @@
-import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 
@@ -35,57 +31,80 @@ class AdHelper {
   static bool _isShowingAd = false;
   static DateTime? _appOpenLoadTime;
 
-  // AdHelper Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¾Ã ÂªÂ¸Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° Ã Âªâ€  Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹:
+  // AdHelper Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ¢â‚¬  Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹:
 
-  static int _playCount = 0; // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€”Ã ÂªÂ£Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+  static int _playCount =
+      0; // Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â£Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡
 
-  static void playVideoWithAds(BuildContext context, VoidCallback startVideo) async {
+  static void playVideoWithAds(
+    BuildContext context,
+    VoidCallback startVideo,
+  ) async {
     bool isOnline = await NetworkInfo.isConnected();
     _playCount++;
 
     if (isOnline) {
-      // --- Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ¨Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹: Ã ÂªÂ¦Ã ÂªÂ° Ã Â«Â© Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹Ã ÂªÂ Interstitial Ã ÂªÂÃ ÂªÂ¡ ---
+      // --- Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬Å“Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹: Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚Â«Ã‚Â© Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â Interstitial Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡ ---
       if (_playCount % 3 == 0) {
         showInterstitialAd(startVideo);
       } else {
         startVideo();
       }
     } else {
-      // --- Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ«Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹: Ã Â«Â©Ã Â«Â¦ Ã ÂªÂ¸Ã Â«â€¡Ã Âªâ€¢Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã ÂªÂµÃ Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€” Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ®Ã ÂªÂ° ---
+      // --- Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬Å“Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹: Ãƒ Ã‚Â«Ã‚Â©Ãƒ Ã‚Â«Ã‚Â¦ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬â€ Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â° ---
       _showOfflineTimerDialog(context, startVideo);
     }
   }
 
-  static void _showOfflineTimerDialog(BuildContext context, VoidCallback onFinish) {
+  static void _showOfflineTimerDialog(
+    BuildContext context,
+    VoidCallback onFinish,
+  ) {
     int timeLeft = 30;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          // Ã ÂªÅ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ®Ã ÂªÂ° Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+          // Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
           Timer.periodic(const Duration(seconds: 1), (timer) {
             if (timeLeft > 0) {
               if (context.mounted) setDialogState(() => timeLeft--);
             } else {
               timer.cancel();
               if (context.mounted) {
-                Navigator.pop(context); // Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€” Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-                onFinish(); // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¶Ã ÂªÂ°Ã Â«â€š Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+                Navigator.pop(
+                  context,
+                ); // Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ¢â‚¬â€ Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ‚Â§ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
+                onFinish(); // Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
               }
             }
           });
 
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            title: const Text("Internet Required Ã°Å¸â€œÂ¶", style: TextStyle(color: Colors.red)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: const Text(
+              "Internet Required ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¶",
+              style: TextStyle(color: Colors.red),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("To skip waiting and support this app, please turn on internet."),
+                const Text(
+                  "To skip waiting and support this app, please turn on internet.",
+                ),
                 const SizedBox(height: 20),
                 const Text("Otherwise, video starts in:"),
-                Text("$timeLeft", style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.blue)),
+                Text(
+                  "$timeLeft",
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -108,7 +127,7 @@ class AdHelper {
   // --- 2. Adaptive Banner Ad Widget ---
   static Widget adaptiveBannerWidget(BuildContext context) {
     return FutureBuilder<AdSize?>(
-      // àª…àª¹à«€àª‚ àªµàª¿àª¡à«àª¥àª®àª¾àª‚àª¥à«€ àª®àª¾àª°à«àªœàª¿àª¨ àª¬àª¾àª¦ àª•àª°àªµàª¾àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€, AdSize àªªà«‹àª¤à«‡ àªàª¡àªœàª¸à«àªŸ àª•àª°àª¶à«‡
+      // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã Â«ÂÃ ÂªÂ¥Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨ Ã ÂªÂ¬Ã ÂªÂ¾Ã ÂªÂ¦ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ° Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬, AdSize Ã ÂªÂªÃ Â«â€¹Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂÃ ÂªÂ¡Ã ÂªÅ“Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
       future: AdSize.getAnchoredAdaptiveBannerAdSize(
         Orientation.portrait,
         MediaQuery.of(context).size.width.truncate(),
@@ -117,7 +136,7 @@ class AdHelper {
         if (snapshot.hasData && snapshot.data != null) {
           return BannerAdWidget(size: snapshot.data!);
         } else {
-          // àªœà«àª¯àª¾àª°à«‡ àª¡à«‡àªŸàª¾ àª²à«‹àª¡ àª¥àª¤à«‹ àª¹à«‹àª¯ àª¤à«àª¯àª¾àª°à«‡ àª¸à«‡àª« àª¸àª¾àªˆàª àª†àªªà«‹
+          // Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¾ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã ÂªÂ¥Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂ« Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ Ã Âªâ€ Ã ÂªÂªÃ Â«â€¹
           return BannerAdWidget(size: AdSize.banner);
         }
       },
@@ -133,7 +152,7 @@ class AdHelper {
       child: Container(
         width: size.width.toDouble(),
         height: size.height.toDouble(),
-        margin: const EdgeInsets.symmetric(vertical: 8,horizontal: 15),
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.blue.shade700, Colors.blue.shade400],
@@ -164,7 +183,7 @@ class AdHelper {
     return Container(
       width: size.width.toDouble(),
       height: size.height.toDouble(),
-      margin: const EdgeInsets.symmetric(vertical: 8,horizontal: 15),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
       decoration: BoxDecoration(
         color: Colors.grey.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
@@ -181,8 +200,9 @@ class AdHelper {
 
   // --- 5. App Open Ad ---
   static void loadAppOpenAd() async {
-    // Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸ Ã ÂªÅ¡Ã Â«â€¡Ã Âªâ€¢ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-    final List<ConnectivityResult> results = await Connectivity().checkConnectivity();
+    // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
+    final List<ConnectivityResult> results = await Connectivity()
+        .checkConnectivity();
     if (results.contains(ConnectivityResult.none)) return;
 
     AppOpenAd.load(
@@ -215,7 +235,9 @@ class AdHelper {
     }
 
     if (isFullScreenAdShowing) {
-      debugPrint("Ã ÂªÂ¬Ã Â«â‚¬Ã ÂªÅ“Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÅ¡Ã ÂªÂ¾Ã ÂªÂ²Ã Â«Â Ã Âªâ€ºÃ Â«â€¡, App Open Ad Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«â‚¬Ã ÂªÂª Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬.");
+      debugPrint(
+        "Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, App Open Ad Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Âª Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬.",
+      );
       return;
     }
 
@@ -258,10 +280,12 @@ class AdHelper {
         onAdLoaded: (ad) {
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdShowedFullScreenContent: (ad) {
-              isFullScreenAdShowing = true; // Ã Âªâ€¦Ã Âªâ€”Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š: Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«Â Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«ÂÃ Âªâ€š
+              isFullScreenAdShowing =
+                  true; // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡: Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡
             },
             onAdDismissedFullScreenContent: (ad) {
-              isFullScreenAdShowing = false; // Ã Âªâ€¦Ã Âªâ€”Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š: Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ«Ã Â«â€¹Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«ÂÃ Âªâ€š
+              isFullScreenAdShowing =
+                  false; // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡: Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡
               ad.dispose();
               onAdDismissed();
             },
@@ -282,18 +306,48 @@ class AdHelper {
   }
 
   // --- 7. Rewarded Ad ---
-  static void showRewardedAd(VoidCallback onRewardEarned) {
+  static void showRewardedAd(
+    BuildContext context,
+    // Context àª‰àª®à«‡àª°àªµà«‹ àªœàª°à«‚àª°à«€ àª›à«‡ Dialog àª¬àª‚àª§ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+    VoidCallback onRewardEarned, {
+    VoidCallback? errorFunction,
+  }) {
+    // à«§. àª²à«‹àª¡àª¿àª‚àª— àª¡àª¾àª¯àª²à«‹àª— àª¬àª¤àª¾àªµà«‹
+    DialogHelper.showAdLoadingDialog(context);
+
     RewardedAd.load(
       adUnitId: rewardedId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
+          // à«¨. àªàª¡ àª²à«‹àª¡ àª¥àªˆ àª—àªˆ, àª¹àªµà«‡ àª²à«‹àª¡àª° àª¬àª‚àª§ àª•àª°à«‹
+          DialogHelper.hideDialog(context);
+
           ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) => ad.dispose(),
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              if (errorFunction != null) errorFunction();
+            },
           );
-          ad.show(onUserEarnedReward: (ad, reward) => onRewardEarned());
+
+          ad.show(
+            onUserEarnedReward: (ad, reward) {
+              onRewardEarned();
+            },
+          );
         },
-        onAdFailedToLoad: (error) => debugPrint("Rewarded Error: $error"),
+        onAdFailedToLoad: (error) {
+          // à«©. àªàª¡ àª²à«‹àª¡ àª¨ àª¥àªˆ, àª²à«‹àª¡àª° àª¬àª‚àª§ àª•àª°à«‹ àª…àª¨à«‡ àªàª°àª° àª«àª‚àª•à«àª¶àª¨ àª•à«‹àª² àª•àª°à«‹
+          DialogHelper.hideDialog(context);
+          debugPrint("Rewarded Error: $error");
+
+          if (errorFunction != null) {
+            errorFunction(); // àª…àª¹à«€àª‚ () àª‰àª®à«‡àª°àªµà«àª‚ àªœàª°à«‚àª°à«€ àª›à«‡
+          }
+        },
       ),
     );
   }
@@ -319,8 +373,10 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     super.initState();
     _loadAd();
 
-    // Ã Â«Â§. Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂµÃ ÂªÂ°Ã Â«ÂÃ Âªâ€¢ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂÃ ÂªÂ¨Ã ÂªÂ° Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€ Ã ÂªÂµÃ Â«â€¡ Ã Âªâ€¢Ã Â«â€¡ Ã ÂªÂ¤Ã ÂªÂ°Ã ÂªÂ¤ Ã ÂªÅ“ Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+    // Ãƒ Ã‚Â«Ã‚Â§. Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¤ Ãƒ Ã‚ÂªÃ…â€œ Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      results,
+    ) {
       bool isOnline = !results.contains(ConnectivityResult.none);
       if (isOnline && !_isLoaded) {
         debugPrint("Network Restored: Loading Banner Ad...");
@@ -329,7 +385,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     });
   }
 
-  // Ã Â«Â¨. Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ°Ã ÂªÂ¾Ã ÂªÂ®Ã Â«â‚¬Ã ÂªÅ¸Ã ÂªÂ° Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂ«Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+  // Ãƒ Ã‚Â«Ã‚Â¨. Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
   @override
   void didUpdateWidget(covariant BannerAdWidget oldWidget) {
     super.didUpdateWidget(oldWidget);

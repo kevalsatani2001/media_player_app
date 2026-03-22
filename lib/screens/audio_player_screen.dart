@@ -331,24 +331,6 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
     );
   }
 
-  Widget _buildVideoPlayer() {
-    if (player.chewieController == null ||
-        player.videoController == null ||
-        !player.videoController!.value.isInitialized) {
-      return _buildVideoLoadingPlaceholder();
-    }
-
-     if (player.chewieController != null &&
-        player.chewieController!.videoPlayerController.value.isInitialized) {
-      return Chewie(
-        key: ValueKey(player.currentEntity?.id ?? "default_video"),
-        controller: player.chewieController!,
-      );
-    } else {
-      return const CustomLoader();
-    }
-  }
-
   String _fmt(Duration d) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     return "${twoDigits(d.inMinutes.remainder(60))}:${twoDigits(d.inSeconds.remainder(60))}";

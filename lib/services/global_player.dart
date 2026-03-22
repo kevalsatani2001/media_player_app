@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio_background/just_audio_background.dart' as bg;
 import '../models/media_item.dart' as my;
@@ -9,6 +10,7 @@ import 'notification_service.dart';
 class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
   VoidCallback? _currentListener;
+
   factory GlobalPlayerService() => _instance;
   GlobalPlayerService._internal();
 
@@ -32,7 +34,8 @@ class GlobalPlayerService {
         : await Hive.openBox('last_played');
 
     await box.put('last_id', playlist[currentIndex].id);
-    await box.put('last_position', controller!.value.position.inMilliseconds);
+    await box.put(
+        'last_position', controller!.value.position.inMilliseconds);
     await box.put('last_index', currentIndex);
   }
 
@@ -44,7 +47,7 @@ class GlobalPlayerService {
     }
     playlist = list;
     currentIndex = index < list.length ? index : 0;
-    await loadVideo(onUpdate,seekToMs: seekToMs);
+    await loadVideo(onUpdate, seekToMs: seekToMs);
   }
 
   Future<void> loadVideo(Function onUpdate, {int? seekToMs}) async {
@@ -52,49 +55,82 @@ class GlobalPlayerService {
 
     final entity = playlist[currentIndex];
     final file = await entity.file;
-    if (file == null) return;
+
+    // ✅ Step 4: File Safety Check
+    if (file == null || !await file.exists()) {
+      print("❌ File not found / deleted");
+      playNext(onUpdate);
+      return;
+    }
 
     isInitialized = false;
 
-    if (controller != null) {
-      if (_currentListener != null) {
-        controller!.removeListener(_currentListener!);
+    try {
+      if (controller != null) {
+        clearListener();
+        await controller!.dispose();
+        controller = null;
       }
-      await controller!.dispose();
-      controller = null;
-    }
 
-    controller = VideoPlayerController.file(file);
+      controller = VideoPlayerController.file(file);
 
-    _currentListener = () {
-      // --- àª† àª¨àªµà«‹ àª­àª¾àª— àª‰àª®à«‡àª°à«‹ ---
-      if (isInitialized && controller != null) {
-        // àªœà«‹ àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‚àª°à«‹ àª¥àªˆ àª—àª¯à«‹ àª¹à«‹àª¯
-        if (controller!.value.position >= controller!.value.duration &&
-            !controller!.value.isPlaying &&
-            controller!.value.isInitialized) {
+      // ✅ Step 5: Retry + Timeout
+      int retry = 0;
+      while (retry < 2) {
+        try {
+          await controller!
+              .initialize()
+              .timeout(const Duration(seconds: 10));
+          break;
+        } catch (e) {
+          retry++;
+          print("⚠️ Retry $retry");
 
-           playNext(onUpdate);
-          return;
+          if (retry >= 2) {
+            print("❌ Failed after retry");
+            playNext(onUpdate);
+            return;
+          }
         }
       }
-      // -----------------------
+
+      if (seekToMs != null) {
+        await controller!.seekTo(Duration(milliseconds: seekToMs));
+      }
+
+      isInitialized = true;
+
+      controller!.setVolume(isMuted ? 0 : volume);
+      controller!.setLooping(isLooping);
+
+      await controller!.play();
+
+      // 🔥 Ensure video actually started
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!controller!.value.isPlaying) {
+        throw Exception("Video not playing");
+      }
+
+      _currentListener = () {
+        if (isInitialized && controller != null) {
+          if (controller!.value.position >= controller!.value.duration &&
+              !controller!.value.isPlaying &&
+              controller!.value.isInitialized) {
+            playNext(onUpdate);
+            return;
+          }
+        }
+        onUpdate();
+      };
+
+      controller!.addListener(_currentListener!);
       onUpdate();
-    };
+    } catch (e) {
+      print("❌ Video load failed: $e");
 
-    await controller!.initialize();
-
-    if (seekToMs != null) {
-      await controller!.seekTo(Duration(milliseconds: seekToMs));
+      // 🔥 Auto skip
+      playNext(onUpdate);
     }
-
-    isInitialized = true;
-    controller!.setVolume(isMuted ? 0 : volume);
-    controller!.setLooping(isLooping);
-    controller!.play();
-
-    controller!.addListener(_currentListener!);
-    onUpdate();
   }
 
   void clearListener() {
@@ -107,14 +143,15 @@ class GlobalPlayerService {
   void playNext(Function onUpdate) {
     if (playlist.isEmpty) return;
 
+    // ✅ Shuffle Fix
     if (isShuffle && playlist.length > 1) {
-      currentIndex = (DateTime.now().millisecondsSinceEpoch) % playlist.length;
+      final random = Random();
+      currentIndex = random.nextInt(playlist.length);
     } else if (currentIndex < playlist.length - 1) {
       currentIndex++;
     } else {
       currentIndex = 0;
     }
-
 
     clearListener();
     loadVideo(onUpdate);
@@ -131,7 +168,20 @@ class GlobalPlayerService {
 
   void togglePlay() {
     if (controller == null) return;
-    controller!.value.isPlaying ? controller!.pause() : controller!.play();
+    controller!.value.isPlaying
+        ? controller!.pause()
+        : controller!.play();
+  }
+
+  Future<void> playNetworkStream(
+      String url, VoidCallback onInitialized) async {
+    await controller?.dispose();
+    controller = VideoPlayerController.networkUrl(Uri.parse(url));
+
+    await controller!.initialize();
+    isInitialized = true;
+    controller!.play();
+    onInitialized();
   }
 }
 
@@ -147,9 +197,9 @@ extension SaveState on GlobalPlayerService {
       'position': controller!.value.position.inMilliseconds,
       'playlist_ids': playlist.map((e) => e.id).toList(),
     });
-
   }
 }
+
 
 class GlobalPlayer extends ChangeNotifier {
   static final GlobalPlayer _instance = GlobalPlayer._internal();
@@ -190,7 +240,7 @@ class GlobalPlayer extends ChangeNotifier {
 
   final AudioPlayer audioPlayer = AudioPlayer();
   VideoPlayerController? videoController;
-  ChewieController? chewieController;
+  // ChewieController? chewieController;
 
   List<my.MediaItem> queue = [];
   int currentIndex = -1;
@@ -272,9 +322,9 @@ class GlobalPlayer extends ChangeNotifier {
       }
       await audioPlayer.setLoopMode(loopMode);
     } else {
-      bool currentLoop = chewieController?.looping ?? false;
-      chewieController?.dispose();
-      videoController?.setLooping(!currentLoop);
+      // bool currentLoop = chewieController?.looping ?? false;
+      // chewieController?.dispose();
+      // videoController?.setLooping(!currentLoop);
     }
     notifyListeners();
   }
@@ -321,7 +371,7 @@ class GlobalPlayer extends ChangeNotifier {
           audioPlayer.play();
         } else {
           print("ty is ===> ------>  video");
-          await _setupVideoPlayer(queue[currentIndex].path);
+          // await _setupVideoPlayer(queue[currentIndex].path);
         }
       } catch (e) {
         debugPrint("Init Error: $e");
@@ -405,33 +455,33 @@ class GlobalPlayer extends ChangeNotifier {
 
   LoopMode loopMode = LoopMode.off;
 
-  Future<void> _setupVideoPlayer(String path) async {
-    videoController = VideoPlayerController.file(File(path));
-    await videoController!.initialize();
-
-    chewieController = ChewieController(
-      zoomAndPan: true,
-      aspectRatio: videoController!.value.aspectRatio,
-      autoPlay: true,
-      looping: loopMode == LoopMode.one,
-      videoPlayerController: videoController!,
-      deviceOrientationsOnEnterFullScreen: [
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ],
-      deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
-      materialProgressColors: ChewieProgressColors(
-        playedColor: const Color(0XFF3D57F9),
-        backgroundColor: const Color(0XFFF6F6F6),
-      ),
-      onSufflePressed: () => toggleShuffle(),
-      onNextVideo: () => playNext(),
-      onPreviousVideo: () => playPrevious(),
-      additionalOptions: (context) => _buildAdditionalOptions(context),
-    );
-
-    videoController!.addListener(_videoListener);
-  }
+  // Future<void> _setupVideoPlayer(String path) async {
+  //   videoController = VideoPlayerController.file(File(path));
+  //   await videoController!.initialize();
+  //
+  //   chewieController = ChewieController(
+  //     zoomAndPan: true,
+  //     aspectRatio: videoController!.value.aspectRatio,
+  //     autoPlay: true,
+  //     looping: loopMode == LoopMode.one,
+  //     videoPlayerController: videoController!,
+  //     deviceOrientationsOnEnterFullScreen: [
+  //       DeviceOrientation.landscapeLeft,
+  //       DeviceOrientation.landscapeRight,
+  //     ],
+  //     deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
+  //     materialProgressColors: ChewieProgressColors(
+  //       playedColor: const Color(0XFF3D57F9),
+  //       backgroundColor: const Color(0XFFF6F6F6),
+  //     ),
+  //     onSufflePressed: () => toggleShuffle(),
+  //     onNextVideo: () => playNext(),
+  //     onPreviousVideo: () => playPrevious(),
+  //     additionalOptions: (context) => _buildAdditionalOptions(context),
+  //   );
+  //
+  //   videoController!.addListener(_videoListener);
+  // }
 
   void _videoListener() {
     if (currentIndex == -1) return; // Safety check
@@ -486,14 +536,14 @@ class GlobalPlayer extends ChangeNotifier {
       videoController!.removeListener(_videoListener);
 
       final oldVideoController = videoController;
-      final oldChewieController = chewieController;
+      // final oldChewieController = chewieController;
 
       videoController = null;
-      chewieController = null;
+      // chewieController = null;
 
       Future.delayed(Duration.zero, () {
         oldVideoController?.dispose();
-        oldChewieController?.dispose();
+        // oldChewieController?.dispose();
       });
     }
 
@@ -534,7 +584,7 @@ class GlobalPlayer extends ChangeNotifier {
         AppToast.show(
           currentContext,
           "Internet connection lost. Video cannot be played.",
-          type: ToastType.error, // જો તમારી એપમાં type સપોર્ટ કરતું હોય તો
+          type: ToastType.error, // àªœà«‹ àª¤àª®àª¾àª°à«€ àªàªªàª®àª¾àª‚ type àª¸àªªà«‹àª°à«àªŸ àª•àª°àª¤à«àª‚ àª¹à«‹àª¯ àª¤à«‹
         );
       }
 
@@ -568,78 +618,11 @@ class GlobalPlayer extends ChangeNotifier {
     _networkSubscription?.cancel();
     audioPlayer.dispose();
     videoController?.dispose();
-    chewieController?.dispose();
+    // chewieController?.dispose();
     super.dispose();
   }
 
-  _buildAdditionalOptions(BuildContext context) {
-    return [
-      OptionItem(
-        controlType: ControlType.miniVideo,
-        onTap: (context) {
-          Navigator.pop(context);
-        },
-        iconData: Icons.screen_rotation,
-        title: "Mini Screen",
-        iconImage: AppSvg.icMiniScreen,
-      ),
-      OptionItem(
-        controlType: ControlType.volume,
-        onTap: (context) {
-          // toggleRotation();
-          // Navigator.pop(context);
-        },
-        iconData: Icons.screen_rotation,
-        title: "Volume",
-        iconImage: AppSvg.icVolumeOff,
-      ),
-      OptionItem(
-        controlType: ControlType.playbackSpeed,
-        onTap: (context) {
-          // toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "video speed",
-        iconImage: AppSvg.ic2x,
-      ),
 
-      OptionItem(
-        controlType: ControlType.shuffle,
-        onTap: (context) => () {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "Shuffle",
-        iconImage: AppSvg.icShuffle,
-      ),
-      OptionItem(
-        controlType: ControlType.theme,
-        onTap: (context) {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "dark",
-        iconImage: AppSvg.icDarkMode,
-      ),
-      OptionItem(
-        onTap: (context) {
-          // chewie!.videoPlayerController.value.cancelAndRestartTimer();
-          //
-          // if (videoPlayerLatestValue.volume == 0) {
-          //   chewie!.videoPlayerController.setVolume(chewie.videoPlayerController.videoPlayerOptions.);
-          //   // controller.setVolume(_latestVolume ?? 0.5);
-          // } else {
-          //   _latestVolume = controller.value.volume;
-          //   controller.setVolume(0.0);
-          // }
-        },
-        controlType: ControlType.loop,
-        iconData: Icons.shuffle,
-        title: "Loop",
-        iconImage: AppSvg.icLoop,
-      ),
-    ];
-  }
 
   bool _isAppInBackground() {
     final state = WidgetsBinding.instance.lifecycleState;
@@ -682,7 +665,7 @@ class GlobalPlayer extends ChangeNotifier {
       await audioPlayer.seek(Duration.zero, index: currentIndex);
       audioPlayer.play();
     } else {
-      await _setupVideoPlayer(item.path);
+      // await _setupVideoPlayer(item.path);
     }
 
     notifyListeners();
@@ -732,10 +715,10 @@ class GlobalPlayer extends ChangeNotifier {
       videoController = null;
     }
 
-    if (chewieController != null) {
-      chewieController!.dispose();
-      chewieController = null;
-    }
+    // if (chewieController != null) {
+    //   chewieController!.dispose();
+    //   chewieController = null;
+    // }
     audioPlayer.stop();
     queue = [];
     currentIndex = -1;
