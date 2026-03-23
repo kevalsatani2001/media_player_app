@@ -1,4211 +1,3176 @@
 /*
-sunday
+//////////////////////////////////// part 1 new player scareen//////////////////////
+
+import 'dart:ui' as ui;
+import '../utils/app_imports.dart';
+
+class PlayerScreen extends StatefulWidget {
+  final List<AssetEntity> entityList;
+  final AssetEntity entity;
+  final int index;
+  final int? resumePosition;
+
+  const PlayerScreen({
+    super.key,
+    required this.entityList,
+    required this.entity,
+    required this.index,
+    this.resumePosition,
+  });
+
+  @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen>
+    with WidgetsBindingObserver {
+  static const List<Color> _presetColors = [
+    Colors.white,
+    Colors.black,
+    Colors.redAccent,
+    Colors.blueAccent,
+    Colors.greenAccent,
+    Colors.yellowAccent,
+    Colors.orangeAccent,
+    Colors.purpleAccent,
+    Colors.cyanAccent,
+    Colors.grey,
+  ];
+
+  final playerService = GlobalPlayerService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // UI States
+  bool _showControls = true;
+  bool _isLocked = false;
+  bool _isFullScreen = false;
+  BoxFit _videoFit = BoxFit.contain;
+  Timer? _controlsTimer;
+
+  // Zoom/Scale/Gestures States
+  double _baseScale = 1.0;
+  double _videoScale = 1.0;
+  bool _isScaling = false;
+  double _brightness = 0.5;
+
+  double? _gestureValue;
+  bool _isBrightnessGesture = false;
+  Timer? _gestureOverlayTimer;
+
+  bool _showForwardIcon = false;
+  bool _showBackwardIcon = false;
+  Timer? _seekIconTimer;
+
+  bool _isMirrored = false; // Mirror mode
+  bool _isFlipped = false; // Vertical flip
+  bool _isDarkMode = true; // Theme mode
+  Duration? _pointA; // A-B Repeat Point A
+  Duration? _pointB; // A-B Repeat Point B
+  final GlobalKey _globalKey = GlobalKey();
+  bool _isExtraControlsExpanded = false;
+
+  String? _overlayText;
+  String? sign;
+  Timer? _overlayTextTimer;
+  Duration? _seekDuration;
+  String _activeGestureType = 'none'; // 'none', 'seek', 'vertical'
+  bool _isMoreMenuVisible = false;
+  bool _isQueueVisible = false;
+
+  bool _showShortcutsInMenu = false;
+
+  // aspect ratio
+
+  bool _isRatioVisible = false;
+  double? _selectedAspectRatio;
+  bool _applyRatioToAll = false;
+
+  // Screen settings runtime helpers
+  DateTime _now = DateTime.now();
+  Timer? _clockTimer;
+  final Battery _battery = Battery();
+  int? _batteryLevel;
+  bool _pausedDueToObstruction = false;
 
 
-import 'dart:async';
-import 'dart:io';
-import 'package:audio_session/audio_session.dart';
-import 'package:chewie/chewie.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
-import 'package:just_audio/just_audio.dart'
-    hide PlayerState; // Just Audio ઉમેરો
-import 'package:photo_manager/photo_manager.dart';
-import 'package:video_player/video_player.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
-import '../core/constants.dart';
+  final Map<String, double?> _ratioValues = {
+    "Default": null,
+    "Custom": 1.2,
+    // Ã ÂªÂ¤Ã ÂªÂ®Ã Â«â€¡ Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¤Ã Â«â€¡ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¶Ã Âªâ€¢Ã Â«â€¹
+    "1:1": 1.0,
+    "4:3": 4 / 3,
+    "16:9": 16 / 9,
+    "18:9": 18 / 9,
+    "21:9": 21 / 9,
+    "2.21:1": 2.21 / 1,
+    "2.35:1": 2.35 / 1,
+    "2.39:1": 2.39 / 1,
+  };
 
-// import '../models/media_item.dart';
-import '../models/player_data.dart';
-import 'package:just_audio_background/just_audio_background.dart'
-    as bg; // Alias આપો
-import '../models/media_item.dart' as my;
-import '../models/playlist_model.dart';
-import '../screens/detail_screen.dart';
 
-class GlobalPlayer extends ChangeNotifier {
-  AssetEntity? currentEntity;
-  static final GlobalPlayer _instance = GlobalPlayer._internal();
+  Map<String, bool> _enabledShortcuts = {
+    "Capture": true,
+    "Playback Speed": true,
+    "A-B Repeat": true,
+    "Flip": true,
+    "Mirror": true,
+    "Trim": true,
+    "Shuffle": true,
+    "Repeat": true,
+    "Mute": true,
+    "Screen": true,
+  };
 
-  factory GlobalPlayer() => _instance;
-
-  GlobalPlayer._internal() {
-    _initJustAudio(); // Constructor માં જ ઓડિયો પ્લેયર સેટ કરો
-  }
-
-  // પ્લેયર્સ
-  VideoPlayerController? controller; // ફક્ત વીડિયો માટે
-  final AudioPlayer audioPlayer = AudioPlayer(); // ફક્ત ઓડિયો માટે
-  ChewieController? chewie;
-
-  String? currentPath;
-  String? currentType;
-  bool? isFavourite;
-  String? currentItemId;
-  bool isLooping = false;
-  List<my.MediaItem> queue = [];
-  List<my.MediaItem> originalQueue = [];
-  int currentIndex = -1;
-  bool isShuffle = false;
-
-  // Just Audio Initializer
-  void _initJustAudio() async {
-    audioPlayer.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        // જ્યારે ઓડિયો પૂરો થાય ત્યારે આપણું playNext() કોલ કરો
-        // આનાથી પ્લેલિસ્ટમાં વીડિયો હશે તો પણ તે સ્વિચ થઈ જશે
-        playNext();
-      }
-    });
-
-    audioPlayer.currentIndexStream.listen((index) {
-      // Jyare background mathi next/prev thay tyare aa trigger thase
-      if (index != null && index < queue.length && index >= 0) {
-        currentIndex = index;
-        currentPath = queue[index].path;
-        currentType = queue[index].type;
-        isFavourite = queue[index].isFavourite;
-        currentItemId = queue[index].id;
-        // currentType = "audio";
-        notifyListeners();
-        print("in side init======");
-        print("in side init======$isFavourite");
-      }
-    });
-
-    audioPlayer.playerStateStream.listen((state) {
-      if (state.processingState == ProcessingState.completed) {
-        // Just audio playlist automatically next par jashe,
-        // pan tame tamari logic mujab handle kari shako.
-      }
-    });
-    // await loadQueueFromHive();
-  }
-
-  Future<void> playFromPlaylist(PlaylistModel playlist, int startIndex) async {
-    // ૧. પ્લેલિસ્ટની બધી આઈટમ્સને પ્લેયરની ક્યુમાં સેટ કરો
-    this.originalQueue = List.from(playlist.items);
-    this.queue = List.from(playlist.items);
-
-    // ૨. જે આઈટમ પર ક્લિક કર્યું છે તેની વિગતો લો
-    final firstItem = playlist.items[startIndex];
-    this.currentIndex = startIndex;
-
-    // ૩. આપણી મેઈન play મેથડને કોલ કરો
-    // પણ ધ્યાન રાખજો: play() મેથડમાં તમે ફરીથી loadQueueFromHive() કોલ ના કરતા હોય એ જોજો.
-    await play(
-      firstItem.path,
-      type: firstItem.type,
-      isFavourite: firstItem.isFavourite ?? false,
-      id: firstItem.id ?? "",
-      fromPlaylist: true, // આપણે નીચે play મેથડમાં આ ફ્લેગ ઉમેરીશું
-    );
-  }
-
-  Future<void> _clearPreviousPlayer() async {
-    // ૧. ઓડિયો રોકો
-    if (audioPlayer.playing) {
-      await audioPlayer.stop();
-    }
-
-    // ૨. વીડિયો અને ચેવી ક્લીનઅપ
-    if (controller != null) {
-      controller!.removeListener(_handlePlaybackCompletion);
-
-      // પ્લેયરને ડિસ્પોઝ કરતા પહેલા પોઝ કરો
-      await controller!.pause();
-
-      final oldController = controller;
-      final oldChewie = chewie;
-
-      // મેઈન વેરીએબલ્સને તરત જ નલ કરો જેથી UI અપડેટ થઈ જાય
-      controller = null;
-      chewie = null;
-      notifyListeners();
-
-      // ૩૦૦ મિલીસેકન્ડનો ગેપ આપવો (Android માટે જરૂરી છે)
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // અહીં ફેરફાર છે:
-      oldChewie?.dispose(); // await વગર (કારણ કે આ void છે)
-
-      if (oldController != null) {
-        await oldController.dispose(); // await સાથે (કારણ કે આ Future છે)
+  void _checkABRepeat() {
+    if (_pointA != null && _pointB != null) {
+      final currentPos = playerService.controller!.value.position;
+      if (currentPos >= _pointB!) {
+        playerService.controller!.seekTo(_pointA!);
       }
     }
-    WakelockPlus.disable();
   }
 
-  // // ૩. જૂના પ્લેયરને પ્રોપરલી બંધ કરવા માટે
-  // Future<void> _clearPreviousPlayer() async {
-  //   // ૧. ઓડિયો રોકો
-  //   if (audioPlayer.playing) await audioPlayer.stop();
-  //
-  //   // ૨. વીડિયો ક્લીનઅપ
-  //   if (controller != null) {
-  //     controller!.removeListener(_handlePlaybackCompletion);
-  //
-  //     // પ્લેયરને ડિસ્પોઝ કરતા પહેલા રેફરન્સ લો અને વેરીએબલને null કરો
-  //     final oldController = controller;
-  //     controller = null;
-  //     chewie?.dispose();
-  //     chewie = null;
-  //
-  //     // આ લાઈન સૌથી મહત્વની છે: UI ને કહો કે પ્લેયર જતો રહ્યો છે
-  //     notifyListeners();
-  //
-  //     // થોડી રાહ જોઈને ડિસ્પોઝ કરો જેથી વિજેટ ટ્રી અપડેટ થઈ જાય
-  //     await Future.delayed(Duration(milliseconds: 100));
-  //     await oldController!.dispose();
-  //   }
-  // }
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
-  // GlobalPlayer Class ની અંદર
-  my.MediaItem? get currentMediaItem {
-    if (currentIndex >= 0 && currentIndex < queue.length) {
-      return queue[currentIndex];
+    final box = Hive.box('last_played');
+    String? lastId = box.get('last_id');
+    int? lastPos = box.get('last_position');
+
+    int? seekTo;
+    if (lastId == widget.entity.id) {
+      seekTo = lastPos;
     }
-    return null;
-  }
 
-  Future<void> playNext() async {
-    if (queue.isEmpty) return;
-
-    int nextIndex = (currentIndex + 1) % queue.length;
-
-    // જો આપણે ફરીથી એ જ ઇન્ડેક્સ પર આવી ગયા હોઈએ (બધા વિડિયો સ્કીપ થયા હોય), તો અટકી જવું
-    int startTrackIndex = currentIndex;
-
-    while (true) {
-      final nextItem = queue[nextIndex];
-      final isAppInBackground =
-          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
-
-      // જો વિડિયો હોય અને એપ બેકગ્રાઉન્ડમાં હોય, તો સ્કીપ કરો
-      if (nextItem.type == 'video' && isAppInBackground) {
-        nextIndex = (nextIndex + 1) % queue.length;
-
-        // જો આખું લિસ્ટ ચેક થઈ ગયું હોય અને કઈ વગાડવા જેવું ન મળે તો બ્રેક કરો
-        if (nextIndex == startTrackIndex) {
-          debugPrint("No playable audio found in background.");
-          return;
+    if (widget.entityList.isNotEmpty) {
+      playerService.init(widget.entityList, widget.index, () {
+        if (mounted) {
+          _checkVideoEnd();
+          setState(() {});
         }
-        continue;
-      }
-      break; // યોગ્ય આઈટમ મળી ગઈ
+      }, seekToMs: seekTo);
     }
 
-    currentIndex = nextIndex;
-    final item = queue[currentIndex];
-    if (chewie != null && chewie!.isFullScreen) {
-      chewie!
-          .exitFullScreen(); // નવો વીડિયો શરૂ થાય એ પહેલા ફૂલ સ્ક્રીન માંથી બહાર નીકળો
-    }
-    await play(
-      item.path,
-      type: item.type,
-      id: item.id,
-      isFavourite: item.isFavourite,
-      network: item.isNetwork,
-      fromPlaylist: true, // આ ઉમેરવું જરૂરી છે
-    );
-    notifyListeners();
-  }
+    _isFullScreen = true;
+    _setOrientation(true);
+    _startControlsTimer();
 
-  Future<void> _savePlayerState() async {
-    final box = Hive.box('player_state');
-
-    await box.put(
-      'current',
-      PlayerState()
-        ..paths = queue.map((e) => e.path).toList()
-        ..currentIndex = currentIndex
-        ..currentType = currentType ?? 'audio'
-        ..currentPositionMs = controller?.value.position.inMilliseconds ?? 0,
-    );
-  }
-
-  // GlobalPlayer Class ની અંદર
-  Future<void> initAudioSession() async {
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration.music());
-
-    // આ લાઈન ત્યારે કામ લાગશે જ્યારે ફોન પર કોલ આવે તો ઓડિયો ઓટોમેટિક પોઝ થઈ જાય
-    session.interruptionEventStream.listen((event) {
-      if (event.begin) {
-        pause();
-      } else {
-        resume();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      _applyScreenSettings(settings);
+      if (!settings.showInterfaceAtStartup) {
+        setState(() => _showControls = false);
       }
+    });
+
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _now = DateTime.now());
+      _refreshBatteryIfNeeded();
     });
   }
 
-  void _handlePlaybackCompletion() {
-    if (controller != null &&
-        controller!.value.position >= controller!.value.duration &&
-        !isLooping &&
-        controller!.value.isInitialized) {
-      // ચેક કરો કે ઇનિશિયલાઇઝ છે
-
-      // લિસનર હટાવી દો જેથી નેક્સ્ટ વીડિયો વખતે લૂપ ના થાય
-      controller!.removeListener(_handlePlaybackCompletion);
-      playNext();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      playerService.saveLastPlayed();
     }
-  }
-
-  void toggleShuffle() {
-    isShuffle = !isShuffle;
-    if (isShuffle) {
-      queue.shuffle();
-    } else {
-      queue = List.from(originalQueue);
+    if (state == AppLifecycleState.inactive &&
+        mounted &&
+        Provider.of<SettingsProvider>(context, listen: false)
+            .pausePlaybackIfObstructed) {
+      playerService.controller?.pause();
     }
-    notifyListeners();
-  }
-
-  Timer? _positionTimer;
-
-  void _startPositionSaver() {
-    _positionTimer?.cancel();
-    _positionTimer = Timer.periodic(Duration(seconds: 5), (_) {
-      _savePlayerState();
-    });
-  }
-
-  void _stopPositionSaver() {
-    _positionTimer?.cancel();
-  }
-
-  Future<void> playPrevious() async {
-    if (queue.isEmpty) return;
-
-    currentIndex = (currentIndex - 1 < 0) ? queue.length - 1 : currentIndex - 1;
-    final item = queue[currentIndex];
-
-    await play(
-      item.path,
-      type: item.type,
-      id: item.id,
-      isFavourite: item.isFavourite,
-      network: item.isNetwork,
-      fromPlaylist: true, // આ ભૂલતા નહીં
-    );
-    notifyListeners();
-  }
-
-  Future<void> loadQueueFromHive(String type) async {
-    print("type is ====------$type");
-    try {
-      // Hive boxes open karo
-      final audioBox = Hive.box('audios');
-      final videoBox = Hive.box('videos');
-
-      List<my.MediaItem> allItems = [];
-
-      // --- Audio Data ---
-      if (type == 'audio') {
-        for (var item in audioBox.values) {
-          if (item is my.MediaItem) {
-            // Jo direct object male to
-            allItems.add(item);
-          } else if (item is Map) {
-            // Jo Map male to factory method vapro
-            allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
-          }
-        }
-      } else {
-        // --- Video Data ---
-        for (var item in videoBox.values) {
-          if (item is my.MediaItem) {
-            allItems.add(item);
-          } else if (item is Map) {
-            allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
-          }
-        }
-      }
-
-      this.originalQueue = List.from(allItems);
-      this.queue = List.from(allItems);
-
-      debugPrint("Queue Loaded Successfully: ${queue.length} items");
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Hive Load Error: $e");
-    }
-  }
-
-  // Future<void> play(
-  //   String path, {
-  //   bool network = false,
-  //   required String type,
-  //   required bool isFavourite,
-  //   required String id,
-  //   bool fromPlaylist = false,
-  // }) async {
-  //   // 1. Queue check & find index
-  //
-  //   // if (queue.isEmpty) await loadQueueFromHive();
-  //
-  //   currentIndex = queue.indexWhere((element) => element.path == path);
-  //
-  //   if (currentIndex == -1) {
-  //     // Jo current item queue ma nathi to add karo
-  //     final newItem = my.MediaItem(
-  //       path: path,
-  //       type: type,
-  //       isNetwork: network,
-  //       isFavourite: isFavourite,
-  //       id: id,
-  //     );
-  //     queue.add(newItem);
-  //     currentIndex = queue.length - 1;
-  //   }
-  //
-  //   await _clearPreviousPlayer();
-  //   currentPath = path;
-  //   currentType = type;
-  //   isFavourite = isFavourite;
-  //   currentItemId = id;
-  //
-  //   try {
-  //     final session = await AudioSession.instance;
-  //
-  //     if (type == "audio") {
-  //       // Audio background playlist banavo
-  //       final audioSources = queue.where((i) => i.type == 'audio').map((item) {
-  //         return AudioSource.uri(
-  //           item.isNetwork ? Uri.parse(item.path) : Uri.file(item.path),
-  //           tag: bg.MediaItem(
-  //             id: item.path,
-  //             album: "My Playlist",
-  //             title: item.path.split('/').last,
-  //           ),
-  //         );
-  //       }).toList();
-  //
-  //       // Audio list no correct index shodho
-  //       int audioIndex = queue
-  //           .where((i) => i.type == 'audio')
-  //           .toList()
-  //           .indexWhere((e) => e.path == path);
-  //
-  //       await audioPlayer.setAudioSource(
-  //         ConcatenatingAudioSource(children: audioSources),
-  //         initialIndex: audioIndex >= 0 ? audioIndex : 0,
-  //       );
-  //       audioPlayer.play();
-  //     } else {
-  //       // --- વીડિયો પ્લેયર લોજિક ---
-  //       await session.configure(
-  //         const AudioSessionConfiguration.music(),
-  //       ); // સિમ્પલ કોન્ફિગરેશન
-  //
-  //       controller = network
-  //           ? VideoPlayerController.networkUrl(Uri.parse(path))
-  //           : VideoPlayerController.file(File(path));
-  //
-  //       // ૨. ઇનિશિયલાઇઝેશન પૂરું થાય ત્યાં સુધી રાહ જુઓ
-  //       await controller!.initialize();
-  //
-  //       chewie = ChewieController(
-  //         zoomAndPan: true,
-  //         aspectRatio: controller!.value.aspectRatio,
-  //         autoPlay: true,
-  //         looping: isLooping,
-  //         videoPlayerController: controller!,
-  //         deviceOrientationsOnEnterFullScreen: [
-  //           DeviceOrientation.landscapeLeft,
-  //           DeviceOrientation.landscapeRight,
-  //         ],
-  //         deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
-  //         materialProgressColors: ChewieProgressColors(
-  //           playedColor: const Color(0XFF3D57F9),
-  //           backgroundColor: const Color(0XFFF6F6F6),
-  //         ),
-  //         onSufflePressed: () => toggleShuffle(),
-  //         onNextVideo: () => playNext(),
-  //         onPreviousVideo: () => playPrevious(),
-  //         additionalOptions: (context) =>
-  //             _buildAdditionalOptions(context), // આને અલગ ફંક્શનમાં લઈ લો
-  //       );
-  //
-  //       controller!.addListener(_handlePlaybackCompletion);
-  //     }
-  //
-  //     WakelockPlus.enable();
-  //     _startPositionSaver();
-  //
-  //     // ❗ સૌથી મહત્વનું: આખા ફંક્શનમાં ફક્ત એક જ વાર અંતે નોટિફાય કરો
-  //     notifyListeners();
-  //   } catch (e) {
-  //     debugPrint("Playback Error Details: $e");
-  //     // એરર આવે તો પણ નોટિફાય કરો જેથી લોડિંગ સર્કલ અટકે
-  //     notifyListeners();
-  //   }
-  // }
-
-  Future<void> play(
-    String path, {
-    bool network = false,
-    required String type,
-    required bool isFavourite,
-    required String id,
-    bool fromPlaylist = false, // તમે ઉમેરેલો નવો પેરામીટર
-  }) async {
-    // ૧. Index સેટઅપ
-    currentIndex = queue.indexWhere((element) => element.path == path);
-    if (currentIndex == -1 && !fromPlaylist) {
-      final newItem = my.MediaItem(
-        path: path,
-        type: type,
-        isNetwork: network,
-        isFavourite: isFavourite,
-        id: id,
-      );
-      queue.add(newItem);
-      currentIndex = queue.length - 1;
-    }
-
-    await _clearPreviousPlayer();
-    currentPath = path;
-    currentType = type; // આ મહત્વનું છે
-    this.isFavourite = isFavourite;
-    currentItemId = id;
-
-    try {
-      final session = await AudioSession.instance;
-
-      if (type == "audio") {
-        final List<my.MediaItem> audioOnlyList = queue.where((i) => i.type == 'audio').toList();
-        int correctAudioIndex = audioOnlyList.indexWhere((e) => e.path == path);
-        if (correctAudioIndex == -1) correctAudioIndex = 0;
-
-        final audioSources = audioOnlyList.map((item) {
-          return AudioSource.uri(
-            item.isNetwork ? Uri.parse(item.path) : Uri.file(item.path),
-            tag: bg.MediaItem(
-              id: item.path,
-              title: item.path.split('/').last,
-            ),
-          );
-        }).toList();
-
-        // અહી ફેરફાર છે: catchError ઉમેરવાથી "Loading interrupted" એરર શાંત થઈ જશે
-        await audioPlayer.setAudioSource(
-          ConcatenatingAudioSource(children: audioSources),
-          initialIndex: correctAudioIndex,
-          initialPosition: Duration.zero,
-        ).catchError((error) {
-          if (error is PlayerInterruptedException) {
-            print("JustAudio: Loading was interrupted by a new request. This is fine.");
-          } else {
-            print("JustAudio Error: $error");
-          }
-          return null; // Error handle કરી લીધી
-        });
-
-        audioPlayer.play();
-
-      } else {
-        // --- વીડિયો પ્લેયર લોજિક (તમારું જે છે એ જ, કોઈ જ ફેરફાર નથી) ---
-        await session.configure(const AudioSessionConfiguration.music());
-
-        controller = network
-            ? VideoPlayerController.networkUrl(Uri.parse(path))
-            : VideoPlayerController.file(File(path));
-
-        await controller!.initialize().timeout(const Duration(seconds: 15));
-        // await _clearPreviousPlayer();
-        chewie = ChewieController(
-          zoomAndPan: true,
-          aspectRatio: controller!.value.aspectRatio,
-          autoPlay: true,
-          looping: isLooping,
-          videoPlayerController: controller!,
-          deviceOrientationsOnEnterFullScreen: [
-            DeviceOrientation.landscapeLeft,
-            DeviceOrientation.landscapeRight,
-          ],
-          deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
-          materialProgressColors: ChewieProgressColors(
-            playedColor: const Color(0XFF3D57F9),
-            backgroundColor: const Color(0XFFF6F6F6),
-          ),
-          onSufflePressed: () => toggleShuffle(),
-          onNextVideo: () => playNext(),
-          onPreviousVideo: () => playPrevious(),
-          additionalOptions: (context) => _buildAdditionalOptions(context),
-        );
-
-        controller!.addListener(_handlePlaybackCompletion);
-      }
-
-      WakelockPlus.enable();
-      _startPositionSaver();
-      notifyListeners();
-      print("queue length is ========${queue.length}");
-      print("queue length is ========${queue}");
-    } catch (e) {
-      debugPrint("Playback Error Details: $e");
-      notifyListeners();
-    }
-  }
-
-  // કંટ્રોલ મેથડ્સ (બંને પ્લેયર માટે)
-  void pause() {
-    if (currentType == "audio")
-      audioPlayer.pause();
-    else
-      controller?.pause();
-    notifyListeners();
-  }
-
-  void resume() {
-    if (currentType == "audio")
-      audioPlayer.play();
-    else
-      controller?.play();
-    notifyListeners();
-  }
-
-  // Stop મેથડ - જે બધું જ ક્લીન કરશે
-  Future<void> stop() async {
-    // ૧. ઓડિયો રોકો
-    await audioPlayer.stop();
-
-    // ૨. વીડિયો અને ચેવી ડિસ્પોઝ કરો
-    if (controller != null) {
-      await controller!.dispose();
-      controller = null;
-    }
-    if (chewie != null) {
-      chewie!.dispose();
-      chewie = null;
-    }
-
-    // ૩. ડેટા સાવ ખાલી કરો
-    currentPath = null;
-    currentType = null;
-    currentIndex = -1; // આનાથી મિની પ્લેયર અને પ્લેયર સ્ક્રીન આપોઆપ બંધ થશે
-
-    WakelockPlus.disable();
-    notifyListeners(); // બધા વિજેટ્સને ખબર પડશે કે હવે કંઈ પ્લે નથી થઈ રહ્યું
-  }
-
-  // Getter for UI
-  bool get isPlaying {
-    if (currentType == "audio") return audioPlayer.playing;
-    return controller?.value.isPlaying ?? false;
-  }
-
-  // Progress Bar માટે પોઝિશન અને ડ્યુરેશન
-  Duration get position {
-    if (currentType == "audio") return audioPlayer.position;
-    return controller?.value.position ?? Duration.zero;
-  }
-
-  Duration get duration {
-    if (currentType == "audio") return audioPlayer.duration ?? Duration.zero;
-    return controller?.value.duration ?? Duration.zero;
-  }
-
-  void setQueue(List<my.MediaItem> items, int startIndex) {
-    if (items.isEmpty) return;
-
-    this.originalQueue = List.from(items);
-    this.queue = List.from(items);
-
-    // -1 ne badle 0 check karo
-    this.currentIndex = (startIndex >= 0 && startIndex < items.length)
-        ? startIndex
-        : 0;
-
-    notifyListeners();
   }
 
   @override
   void dispose() {
-    _positionTimer?.cancel();
-    audioPlayer.dispose();
-    controller?.dispose();
-    chewie?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    playerService.clearListener();
+    playerService.controller?.pause();
+    playerService.saveLastPlayed();
+    _controlsTimer?.cancel();
+    _gestureOverlayTimer?.cancel();
+    _seekIconTimer?.cancel();
+    _clockTimer?.cancel();
+    _setOrientation(false);
+    // playerService.controller?.removeListener(_videoListener);
     super.dispose();
   }
 
-  _buildAdditionalOptions(BuildContext context) {
-    return [
-      // OptionItem(
-      //   onTap: (context) {
-      //     toggleRotation();
-      //     Navigator.pop(context);
-      //   },
-      //   iconData: Icons.screen_rotation,
-      //   title: isLandscape ? "Portrait Mode" : "Landscape Mode",
-      // ),
-      OptionItem(
-        controlType: ControlType.miniVideo,
-        onTap: (context) {
-          Navigator.pop(context);
-        },
-        iconData: Icons.screen_rotation,
-        title: "Mini Screen",
-        iconImage: AppSvg.icMiniScreen,
-      ),
-      OptionItem(
-        controlType: ControlType.volume,
-        onTap: (context) {
-          // toggleRotation();
-          // Navigator.pop(context);
-        },
-        iconData: Icons.screen_rotation,
-        title: "Volume",
-        iconImage: AppSvg.icVolumeOff,
-      ),
-
-      OptionItem(
-        controlType: ControlType.shuffle,
-        onTap: (context) => () {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "Shuffle",
-        iconImage: AppSvg.icShuffle,
-      ),
-      // OptionItem(
-      //   controlType: ControlType.playbackSpeed,
-      //   onTap: (context) {
-      //     // toggleShuffle();
-      //   },
-      //   iconData: Icons.shuffle,
-      //   title: "video speed",
-      //   iconImage: AppSvg.ic2x,
-      // ),
-      OptionItem(
-        controlType: ControlType.theme,
-        onTap: (context) {
-          toggleShuffle();
-        },
-        iconData: Icons.shuffle,
-        title: "dark",
-        iconImage: AppSvg.icDarkMode,
-      ),
-
-      OptionItem(
-        onTap: (context) {
-
-        },
-        controlType: ControlType.loop,
-        iconData: Icons.shuffle,
-        title: "Loop",
-        iconImage: AppSvg.icLoop,
-      ),  // OptionItem(
-      //   controlType: ControlType.playbackSpeed,
-      //   onTap: (context) async {
-      //     final newPos = (controller!.value.position) - Duration(seconds: 10);
-      //     controller!.seekTo(newPos > Duration.zero ? newPos : Duration.zero);
-      //   },
-      //   iconData: Icons.replay_10,
-      //   title: "kk",
-      //   iconImage: AppSvg.ic10Prev,
-      // ),
-      // OptionItem(
-      //   onTap: (context) async {},
-      //   controlType: ControlType.miniVideo,
-      //   iconData: Icons.replay_10,
-      //   title: "miniScreen",
-      //   iconImage: AppSvg.icMiniScreen,
-      // ),
-    ];
+  Future<void> _refreshBatteryIfNeeded() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (!settings.showBatteryClock && !settings.displayBatteryClockInTitleBar) {
+      return;
+    }
+    try {
+      final level = await _battery.batteryLevel;
+      if (mounted && level != _batteryLevel) {
+        setState(() => _batteryLevel = level);
+      }
+    } catch (_) {}
   }
 
-  void setPlaylistQueue(List<my.MediaItem> items, int startIndex) {
-    this.originalQueue = List.from(items);
-    this.queue = List.from(items);
-    this.currentIndex = startIndex;
+  Future<void> _applyBrightnessSetting(SettingsProvider s) async {
+    if (!s.isBrightnessEnabled) return;
+    try {
+      await ScreenBrightness().setScreenBrightness(s.brightness);
+      setState(() => _brightness = s.brightness);
+    } catch (_) {}
+  }
 
-    final item = queue[startIndex];
-    play(
-      item.path,
-      type: item.type,
-      isFavourite: item.isFavourite,
-      id: item.id,
+  Future<void> _applySoftButtonsSetting(SettingsProvider s) async {
+    switch (s.softButtonsMode) {
+      case "Show":
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        break;
+      case "Hide":
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        break;
+      case "Auto hide":
+      default:
+        await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        break;
+    }
+  }
+
+  Future<void> _applyFullScreenSetting(SettingsProvider s) async {
+    switch (s.fullScreenMode) {
+      case "On":
+        setState(() => _isFullScreen = true);
+        _setOrientation(true);
+        break;
+      case "Off":
+        setState(() => _isFullScreen = false);
+        _setOrientation(false);
+        break;
+      case "Auto Switch":
+      default:
+        break;
+    }
+  }
+
+  Future<void> _applyKeepScreenOn(SettingsProvider s) async {
+    try {
+      if (s.keepScreenOn) {
+        await WakelockPlus.enable();
+      } else {
+        await WakelockPlus.disable();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _applyScreenSettings(SettingsProvider s) async {
+    _applyOrientation(s.orientation);
+    await _applyFullScreenSetting(s);
+    await _applySoftButtonsSetting(s);
+    await _applyKeepScreenOn(s);
+    await _applyBrightnessSetting(s);
+    _refreshBatteryIfNeeded();
+  }
+
+  void _checkVideoEnd() {
+    if (!mounted) return;
+
+    final controller = playerService.controller;
+    if (controller == null || !controller.value.isInitialized) return;
+
+    final bool isFinished =
+        controller.value.position >=
+            (controller.value.duration - const Duration(milliseconds: 500));
+
+    if (isFinished && !controller.value.isPlaying && !playerService.isLooping) {
+      controller.removeListener(_videoListener);
+
+      playerService.playNext(() {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  void _toggleRotation() {
+    setState(() {
+      if (MediaQuery.of(context).orientation == Orientation.portrait) {
+        print("==> if");
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        print("==> else");
+        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      }
+    });
+  }
+
+  void _setOrientation(bool isFull) {
+    if (isFull) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
+  }
+
+  void _startControlsTimer() {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final autoHideSeconds =
+        settings.controlsInterfaceAutoHideEnabled
+            ? settings.interfaceAutoHide
+            : 3.0;
+    _controlsTimer?.cancel();
+    _controlsTimer = Timer(Duration(seconds: autoHideSeconds.round()), () {
+      if (mounted && !_isLocked && _showControls) {
+        setState(() => _showControls = false);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!playerService.isInitialized) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(child: Center(child: CustomLoader())),
+      );
+    }
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      // Ã Âªâ€  Ã ÂªÂ²Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ¨ Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹
+      key: _scaffoldKey,
+
+      endDrawer: _buildSideMenu(),
+      onEndDrawerChanged: (isOpened) {
+        if (isOpened) {
+          // à«§. àª¡à«àª°à«‹àª…àª° àª“àªªàª¨ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àª•àª‚àªŸà«àª°à«‹àª²à«àª¸ àª¹àª¾àªˆàª¡ àª•àª°à«‹
+          setState(() {
+            _showControls = false;
+            _controlsTimer?.cancel(); // àªŸàª¾àªˆàª®àª° àªªàª£ àª¬àª‚àª§ àª•àª°à«€ àª¦à«‹ àªœà«‡àª¥à«€ àª“àªŸà«‹-àª¶à«‹ àª¨àª¾ àª¥àª¾àª¯
+          });
+        } else {
+          // à«¨. àª¡à«àª°à«‹àª…àª° àª•à«àª²à«‹àª àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª¸à«àªŸà«‡àªŸ àª°à«€àª¸à«‡àªŸ àª•àª°à«‹ àª…àª¨à«‡ àª•àª‚àªŸà«àª°à«‹àª²à«àª¸ àª¬àª¤àª¾àªµà«‹
+          _resetDrawerState(); // àª¤àª®àª¾àª°à«àª‚ àª…àª—àª¾àª‰àª¨à«àª‚ àª°à«€àª¸à«‡àªŸ àª«àª‚àª•à«àª¶àª¨
+          setState(() {
+            _showControls = true;
+            _startControlsTimer(); // à«© àª¸à«‡àª•àª¨à«àª¡ àªªàª›à«€ àª“àªŸà«‹àª®à«‡àªŸàª¿àª• àª¹àª¾àªˆàª¡ àª¥àªµàª¾àª¨à«àª‚ àª¶àª°à«‚ àª¥àª¶à«‡
+          });
+        }
+      },
+      backgroundColor: Colors.black,
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: _buildVideoPlayerWithGestures(),
+      ),
+    );
+  }
+  void _resetDrawerState() {
+    setState(() {
+      _isMoreMenuVisible = false;      // àª®à«‡àªˆàª¨ àª®à«‡àª¨à« àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
+      _showShortcutsInMenu = false;    // àª¶à«‹àª°à«àªŸàª•àªŸà«àª¸ àª²àª¿àª¸à«àªŸ àª¬àª‚àª§ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡
+      _isRatioVisible = false;         // àªœà«‹ àª°à«‡àª¶àª¿àª¯à«‹ àª®àª¾àªŸà«‡ àª…àª²àª— àª¸à«àªŸà«‡àªŸ àª¹à«‹àª¯ àª¤à«‹
+      // àª¬à«€àªœàª¾ àª•à«‹àªˆ àªªàª£ àª¡à«àª°à«‹àª…àª° àª¸à«àªªà«‡àª¸àª¿àª«àª¿àª• àª¬à«àª²àª¿àª¯àª¨ àª…àª¹àª¿àª¯àª¾àª‚ false àª•àª°à«€ àª¶àª•àª¾àª¯
+    });
+  }
+
+  Widget _buildVideoPlayerWithGestures() {
+    final settings = Provider.of<SettingsProvider>(context);
+
+    return VisibilityDetector(
+      key: const ValueKey("player_visibility"),
+      onVisibilityChanged: (info) {
+        if (!settings.pausePlaybackIfObstructed) return;
+        final controller = playerService.controller;
+        if (controller == null) return;
+
+        final visible = info.visibleFraction;
+        if (visible < 0.6 && controller.value.isPlaying) {
+          controller.pause();
+          _pausedDueToObstruction = true;
+        } else if (visible > 0.95 &&
+            _pausedDueToObstruction &&
+            !controller.value.isPlaying) {
+          controller.play();
+          _pausedDueToObstruction = false;
+        }
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (_isLocked) {
+            if (settings.showInterfaceWhenLockedTouched) {
+              setState(() => _showControls = !_showControls);
+            }
+            return;
+          }
+
+          setState(() {
+            _showControls = !_showControls;
+            if (_showControls) {
+              _startControlsTimer();
+            } else {
+              _controlsTimer?.cancel();
+            }
+          });
+        },
+        onDoubleTapDown: (details) => _seekRelative(details.globalPosition),
+        onScaleStart: (details) {
+          _baseScale = _videoScale;
+          _isScaling = details.pointerCount >= 2;
+          _activeGestureType = 'none';
+        },
+        onScaleUpdate: (details) {
+          if (_isLocked || (_scaffoldKey.currentState?.isEndDrawerOpen ?? false)) return;
+
+          if (details.pointerCount >= 2) {
+            _isScaling = true;
+            setState(() {
+              _videoScale = (_baseScale * details.scale).clamp(1.0, 5.0);
+            });
+          } else if (!_isScaling) {
+            _handleSwipe(details);
+          }
+        },
+        onScaleEnd: (_) {
+          _isScaling = false;
+          _activeGestureType = 'none';
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+          /*
+          Transform.scale(
+            scale: _videoScale,
+            child: Center( // Center Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¥Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ¢â‚¬â€œÃƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚Â«Ã¢â‚¬Â¡
+              child: AspectRatio(
+                aspectRatio: playerService.controller!.value.aspectRatio,
+                child: VideoPlayer(playerService.controller!),
+              ),
+            ),
+          ),
+          */
+          // Video Surface
+          RepaintBoundary(
+            key: _globalKey,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..rotateY(_isMirrored ? 3.14159 : 0) // Mirror (Y-axis rotation)
+                ..rotateX(_isFlipped ? 3.14159 : 0),
+              // Vertical Flip (X-axis rotation)
+              // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¸Ã ÂªÂ°Ã ÂªÂ«Ã Â«â€¡Ã ÂªÂ¸ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ³Ã ÂªÂ¾ Ã ÂªÂ­Ã ÂªÂ¾Ã Âªâ€”Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š:
+              child: Transform.scale(
+                scale: _videoScale,
+                child: Center(
+                  child: AspectRatio(
+                    // Ã ÂªÅ“Ã Â«â€¹ _selectedAspectRatio null Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹Ã ÂªÂ¨Ã Â«â€¹ Ã Âªâ€œÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨Ã ÂªÂ² Ã ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂµÃ Â«â€¹
+                    aspectRatio:
+                    _selectedAspectRatio ??
+                        playerService.controller!.value.aspectRatio,
+                    child: FittedBox(
+                      fit: _videoFit,
+                      // BoxFit.fill Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ«Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¶Ã Â«â€¡
+                      clipBehavior: Clip.hardEdge,
+                      child: SizedBox(
+                        width: playerService.controller!.value.size.width,
+                        height: playerService.controller!.value.size.height,
+                        child: VideoPlayer(playerService.controller!),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          _buildSeekIndicator(),
+          _buildGestureIndicator(),
+          // Custom Overlay for Controls
+          AnimatedOpacity(
+            opacity: _showControls || _isLocked ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 300),
+            child: _buildControlsOverlay(),
+          ),
+          _buildScreenOverlays(settings),
+          if (_overlayText != null)
+            Center(
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  // This keeps the box tight around the text
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (sign != null) ...[
+                      Text(
+                        sign ?? "",
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                    SizedBox(width: 8), // Gap between icon and time
+                    Text(
+                      _overlayText ?? "",
+                      style: TextStyle(fontSize: 24, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+      ),
     );
   }
 
-  Future<void> routeToDetailPage(
-    AssetEntity entity,
-    BuildContext context,
-  ) async {
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
+  Widget _buildScreenOverlays(SettingsProvider settings) {
+    final controller = playerService.controller;
+    final position = controller?.value.position ?? Duration.zero;
+    final duration = controller?.value.duration ?? Duration.zero;
+    final remaining = duration - position;
+
+    final List<Widget> overlays = [];
+
+    if (settings.showElapsedTime) {
+      final double offset =
+          settings.isCornerOffsetEnabled ? settings.cornerOffset : 0.0;
+      overlays.add(
+        Positioned(
+          left: 12,
+          top: 12 + offset,
+          child: _overlayChip(
+            _formatDuration(position),
+            bg: settings.screenTextBackgroundEnabled
+                ? settings.screenTextBackgroundColor
+                : Colors.black54,
+            fg: settings.controlsColor,
+          ),
+        ),
+      );
+    }
+
+    if (settings.showBatteryClock) {
+      overlays.add(
+        Positioned(
+          right: 12,
+          top: 12,
+          child: _overlayChip(
+            "${_formatClock(_now)}${_batteryLevel != null ? " • ${_batteryLevel!}%" : ""}",
+            bg: settings.screenTextBackgroundEnabled
+                ? settings.screenTextBackgroundColor
+                : Colors.black54,
+            fg: settings.controlsColor,
+          ),
+        ),
+      );
+    }
+
+    if (settings.screenTextPlaceAtBottom) {
+      overlays.add(
+        Positioned(
+          left: 12,
+          right: 12,
+          bottom: 12,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: settings.screenTextBackgroundEnabled
+                  ? settings.screenTextBackgroundColor
+                  : Colors.black54,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: Text(
+              settings.showRemainingTime
+                  ? "-${_formatDuration(remaining)}"
+                  : _formatDuration(position),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: settings.screenTextBottomColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (overlays.isEmpty) return const SizedBox.shrink();
+    return Stack(children: overlays);
+  }
+
+  Widget _overlayChip(String text, {required Color bg, required Color fg}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: fg,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  String _formatClock(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return "$h:$m";
+  }
+
+  Widget _buildGestureIndicator() {
+    if (_gestureValue == null) return const SizedBox.shrink();
+
+    return Align(
+      // Brightness (Left Swipe) -> Design Right Side
+      // Volume (Right Swipe) -> Design Left Side
+      alignment: _isBrightnessGesture
+          ? Alignment.centerRight
+          : Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isBrightnessGesture
+                    ? (_gestureValue! > 0.5
+                    ? Icons.brightness_7
+                    : Icons.brightness_4)
+                    : (_gestureValue! == 0
+                    ? Icons.volume_off
+                    : Icons.volume_up),
+                color: Colors.white,
+                size: 30,
+              ),
+              const SizedBox(height: 15),
+
+              Container(
+                width: 6,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+
+                  children: [
+                    FractionallySizedBox(
+                      heightFactor: _gestureValue!.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _isBrightnessGesture
+                              ? Colors.orangeAccent
+                              : Colors.redAccent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                              (_isBrightnessGesture
+                                  ? Colors.orangeAccent
+                                  : Colors.redAccent)
+                                  .withOpacity(0.5),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 15),
+              Text(
+                "${(_gestureValue! * 100).toInt()}%",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleSwipe(ScaleUpdateDetails details) async {
+    if (_isScaling) return;
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
+    double deltaY = details.focalPointDelta.dy;
+    double deltaX = details.focalPointDelta.dx;
+
+    if (details.localFocalPoint.dy > height * 0.85) {
+      return;
+    }
+    if (_activeGestureType == 'none') {
+      if (deltaX.abs() > deltaY.abs() && deltaX.abs() > 2.0) {
+        _activeGestureType = 'seek';
+      } else if (deltaY.abs() > deltaX.abs() && deltaY.abs() > 2.0) {
+        _activeGestureType = 'vertical';
+      }
+    }
+
+    _gestureOverlayTimer?.cancel();
+
+    if (_activeGestureType == 'seek') {
+      final controller = playerService.controller!;
+      if (controller.value.isInitialized) {
+        final currentPos = controller.value.position;
+        final totalDuration = controller.value.duration;
+
+        Duration seekStep = Duration(milliseconds: (deltaX * 200).toInt());
+        Duration newPos = currentPos + seekStep;
+
+        if (newPos < Duration.zero) newPos = Duration.zero;
+        if (newPos > totalDuration) newPos = totalDuration;
+
+        controller.seekTo(newPos);
+
+        // Check if we are seeking forward or backward
+        bool isForward = deltaX > 0;
+
+        // Use Unicode for Ã‚Â« (backward) and Ã‚Â» (forward)
+        String icon = isForward ? "\u00BB" : "\u00AB";
+        _showOverlayMessage(_formatDuration(newPos), icon);
+      }
+      return;
+    }
+
+    if (_activeGestureType == 'vertical') {
+      if (details.localFocalPoint.dx < width / 2) {
+        final settings = Provider.of<SettingsProvider>(context, listen: false);
+        if (!(settings.gestures["Brightness"] ?? false)) return;
+        // Brightness Logic
+        _isBrightnessGesture = true;
+        _brightness = (_brightness - deltaY / 200).clamp(0.0, 1.0);
+        _gestureValue = _brightness;
+        await ScreenBrightness().setScreenBrightness(_brightness);
+      } else {
+        final settings = Provider.of<SettingsProvider>(context, listen: false);
+        if (!(settings.gestures["Volume"] ?? false)) return;
+        // Volume Logic
+        _isBrightnessGesture = false;
+        playerService.volume = (playerService.volume - deltaY / 200).clamp(
+          0.0,
+          1.0,
+        );
+        _gestureValue = playerService.volume;
+        VolumeController().setVolume(playerService.volume, showSystemUI: false);
+      }
+      setState(() {});
+    }
+
+    _gestureOverlayTimer = Timer(const Duration(milliseconds: 800), () {
+      setState(() => _gestureValue = null);
+    });
+  }
+
+  void _seekRelative(Offset tapPosition) {
+    if (_isLocked) return;
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (!(settings.gestures["FF/RW(Double tap)"] ?? true)) return;
+    final width = MediaQuery.of(context).size.width;
+    final currentPos = playerService.controller!.value.position;
+
+    _seekIconTimer?.cancel();
+
+    bool isForward = tapPosition.dx > width / 2;
+
+    setState(() {
+      if (isForward) {
+        _showForwardIcon = true;
+        _showBackwardIcon = false;
+      } else {
+        _showBackwardIcon = true;
+        _showForwardIcon = false;
+      }
+    });
+
+    final newPos = isForward
+        ? currentPos + const Duration(seconds: 10)
+        : currentPos - const Duration(seconds: 10);
+    playerService.controller!.seekTo(newPos);
+
+    _seekIconTimer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() {
+          _showForwardIcon = false;
+          _showBackwardIcon = false;
+        });
+      }
+    });
+  }
+
+  Widget _buildSeekIndicator() {
+    return Stack(
+      children: [
+        // Backward Indicator (Left Side)
+        if (_showBackwardIcon)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: MediaQuery.of(context).size.width / 3,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.white.withOpacity(0.2), Colors.transparent],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.fast_rewind_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                  Text(
+                    "-10s",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+        // Forward Indicator (Right Side)
+        if (_showForwardIcon)
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              width: MediaQuery.of(context).size.width / 3,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.transparent, Colors.white.withOpacity(0.2)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.fast_forward_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                  Text(
+                    "+10s",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildControlsOverlay() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _isLocked ? Colors.transparent : Colors.black.withOpacity(0.4),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (!_isLocked) ...[_buildTopBar(), _buildExtraControlsHeader()],
+          const Spacer(),
+          const Spacer(),
+          const Spacer(),
+          _buildBottomSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExtraControlsHeader() {
+    return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 0),
+    child: Row(
+    children: [
+    Expanded(
+    child: GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onHorizontalDragStart: (_) {},
+    onHorizontalDragUpdate: (details) {
+    if (details.delta.dx < -1 && !_isExtraControlsExpanded) {
+    setState(() {
+    _isExtraControlsExpanded = true;
+    });
+    _startControlsTimer();
+    }
+    },
+      //////////////////////////////////// part 2 new player scareen/////////////////////////////////////////////////////////////////////////////////////////////////
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        height: 90,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+            child: // _buildExtraControlsHeader Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã Âªâ€š Row Ã Âªâ€ºÃ Â«â€¡ Ã ÂªÂ¤Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾Ã Âªâ€š:
+            Row(
+              children: [
+                if (_isExtraControlsExpanded) ...[
+                  if (_enabledShortcuts["Capture"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.icCamera,
+                      label: "Capture",
+                      onTap: _captureScreenshot,
+                    ),
+
+                  if (_enabledShortcuts["A-B Repeat"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.icABRepeat,
+                      label: "A-B Repeat",
+                      color: _pointA != null
+                          ? Colors.redAccent
+                          : Colors.white,
+                      onTap: _handleABRepeat,
+                    ),
+
+                  if (_enabledShortcuts["Flip"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.icSwapVert,
+                      label: "Flip",
+                      color: _isFlipped
+                          ? Colors.redAccent
+                          : Colors.white,
+                      onTap: () =>
+                          setState(() => _isFlipped = !_isFlipped),
+                    ),
+
+                  if (_enabledShortcuts["Mirror"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.icSwapHor,
+                      label: "Mirror",
+                      color: _isMirrored
+                          ? Colors.redAccent
+                          : Colors.white,
+                      onTap: () =>
+                          setState(() => _isMirrored = !_isMirrored),
+                    ),
+
+                  if (_enabledShortcuts["Trim"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.likeIcon,
+                      label: "Trim",
+                      onTap: () async {
+                        await playerService.controller?.pause();
+                        File? file = await playerService
+                            .playlist[playerService.currentIndex]
+                            .file;
+
+                        final trimmedPath = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                VideoTrimScreen(file: file!),
+                          ),
+                        );
+                        print("trimmedPath is ==> $trimmedPath");
+
+                        int lastPosition =
+                            playerService
+                                .controller
+                                ?.value
+                                .position
+                                .inMilliseconds ??
+                                0;
+
+                        playerService.loadVideo(
+                              () {
+                            if (mounted) setState(() {});
+                          },
+                          seekToMs: lastPosition,
+                        );
+                      },
+                    ),
+                  if (_enabledShortcuts["Playback Speed"]!)
+                    _controlItemWithLabel(
+                      src: AppSvg.ic2x,
+                      // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂªÃ Â«â‚¬Ã ÂªÂ¡ Ã Âªâ€ Ã ÂªË†Ã Âªâ€¢Ã ÂªÂ¨
+                      label: "Speed",
+                      onTap:
+                      _showPlaybackSpeedBottomSheet, // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š Ã ÂªÂ«Ã Âªâ€šÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¶Ã ÂªÂ¨ Ã Âªâ€¢Ã Â«â€¹Ã ÂªÂ² Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡
+                    ),
+                ],
+
+                // Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ®Ã Â«â‚¬ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¤Ã ÂªÂ¾ Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨Ã Â«â€¹ Ã ÂªÂªÃ ÂªÂ£ Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂ¤Ã ÂªÂ®Ã Â«â€¡ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ®Ã Â«â€šÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ¯Ã ÂªÂ¾ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹:
+                if (_enabledShortcuts["Shuffle"]!)
+                  _controlItemWithLabel(
+                    src: playerService.isShuffle
+                        ? AppSvg.icShuffleActive
+                        : AppSvg.icShuffle,
+                    label: "Shuffle",
+                    onTap: () => setState(
+                          () => playerService.isShuffle =
+                      !playerService.isShuffle,
+                    ),
+                  ),
+
+                if (_enabledShortcuts["Repeat"]!)
+                  _controlItemWithLabel(
+                    src: playerService.isLooping
+                        ? AppSvg.icLoopActive
+                        : AppSvg.icLoop,
+                    label: "Repeat",
+                    onTap: () => setState(() {
+                      playerService.isLooping =
+                      !playerService.isLooping;
+                      playerService.controller!.setLooping(
+                        playerService.isLooping,
+                      );
+                    }),
+                  ),
+
+                _controlItemWithLabel(
+                  src: playerService.isMuted
+                      ? AppSvg.icVolumeOff
+                      : AppSvg.icVolumeOn,
+                  label: "Mute",
+                  onTap: () => setState(() {
+                    playerService.isMuted = !playerService.isMuted;
+                    playerService.controller!.setVolume(
+                      playerService.isMuted ? 0 : playerService.volume,
+                    );
+                  }),
+                ),
+                _controlItemWithLabel(
+                  src: _isFullScreen
+                      ? AppSvg.icZoomOut
+                      : AppSvg.icZoomIn,
+                  label: "Screen",
+                  onTap: () => setState(() {
+                    _isFullScreen = !_isFullScreen;
+                    _setOrientation(_isFullScreen);
+                  }),
+                ),
+
+                // 'More/Less' Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨ Ã ÂªÂ¹Ã Âªâ€šÃ ÂªÂ®Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¾ Ã Âªâ€ºÃ Â«â€¡Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¹Ã Â«â€¡Ã ÂªÂ¶Ã Â«â€¡ (Ã ÂªÂ¤Ã Â«â€¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã Â«ÂÃ ÂªÂ¯Ã Â«ÂÃ Âªâ€š)
+                _controlItemWithLabel(
+                  src: _isExtraControlsExpanded
+                      ? AppSvg.icOff
+                      : AppSvg.icOn,
+                  label: _isExtraControlsExpanded ? "Less" : "More",
+                  onTap: () => setState(
+                        () => _isExtraControlsExpanded =
+                    !_isExtraControlsExpanded,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+    ),
+    ],
+    ),
+    );
+  }
+
+  Widget _controlItemWithLabel({
+    required String src,
+    required String label,
+    required VoidCallback onTap,
+    Color color = Colors.white,
+  }) {
+    return GestureDetector(
+      onTap: () {
+        onTap();
+        _startControlsTimer();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppImage(src: src, height: 35, width: 35),
+            if (_isExtraControlsExpanded) ...[
+              const SizedBox(height: 6),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    bool isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+    final settings = Provider.of<SettingsProvider>(context);
+    return Container(
+      height: isLandscape ? 60 : 100,
+      padding: EdgeInsets.only(top: isLandscape ? 0 : 30, left: 10, right: 10),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.black87, Colors.transparent],
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new,
+              color: Colors.white,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: Text(
+              playerService.playlist[playerService.currentIndex].title ??
+                  "Playing Video",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isLandscape ? 16 : 18,
+                fontWeight: FontWeight.w500,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          if (settings.displayBatteryClockInTitleBar)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Text(
+                "${_formatClock(_now)}${_batteryLevel != null ? "  ${_batteryLevel!}%" : ""}",
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          if (settings.screenRotationButton)
+            IconButton(
+              icon: const Icon(Icons.screen_rotation, color: Colors.white),
+              onPressed: _toggleRotation,
+            ),
+          // Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€”Ã Â«ÂÃ ÂªÂ¸ Ã Âªâ€ Ã Âªâ€¡Ã Âªâ€¢Ã ÂªÂ¨Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã Â«â€¡ 3 Dots
+          IconButton(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onPressed: () {
+              // Ã Âªâ€ Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ®Ã ÂªÂ£Ã Â«â‚¬ Ã ÂªÂ¬Ã ÂªÂ¾Ã ÂªÅ“Ã Â«ÂÃ ÂªÂ¨Ã Â«â€¹ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ¨Ã Â«â€š (EndDrawer) Ã Âªâ€œÃ ÂªÂªÃ ÂªÂ¨ Ã ÂªÂ¥Ã ÂªÂ¶Ã Â«â€¡
+              // playerService.controller?.pause(); // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂªÃ Â«â€¹Ã ÂªÂ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+              _scaffoldKey.currentState?.openEndDrawer();
+              // Ã ÂªÅ“Ã Â«â€¹ Ã Âªâ€°Ã ÂªÂªÃ ÂªÂ°Ã ÂªÂ¨Ã Â«â‚¬ Ã ÂªÂ²Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ¨ Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ® Ã ÂªÂ¨Ã ÂªÂ¾ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¡ Ã ÂªÂ¤Ã Â«â€¹ Scaffold.of(context).openEndDrawer(); Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂªÃ ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¶Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¯
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Ã Âªâ€  Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÅ“Ã Â«â€¡Ã ÂªÅ¸Ã ÂªÂ¨Ã Â«â€¡ Scaffold Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š endDrawer: _buildSideMenu() Ã ÂªÂ¤Ã ÂªÂ°Ã Â«â‚¬Ã Âªâ€¢Ã Â«â€¡ Ã ÂªÂ®Ã Â«â€šÃ Âªâ€¢Ã ÂªÂµÃ Â«ÂÃ Âªâ€š
+  Widget _buildSideMenu() {
+    double drawerWidth =
+    MediaQuery.of(context).orientation == Orientation.landscape
+        ? MediaQuery.of(context).size.width * 0.35
+        : MediaQuery.of(context).size.width * 0.75;
+
+    return SizedBox(
+      width: drawerWidth,
+      child: Drawer(
+        backgroundColor: Colors.black.withOpacity(0.01),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header Section (Dynamic based on _isMoreMenuVisible)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 15,
+                  horizontal: 10,
+                ),
+                child: Row(
+                  children: [
+                    if (_isMoreMenuVisible || _isQueueVisible)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => setState(() {
+                          _isMoreMenuVisible = false;
+                          _isQueueVisible = false;
+                        }),
+                      ),
+                    Text(
+                      _isQueueVisible
+                          ? "Playing Queue"
+                          : (_isMoreMenuVisible ? "More" : "Quick Menu"),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.white24, height: 1),
+
+              // Content Section
+              Expanded(
+                child: _isQueueVisible
+                    ? _buildQueueList()
+                    : (_isRatioVisible
+                    ? _buildRatioMenu()
+                    : (_isMoreMenuVisible
+                    ? _buildMoreCategoryMenu()
+                    : _buildMainMenuGrid())),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQueueList() {
+    return ReorderableListView.builder(
+      itemCount: playerService.playlist.length,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) newIndex -= 1;
+          final item = playerService.playlist.removeAt(oldIndex);
+          playerService.playlist.insert(newIndex, item);
+
+          // Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂ¹Ã ÂªÂ¾Ã ÂªÂ²Ã ÂªÂ¨Ã Â«â€¹ Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã Âªâ€“Ã ÂªÂ¸Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ¾Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ currentIndex Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂªÃ ÂªÂ£ Ã Âªâ€¦Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ Â«â€¹ Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡
+          if (oldIndex == playerService.currentIndex) {
+            playerService.currentIndex = newIndex;
+          } else if (oldIndex < playerService.currentIndex &&
+              newIndex >= playerService.currentIndex) {
+            playerService.currentIndex -= 1;
+          } else if (oldIndex > playerService.currentIndex &&
+              newIndex <= playerService.currentIndex) {
+            playerService.currentIndex += 1;
+          }
+        });
+      },
+      itemBuilder: (context, index) {
+        final video = playerService.playlist[index];
+        final bool isCurrent = index == playerService.currentIndex;
+
+        return ListTile(
+          key: ValueKey(video.id),
+          // Reorderable Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¯Ã Â«ÂÃ ÂªÂ¨Ã ÂªÂ¿Ã Âªâ€¢ Ã Âªâ€¢Ã Â«â‚¬ Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã Â«â‚¬ Ã Âªâ€ºÃ Â«â€¡
+          leading: Container(
+            width: 50,
+            height: 35,
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Icon(Icons.videocam, color: Colors.white54, size: 20),
+          ),
+          title: Text(
+            video.title ?? "Unknown",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isCurrent ? Colors.redAccent : Colors.white,
+              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+          trailing: const Icon(Icons.drag_handle, color: Colors.white24),
+          onTap: () {
+            // Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÂ¬Ã ÂªÂ¦Ã ÂªÂ²Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¨Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã Â«â€¹Ã ÂªÅ“Ã ÂªÂ¿Ã Âªâ€¢
+            playerService.currentIndex = index;
+            playerService.loadVideo(() {
+              if (mounted) setState(() {});
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRatioMenu() {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            children: [
+              ..._ratioValues.keys.map((String key) {
+                bool isSelected = _selectedAspectRatio == _ratioValues[key];
+                return ListTile(
+                  leading: Icon(
+                    isSelected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: isSelected ? Colors.redAccent : Colors.white54,
+                    size: 20,
+                  ),
+                  title: Text(
+                    key,
+                    style: TextStyle(
+                      color: isSelected ? Colors.redAccent : Colors.white,
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedAspectRatio = _ratioValues[key];
+                      // Ã ÂªÅ“Ã Â«â€¹ "Apply to all" Ã ÂªÅ¸Ã Â«â‚¬Ã Âªâ€¢ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã Âªâ€”Ã Â«ÂÃ ÂªÂ²Ã Â«â€¹Ã ÂªÂ¬Ã ÂªÂ² Ã ÂªÂ¸Ã ÂªÂ°Ã Â«ÂÃ ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂªÃ ÂªÂ£ Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÂµ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¶Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¯
+                    });
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        ),
+
+        const Divider(color: Colors.white24),
+
+        // Apply to all videos Checkbox
+        CheckboxListTile(
+          title: const Text(
+            "Apply to all videos",
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          value: _applyRatioToAll,
+          activeColor: Colors.redAccent,
+          controlAffinity: ListTileControlAffinity.leading,
+          onChanged: (bool? value) {
+            setState(() {
+              _applyRatioToAll = value ?? false;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  void _showPlaybackSpeedBottomSheet() {
+    double currentSpeed = playerService.controller?.value.playbackSpeed ?? 1.0;
+    TextEditingController speedTextController = TextEditingController(
+      text: currentSpeed.toStringAsFixed(2),
+    );
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      isScrollControlled: true,
+      // Ã Âªâ€¢Ã Â«â‚¬Ã ÂªÂ¬Ã Â«â€¹Ã ÂªÂ°Ã Â«ÂÃ ÂªÂ¡ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÅ“Ã ÂªÂ°Ã Â«â€šÃ ÂªÂ°Ã Â«â‚¬
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+
+          builder: (context, setSheetState) {
+
+            void updateSpeed(double newSpeed, {bool isManual = false}) {
+              double validatedSpeed = newSpeed.clamp(0.25, 4.0);
+
+              double finalSpeed;
+              if (isManual) {
+                finalSpeed = double.parse(validatedSpeed.toStringAsFixed(2));
+              } else {
+                finalSpeed = (validatedSpeed * 20).round() / 20;
+              }
+
+              playerService.controller?.setPlaybackSpeed(finalSpeed);
+
+              setSheetState(() {
+                currentSpeed = finalSpeed;
+                speedTextController.text = finalSpeed.toString();
+              });
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Playback Speed",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+
+                  // --- Row 1: [-] [TextField] [+] ---
+                  // --- Row 1: [-] [TextField] [+] ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬ 0.05 Ã ÂªËœÃ ÂªÅ¸Ã ÂªÂ¶Ã Â«â€¡
+                      _speedCircleButton(
+                        Icons.remove,
+                            () => updateSpeed(currentSpeed - 0.05),
+                      ),
+
+                      Container(
+                        width: 100,
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(
+                          controller: speedTextController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: const InputDecoration(
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.redAccent),
+                            ),
+                            suffixText: "x",
+                          ),
+                          onSubmitted: (value) {
+                            double? entered = double.tryParse(value);
+                            if (entered != null) {
+                              // Ã Âªâ€¦Ã ÂªÂ¹Ã Â«â‚¬Ã Âªâ€š 'isManual: true' Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ 1.81 Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂµÃ Â«â€¡Ã ÂªÂ²Ã Â«ÂÃ ÂªÂ¯Ã Â«Â Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂµÃ Â«â‚¬Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
+                              updateSpeed(entered, isManual: true);
+                            }
+                          },
+                        ),
+                      ),
+
+                      // Ã ÂªÂ¬Ã ÂªÅ¸Ã ÂªÂ¨Ã ÂªÂ¥Ã Â«â‚¬ 0.05 Ã ÂªÂµÃ ÂªÂ§Ã ÂªÂ¶Ã Â«â€¡
+                      _speedCircleButton(
+                        Icons.add,
+                            () => updateSpeed(currentSpeed + 0.05),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // --- Row 2: [Slider] [Reset Icon] ---
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: currentSpeed,
+                          min: 0.25,
+                          max: 4.0,
+                          activeColor: Colors.redAccent,
+                          onChanged: (value) => updateSpeed(value),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                        onPressed: () => updateSpeed(1.0), // Reset to Normal
+                        tooltip: "Reset",
+                      ),
+                    ],
+                  ),
+
+                  // Slider Labels
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "0.25x",
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                        Text(
+                          "1.0x",
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                        Text(
+                          "2.0x",
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                        Text(
+                          "3.0x",
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                        Text(
+                          "4.0x",
+                          style: TextStyle(color: Colors.white54, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showNetworkStreamDialog() {
+    TextEditingController urlController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            "Network Stream",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Enter a video URL to stream (HTTP, HTTPS, or direct link)",
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: urlController,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: "http://example.com/video.mp4",
+                  hintStyle: const TextStyle(color: Colors.white24),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(
+                      Icons.content_paste,
+                      color: Colors.redAccent,
+                    ),
+                    onPressed: () async {
+                      // Clipboard Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ°Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+                      // final data = await Clipboard.getData('text/plain');
+                      // if (data != null) urlController.text = data.text!;
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
+              onPressed: () {
+                String url = urlController.text.trim();
+                if (url.isNotEmpty && Uri.parse(url).isAbsolute) {
+                  Navigator.pop(
+                    context,
+                  ); // Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€” Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+                  Navigator.pop(
+                    context,
+                  ); // Ã ÂªÂ¡Ã Â«ÂÃ ÂªÂ°Ã Â«â€¹Ã Âªâ€¦Ã ÂªÂ° Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+
+                  // Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ® Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+                  playerService.playNetworkStream(url, () {
+                    if (mounted) setState(() {});
+                  });
+                } else {
+                  // Invalid URL Error Ã ÂªÂ¬Ã ÂªÂ¤Ã ÂªÂ¾Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂ¶Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÂ¯
+                }
+              },
+              child: const Text(
+                "Play Stream",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _speedCircleButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.1),
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
+      ),
+    );
+  }
+  //////////////////////////////////// part 3 new player scareen/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  Widget _buildMainMenuGrid() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 15,
+            crossAxisSpacing: 10,
+            padding: const EdgeInsets.all(15),
+            children: [
+              _menuGridItem(
+                Icons.queue_play_next,
+                "Queue",
+                onTapCustom: () {
+                  setState(() => _isQueueVisible = true);
+                },
+              ),
+              _menuGridItem(
+                Icons.aspect_ratio,
+                "Ratio",
+                onTapCustom: () {
+                  setState(() => _isRatioVisible = true);
+                },
+              ),
+              _menuGridItem(
+                Icons.settings_display,
+                "Display",
+                onTapCustom: () {
+                  Navigator.pop(context); // àª¡à«àª°à«‹àª…àª° àª¬àª‚àª§ àª•àª°à«‹
+                  _showDisplaySettings(context);
+                },
+              ),
+              _menuGridItem(Icons.bookmark_border, "Bookmark"),
+              _menuGridItem(Icons.content_cut, "Cut"),
+              _menuGridItem(Icons.favorite_border, "Favourite"),
+              _menuGridItem(Icons.playlist_add, "Playlist"),
+              _menuGridItem(Icons.info_outline, "Info"),
+              _menuGridItem(Icons.share, "Share"),
+              _menuGridItem(
+                Icons.language,
+                "Stream",
+                onTapCustom: () {
+                  _showNetworkStreamDialog();
+                },
+              ),
+              _menuGridItem(Icons.help_outline, "Tutorial"),
+              _menuGridItem(
+                Icons.more_horiz,
+                "More",
+                onTapCustom: () {
+                  setState(() => _isMoreMenuVisible = true);
+                },
+              ),
+            ],
+          ),
+
+          const Divider(color: Colors.white24),
+
+          // --- Shortcuts Switch ---
+          SwitchListTile(
+            title: const Text(
+              "Shortcuts",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            value: _showShortcutsInMenu,
+            activeColor: Colors.redAccent,
+            onChanged: (bool value) {
+              setState(() => _showShortcutsInMenu = value);
+            },
+          ),
+
+          // --- Checkbox List (Ã ÂªÅ“Ã Â«â€¹ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂµÃ Â«â‚¬Ã ÂªÅ¡ Ã Âªâ€œÃ ÂªÂ¨ Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¯ Ã ÂªÂ¤Ã Â«â€¹ Ã ÂªÅ“ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¶Ã Â«â€¡) ---
+          if (_showShortcutsInMenu)
+            ..._enabledShortcuts.keys.map((String key) {
+              return CheckboxListTile(
+                title: Text(
+                  key,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                value: _enabledShortcuts[key],
+                activeColor: Colors.redAccent,
+                checkColor: Colors.white,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _enabledShortcuts[key] = value ?? false;
+                  });
+                },
+              );
+            }).toList(),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildMoreCategoryMenu() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "TOOLS",
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _textButtonItem("Delete", () {}),
+          _textButtonItem("Rename", () {}),
+          _textButtonItem("Lock", () {}),
+          _textButtonItem("Settings", () {}),
+
+          const SizedBox(height: 30),
+
+          const Text(
+            "HELP",
+            style: TextStyle(
+              color: Colors.redAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _textButtonItem("FAQ", () {}),
+          _textButtonItem("About", () {}),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _textButtonItem(String title, VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        onPressed: onTap,
+        style: TextButton.styleFrom(
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+        ),
+        child: Text(
+          title,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _menuGridItem(
+      IconData icon,
+      String title, {
+        VoidCallback? onTapCustom,
+      }) {
+    return InkWell(
+      onTap: onTapCustom ?? () {},
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMoreOptionsBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Category 1: Tools
+              const Text(
+                "Tools",
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.delete_outline, color: Colors.white),
+                    label: const Text(
+                      "Delete",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.edit_outlined, color: Colors.white),
+                    label: const Text(
+                      "Rename",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.lock_outline, color: Colors.white),
+                    label: const Text(
+                      "Lock",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    label: const Text(
+                      "Settings",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(color: Colors.white24, height: 30),
+
+              // Category 2: Help
+              const Text(
+                "Help",
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.question_answer_outlined,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      "FAQ",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.info_outline, color: Colors.white),
+                    label: const Text(
+                      "About",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCenterControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildCircularButton(
+          icon: AppSvg.skipPrev,
+          onPressed: () => playerService.playPrevious(() => setState(() {})),
+        ),
+        const SizedBox(width: 40),
+        GestureDetector(
+          onTap: () {
+            playerService.togglePlay();
+            _startControlsTimer();
+            setState(() {});
+          },
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: AppImage(
+              src: playerService.controller!.value.isPlaying
+                  ? AppSvg.pauseVid
+                  : AppSvg.playVid,
+              height: 45,
+              width: 45,
+            ),
+
+            // Icon(
+            //   playerService.controller!.value.isPlaying
+            //       ? Icons.pause_rounded
+            //       : Icons.play_arrow_rounded,
+            //   size: 60,
+            //   color: Colors.white,
+            // ),
+          ),
+        ),
+        const SizedBox(width: 40),
+        _buildCircularButton(
+          icon: AppSvg.skipNext,
+          onPressed: () => playerService.playNext(() => setState(() {})),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircularButton({
+    required String icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black.withOpacity(0.40),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(5),
+          child: AppImage(src: icon, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomSection() {
+    final settings = Provider.of<SettingsProvider>(context);
+    final playedColor =
+        settings.progressBarCategory == "Flat"
+            ? settings.progressBarColor.withOpacity(0.8)
+            : settings.progressBarColor;
+
+    return Container(
+      padding: const EdgeInsets.only(bottom: 0, left: 10, right: 10),
+      child: Column(
+        children: [
+          if (!_isLocked && !settings.isProgressBarBelow) ...[
+            Row(
+              children: [
+                Text(
+                  _formatDuration(playerService.controller!.value.position),
+                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: VideoProgressIndicator(
+                      playerService.controller!,
+                      allowScrubbing: true,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      colors: VideoProgressColors(
+                        playedColor: playedColor,
+                        bufferedColor: Colors.white24,
+                        backgroundColor: Colors.white12,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  settings.showRemainingTime
+                      ? "-${_formatDuration(playerService.controller!.value.duration - playerService.controller!.value.position)}"
+                      : _formatDuration(playerService.controller!.value.duration),
+                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 0),
+
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: [
+            //
+            //   ],
+            // ),
+          ],
+
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+                onPressed: () => setState(() {
+                  _isLocked = !_isLocked;
+                  if (!_isLocked) _startControlsTimer();
+                }),
+              ),
+              if (!_isLocked) ...[
+                Row(
+                  children: [
+                    _buildCircularButton(
+                      icon: AppSvg.skipPrev,
+                      onPressed: () =>
+                          playerService.playPrevious(() => setState(() {})),
+                    ),
+                    SizedBox(width: 20),
+                    GestureDetector(
+                      onTap: () {
+                        playerService.togglePlay();
+                        _startControlsTimer();
+                        setState(() {});
+                      },
+                      child: AppImage(
+                        src: playerService.controller!.value.isPlaying
+                            ? AppSvg.pauseVid
+                            : AppSvg.playVid,
+                        height: 45,
+                        width: 45,
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    _buildCircularButton(
+                      icon: AppSvg.skipNext,
+                      onPressed: () =>
+                          playerService.playNext(() => setState(() {})),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: Icon(
+                    _getFitIcon(_videoFit),
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (_videoFit == BoxFit.contain) {
+                        _videoFit = BoxFit.cover;
+                      } else if (_videoFit == BoxFit.cover) {
+                        _videoFit = BoxFit.fill;
+                      } else if (_videoFit == BoxFit.fill) {
+                        _videoFit = BoxFit.none;
+                      } else {
+                        _videoFit = BoxFit.contain;
+                      }
+
+                      _overlayText = _getFitText(_videoFit);
+                    });
+
+                    _overlayTextTimer?.cancel();
+                    _overlayTextTimer = Timer(const Duration(seconds: 2), () {
+                      if (mounted) setState(() => _overlayText = null);
+                    });
+                  },
+                ),
+              ],
+            ],
+          ),
+          if (!_isLocked && settings.isProgressBarBelow) ...[
+            Row(
+              children: [
+                Text(
+                  _formatDuration(playerService.controller!.value.position),
+                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: VideoProgressIndicator(
+                      playerService.controller!,
+                      allowScrubbing: true,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      colors: VideoProgressColors(
+                        playedColor: playedColor,
+                        bufferedColor: Colors.white24,
+                        backgroundColor: Colors.white12,
+                      ),
+                    ),
+                  ),
+                ),
+                Text(
+                  settings.showRemainingTime
+                      ? "-${_formatDuration(playerService.controller!.value.duration - playerService.controller!.value.position)}"
+                      : _formatDuration(playerService.controller!.value.duration),
+                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 0),
+
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            //   children: [
+            //
+            //   ],
+            // ),
+          ],
+          SizedBox(height: 16),
+
+        ],
+      ),
+    );
+  }
+
+  String _getFitText(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return "Fit";
+      case BoxFit.cover:
+        return "Crop";
+      case BoxFit.fill:
+        return "Stretch";
+      case BoxFit.none:
+        return "100%";
+      default:
+        return "Fit";
+    }
+  }
+
+  IconData _getFitIcon(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return Icons.fit_screen_outlined;
+      case BoxFit.cover:
+        return Icons.crop_free_rounded;
+      case BoxFit.fill:
+        return Icons.open_in_full_rounded;
+      case BoxFit.none:
+        return Icons.fullscreen_exit_rounded;
+      default:
+        return Icons.fit_screen;
+    }
+  }
+
+  Widget _controlIconButton({
+    String? src,
+    IconData? icon,
+    Color color = Colors.white,
+    required VoidCallback onTap,
+  }) {
+    return IconButton(
+      onPressed: onTap,
+      icon: src != null
+          ? AppImage(src: src, height: 35, width: 35)
+          : Icon(icon, color: color, size: 22),
+    );
+  }
+
+  Future<void> _captureScreenshot() async {
+    try {
+      RenderRepaintBoundary boundary =
+      _globalKey.currentContext!.findRenderObject()
+      as RenderRepaintBoundary;
+
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final directory = await getTemporaryDirectory();
+      final imagePath =
+          '${directory.path}/screenshot_${DateTime.now().millisecondsSinceEpoch}.png';
+      File imageFile = File(imagePath);
+      await imageFile.writeAsBytes(pngBytes);
+
+      await Gal.putImage(imagePath);
+
+      AppToast.show(
+        context,
+        "Screenshot saved to Gallery!",
+        type: ToastType.success,
+      );
+    } catch (e) {
+      print("Screenshot Error: $e");
+      AppToast.show(context, "Error saving screenshot", type: ToastType.error);
+    }
+  }
+
+  void _handleABRepeat() {
+    final currentPos = playerService.controller!.value.position;
+    if (_pointA == null) {
+      _pointA = currentPos;
+      AppToast.show(context, "Point A Set");
+    } else if (_pointB == null) {
+      _pointB = currentPos;
+      AppToast.show(context, "Point B Set. Repeating A-B");
+      playerService.controller!.addListener(_checkABRepeat);
+    } else {
+      _pointA = null;
+      _pointB = null;
+      playerService.controller!.removeListener(_checkABRepeat);
+      AppToast.show(context, "A-B Repeat Cleared");
+    }
+    setState(() {});
+  }
+
+  void _showSettingsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
+              border: Border.all(color: Colors.white10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Video Settings",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Divider(color: Colors.white12, thickness: 1),
+                const SizedBox(height: 10),
+
+                // 1. Playback Speed Item
+                _buildSettingsTile(
+                  icon: Icons.speed_rounded,
+                  title: "Playback Speed",
+                  value: "${playerService.playbackSpeed}x",
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showSpeedSelection();
+                  },
+                ),
+
+                // 2. Aspect Ratio (Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¡)
+                // _buildSettingsTile(
+                //   icon: Icons.aspect_ratio_rounded,
+                //   title: "Aspect Ratio",
+                //   value: _getFitText(_videoFit),
+                //   onTap: () {
+                //     Navigator.pop(context);
+                //     // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡ Aspect Ratio Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â² Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â‚¬Â¹
+                //   },
+                // ),
+                //
+                // // 3. Audio/Subtitle (Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â­Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ‚Â·Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â°Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¯)
+                // _buildSettingsTile(
+                //   icon: Icons.subtitles_rounded,
+                //   title: "Subtitles",
+                //   value: "Off",
+                //   onTap: () {},
+                // ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  ////////////////////////////////////// part 4 new player scareen//////////////////////////////////////////////////////////////////////////////////////////
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 24),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 5),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white24,
+              size: 14,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSpeedSelection() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.8),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(30),
+              ),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 15),
+                  // Handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Text(
+                      "Playback Speed",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const Divider(color: Colors.white12, height: 1),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [0.5, 0.75, 1.0, 1.25, 1.5, 2.0].map((speed) {
+                          bool isSelected =
+                              playerService.playbackSpeed == speed;
+                          return ListTile(
+                            onTap: () {
+                              _changeSpeed(speed);
+                              Navigator.pop(context);
+                            },
+                            leading: Icon(
+                              Icons.check_circle_rounded,
+                              color: isSelected
+                                  ? Colors.redAccent
+                                  : Colors.transparent,
+                              size: 20,
+                            ),
+                            title: Text(
+                              "${speed}x",
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.redAccent
+                                    : Colors.white,
+                                fontSize: 16,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Text(
+                              "Current",
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
+                              ),
+                            )
+                                : null,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _changeSpeed(double speed) async {
+    await playerService.controller!.setPlaybackSpeed(speed);
+    setState(() {
+      playerService.playbackSpeed = speed;
+    });
+    Navigator.pop(context);
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return "00:00";
+    String minutes = duration.inMinutes.toString().padLeft(2, '0');
+    String seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return "$minutes:$seconds";
+  }
+
+  void _showOverlayMessage(String message, String icon) {
+    setState(() {
+      _overlayText = message;
+      sign = icon;
+    });
+
+    _overlayTextTimer?.cancel();
+    _overlayTextTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _overlayText = null;
+          sign = null;
+        });
+      }
+    });
+  }
+
+  void _videoListener() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _playTrimmedVideo(String path) async {
+    if (playerService.controller != null) {
+      playerService.controller!.removeListener(_videoListener);
+      await playerService.controller!.dispose();
+    }
+
+    final newController = VideoPlayerController.file(File(path));
+
+    try {
+      await newController.initialize();
+
+      setState(() {
+        playerService.controller = newController;
+
+        playerService.controller!.addListener(() {
+          if (mounted) {
+            setState(() {});
+
+            _checkVideoEnd();
+          }
+        });
+
+        playerService.controller!.play();
+      });
+    } catch (e) {
+      debugPrint("Error loading trimmed video: $e");
+    }
+  }
+
+  void _showDisplaySettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return DefaultTabController(
+          length: 6,
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.85,
+            child: Column(
+              children: [
+                const TabBar(
+                  isScrollable: true,
+                  indicatorColor: Colors.redAccent,
+                  tabs: [
+                    Tab(text: "Style"), Tab(text: "Screen"), Tab(text: "Controls"),
+                    Tab(text: "Navigation"), Tab(text: "Text"), Tab(text: "Layout"),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _styleTab(s),
+                      ),
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _screenTab(s),
+                      ),
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _controlsTab(s),
+                      ),
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _navigationTab(s),
+                      ),
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _textTab(s),
+                      ),
+                      Consumer<SettingsProvider>(
+                        builder: (_, s, __) => _layoutTab(s),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _controlsTab(SettingsProvider s) {
+    final gestureItems = s.gestures.keys.toList();
+    final shortcutItems = s.quickShortcuts.keys.toList();
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildDropdown("Touch Action", ["Show Interface -> Pause/Resume", "Show interface + pause/resume", "Pause/resume", "Show/hide interface"], s.touchAction, (v) => s.updateSetting(() => s.touchAction = v!)),
+        _buildDropdown("Lock Mode", ["Lock", "Kids lock", "Kids lock (+Touch effects)"], s.lockMode, (v) => s.updateSetting(() => s.lockMode = v!)),
+
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Gestures", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+        ),
+        // 2 Column Grid for Gestures
+        GridView.count(
+          crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 3,
+          children: gestureItems
+              .map((item) => _buildCheckbox(
+                    item,
+                    s.gestures[item] ?? true,
+                    (v) => s.updateSetting(() => s.gestures[item] = v ?? false),
+                  ))
+              .toList(),
+        ),
+
+        const SizedBox(height: 8),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Text("Quick Shortcuts", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+        ),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 3,
+          children: shortcutItems
+              .map((item) => _buildCheckbox(
+                    item,
+                    s.quickShortcuts[item] ?? true,
+                    (v) => s.updateSetting(() => s.quickShortcuts[item] = v ?? false),
+                  ))
+              .toList(),
+        ),
+
+        _buildCheckbox("Interface auto hide", s.controlsInterfaceAutoHideEnabled, (v) => s.updateSetting(() => s.controlsInterfaceAutoHideEnabled = v ?? true)),
+        if (s.controlsInterfaceAutoHideEnabled)
+          _buildSlider("Hide Interval (sec)", 1, 60, s.interfaceAutoHide, (v) => s.updateSetting(() => s.interfaceAutoHide = v)),
+        _buildCheckbox(
+          "Show interface when locked screen is touched",
+          s.showInterfaceWhenLockedTouched,
+          (v) => s.updateSetting(() => s.showInterfaceWhenLockedTouched = v ?? true),
+        ),
+      ],
+    );
+  }
+
+  Widget _navigationTab(SettingsProvider s) {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildSlider("Seek Speed (sec/cm)", 2, 400, s.seekSpeed, (v) => s.updateSetting(() => s.seekSpeed = v)),
+        _buildCheckbox("Forward/backward moving button", s.forwardBackwardButton, (v) => s.updateSetting(() => s.forwardBackwardButton = v ?? true)),
+        _buildSlider("Move Interval (sec)", 1, 60, s.moveInterval, (v) => s.updateSetting(() => s.moveInterval = v)),
+        _buildCheckbox("Previous/next button", s.previousNextButton, (v) => s.updateSetting(() => s.previousNextButton = v ?? true)),
+        _buildCheckbox("Display the current position while changing position", s.displayCurrentPositionWhileChanging, (v) => s.updateSetting(() => s.displayCurrentPositionWhileChanging = v ?? true)),
+      ],
+    );
+  }
+
+  Widget _textTab(SettingsProvider s) {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildDropdown("Font", ["Select Font Folder", "Default", "Mono", "Sans Serif", "Serif"], s.font, (v) => s.updateSetting(() => s.font = v!)),
+        _buildSlider("Size", 16, 60, s.fontSize, (v) => s.updateSetting(() => s.fontSize = v)),
+        _buildSlider("Scale (%)", 50, 400, s.textScale, (v) => s.updateSetting(() => s.textScale = v)),
+
+        Row(
+          children: [
+            Expanded(child: _buildColorTile("Color", s.textColor, onPick: (c) => s.updateSetting(() => s.textColor = c))),
+            Expanded(child: _buildCheckbox("Bold", s.isBold, (v) => s.updateSetting(() => s.isBold = v!))),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(
+              child: _buildCheckbox(
+                "Background",
+                s.subtitleBackgroundEnabled,
+                (v) => s.updateSetting(() => s.subtitleBackgroundEnabled = v ?? false),
+              ),
+            ),
+            Expanded(
+              child: _buildColorTile(
+                "Bg Color",
+                s.subtitleBackgroundColor,
+                enabled: s.subtitleBackgroundEnabled,
+                onPick: (c) => s.updateSetting(() => s.subtitleBackgroundColor = c),
+              ),
+            ),
+          ],
+        ),
+
+        Row(
+          children: [
+            Expanded(child: _buildCheckbox("Border", s.hasBorder, (v) => s.updateSetting(() => s.hasBorder = v!))),
+            Expanded(
+              child: _buildColorTile(
+                "Border Color",
+                s.borderColor,
+                enabled: s.hasBorder,
+                onPick: (c) => s.updateSetting(() => s.borderColor = c),
+              ),
+            ),
+          ],
+        ),
+        if (s.hasBorder) ...[
+          _buildSlider("Border Width", 50, 300, s.borderSize, (v) => s.updateSetting(() => s.borderSize = v)),
+          _buildCheckbox("Improve stroke rendering", s.improveStrokeRendering, (v) => s.updateSetting(() => s.improveStrokeRendering = v ?? true)),
+        ],
+
+        _buildCheckbox("Shadow", s.shadowEnabled, (v) => s.updateSetting(() => s.shadowEnabled = v ?? true)),
+        _buildCheckbox("Fade out", s.fadeOutEnabled, (v) => s.updateSetting(() => s.fadeOutEnabled = v ?? false)),
+        _buildCheckbox("Improve SSA rendering", s.improveSsaRendering, (v) => s.updateSetting(() => s.improveSsaRendering = v ?? true)),
+        _buildCheckbox("Improve the rendering of complex scripts", s.improveComplexScriptRendering, (v) => s.updateSetting(() => s.improveComplexScriptRendering = v ?? true)),
+        _buildCheckbox("Ignore font specified in SSA subtitles", s.ignoreSsaFont, (v) => s.updateSetting(() => s.ignoreSsaFont = v ?? false)),
+        _buildCheckbox(
+          "Ignore broken fonts specified in SSA subtitles (experimental)",
+          s.ignoreBrokenSsaFonts,
+          (v) => s.updateSetting(() => s.ignoreBrokenSsaFonts = v ?? false),
+        ),
+      ],
+    );
+  }
+
+  Widget _layoutTab(SettingsProvider s) {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildDropdown("Alignment", ["Left", "Center", "Right"], s.layoutAlignment, (v) => s.updateSetting(() => s.layoutAlignment = v!)),
+        _buildSlider("Bottom Margins", 0, 150, s.bottomMargins, (v) => s.updateSetting(() => s.bottomMargins = v)),
+        Row(
+          children: [
+            Expanded(child: _buildCheckbox("Background", s.layoutBackgroundEnabled, (v) => s.updateSetting(() => s.layoutBackgroundEnabled = v ?? false))),
+            Expanded(
+              child: _buildColorTile(
+                "Background Color",
+                s.layoutBackgroundColor,
+                enabled: s.layoutBackgroundEnabled,
+                onPick: (c) => s.updateSetting(() => s.layoutBackgroundColor = c),
+              ),
+            ),
+          ],
+        ),
+        _buildCheckbox("Fit subtitles into video size", s.fitSubtitlesIntoVideoSize, (v) => s.updateSetting(() => s.fitSubtitlesIntoVideoSize = v ?? true)),
+      ],
+    );
+  }
+
+  Widget _styleTab(SettingsProvider s) {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildDropdown("Present", ["Default", "Inverse"], s.present, (v) => s.updateSetting(() => s.present = v!)),
+        _buildSwitch("Frame", s.isFrameEnabled, (v) => s.updateSetting(() => s.isFrameEnabled = v)),
+        _buildColorTile("Controls Color", s.controlsColor, onPick: (c) => s.updateSetting(() => s.controlsColor = c)),
+        _buildColorTile("Progressbar Color", s.progressBarColor, onPick: (c) => s.updateSetting(() => s.progressBarColor = c)),
+        _buildDropdown("Progressbar Category", ["Material", "Flat"], s.progressBarCategory, (v) => s.updateSetting(() => s.progressBarCategory = v!)),
+        _buildCheckbox("Place progress bar below buttons", s.isProgressBarBelow, (v) => s.updateSetting(() => s.isProgressBarBelow = v!)),
+      ],
+    );
+  }
+
+  Widget _screenTab(SettingsProvider s) {
+    return ListView(
+      padding: const EdgeInsets.all(10),
+      children: [
+        _buildDropdown("Orientation", ["Landscape", "Reverse Landscape", "Auto rotation(landscape)", "Auto rotation", "Use System default", "Use video orientation"], s.orientation, (v) {
+          s.updateSetting(() => s.orientation = v!);
+          _applyScreenSettings(s);
+        }),
+        _buildDropdown("Full Screen", ["On", "Off", "Auto Switch"], s.fullScreenMode, (v) {
+          s.updateSetting(() => s.fullScreenMode = v!);
+          _applyScreenSettings(s);
+        }),
+        _buildDropdown("Soft buttons", ["Show", "Hide", "Auto hide"], s.softButtonsMode, (v) {
+          s.updateSetting(() => s.softButtonsMode = v!);
+          _applyScreenSettings(s);
+        }),
+
+        const Divider(color: Colors.white24),
+
+        _buildCheckbox("Brightness", s.isBrightnessEnabled, (v) {
+          s.updateSetting(() => s.isBrightnessEnabled = v!);
+          _applyScreenSettings(s);
+        }),
+        if (s.isBrightnessEnabled)
+          _buildSlider("Brightness Level", 0.1, 1.0, s.brightness, (v) {
+            s.updateSetting(() => s.brightness = v);
+            _applyBrightnessSetting(s);
+          }),
+
+        Row(
+          children: [
+            Expanded(child: _buildCheckbox("Elapsed time", s.showElapsedTime, (v) => s.updateSetting(() => s.showElapsedTime = v!))),
+            Expanded(child: _buildCheckbox("Battery/Clock", s.showBatteryClock, (v) => s.updateSetting(() => s.showBatteryClock = v!))),
+          ],
+        ),
+
+        // Corner Offset Logic
+        _buildCheckbox("Corner Offset", s.isCornerOffsetEnabled, s.showElapsedTime ? (v) => s.updateSetting(() => s.isCornerOffsetEnabled = v!) : null),
+        if (s.isCornerOffsetEnabled && s.showElapsedTime)
+          _buildSlider("Offset Value", 0, 150, s.cornerOffset, (v) => s.updateSetting(() => s.cornerOffset = v)),
+
+        Row(
+          children: [
+            Expanded(child: _buildCheckbox("Text background", s.screenTextBackgroundEnabled, (v) => s.updateSetting(() => s.screenTextBackgroundEnabled = v ?? false))),
+            Expanded(
+              child: _buildColorTile(
+                "Text Bg Color",
+                s.screenTextBackgroundColor,
+                enabled: s.screenTextBackgroundEnabled,
+                onPick: (c) => s.updateSetting(() => s.screenTextBackgroundColor = c),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            Expanded(child: _buildCheckbox("Place at the bottom", s.screenTextPlaceAtBottom, (v) => s.updateSetting(() => s.screenTextPlaceAtBottom = v ?? false))),
+            Expanded(
+              child: _buildColorTile(
+                "Bottom Text Color",
+                s.screenTextBottomColor,
+                enabled: s.screenTextPlaceAtBottom,
+                onPick: (c) => s.updateSetting(() => s.screenTextBottomColor = c),
+              ),
+            ),
+          ],
+        ),
+        _buildCheckbox("Screen rotation button", s.screenRotationButton, (v) => s.updateSetting(() => s.screenRotationButton = v ?? true)),
+        _buildCheckbox("Display battery/clock in title bar", s.displayBatteryClockInTitleBar, (v) => s.updateSetting(() => s.displayBatteryClockInTitleBar = v ?? true)),
+        _buildCheckbox("Show remaining time", s.showRemainingTime, (v) => s.updateSetting(() => s.showRemainingTime = v ?? true)),
+        _buildCheckbox("Keep screen on", s.keepScreenOn, (v) {
+          s.updateSetting(() => s.keepScreenOn = v ?? true);
+          _applyKeepScreenOn(s);
+        }),
+        _buildCheckbox("Pause playback if obstructed by another window", s.pausePlaybackIfObstructed, (v) => s.updateSetting(() => s.pausePlaybackIfObstructed = v ?? false)),
+        _buildCheckbox("Show interface at the startup", s.showInterfaceAtStartup, (v) => s.updateSetting(() => s.showInterfaceAtStartup = v ?? true)),
+      ],
+    );
+  }
+
+  void _applyOrientation(String? value) {
+    switch (value) {
+      case "Landscape":
+        SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
+        break;
+      case "Reverse Landscape":
+        SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeRight]);
+        break;
+      case "Auto rotation(landscape)":
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        break;
+      case "Auto rotation":
+      case "Use System default":
+        SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+        break;
+      case "Use video orientation":
+        _setOrientation(_isFullScreen);
+        break;
+      default:
+        break;
+    }
+  }
+
+
+  // Dropdown Widget
+  Widget _buildDropdown(String title, List<String> items, String current, ValueChanged<String?> onChange) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
+      trailing: DropdownButton<String>(
+        value: current,
+        dropdownColor: Colors.black,
+        style: const TextStyle(color: Colors.redAccent),
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: onChange,
+      ),
+    );
+  }
+
+// Checkbox Widget
+  Widget _buildCheckbox(String title, bool value, ValueChanged<bool?>? onChange) {
+    return CheckboxListTile(
+      title: Text(title, style: TextStyle(color: onChange == null ? Colors.grey : Colors.white, fontSize: 13)),
+      value: value,
+      onChanged: onChange,
+      activeColor: Colors.redAccent,
+      controlAffinity: ListTileControlAffinity.leading,
+      dense: true,
+    );
+  }
+
+// Slider Widget
+  Widget _buildSlider(String title, double min, double max, double value, ValueChanged<double> onChange) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("$title: ${value.toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Slider(value: value, min: min, max: max, activeColor: Colors.redAccent, onChanged: onChange),
+        ],
+      ),
+    );
+  }
+
+// Switch Widget
+  Widget _buildSwitch(String title, bool value, ValueChanged<bool> onChange) {
+    return SwitchListTile(
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
+      value: value,
+      onChanged: onChange,
+      activeColor: Colors.redAccent,
+    );
+  }
+
+// Color Box Widget
+  Widget _buildColorTile(
+    String title,
+    Color color, {
+    ValueChanged<Color>? onPick,
+    bool enabled = true,
+  }) {
+    return ListTile(
+      title: Text(
+        title,
+        style: TextStyle(
+          color: enabled ? Colors.white : Colors.grey,
+          fontSize: 14,
+        ),
+      ),
+      onTap: (onPick != null && enabled)
+          ? () => _openColorPicker(title, color, onPick)
+          : null,
+      trailing: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  void _openColorPicker(
+    String title,
+    Color current,
+    ValueChanged<Color> onPick,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _presetColors.map((color) {
+                  final isSelected = color.value == current.value;
+                  return GestureDetector(
+                    onTap: () {
+                      onPick(color);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.white : Colors.white24,
+                          width: isSelected ? 3 : 1,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
-// import 'dart:async';
-// import 'dart:io';
-// import 'package:audio_session/audio_session.dart';
-// import 'package:chewie/chewie.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:hive/hive.dart';
-// import 'package:just_audio/just_audio.dart' hide PlayerState; // Just Audio ઉમેરો
-// import 'package:photo_manager/photo_manager.dart';
-// import 'package:video_player/video_player.dart';
-// import 'package:wakelock_plus/wakelock_plus.dart';
-// import '../core/constants.dart';
-// // import '../models/media_item.dart';
-// import '../models/player_data.dart';
-// import 'package:just_audio_background/just_audio_background.dart' as bg; // Alias આપો
-// import '../models/media_item.dart' as my;
-//
-// class GlobalPlayer extends ChangeNotifier {
-//   AssetEntity? currentEntity;
-//   static final GlobalPlayer _instance = GlobalPlayer._internal();
-//   factory GlobalPlayer() => _instance;
-//   GlobalPlayer._internal() {
-//     _initJustAudio(); // Constructor માં જ ઓડિયો પ્લેયર સેટ કરો
-//
-//   }
-//
-//   // પ્લેયર્સ
-//   VideoPlayerController? controller; // ફક્ત વીડિયો માટે
-//   final AudioPlayer audioPlayer = AudioPlayer(); // ફક્ત ઓડિયો માટે
-//   ChewieController? chewie;
-//
-//   String? currentPath;
-//   String? currentType;
-//   bool isLooping = false;
-//   List<my.MediaItem> queue = [];
-//   List<my.MediaItem> originalQueue = [];
-//   int currentIndex = -1;
-//   bool isShuffle = false;
-//
-//   // Just Audio Initializer
-//   void _initJustAudio() async{
-//     audioPlayer.currentIndexStream.listen((index) {
-//       // Jyare background mathi next/prev thay tyare aa trigger thase
-//       if (index != null && index < queue.length && index >= 0) {
-//         currentIndex = index;
-//         currentPath = queue[index].path;
-//         currentType = queue[index].type;
-//         // currentType = "audio";
-//         notifyListeners();
-//       }
-//     });
-//
-//     audioPlayer.playerStateStream.listen((state) {
-//       if (state.processingState == ProcessingState.completed) {
-//         // Just audio playlist automatically next par jashe,
-//         // pan tame tamari logic mujab handle kari shako.
-//       }
-//     });
-//     // await loadQueueFromHive();
-//   }
-//   // ૩. જૂના પ્લેયરને પ્રોપરલી બંધ કરવા માટે
-//   Future<void> _clearPreviousPlayer() async {
-//     // ૧. ઓડિયો રોકો
-//     if (audioPlayer.playing) await audioPlayer.stop();
-//
-//     // ૨. વીડિયો ક્લીનઅપ
-//     if (controller != null) {
-//       controller!.removeListener(_handlePlaybackCompletion);
-//
-//       // પ્લેયરને ડિસ્પોઝ કરતા પહેલા રેફરન્સ લો અને વેરીએબલને null કરો
-//       final oldController = controller;
-//       controller = null;
-//       chewie?.dispose();
-//       chewie = null;
-//
-//       // આ લાઈન સૌથી મહત્વની છે: UI ને કહો કે પ્લેયર જતો રહ્યો છે
-//       notifyListeners();
-//
-//       // થોડી રાહ જોઈને ડિસ્પોઝ કરો જેથી વિજેટ ટ્રી અપડેટ થઈ જાય
-//       await Future.delayed(Duration(milliseconds: 100));
-//       await oldController!.dispose();
-//     }
-//   }
-//
-//   // GlobalPlayer Class ની અંદર
-//   my.MediaItem? get currentMediaItem {
-//     if (currentIndex >= 0 && currentIndex < queue.length) {
-//       return queue[currentIndex];
-//     }
-//     return null;
-//   }
-//
-//   // સુધારેલી playNext મેથડ
-//   Future<void> playNext() async {
-//     if (queue.isEmpty) return;
-//
-//     // જો છેલ્લું ગીત હોય તો પહેલા પર જાઓ (Loop Queue)
-//     currentIndex = (currentIndex + 1) % queue.length;
-//
-//     final nextItem = queue[currentIndex];
-//     // અહીં await જરૂરી છે જેથી ડેટા લોડ થયા પછી જ UI અપડેટ થાય
-//     await play(nextItem.path, network: nextItem.isNetwork, type: nextItem.type);
-//     notifyListeners();
-//   }
-//
-//   Future<void> _savePlayerState() async {
-//     final box = Hive.box('player_state');
-//
-//     await box.put(
-//       'current',
-//       PlayerState()
-//         ..paths = queue.map((e) => e.path).toList()
-//         ..currentIndex = currentIndex
-//         ..currentType = currentType ?? 'audio'
-//         ..currentPositionMs =
-//             controller?.value.position.inMilliseconds ?? 0,
-//     );
-//   }
-//
-//   // GlobalPlayer Class ની અંદર
-//   Future<void> initAudioSession() async {
-//     final session = await AudioSession.instance;
-//     await session.configure(const AudioSessionConfiguration.music());
-//
-//     // આ લાઈન ત્યારે કામ લાગશે જ્યારે ફોન પર કોલ આવે તો ઓડિયો ઓટોમેટિક પોઝ થઈ જાય
-//     session.interruptionEventStream.listen((event) {
-//       if (event.begin) {
-//         pause();
-//       } else {
-//         resume();
-//       }
-//     });
-//   }
-//
-//
-//   void _handlePlaybackCompletion() {
-//     if (controller != null &&
-//         controller!.value.position >= controller!.value.duration &&
-//         !isLooping &&
-//         controller!.value.isInitialized) { // ચેક કરો કે ઇનિશિયલાઇઝ છે
-//
-//       // લિસનર હટાવી દો જેથી નેક્સ્ટ વીડિયો વખતે લૂપ ના થાય
-//       controller!.removeListener(_handlePlaybackCompletion);
-//       playNext();
-//     }
-//   }
-//   void toggleShuffle() {
-//     isShuffle = !isShuffle;
-//     if (isShuffle) {
-//       queue.shuffle();
-//     } else {
-//       queue = List.from(originalQueue);
-//     }
-//     notifyListeners();
-//   }
-//   Timer? _positionTimer;
-//
-//   void _startPositionSaver() {
-//     _positionTimer?.cancel();
-//     _positionTimer = Timer.periodic(Duration(seconds: 5), (_) {
-//       _savePlayerState();
-//     });
-//   }
-//   void _stopPositionSaver() {
-//     _positionTimer?.cancel();
-//   }
-//   Future<void> playPrevious() async {
-//     if (queue.isEmpty) return;
-//     currentIndex = (currentIndex - 1 < 0) ? queue.length - 1 : currentIndex - 1;
-//     final item = queue[currentIndex];
-//     await play(item.path, network: item.isNetwork, type: item.type);
-//   }
-//
-//   Future<void> loadQueueFromHive(String type) async {
-// print("type is ====------$type");
-//     try {
-//       // Hive boxes open karo
-//       final audioBox = Hive.box('audios');
-//       final videoBox = Hive.box('videos');
-//
-//       List<my.MediaItem> allItems = [];
-//
-//
-//       // --- Audio Data ---
-//       if(type=='audio'){
-//       for (var item in audioBox.values) {
-//         if (item is my.MediaItem) {
-//           // Jo direct object male to
-//           allItems.add(item);
-//         } else if (item is Map) {
-//           // Jo Map male to factory method vapro
-//           allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
-//         }
-//       }}
-// else{
-//       // --- Video Data ---
-//       for (var item in videoBox.values) {
-//         if (item is my.MediaItem) {
-//           allItems.add(item);
-//         } else if (item is Map) {
-//           allItems.add(my.MediaItem.fromMap(Map<String, dynamic>.from(item)));
-//         }
-//       }}
-//
-//       this.originalQueue = List.from(allItems);
-//       this.queue = List.from(allItems);
-//
-//       debugPrint("Queue Loaded Successfully: ${queue.length} items");
-//       notifyListeners();
-//     } catch (e) {
-//       debugPrint("Hive Load Error: $e");
-//     }
-//   }
-//
-//   Future<void> play(String path, {bool network = false, required String type}) async {
-// // 1. Queue check & find index
-//
-//     // if (queue.isEmpty) await loadQueueFromHive();
-//
-//     currentIndex = queue.indexWhere((element) => element.path == path);
-//
-//     if (currentIndex == -1) {
-//       // Jo current item queue ma nathi to add karo
-//       final newItem = my.MediaItem(path: path, type: type, isNetwork: network);
-//       queue.add(newItem);
-//       currentIndex = queue.length - 1;
-//     }
-//
-//     await _clearPreviousPlayer();
-//     currentPath = path;
-//     currentType = type;
-//
-//     try {
-//       final session = await AudioSession.instance;
-//
-//       if (type == "audio") {
-//         // Audio background playlist banavo
-//         final audioSources = queue.where((i) => i.type == 'audio').map((item) {
-//           return AudioSource.uri(
-//             item.isNetwork ? Uri.parse(item.path) : Uri.file(item.path),
-//             tag: bg.MediaItem(
-//               id: item.path,
-//               album: "My Playlist",
-//               title: item.path.split('/').last,
-//             ),
-//           );
-//         }).toList();
-//
-//         // Audio list no correct index shodho
-//         int audioIndex = queue.where((i) => i.type == 'audio')
-//             .toList()
-//             .indexWhere((e) => e.path == path);
-//
-//         await audioPlayer.setAudioSource(
-//           ConcatenatingAudioSource(children: audioSources),
-//           initialIndex: audioIndex >= 0 ? audioIndex : 0,
-//         );
-//         audioPlayer.play();
-//       }
-//       else {
-//         // --- વીડિયો પ્લેયર લોજિક ---
-//         await session.configure(const AudioSessionConfiguration.music()); // સિમ્પલ કોન્ફિગરેશન
-//
-//         controller = network
-//             ? VideoPlayerController.networkUrl(Uri.parse(path))
-//             : VideoPlayerController.file(File(path));
-//
-//         // ૨. ઇનિશિયલાઇઝેશન પૂરું થાય ત્યાં સુધી રાહ જુઓ
-//         await controller!.initialize();
-//
-//         chewie = ChewieController(
-//           zoomAndPan: true,
-//           aspectRatio: controller!.value.aspectRatio,
-//           autoPlay: true,
-//           looping: isLooping,
-//           videoPlayerController: controller!,
-//           deviceOrientationsOnEnterFullScreen: [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight],
-//           deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
-//           materialProgressColors: ChewieProgressColors(
-//             playedColor: const Color(0XFF3D57F9),
-//             backgroundColor: const Color(0XFFF6F6F6),
-//           ),
-//           onSufflePressed: () => toggleShuffle(),
-//           onNextVideo: () => playNext(),
-//           onPreviousVideo: () => playPrevious(),
-//           additionalOptions: (context) => _buildAdditionalOptions(context), // આને અલગ ફંક્શનમાં લઈ લો
-//         );
-//
-//         controller!.addListener(_handlePlaybackCompletion);
-//       }
-//
-//       WakelockPlus.enable();
-//       _startPositionSaver();
-//
-//       // ❗ સૌથી મહત્વનું: આખા ફંક્શનમાં ફક્ત એક જ વાર અંતે નોટિફાય કરો
-//       notifyListeners();
-//
-//     } catch (e) {
-//       debugPrint("Playback Error Details: $e");
-//       // એરર આવે તો પણ નોટિફાય કરો જેથી લોડિંગ સર્કલ અટકે
-//       notifyListeners();
-//     }
-//   }
-//   // કંટ્રોલ મેથડ્સ (બંને પ્લેયર માટે)
-//   void pause() {
-//     if (currentType == "audio") audioPlayer.pause();
-//     else controller?.pause();
-//     notifyListeners();
-//   }
-//
-//   void resume() {
-//     if (currentType == "audio") audioPlayer.play();
-//     else controller?.play();
-//     notifyListeners();
-//   }
-//
-//
-//   // Stop મેથડ - જે બધું જ ક્લીન કરશે
-//   Future<void> stop() async {
-//     // ૧. ઓડિયો રોકો
-//     await audioPlayer.stop();
-//
-//     // ૨. વીડિયો અને ચેવી ડિસ્પોઝ કરો
-//     if (controller != null) {
-//       await controller!.dispose();
-//       controller = null;
-//     }
-//     if (chewie != null) {
-//       chewie!.dispose();
-//       chewie = null;
-//     }
-//
-//     // ૩. ડેટા સાવ ખાલી કરો
-//     currentPath = null;
-//     currentType = null;
-//     currentIndex = -1; // આનાથી મિની પ્લેયર અને પ્લેયર સ્ક્રીન આપોઆપ બંધ થશે
-//
-//     WakelockPlus.disable();
-//     notifyListeners(); // બધા વિજેટ્સને ખબર પડશે કે હવે કંઈ પ્લે નથી થઈ રહ્યું
-//   }
-//   // Getter for UI
-//   bool get isPlaying {
-//     if (currentType == "audio") return audioPlayer.playing;
-//     return controller?.value.isPlaying ?? false;
-//   }
-//
-//   // Progress Bar માટે પોઝિશન અને ડ્યુરેશન
-//   Duration get position {
-//     if (currentType == "audio") return audioPlayer.position;
-//     return controller?.value.position ?? Duration.zero;
-//   }
-//
-//   Duration get duration {
-//     if (currentType == "audio") return audioPlayer.duration ?? Duration.zero;
-//     return controller?.value.duration ?? Duration.zero;
-//   }
-//
-//   void setQueue(List<my.MediaItem> items, int startIndex) {
-//     if (items.isEmpty) return;
-//
-//     this.originalQueue = List.from(items);
-//     this.queue = List.from(items);
-//
-//     // -1 ne badle 0 check karo
-//     this.currentIndex = (startIndex >= 0 && startIndex < items.length) ? startIndex : 0;
-//
-//     notifyListeners();
-//   }
-//   @override
-//   void dispose() {
-//     _positionTimer?.cancel();
-//     audioPlayer.dispose();
-//     controller?.dispose();
-//     chewie?.dispose();
-//     super.dispose();
-//   }
-//
-//   _buildAdditionalOptions(BuildContext context){
-//     return [
-//       // OptionItem(
-//       //   onTap: (context) {
-//       //     toggleRotation();
-//       //     Navigator.pop(context);
-//       //   },
-//       //   iconData: Icons.screen_rotation,
-//       //   title: isLandscape ? "Portrait Mode" : "Landscape Mode",
-//       // ),
-//       OptionItem(
-//         controlType: ControlType.miniVideo,
-//         onTap: (context) {
-//           Navigator.pop(context);
-//         },
-//         iconData: Icons.screen_rotation,
-//         title: "Mini Screen",
-//         iconImage: AppSvg.icMiniScreen,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.volume,
-//         onTap: (context) {
-//           // toggleRotation();
-//           // Navigator.pop(context);
-//         },
-//         iconData: Icons.screen_rotation,
-//         title: "Volume",
-//         iconImage: AppSvg.icVolumeOff,
-//       ),
-//
-//       OptionItem(
-//         controlType: ControlType.shuffle,
-//         onTap: (context) => toggleShuffle,
-//         iconData: Icons.shuffle,
-//         title: "Shuffle",
-//         iconImage: AppSvg.icShuffle,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.playbackSpeed,
-//         onTap: (context) {
-//           // toggleShuffle();
-//         },
-//         iconData: Icons.shuffle,
-//         title: "video speed",
-//         iconImage: AppSvg.ic2x,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.theme,
-//         onTap: (context) {
-//           toggleShuffle();
-//         },
-//         iconData: Icons.shuffle,
-//         title: "dark",
-//         iconImage: AppSvg.icDarkMode,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.info,
-//         onTap: (context) {
-//           toggleShuffle();
-//         },
-//         iconData: Icons.shuffle,
-//         title: "info",
-//         iconImage: AppSvg.icInfo,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.prev10,
-//         onTap: (context) {
-//           toggleShuffle();
-//         },
-//         iconData: Icons.shuffle,
-//         title: "prev10",
-//         iconImage: AppSvg.ic10Prev,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.next10,
-//         onTap: (context) {
-//           toggleShuffle();
-//         },
-//         iconData: Icons.shuffle,
-//         title: "next10",
-//         iconImage: AppSvg.ic10Next,
-//       ),
-//
-//       OptionItem(
-//         onTap: (context) {
-//           // chewie!.videoPlayerController.value.cancelAndRestartTimer();
-//           //
-//           // if (videoPlayerLatestValue.volume == 0) {
-//           //   chewie!.videoPlayerController.setVolume(chewie.videoPlayerController.videoPlayerOptions.);
-//           //   // controller.setVolume(_latestVolume ?? 0.5);
-//           // } else {
-//           //   _latestVolume = controller.value.volume;
-//           //   controller.setVolume(0.0);
-//           // }
-//         },
-//         controlType: ControlType.loop,
-//         iconData: Icons.shuffle,
-//         title: "Loop",
-//         iconImage: AppSvg.icLoop,
-//       ),
-//       OptionItem(
-//         controlType: ControlType.playbackSpeed,
-//         onTap: (context) async {
-//           final newPos =
-//               (controller!.value.position) - Duration(seconds: 10);
-//           controller!.seekTo(
-//             newPos > Duration.zero ? newPos : Duration.zero,
-//           );
-//         },
-//         iconData: Icons.replay_10,
-//         title: "kk",
-//         iconImage: AppSvg.ic10Prev,
-//       ),
-//       OptionItem(
-//         onTap: (context) async {},
-//         controlType: ControlType.miniVideo,
-//         iconData: Icons.replay_10,
-//         title: "miniScreen",
-//         iconImage: AppSvg.icMiniScreen,
-//       ),
-//     ];
-//   }
-// }
-//
 
+class SettingsProvider extends ChangeNotifier {
+  // --- Style ---
+  String present = "Default";
+  bool isFrameEnabled = true;
+  Color controlsColor = Colors.white;
+  Color progressBarColor = Colors.redAccent;
+  String progressBarCategory = "Material";
+  bool isProgressBarBelow = false;
 
+  // --- Screen ---
+  String orientation = "Auto rotation";
+  String fullScreenMode = "Auto Switch";
+  String softButtonsMode = "Auto hide";
+  double brightness = 0.5;
+  bool isBrightnessEnabled = true;
+  bool showElapsedTime = true;
+  bool showBatteryClock = true;
+  bool isCornerOffsetEnabled = false;
+  double cornerOffset = 0.0;
+  bool screenTextBackgroundEnabled = false;
+  Color screenTextBackgroundColor = Colors.black54;
+  bool screenTextPlaceAtBottom = false;
+  Color screenTextBottomColor = Colors.white;
+  bool screenRotationButton = true;
+  bool displayBatteryClockInTitleBar = true;
+  bool showRemainingTime = false;
+  bool keepScreenOn = true;
+  bool pausePlaybackIfObstructed = false;
+  bool showInterfaceAtStartup = true;
 
+  // --- Text (Subtitles) ---
+  String font = "Default";
+  double fontSize = 20.0;
+  double textScale = 100.0;
+  Color textColor = Colors.white;
+  bool isBold = false;
+  bool subtitleBackgroundEnabled = false;
+  Color subtitleBackgroundColor = Colors.black54;
+  bool hasBorder = false;
+  Color borderColor = Colors.black;
+  double borderSize = 100.0;
+  bool improveStrokeRendering = true;
+  bool shadowEnabled = true;
+  bool fadeOutEnabled = false;
+  bool improveSsaRendering = true;
+  bool improveComplexScriptRendering = true;
+  bool ignoreSsaFont = false;
+  bool ignoreBrokenSsaFonts = false;
 
+  String touchAction = "Show Interface -> Pause/Resume";
+  String lockMode = "Lock";
+  Map<String, bool> gestures = {
+    "Seek position": true,
+    "Zoom and pan": true,
+    "Video zoom": true,
+    "Video pan": true,
+    "Volume": true,
+    "Brightness": true,
+    "Play/pause(Double tap)": true,
+    "Video zoom(double tap)": true,
+    "FF/RW(Double tap)": true,
+    "Speed FF(Long press)": true,
+    "Playback speed": true,
+    "Subtitle Scroll": true,
+    "Subtitle up/down": true,
+    "Subtitle zoom": true,
+  };
+  Map<String, bool> quickShortcuts = {
+    "Screen Rotation": true,
+    "Playback speed": true,
+    "Background play": true,
+    "Loop": true,
+    "Mute": true,
+    "Shuffle": true,
+    "Equalizer": true,
+    "Sleep Timer": true,
+    "A - B Repeat": true,
+    "Night Mode": true,
+    "Customise Items": true,
+    "ScreenShot": true,
+    "Mirror mode": true,
+    "Verticle Flip": true,
+  };
+  bool controlsInterfaceAutoHideEnabled = true;
+  double interfaceAutoHide = 3.0;
+  bool showInterfaceWhenLockedTouched = true;
+  double seekSpeed = 10.0;
+  bool forwardBackwardButton = true;
+  double moveInterval = 10.0;
+  bool previousNextButton = true;
+  bool displayCurrentPositionWhileChanging = true;
+
+  String layoutAlignment = "Center";
+  double bottomMargins = 20.0;
+  bool layoutBackgroundEnabled = false;
+  Color layoutBackgroundColor = Colors.black54;
+  bool fitSubtitlesIntoVideoSize = true;
+
+  // Function to update values and notify UI
+  void updateSetting(VoidCallback action) {
+    action();
+    notifyListeners();
+  }
+}
  */
-
-
-
-
-
-// import 'dart:async';
-// import 'dart:io';
-// import 'package:audio_session/audio_session.dart';
-// import 'package:chewie/chewie.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:hive/hive.dart';
-// import 'package:just_audio/just_audio.dart' hide PlayerState; // Just Audio ઉમેરો
-// import 'package:photo_manager/photo_manager.dart';
-// import 'package:video_player/video_player.dart';
-// import 'package:wakelock_plus/wakelock_plus.dart';
-// import '../core/constants.dart';
-// // import '../models/media_item.dart';
-// import '../models/player_data.dart';
-// import 'package:just_audio_background/just_audio_background.dart' as bg; // Alias આપો
-// import '../models/media_item.dart' as my;
-//
-// class GlobalPlayer extends ChangeNotifier {
-//   AssetEntity? currentEntity;
-//   static final GlobalPlayer _instance = GlobalPlayer._internal();
-//   factory GlobalPlayer() => _instance;
-//   GlobalPlayer._internal() {
-//     _initJustAudio(); // Constructor માં જ ઓડિયો પ્લેયર સેટ કરો
-//   }
-//
-//   // પ્લેયર્સ
-//   VideoPlayerController? controller; // ફક્ત વીડિયો માટે
-//   final AudioPlayer audioPlayer = AudioPlayer(); // ફક્ત ઓડિયો માટે
-//   ChewieController? chewie;
-//
-//   String? currentPath;
-//   String? currentType;
-//   bool isLooping = false;
-//   List<my.MediaItem> queue = [];
-//   List<my.MediaItem> originalQueue = [];
-//   int currentIndex = -1;
-//   bool isShuffle = false;
-//
-//   // Just Audio Initializer
-//   void _initJustAudio() {
-//     audioPlayer.setAudioSource(ConcatenatingAudioSource(children: []),preload: true,);
-//     // ઓડિયો પૂરો થાય ત્યારે નેક્સ્ટ સોન્ગ પ્લે કરવા માટે
-//     audioPlayer.playerStateStream.listen((state) {
-//       if (state.processingState == ProcessingState.completed) {
-//         if (!isLooping) {
-//           playNext();
-//         }
-//       }
-//     });
-//   }
-//   Future<void> playNext() async {
-//     if (queue.isEmpty) return;
-//
-//     if (currentIndex + 1 >= queue.length) {
-//       if (isLooping) {
-//         currentIndex = 0;
-//       } else {
-//         return;
-//       }
-//     } else {
-//       currentIndex++;
-//     }
-//
-//     final item = queue[currentIndex];
-//
-//     await play(item.path, network: item.isNetwork, type: item.type);
-//
-//     await _savePlayerState();
-//     notifyListeners();
-//   }
-//
-//   Future<void> _savePlayerState() async {
-//     final box = Hive.box('player_state');
-//
-//     await box.put(
-//       'current',
-//       PlayerState()
-//         ..paths = queue.map((e) => e.path).toList()
-//         ..currentIndex = currentIndex
-//         ..currentType = currentType ?? 'audio'
-//         ..currentPositionMs =
-//             controller?.value.position.inMilliseconds ?? 0,
-//     );
-//   }
-//
-//   // GlobalPlayer Class ની અંદર
-//   Future<void> initAudioSession() async {
-//     final session = await AudioSession.instance;
-//     await session.configure(const AudioSessionConfiguration.music());
-//
-//     // આ લાઈન ત્યારે કામ લાગશે જ્યારે ફોન પર કોલ આવે તો ઓડિયો ઓટોમેટિક પોઝ થઈ જાય
-//     session.interruptionEventStream.listen((event) {
-//       if (event.begin) {
-//         pause();
-//       } else {
-//         resume();
-//       }
-//     });
-//   }
-//
-//
-//   void _handlePlaybackCompletion() {
-//     if (controller == null || !controller!.value.isInitialized) return;
-//
-//     // જ્યારે વિડિયો/ઓડિયો પૂરો થાય ત્યારે
-//     if (controller!.value.position >= controller!.value.duration) {
-//       // જો લૂપિંગ ચાલુ હોય તો video_player પોતે હેન્ડલ કરી લેશે (setLooping true હોય તો)
-//       // જો લૂપિંગ બંધ હોય તો જ playNext() કોલ કરો
-//       if (!isLooping) {
-//         playNext();
-//       }
-//     }
-//   }
-//
-//   void toggleShuffle() {
-//     print("call ssss========$isShuffle");
-//     isShuffle = !isShuffle;
-//     print("call ssss========$isShuffle");
-//
-//     final currentItem = queue[currentIndex];
-//
-//     if (isShuffle) {
-//       queue.shuffle();
-//     } else {
-//       queue = List.from(originalQueue);
-//     }
-//
-//     currentIndex = queue.indexOf(currentItem);
-//
-//     notifyListeners();
-//   }
-//   Timer? _positionTimer;
-//
-//   void _startPositionSaver() {
-//     _positionTimer?.cancel();
-//     _positionTimer = Timer.periodic(Duration(seconds: 5), (_) {
-//       _savePlayerState();
-//     });
-//   }
-//   void _stopPositionSaver() {
-//     _positionTimer?.cancel();
-//   }
-//   Future<void> playPrevious() async {
-//     if (queue.isEmpty) return;
-//
-//     if (currentIndex - 1 < 0) {
-//       if (isLooping) {
-//         currentIndex = queue.length - 1;
-//       } else {
-//         return;
-//       }
-//     } else {
-//       currentIndex--;
-//     }
-//
-//     final item = queue[currentIndex];
-//     await play(item.path, network: item.isNetwork, type: item.type);
-//     await _savePlayerState();
-//     notifyListeners();
-//   }
-//
-//   Future<void> play(String path, {bool network = false, required String type}) async {
-//     // ૧. જો સેમ ગીત/વીડિયો ઓલરેડી ચાલુ હોય, તો રિઝ્યુમ કરો અથવા કશું ના કરો
-//     if (currentPath == path) {
-//       if (!isPlaying) resume();
-//       return;
-//     }
-//
-//     // ૨. જૂનું બધું અટકાવો
-//     await stop();
-//
-//     currentPath = path;
-//     currentType = type;
-//
-//     try {
-//       final session = await AudioSession.instance;
-//
-//       if (type == "audio") {
-//         // --- ઓડિયો પ્લેયર લોજિક ---
-//
-//         // ઓડિયો સેશનને મ્યુઝિક મોડમાં સેટ કરો
-//         await session.configure(const AudioSessionConfiguration.music());
-//         await session.setActive(true);
-//         await audioPlayer.stop();
-//         final source = AudioSource.uri(
-//           network ? Uri.parse(path) : Uri.file(path),
-//           tag: bg.MediaItem(
-//             id: path,
-//             album: "Local Media",
-//             title: path.split('/').last,
-//             artist: "Media Player",
-//           ),
-//         );
-//
-//         // એરર હેન્ડલિંગ સાથે ઓડિયો લોડ કરો
-//         await audioPlayer.setAudioSource(source,preload: true,).catchError((error) {
-//           if (error is PlayerInterruptedException) {
-//             print("Loading interrupted: common and safe to ignore");
-//           } else {
-//             print("Actual loading error: $error");
-//           }
-//         });
-//
-//         await audioPlayer.play();
-//         WakelockPlus.enable();
-//       }
-//       else {
-//
-//         // નવું સેટઅપ કરતા પહેલા UI ને કહી દો કે જૂનું કંટ્રોલર ગયું
-//         controller = null;
-//         notifyListeners();
-//         // ૧. ઓડિયો પ્લેયરને પૂરેપૂરું શાંત કરો
-//         await audioPlayer.stop();
-//
-//         // આ લાઈન સૌથી મહત્વની છે: સોર્સને null સેટ કરો જેથી Native એન્જિન ફ્રી થાય
-//         await audioPlayer.setAudioSource(
-//           ConcatenatingAudioSource(children: []),
-//           initialIndex: null,
-//           initialPosition: null,
-//         );
-//
-//         // ૨. ઓડિયો સેશનને વીડિયો માટે "Exclusive" રીતે એક્ટિવ કરો
-//         final session = await AudioSession.instance;
-//         await session.configure(const AudioSessionConfiguration(
-//           avAudioSessionCategory: AVAudioSessionCategory.playback,
-//           avAudioSessionMode: AVAudioSessionMode.moviePlayback,
-//           // એન્ડ્રોઇડ માટે ખાસ સેટિંગ્સ
-//           androidAudioAttributes: AndroidAudioAttributes(
-//             contentType: AndroidAudioContentType.movie,
-//             usage: AndroidAudioUsage.media,
-//           ),
-//         ));
-//
-//         // ફોર્સફુલી સેશન એક્ટિવ કરો
-//         await session.setActive(true);
-//
-//         // ૩. જૂનું કંટ્રોલર પ્રોપરલી કાઢી નાખો
-//         if (controller != null) {
-//           controller!.removeListener(_handlePlaybackCompletion);
-//           await controller!.dispose();
-//           controller = null;
-//         }
-//
-//         controller = network
-//             ? VideoPlayerController.networkUrl(Uri.parse(path))
-//             : VideoPlayerController.file(File(path));
-//
-//         try {
-//           await controller!.initialize();
-//           // વોલ્યુમ અહીં સેટ કરવું જરૂરી છે
-//           await controller!.setVolume(1.0);
-//           notifyListeners();
-//           controller!.addListener(_handlePlaybackCompletion);
-//         } catch (e) {
-//           print("Video Init Error: $e");
-//           // Chewie સેટઅપ
-//           chewie = ChewieController(
-//             zoomAndPan: true,
-//             aspectRatio: controller!.value.aspectRatio,
-//             autoPlay: true,
-//             looping: isLooping,
-//             videoPlayerController: controller!,
-//             // mute: false, // ખાતરી કરો કે અહીં ફોલ્સ છે
-//
-//             // તમારા કસ્ટમ ઓપ્શન્સ અને કંટ્રોલ્સ
-//             deviceOrientationsOnEnterFullScreen: [
-//               DeviceOrientation.landscapeLeft,
-//               DeviceOrientation.landscapeRight,
-//             ],
-//             deviceOrientationsAfterFullScreen: [
-//               DeviceOrientation.portraitUp,
-//               DeviceOrientation.portraitDown,
-//             ],
-//             materialProgressColors: ChewieProgressColors(
-//               playedColor: const Color(0XFF3D57F9),
-//               backgroundColor: const Color(0XFFF6F6F6),
-//             ),
-//             onSufflePressed: () => toggleShuffle(),
-//             onNextVideo: () => playNext(),
-//             onPreviousVideo: () => playPrevious(),
-//
-//             additionalOptions: (context) {
-//               return [
-//                 // OptionItem(
-//                 //   onTap: (context) {
-//                 //     toggleRotation();
-//                 //     Navigator.pop(context);
-//                 //   },
-//                 //   iconData: Icons.screen_rotation,
-//                 //   title: isLandscape ? "Portrait Mode" : "Landscape Mode",
-//                 // ),
-//                 OptionItem(
-//                   controlType: ControlType.miniVideo,
-//                   onTap: (context) {
-//                     Navigator.pop(context);
-//                   },
-//                   iconData: Icons.screen_rotation,
-//                   title: "Mini Screen",
-//                   iconImage: AppSvg.icMiniScreen,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.volume,
-//                   onTap: (context) {
-//                     // toggleRotation();
-//                     // Navigator.pop(context);
-//                   },
-//                   iconData: Icons.screen_rotation,
-//                   title: "Volume",
-//                   iconImage: AppSvg.icVolumeOff,
-//                 ),
-//
-//                 OptionItem(
-//                   controlType: ControlType.shuffle,
-//                   onTap: (context) => toggleShuffle,
-//                   iconData: Icons.shuffle,
-//                   title: "Shuffle",
-//                   iconImage: AppSvg.icShuffle,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.playbackSpeed,
-//                   onTap: (context) {
-//                     // toggleShuffle();
-//                   },
-//                   iconData: Icons.shuffle,
-//                   title: "video speed",
-//                   iconImage: AppSvg.ic2x,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.theme,
-//                   onTap: (context) {
-//                     toggleShuffle();
-//                   },
-//                   iconData: Icons.shuffle,
-//                   title: "dark",
-//                   iconImage: AppSvg.icDarkMode,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.info,
-//                   onTap: (context) {
-//                     toggleShuffle();
-//                   },
-//                   iconData: Icons.shuffle,
-//                   title: "info",
-//                   iconImage: AppSvg.icInfo,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.prev10,
-//                   onTap: (context) {
-//                     toggleShuffle();
-//                   },
-//                   iconData: Icons.shuffle,
-//                   title: "prev10",
-//                   iconImage: AppSvg.ic10Prev,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.next10,
-//                   onTap: (context) {
-//                     toggleShuffle();
-//                   },
-//                   iconData: Icons.shuffle,
-//                   title: "next10",
-//                   iconImage: AppSvg.ic10Next,
-//                 ),
-//
-//                 OptionItem(
-//                   onTap: (context) {
-//                     // chewie!.videoPlayerController.value.cancelAndRestartTimer();
-//                     //
-//                     // if (videoPlayerLatestValue.volume == 0) {
-//                     //   chewie!.videoPlayerController.setVolume(chewie.videoPlayerController.videoPlayerOptions.);
-//                     //   // controller.setVolume(_latestVolume ?? 0.5);
-//                     // } else {
-//                     //   _latestVolume = controller.value.volume;
-//                     //   controller.setVolume(0.0);
-//                     // }
-//                   },
-//                   controlType: ControlType.loop,
-//                   iconData: Icons.shuffle,
-//                   title: "Loop",
-//                   iconImage: AppSvg.icLoop,
-//                 ),
-//                 OptionItem(
-//                   controlType: ControlType.playbackSpeed,
-//                   onTap: (context) async {
-//                     final newPos =
-//                         (controller!.value.position) - Duration(seconds: 10);
-//                     controller!.seekTo(
-//                       newPos > Duration.zero ? newPos : Duration.zero,
-//                     );
-//                   },
-//                   iconData: Icons.replay_10,
-//                   title: "kk",
-//                   iconImage: AppSvg.ic10Prev,
-//                 ),
-//                 OptionItem(
-//                   onTap: (context) async {},
-//                   controlType: ControlType.miniVideo,
-//                   iconData: Icons.replay_10,
-//                   title: "miniScreen",
-//                   iconImage: AppSvg.icMiniScreen,
-//                 ),
-//               ];
-//             },
-//           );
-//
-//           await controller!.play();
-//         }}
-//
-//       _startPositionSaver();
-//     } catch (e) {
-//       print("Playback Error: $e");
-//     }
-//
-//     notifyListeners();
-//   }
-//
-//   // કંટ્રોલ મેથડ્સ (બંને પ્લેયર માટે)
-//   void pause() {
-//     if (currentType == "audio") {
-//       audioPlayer.pause();
-//     } else {
-//       controller?.pause();
-//     }
-//     notifyListeners();
-//   }
-//
-//   void resume() {
-//     if (currentType == "audio") {
-//       audioPlayer.play();
-//     } else {
-//       controller?.play();
-//     }
-//     notifyListeners();
-//   }
-//
-//
-//   Future<void> stop() async {
-//     // ૧. ઓડિયો પ્લેયર ક્લીનઅપ
-//     if (audioPlayer.playing) {
-//       await audioPlayer.stop();
-//     }
-//     // સોર્સ લોડિંગ કેન્સલ કરવા માટે
-//     await audioPlayer.setAudioSource(ConcatenatingAudioSource(children: [])).catchError((e) => null);
-//
-//     // ૨. વીડિયો પ્લેયર ક્લીનઅપ
-//     if (controller != null) {
-//       controller!.removeListener(_handlePlaybackCompletion);
-//       await controller!.dispose();
-//       controller = null;
-//     }
-//
-//     if (chewie != null) {
-//       chewie!.dispose();
-//       chewie = null;
-//     }
-//
-//     // ઓડિયો સેશન બંધ કરો
-//     final session = await AudioSession.instance;
-//     await session.setActive(false);
-//
-//     WakelockPlus.disable();
-//     _stopPositionSaver();
-//     notifyListeners();
-//   }
-//
-//   // Getter for UI
-//   bool get isPlaying {
-//     if (currentType == "audio") return audioPlayer.playing;
-//     return controller?.value.isPlaying ?? false;
-//   }
-//
-//   // Progress Bar માટે પોઝિશન અને ડ્યુરેશન
-//   Duration get position {
-//     if (currentType == "audio") return audioPlayer.position;
-//     return controller?.value.position ?? Duration.zero;
-//   }
-//
-//   Duration get duration {
-//     if (currentType == "audio") return audioPlayer.duration ?? Duration.zero;
-//     return controller?.value.duration ?? Duration.zero;
-//   }
-//
-//   void setQueue(List<my.MediaItem> items, int startIndex) {
-//     if (items.isEmpty) return; // ખાલી લિસ્ટ હોય તો કશું ના કરવું
-//
-//     originalQueue = List.from(items);
-//     queue = List.from(items);
-//     currentIndex = startIndex;
-//     notifyListeners(); // આનાથી UI ને ખબર પડશે કે હવે ઈન્ડેક્સ -1 નથી
-//   }
-// }
-//
-//
-//
-//
-//
-//
-//
-//
-// // import 'dart:io';
-// // import 'dart:typed_data';
-// // import 'dart:ui' as ui;
-// //
-// // import 'package:flutter/material.dart';
-// // import 'package:flutter_bloc/flutter_bloc.dart';
-// // import 'package:hive/hive.dart';
-// // import 'package:photo_manager/photo_manager.dart';
-// // import 'package:photo_manager/platform_utils.dart';
-// // import 'package:share_plus/share_plus.dart';
-// //
-// // import '../blocs/audio/audio_bloc.dart';
-// // import '../models/media_item.dart';
-// // import '../widgets/image_item_widget.dart';
-// // import 'home_screen.dart';
-// // import 'player_screen.dart';
-// //
-// // class AudioScreen extends StatefulWidget {
-// //   const AudioScreen({super.key});
-// //
-// //   @override
-// //   State<AudioScreen> createState() => _AudioScreenState();
-// // }
-// //
-// // class _AudioScreenState extends State<AudioScreen> {
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     final box = Hive.box('audios');
-// //
-// //     return BlocProvider(
-// //       create: (_) => AudioBloc(box)..add(LoadAudios()),
-// //       child: Scaffold(
-// //         appBar: AppBar(
-// //           title: const Text("Audios"),
-// //           actions: [
-// //             IconButton(
-// //               icon: const Icon(Icons.refresh),
-// //               onPressed: () =>
-// //                   context.read<AudioBloc>().add(LoadAudios()),
-// //             ),
-// //           ],
-// //         ),
-// //         body: Stack(children: [const _AudioBody(),Align(
-// //             alignment: Alignment.bottomCenter,
-// //             child: const MiniPlayer()),]),
-// //         floatingActionButton: FloatingActionButton(
-// //           onPressed: () =>
-// //               context.read<AudioBloc>().add(LoadAudios()),
-// //           child: const Icon(Icons.refresh),
-// //         ),
-// //       ),
-// //     );
-// //   }
-// // }
-// // class _AudioBody extends StatefulWidget {
-// //   const _AudioBody();
-// //
-// //   @override
-// //   State<_AudioBody> createState() => _AudioBodyState();
-// // }
-// //
-// // class _AudioBodyState extends State<_AudioBody> {
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return BlocBuilder<AudioBloc, AudioState>(
-// //       builder: (context, state) {
-// //         if (state is AudioLoading) {
-// //           return const Center(
-// //             child: CircularProgressIndicator.adaptive(),
-// //           );
-// //         }
-// //
-// //         if (state is AudioError) {
-// //           return Center(child: Text(state.message));
-// //         }
-// //
-// //         if (state is AudioLoaded) {
-// //           if (state.entities.isEmpty) {
-// //             return const Center(
-// //               child: Text("No audio files found"),
-// //             );
-// //           }
-// //
-// //           return ListView.builder(
-// //             padding: EdgeInsets.symmetric(horizontal: 15),
-// //             itemCount: state.entities.length,
-// //             itemBuilder: (context, index) {
-// //               final audio = state.entities[index];
-// //               final colors = Theme.of(context).extension<AppThemeColors>()!;
-// //               return FutureBuilder<File?>(
-// //                 future: audio.file,
-// //                 builder: (context, snapshot) {
-// //                   if (!snapshot.hasData) {
-// //                     return const ListTile(
-// //                       leading: Icon(Icons.music_note),
-// //                       title: Text("Loading..."),
-// //                     );
-// //                   }
-// //
-// //                   final file = snapshot.data!;
-// //                   return Padding(
-// //                     padding: const EdgeInsets.symmetric(vertical: 7.5),
-// //                     child: GestureDetector(
-// //                       onTap: () {
-// //                         print("audio====${audio.typeInt}");
-// //                         Navigator.push(
-// //                           context,
-// //                           MaterialPageRoute(
-// //                             builder: (_) => PlayerScreen(
-// //                               entity: audio,
-// //                               item: MediaItem(
-// //                                 id: audio.id,
-// //                                 path: file.path,
-// //                                 isNetwork: false,
-// //                                 type: 'audio',
-// //                               ),
-// //                             ),
-// //                           ),
-// //                         ).then((value) {
-// //                           context.read<AudioBloc>().add(
-// //                             LoadAudios(showLoading: false),
-// //                           );
-// //                         });
-// //                       },
-// //                       child: Container(
-// //                         padding: const EdgeInsets.symmetric(
-// //                           horizontal: 10,
-// //                           vertical: 10,
-// //                         ),
-// //                         decoration: BoxDecoration(
-// //                           color: colors.cardBackground,
-// //                           borderRadius: BorderRadius.circular(10),
-// //                         ),
-// //                         child: Row(
-// //                           children: [
-// //                             /// 🎵 Icon + Play overlay
-// //                             Container(
-// //                               height: 50,
-// //                               width: 50,
-// //                               decoration: BoxDecoration(
-// //                                 borderRadius: BorderRadius.circular(10),
-// //                                 color: colors.blackColor.withOpacity(0.38),
-// //                               ),
-// //                               child: Stack(
-// //                                 alignment: Alignment.center,
-// //                                 children: [
-// //                                   AppImage(
-// //                                     src: AppSvg.musicUnselected,
-// //                                     height: 22,
-// //                                   ),
-// //                                   AppImage(
-// //                                     src: GlobalPlayer().currentPath == file.path
-// //                                         ? AppSvg.playerPause
-// //                                         : AppSvg.playerResume,
-// //                                     height: 18,
-// //                                   ),
-// //                                 ],
-// //                               ),
-// //                             ),
-// //
-// //                             const SizedBox(width: 12),
-// //
-// //                             /// 🎶 Title + Duration
-// //                             Expanded(
-// //                               child: Column(
-// //                                 crossAxisAlignment: CrossAxisAlignment.start,
-// //                                 mainAxisSize: MainAxisSize.min,
-// //                                 children: [
-// //                                   AppText(
-// //                                     file.path.split('/').last,
-// //                                     maxLines: 1,
-// //                                     // overflow: TextOverflow.ellipsis,
-// //                                     fontSize: 15,
-// //                                     fontWeight: FontWeight.w500,
-// //                                   ),
-// //                                   const SizedBox(height: 6),
-// //                                   AppText(
-// //                                     formatDuration(audio.duration),
-// //                                     fontSize: 13,
-// //                                     fontWeight: FontWeight.w500,
-// //                                     color: colors.textFieldBorder,
-// //                                   ),
-// //                                 ],
-// //                               ),
-// //                             ),
-// //
-// //                             const SizedBox(width: 6),
-// //
-// //                             /// ⋮ Menu
-// //                             PopupMenuButton<MediaMenuAction>(
-// //                               padding: EdgeInsets.zero,
-// //                               icon: AppImage(src: AppSvg.dropDownMenuDot),
-// //                               onSelected: (action) async {
-// //                                 switch (action) {
-// //                                   case MediaMenuAction.detail:
-// //                                     routeToDetailPage(context, audio);
-// //                                     break;
-// //                                   case MediaMenuAction.info:
-// //                                     showInfoDialog(context, audio);
-// //                                     break;
-// //                                   case MediaMenuAction.thumb:
-// //                                     showThumb(context, audio, 500);
-// //                                     break;
-// //                                   case MediaMenuAction.share:
-// //                                     _shareItem(context, audio);
-// //                                     break;
-// //                                   case MediaMenuAction.delete:
-// //                                     _deleteCurrent(context, audio);
-// //                                     break;
-// //                                   case MediaMenuAction.addToFavourite:
-// //                                     await _toggleFavourite(
-// //                                       context,
-// //                                       audio,
-// //                                       index,
-// //                                     );
-// //                                     break;
-// //                                 }
-// //                               },
-// //                               itemBuilder: (context) => [
-// //                                 const PopupMenuItem(
-// //                                   value: MediaMenuAction.detail,
-// //                                   child: Text('Show detail page'),
-// //                                 ),
-// //                                 const PopupMenuItem(
-// //                                   value: MediaMenuAction.info,
-// //                                   child: Text('Show info dialog'),
-// //                                 ),
-// //                                 if (audio.type == AssetType.video)
-// //                                   const PopupMenuItem(
-// //                                     value: MediaMenuAction.thumb,
-// //                                     child: Text('Show 500 size thumb'),
-// //                                   ),
-// //                                 const PopupMenuItem(
-// //                                   value: MediaMenuAction.share,
-// //                                   child: Text('Share'),
-// //                                 ),
-// //                                 PopupMenuItem(
-// //                                   value: MediaMenuAction.addToFavourite,
-// //                                   child: Text(
-// //                                     audio.isFavorite
-// //                                         ? 'Remove from Favourite'
-// //                                         : 'Add to Favourite',
-// //                                   ),
-// //                                 ),
-// //                                 const PopupMenuItem(
-// //                                   value: MediaMenuAction.delete,
-// //                                   child: Text('Delete'),
-// //                                 ),
-// //                               ],
-// //                             ),
-// //                           ],
-// //                         ),
-// //                       ),
-// //                     ),
-// //                   );
-// //
-// //                   ListTile(
-// //                     leading: const Icon(Icons.music_note),
-// //                     title: Text(
-// //                       file.path.split('/').last,
-// //                       maxLines: 3,
-// //                       overflow: TextOverflow.ellipsis,
-// //                     ),
-// //                     onTap: () {
-// //                       print("audio====${audio.typeInt}");
-// //                       Navigator.push(
-// //                         context,
-// //                         MaterialPageRoute(
-// //                           builder: (_) => PlayerScreen(
-// //                             entity: audio,
-// //                             item: MediaItem(
-// //                               id: audio.id,
-// //                               path: file.path,
-// //                               isNetwork: false,
-// //                               type: 'audio',
-// //                             ),
-// //                           ),
-// //                         ),
-// //                       ).then((value) {
-// //                         context.read<AudioBloc>().add(
-// //                           LoadAudios(showLoading: false),
-// //                         );
-// //                       });
-// //                     },
-// //                     trailing: PopupMenuButton<MediaMenuAction>(
-// //                       icon: Container(
-// //                         padding: const EdgeInsets.all(6),
-// //                         decoration: BoxDecoration(
-// //                           color: Colors.black.withOpacity(0.5),
-// //                           shape: BoxShape.circle,
-// //                         ),
-// //                         child: const Icon(
-// //                           Icons.more_vert,
-// //                           color: Colors.white,
-// //                           size: 18,
-// //                         ),
-// //                       ),
-// //                       onSelected: (action) async {
-// //                         switch (action) {
-// //                           case MediaMenuAction.detail:
-// //                             routeToDetailPage(context, audio);
-// //                             break;
-// //
-// //                           case MediaMenuAction.info:
-// //                             showInfoDialog(context, audio);
-// //                             break;
-// //
-// //                           case MediaMenuAction.thumb:
-// //                             showThumb(context, audio, 500);
-// //                             break;
-// //
-// //                           case MediaMenuAction.share:
-// //                             _shareItem(context, audio);
-// //                             break;
-// //
-// //                           case MediaMenuAction.delete:
-// //                             _deleteCurrent(context, audio);
-// //                             break;
-// //
-// //                           case MediaMenuAction.addToFavourite:
-// //                             await _toggleFavourite(context, audio, index);
-// //                             break;
-// //                         }
-// //                       },
-// //                       itemBuilder: (context) => [
-// //                         const PopupMenuItem(
-// //                           value: MediaMenuAction.detail,
-// //                           child: Text('Show detail page'),
-// //                         ),
-// //                         const PopupMenuItem(
-// //                           value: MediaMenuAction.info,
-// //                           child: Text('Show info dialog'),
-// //                         ),
-// //                         if (audio.type == AssetType.video)
-// //                           const PopupMenuItem(
-// //                             value: MediaMenuAction.thumb,
-// //                             child: Text('Show 500 size thumb'),
-// //                           ),
-// //                         const PopupMenuItem(
-// //                           value: MediaMenuAction.share,
-// //                           child: Text('Share'),
-// //                         ),
-// //                         PopupMenuItem(
-// //                           value: MediaMenuAction.addToFavourite,
-// //                           child: Text(
-// //                             audio.isFavorite
-// //                                 ? "Remove to Favourite"
-// //                                 : 'Add to Favourite',
-// //                           ),
-// //                         ),
-// //                         const PopupMenuItem(
-// //                           value: MediaMenuAction.delete,
-// //                           child: Text('Delete'),
-// //                         ),
-// //                       ],
-// //                     ),
-// //                   );
-// //                 },
-// //               );
-// //             },
-// //           );
-// //
-// //         }
-// //
-// //         return const SizedBox();
-// //       },
-// //     );
-// //   }
-// //
-// //   Future<void> routeToDetailPage(BuildContext context,AssetEntity entity) async {
-// //     Navigator.of(context).push<void>(
-// //       MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
-// //     );
-// //   }
-// //
-// //   Future<void> showThumb(BuildContext context, AssetEntity entity, int size) async {
-// //     final String title;
-// //     if (entity.title?.isEmpty != false) {
-// //       title = await entity.titleAsync;
-// //     } else {
-// //       title = entity.title!;
-// //     }
-// //     print('entity.title = $title');
-// //     return showDialog(
-// //       context: context,
-// //       builder: (_) {
-// //         return FutureBuilder<Uint8List?>(
-// //           future: entity.thumbnailDataWithOption(
-// //             ThumbnailOption.ios(
-// //               size: const ThumbnailSize.square(500),
-// //               // resizeContentMode: ResizeContentMode.fill,
-// //             ),
-// //           ),
-// //           builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
-// //             Widget w;
-// //             if (snapshot.hasError) {
-// //               return ErrorWidget(snapshot.error!);
-// //             } else if (snapshot.hasData) {
-// //               final Uint8List data = snapshot.data!;
-// //               ui.decodeImageFromList(data, (ui.Image result) {
-// //                 print('result size: ${result.width}x${result.height}');
-// //                 // for 4288x2848
-// //               });
-// //               w = Image.memory(data);
-// //             } else {
-// //               w = Center(
-// //                 child: Container(
-// //                   color: Colors.white,
-// //                   padding: const EdgeInsets.all(20),
-// //                   child: const CustomLoader(),
-// //                 ),
-// //               );
-// //             }
-// //             return GestureDetector(
-// //               child: w,
-// //               onTap: () => Navigator.pop(context),
-// //             );
-// //           },
-// //         );
-// //       },
-// //     );
-// //   }
-// //
-// //   Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-// //     final file = await entity.file;
-// //     await Share.shareXFiles([XFile(file!.path)], text: entity.title);
-// //   }
-// //
-// //   Future<void> _toggleFavourite(
-// //       BuildContext context,
-// //       AssetEntity entity,
-// //       int index,
-// //       ) async {
-// //     final favBox = Hive.box('favourites');
-// //     final bool isFavorite = entity.isFavorite;
-// //
-// //     final file = await entity.file;
-// //     if (file == null) return;
-// //
-// //     final key = file.path;
-// //
-// //     // 🔹 Update Hive
-// //     if (isFavorite) {
-// //       favBox.delete(key);
-// //     } else {
-// //       favBox.put(key, {
-// //         "path": file.path,
-// //         "isNetwork": false,
-// //         "type": entity.type == AssetType.audio ? "audio" : "video",
-// //       });
-// //     }
-// //
-// //     // 🔹 Update system favourite
-// //     if (PlatformUtils.isOhos) {
-// //       await PhotoManager.editor.ohos.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     } else if (Platform.isAndroid) {
-// //       await PhotoManager.editor.android.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     } else {
-// //       await PhotoManager.editor.darwin.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     }
-// //
-// //     // 🔹 Reload entity
-// //     final AssetEntity? newEntity = await entity.obtainForNewProperties();
-// //     if (!mounted || newEntity == null) return;
-// //
-// //     // 🔹 Update UI list
-// //     // readPathProvider(context).list[index] = newEntity;
-// //     context.read<AudioBloc>().add(LoadAudios(showLoading: false));
-// //
-// //     setState(() {});
-// //   }
-// //
-// //   Future<void> _deleteCurrent(
-// //       BuildContext context,
-// //       AssetEntity entity,
-// //       ) async {
-// //     if (!Platform.isAndroid && !Platform.isIOS) return;
-// //
-// //     final bool? confirm = await showDialog<bool>(
-// //       context: context,
-// //       builder: (_) => AlertDialog(
-// //         title: const Text('Delete media'),
-// //         content: const Text('Are you sure you want to delete this file?'),
-// //         actions: [
-// //           TextButton(
-// //             onPressed: () => Navigator.pop(context, false),
-// //             child: const Text('Cancel'),
-// //           ),
-// //           TextButton(
-// //             onPressed: () => Navigator.pop(context, true),
-// //             child: const Text(
-// //               'Delete',
-// //               style: TextStyle(color: Colors.red),
-// //             ),
-// //           ),
-// //         ],
-// //       ),
-// //     );
-// //
-// //     if (confirm != true) return;
-// //
-// //     // ✅ Correct delete API
-// //     final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-// //
-// //     if (result.isNotEmpty) {
-// //       context
-// //           .read<AudioBloc>()
-// //           .add(LoadAudios(showLoading: false));
-// //     }
-// //   }
-// // }
-// //
-// //
-// //
-// // import 'dart:io';
-// // import 'dart:typed_data';
-// // import 'dart:ui' as ui;
-// //
-// // import 'package:flutter/cupertino.dart';
-// // import 'package:flutter/material.dart';
-// // import 'package:flutter_bloc/flutter_bloc.dart';
-// // import 'package:hive/hive.dart';
-// // import 'package:photo_manager/photo_manager.dart';
-// // import 'package:photo_manager/platform_utils.dart';
-// // import 'package:share_plus/share_plus.dart';
-// // import 'package:video_player_app/screens/player_screen.dart';
-// //
-// // import '../blocs/home/home_tab_bolc.dart';
-// // import '../blocs/home/home_tab_event.dart';
-// // import '../blocs/home/home_tab_state.dart';
-// // import '../blocs/video/video_bloc.dart';
-// // import '../main.dart';
-// // import '../models/media_item.dart';
-// // import '../widgets/home_card.dart';
-// // import '../widgets/image_item_widget.dart';
-// // import 'home_screen.dart';
-// //
-// // class HomePage extends StatefulWidget {
-// //   const HomePage({super.key});
-// //
-// //   @override
-// //   State<HomePage> createState() => _HomePageState();
-// // }
-// //
-// // class _HomePageState extends State<HomePage> with RouteAware{
-// //   AssetPathProvider readPathProvider(BuildContext c) =>
-// //       c.read<AssetPathProvider>();
-// //
-// //   AssetPathProvider watchPathProvider(BuildContext c) =>
-// //       c.watch<AssetPathProvider>();
-// //   List<AssetPathEntity> folderList = <AssetPathEntity>[];
-// //
-// //   int videoCount = 0;
-// //   int audioCount = 0;
-// //   int favouriteCount = 0;
-// //   int playlistCount = 0;
-// //
-// //   @override
-// //   void didChangeDependencies() {
-// //     super.didChangeDependencies();
-// //     routeObserver.subscribe(this, ModalRoute.of(context)!);
-// //   }
-// //
-// //   @override
-// //   void dispose() {
-// //     routeObserver.unsubscribe(this);
-// //     super.dispose();
-// //   }
-// //
-// //   // Called when we return to this page
-// //   @override
-// //   void didPopNext() {
-// //     _loadCounts(); // <-- refresh counts when coming back
-// //     context.read<VideoBloc>().add(LoadVideosFromGallery()); // optional: refresh video list
-// //   }
-// //
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     // WidgetsBinding.instance.addPostFrameCallback((_) {
-// //     _loadCounts();
-// //     // });
-// //   }
-// //   Future<void> _loadCounts() async {
-// //     final favBox = Hive.box('favourites');
-// //     final videoBox = Hive.box('videos');
-// //     final audioBox = Hive.box('audios');
-// //     final playListBox = Hive.box('playlists');
-// //
-// //     if (!mounted) return;
-// //
-// //     setState(() {
-// //       videoCount = videoBox.length;
-// //       audioCount = audioBox.length;
-// //       favouriteCount = favBox.length;
-// //       playlistCount = playListBox.length;
-// //     });
-// //   }
-// //
-// //
-// //
-// //
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text("Media Player")),
-// //       body: SingleChildScrollView(
-// //         child: Column(
-// //           crossAxisAlignment: CrossAxisAlignment.start,
-// //           children: [
-// //             // Top Grid of Cards
-// //             BlocBuilder<VideoBloc, VideoState>(
-// //               builder: (context, state) {
-// //                 int videoCount = 0, audioCount = 0, favCount = 0, playlistCount = 0;
-// //
-// //                 if (state is VideoLoaded) {
-// //                   videoCount = state.videoCount;
-// //                   audioCount = state.audioCount;
-// //                   favCount = state.favouriteCount;
-// //                   playlistCount = state.playlistCount;
-// //                 }
-// //
-// //                 return GridView.count(
-// //                   shrinkWrap: true,
-// //                   physics: const NeverScrollableScrollPhysics(),
-// //                   crossAxisCount: 2,
-// //                   padding: const EdgeInsets.all(12),
-// //                   children: [
-// //                     HomeCard(
-// //                       title: "Video",
-// //                       icon: Icons.video_library,
-// //                       route: "/video",
-// //                       count: videoCount,
-// //                       loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts())),
-// //                     ),
-// //                     HomeCard(
-// //                       title: "Audio",
-// //                       icon: Icons.music_note,
-// //                       route: "/audio",
-// //                       count: audioCount,
-// //                       loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts())),
-// //                     ),
-// //                     HomeCard(
-// //                       title: "Playlist",
-// //                       icon: Icons.queue_music,
-// //                       route: "/playlist",
-// //                       count: playlistCount,
-// //                       loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts())),
-// //                     ),
-// //                     HomeCard(
-// //                       title: "Favourite",
-// //                       icon: Icons.favorite,
-// //                       route: "/favourite",
-// //                       count: favCount,
-// //                       loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts())),
-// //                     ),
-// //                   ],
-// //                 );
-// //               },
-// //             ),
-// //
-// //
-// //             // Custom Tab Bar
-// //             Padding(
-// //               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-// //               child: Row(
-// //                 children: [
-// //                   Expanded(child: _buildTab(context, "Video", 0)),
-// //                   const SizedBox(width: 16),
-// //                   Expanded(child: _buildTab(context, "Folder", 1)),
-// //                 ],
-// //               ),
-// //             ),
-// //             // Tab Content
-// //             Padding(
-// //               padding: const EdgeInsets.all(8.0),
-// //               child: BlocBuilder<HomeTabBloc, HomeTabState>(
-// //                 builder: (context, state) {
-// //                   if (state.selectedIndex == 0) {
-// //                     return _buildVideoSection();
-// //                   } else {
-// //                     return _buildFolderSection();
-// //                   }
-// //                 },
-// //               ),
-// //             ),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// //
-// //   Widget _buildTab(BuildContext context, String title, int index) {
-// //     return BlocBuilder<HomeTabBloc, HomeTabState>(
-// //       builder: (context, state) {
-// //         final isActive = state.selectedIndex == index;
-// //
-// //         return GestureDetector(
-// //           onTap: () async {
-// //             context.read<HomeTabBloc>().add(SelectTab(index));
-// //             if (index == 1) {
-// //               await _loadFolders();
-// //             } else if (index == 0) {
-// //               context.read<VideoBloc>().add(LoadVideosFromGallery());
-// //             }
-// //           },
-// //           child: Column(
-// //             crossAxisAlignment: CrossAxisAlignment.start,
-// //             children: [
-// //               Text(
-// //                 title,
-// //                 style: TextStyle(
-// //                   color: isActive ? Colors.white : Colors.white70,
-// //                   fontSize: 18,
-// //                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-// //                 ),
-// //               ),
-// //               const SizedBox(height: 4),
-// //               AnimatedContainer(
-// //                 duration: const Duration(milliseconds: 200),
-// //                 height: 3,
-// //                 width: isActive ? 30 : 0,
-// //                 decoration: BoxDecoration(
-// //                   color: Colors.red,
-// //                   borderRadius: BorderRadius.circular(2),
-// //                 ),
-// //               ),
-// //             ],
-// //           ),
-// //         );
-// //       },
-// //     );
-// //   }
-// //
-// //   // Video Section using VideoBloc
-// //   Widget _buildVideoSection() {
-// //     return BlocBuilder<VideoBloc, VideoState>(
-// //       builder: (context, state) {
-// //         if (state is VideoLoading) {
-// //           return const Center(child: CircularProgressIndicator.adaptive());
-// //         }
-// //
-// //         if (state is VideoError) {
-// //           return Center(child: Text(state.message));
-// //         }
-// //
-// //         if (state is VideoLoaded) {
-// //           final entities = state.entities;
-// //           if (entities.isEmpty) {
-// //             return const Text(
-// //               "No videos found",
-// //               style: TextStyle(color: Colors.white),
-// //             );
-// //           }
-// //
-// //           return GridView.builder(
-// //             shrinkWrap: true,
-// //             physics: const NeverScrollableScrollPhysics(),
-// //             itemCount: entities.length,
-// //             gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(
-// //               crossAxisCount: 2,
-// //               crossAxisSpacing: 4,
-// //               mainAxisSpacing: 4,
-// //               childAspectRatio: 1.3,
-// //             ),
-// //             itemBuilder: (context, index) {
-// //               final entity = entities[index];
-// //               return ImageItemWidget(
-// //                 entity: entity,
-// //                 option: ThumbnailOption(size: ThumbnailSize.square(200)),
-// //                 onMenuSelected: (action) async {
-// //                   switch (action) {
-// //                     case MediaMenuAction.detail:
-// //                       routeToDetailPage(entity);
-// //                       break;
-// //
-// //                     case MediaMenuAction.info:
-// //                       showInfoDialog(context, entity);
-// //                       break;
-// //
-// //                     case MediaMenuAction.thumb:
-// //                       showThumb(entity, 500);
-// //                       break;
-// //
-// //                     case MediaMenuAction.share:
-// //                       _shareItem(context, entity);
-// //                       break;
-// //
-// //                     case MediaMenuAction.delete:
-// //                       _deleteCurrent(context, entity);
-// //                       break;
-// //
-// //                     case MediaMenuAction.addToFavourite:
-// //                       await _toggleFavourite(context, entity, index);
-// //                       break;
-// //                   }
-// //                 },
-// //                 onTap: () async {
-// //                   final file = await entity.file;
-// //                   if (file == null || !file.existsSync()) return;
-// //                   Navigator.push(
-// //                     context,
-// //                     MaterialPageRoute(
-// //                       builder: (_) =>
-// //                           PlayerScreen(
-// //                             entity: entity,
-// //                             item: MediaItem(
-// //                               id: entity.id,
-// //                               path: file.path,
-// //                               isNetwork: false,
-// //                               type: entity.type == AssetType.video
-// //                                   ? 'video'
-// //                                   : 'audio',
-// //                             ),
-// //                           ),
-// //                     ),
-// //                   ).then((value) {
-// //                     context.read<VideoBloc>().add(LoadVideosFromGallery());
-// //                   },);
-// //                 },
-// //               );
-// //             },
-// //           );
-// //         }
-// //
-// //         return const SizedBox();
-// //       },
-// //     );
-// //   }
-// //
-// //
-// //   Future<void> _deleteCurrent(BuildContext context,
-// //       AssetEntity entity,) async {
-// //     if (!Platform.isAndroid && !Platform.isIOS) return;
-// //
-// //     final bool? confirm = await showDialog<bool>(
-// //       context: context,
-// //       builder: (_) =>
-// //           AlertDialog(
-// //             title: const Text('Delete media'),
-// //             content: const Text('Are you sure you want to delete this file?'),
-// //             actions: [
-// //               TextButton(
-// //                 onPressed: () => Navigator.pop(context, false),
-// //                 child: const Text('Cancel'),
-// //               ),
-// //               TextButton(
-// //                 onPressed: () => Navigator.pop(context, true),
-// //                 child: const Text(
-// //                   'Delete',
-// //                   style: TextStyle(color: Colors.red),
-// //                 ),
-// //               ),
-// //             ],
-// //           ),
-// //     );
-// //
-// //     if (confirm != true) return;
-// //
-// //     // ✅ Correct delete API
-// //     final result = await PhotoManager.editor.deleteWithIds([entity.id]);
-// //
-// //     if (result.isNotEmpty) {
-// //       context
-// //           .read<VideoBloc>()
-// //           .add(LoadVideosFromGallery(showLoading: false));
-// //     }
-// //   }
-// //
-// //
-// //   Future<void> _toggleFavourite(BuildContext context,
-// //       AssetEntity entity,
-// //       int index,) async {
-// //     final favBox = Hive.box('favourites');
-// //     final bool isFavorite = entity.isFavorite;
-// //
-// //     final file = await entity.file;
-// //     if (file == null) return;
-// //
-// //     final key = file.path;
-// //
-// //     // 🔹 Update Hive
-// //     if (isFavorite) {
-// //       favBox.delete(key);
-// //     } else {
-// //       favBox.put(key, {
-// //         "path": file.path,
-// //         "isNetwork": false,
-// //         "type": entity.type == AssetType.audio ? "audio" : "video",
-// //       });
-// //     }
-// //
-// //     // 🔹 Update system favourite
-// //     if (PlatformUtils.isOhos) {
-// //       await PhotoManager.editor.ohos.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     } else if (Platform.isAndroid) {
-// //       await PhotoManager.editor.android.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     } else {
-// //       await PhotoManager.editor.darwin.favoriteAsset(
-// //         entity: entity,
-// //         favorite: !isFavorite,
-// //       );
-// //     }
-// //
-// //     // 🔹 Reload entity
-// //     final AssetEntity? newEntity = await entity.obtainForNewProperties();
-// //     if (!mounted || newEntity == null) return;
-// //
-// //     // 🔹 Update UI list
-// //     // readPathProvider(context).list[index] = newEntity;
-// //     context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-// //
-// //     setState(() {});
-// //   }
-// //
-// //
-// //   // Folder Section
-// //   Widget _buildFolderSection() {
-// //     if (folderList.isEmpty) {
-// //       return const Text(
-// //         "No folders found",
-// //         style: TextStyle(color: Colors.white),
-// //       );
-// //     }
-// //
-// //     return ListView.builder(
-// //       shrinkWrap: true,
-// //       physics: const NeverScrollableScrollPhysics(),
-// //       itemCount: folderList.length,
-// //       itemBuilder: (context, index) {
-// //         final item = folderList[index];
-// //         return GalleryItemWidget(path: item, setState: setState);
-// //       },
-// //     );
-// //   }
-// //
-// //   // Load folders using PhotoManager
-// //   Future<void> _loadFolders() async {
-// //     final permission = await PhotoManager.requestPermissionExtend(
-// //       requestOption: PermissionRequestOption(
-// //         androidPermission: AndroidPermission(
-// //           type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-// //           mediaLocation: true,
-// //         ),
-// //       ),
-// //     );
-// //     if (!permission.hasAccess) return;
-// //
-// //     final List<AssetPathEntity> galleryList =
-// //     await PhotoManager.getAssetPathList(
-// //       type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
-// //       filterOption: FilterOptionGroup(),
-// //       pathFilterOption: PMPathFilter(
-// //         darwin: PMDarwinPathFilter(
-// //           type: [PMDarwinAssetCollectionType.album],
-// //         ),
-// //       ),
-// //     );
-// //
-// //     setState(() {
-// //       folderList.clear();
-// //       folderList.addAll(galleryList);
-// //     });
-// //   }
-// //
-// //   Future<void> routeToDetailPage(AssetEntity entity) async {
-// //     Navigator.of(context).push<void>(
-// //       MaterialPageRoute<void>(builder: (_) => DetailPage(entity: entity)),
-// //     );
-// //   }
-// //
-// //   Future<void> showThumb(AssetEntity entity, int size) async {
-// //     final String title;
-// //     if (entity.title?.isEmpty != false) {
-// //       title = await entity.titleAsync;
-// //     } else {
-// //       title = entity.title!;
-// //     }
-// //     print('entity.title = $title');
-// //     return showDialog(
-// //       context: context,
-// //       builder: (_) {
-// //         return FutureBuilder<Uint8List?>(
-// //           future: entity.thumbnailDataWithOption(
-// //             ThumbnailOption.ios(
-// //               size: const ThumbnailSize.square(500),
-// //               // resizeContentMode: ResizeContentMode.fill,
-// //             ),
-// //           ),
-// //           builder: (BuildContext context, AsyncSnapshot<Uint8List?> snapshot) {
-// //             Widget w;
-// //             if (snapshot.hasError) {
-// //               return ErrorWidget(snapshot.error!);
-// //             } else if (snapshot.hasData) {
-// //               final Uint8List data = snapshot.data!;
-// //               ui.decodeImageFromList(data, (ui.Image result) {
-// //                 print('result size: ${result.width}x${result.height}');
-// //                 // for 4288x2848
-// //               });
-// //               w = Image.memory(data);
-// //             } else {
-// //               w = Center(
-// //                 child: Container(
-// //                   color: Colors.white,
-// //                   padding: const EdgeInsets.all(20),
-// //                   child: const CustomLoader(),
-// //                 ),
-// //               );
-// //             }
-// //             return GestureDetector(
-// //               child: w,
-// //               onTap: () => Navigator.pop(context),
-// //             );
-// //           },
-// //         );
-// //       },
-// //     );
-// //   }
-// //
-// //   Future<void> _shareItem(BuildContext context, AssetEntity entity) async {
-// //     final file = await entity.file;
-// //     await Share.shareXFiles([XFile(file!.path)], text: entity.title);
-// //   }
-// // }
-// //
-// // /*
-// // BlocBuilder<VideoBloc, VideoState>(
-// //               builder: (context, state) {
-// //                 int videoCount = 0, audioCount = 0, favCount = 0, playlistCount = 0;
-// //
-// //                 if (state is VideoLoaded) {
-// //                   videoCount = state.videoCount;
-// //                   audioCount = state.audioCount;
-// //                   favCount = state.favouriteCount;
-// //                   playlistCount = state.playlistCount;
-// //                 }
-// //
-// //                 return GridView.count(
-// //                   shrinkWrap: true,
-// //                   physics: const NeverScrollableScrollPhysics(),
-// //                   crossAxisCount: 2,
-// //                   padding: const EdgeInsets.all(12),
-// //                   children: [
-// //                     HomeCard(title: "Video", icon: Icons.video_library, route: "/video", count: videoCount, loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts()))),
-// //                     HomeCard(title: "Audio", icon: Icons.music_note, route: "/audio", count: audioCount, loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts()))),
-// //                     HomeCard(title: "Playlist", icon: Icons.queue_music, route: "/playlist", count: playlistCount, loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts()))),
-// //                     HomeCard(title: "Favourite", icon: Icons.favorite, route: "/favourite", count: favCount, loadCounts: Future(() => context.read<VideoBloc>().add(RefreshCounts()))),
-// //                   ],
-// //                 );
-// //               },
-// //             ),
-// //
-// //  */
-// //
-// //
-// //
-// //
-// //
-// //
-// //
-// //
-// //
-// //
-// //
-// // // import 'dart:io';
-// // // import 'package:flutter/material.dart';
-// // // import 'package:path_provider/path_provider.dart';
-// // // import 'package:video_player/video_player.dart';
-// // // import 'package:chewie/chewie.dart';
-// // // import 'package:file_picker/file_picker.dart';
-// // // import 'package:shared_preferences/shared_preferences.dart';
-// // // import 'package:hive_flutter/hive_flutter.dart';
-// // // import 'package:video_thumbnail/video_thumbnail.dart';
-// // //
-// // // import 'package:flutter/cupertino.dart';
-// // // import 'package:flutter/material.dart';
-// // // import 'package:hive/hive.dart';
-// // //
-// // //
-// // // import 'dart:io';
-// // //
-// // // import 'package:flutter/cupertino.dart';
-// // // import 'package:flutter/material.dart';
-// // // import 'package:hive/hive.dart';
-// // // import 'package:path_provider/path_provider.dart';
-// // // import 'package:video_thumbnail/video_thumbnail.dart';
-// // //
-// // // void main() async {
-// // //   WidgetsFlutterBinding.ensureInitialized();
-// // //   await Hive.initFlutter();
-// // //   await Hive.openBox('playlists');
-// // //   runApp(const VideoPlayerApp());
-// // // }
-// // //
-// // // /// ================= MEDIA ITEM =================
-// // // class MediaItem {
-// // //   final String path;
-// // //   final bool isNetwork;
-// // //
-// // //   MediaItem({required this.path, required this.isNetwork});
-// // // }
-// // //
-// // // class VideoPlayerApp extends StatelessWidget {
-// // //   const VideoPlayerApp({super.key});
-// // //
-// // //   @override
-// // //   Widget build(BuildContext context) {
-// // //     return MaterialApp(
-// // //       debugShowCheckedModeBanner: false,
-// // //       theme: ThemeData.dark(),
-// // //       home: const HomeScreen(),
-// // //     );
-// // //   }
-// // // }
-// // //
-// // // enum LoopMode { none, one, all }
-// // //
-// // // class HomeScreen extends StatefulWidget {
-// // //   const HomeScreen({super.key});
-// // //
-// // //   @override
-// // //   State<HomeScreen> createState() => _HomeScreenState();
-// // // }
-// // //
-// // // class _HomeScreenState extends State<HomeScreen> {
-// // //   VideoPlayerController? _videoController;
-// // //   ChewieController? _chewieController;
-// // //   Key _playerKey = UniqueKey();
-// // //
-// // //   final List<MediaItem> _playlist = [];
-// // //   int _currentIndex = -1;
-// // //
-// // //   double _volume = 0.5;
-// // //   bool _isSwitching = false;
-// // //   LoopMode _loopMode = LoopMode.none;
-// // //
-// // //   /// ================= PLAY MEDIA =================
-// // //   Future<void> _playMedia(int index) async {
-// // //     if (index < 0 || index >= _playlist.length) return;
-// // //
-// // //     final media = _playlist[index];
-// // //     _isSwitching = true;
-// // //
-// // //     await _videoController?.pause();
-// // //     _videoController?.dispose();
-// // //     _chewieController?.dispose();
-// // //
-// // //     try {
-// // //       final isAudio = media.path
-// // //           .split('.')
-// // //           .last
-// // //           .toLowerCase()
-// // //           .contains(RegExp(r'mp3|m4a|aac|wav'));
-// // //
-// // //       _videoController = media.isNetwork
-// // //           ? VideoPlayerController.networkUrl(Uri.parse(media.path))
-// // //           : VideoPlayerController.file(File(media.path));
-// // //
-// // //       await _videoController!.initialize();
-// // //       _videoController!.setVolume(_volume);
-// // //
-// // //       _chewieController = ChewieController(
-// // //         videoPlayerController: _videoController!,
-// // //         autoPlay: true,
-// // //         allowFullScreen: !isAudio,
-// // //         allowPlaybackSpeedChanging: true,
-// // //         aspectRatio: isAudio ? 1 : 16 / 9,
-// // //       );
-// // //
-// // //       _playerKey = UniqueKey();
-// // //       _currentIndex = index;
-// // //       setState(() {});
-// // //     } catch (e) {
-// // //       _showSnack(
-// // //         media.isNetwork
-// // //             ? "Network error. Check your internet connection."
-// // //             : "Unable to play this file.",
-// // //       );
-// // //     }
-// // //
-// // //     _isSwitching = false;
-// // //   }
-// // //
-// // //   /// ================= PICK LOCAL FILES =================
-// // //   Future<void> pickLocalFiles() async {
-// // //     final result = await FilePicker.platform.pickFiles(
-// // //       allowMultiple: true,
-// // //       type: FileType.custom,
-// // //       allowedExtensions: ['mp4', 'mkv', 'avi', 'mp3', 'm4a', 'aac', 'wav'],
-// // //     );
-// // //
-// // //     if (result == null) return;
-// // //
-// // //     int startIndex = _playlist.length;
-// // //
-// // //     for (final f in result.files) {
-// // //       _playlist.add(MediaItem(path: f.path!, isNetwork: false));
-// // //     }
-// // //
-// // //     await _playMedia(startIndex);
-// // //   }
-// // //
-// // //   /// ================= ADD NETWORK VIDEO =================
-// // //   Future<void> addNetworkVideoDialog() async {
-// // //     String url = '';
-// // //
-// // //     await showDialog(
-// // //       context: context,
-// // //       builder: (_) => AlertDialog(
-// // //         title: const Text("Network Video URL"),
-// // //         content: TextField(
-// // //           onChanged: (v) => url = v,
-// // //           decoration: const InputDecoration(hintText: "http://..."),
-// // //         ),
-// // //         actions: [
-// // //           TextButton(
-// // //             onPressed: () => Navigator.pop(context),
-// // //             child: const Text("Cancel"),
-// // //           ),
-// // //           TextButton(
-// // //             onPressed: () => Navigator.pop(context),
-// // //             child: const Text("Add"),
-// // //           ),
-// // //         ],
-// // //       ),
-// // //     );
-// // //
-// // //     if (url.isEmpty) return;
-// // //
-// // //     _playlist.add(MediaItem(path: url, isNetwork: true));
-// // //     await _playMedia(_playlist.length - 1);
-// // //   }
-// // //
-// // //   /// ================= ADD TO PLAYLIST (HIVE) =================
-// // //   Future<void> _addCurrentMediaToPlaylist() async {
-// // //     if (_currentIndex < 0) return;
-// // //
-// // //     final media = _playlist[_currentIndex];
-// // //     final box = Hive.box('playlists');
-// // //     String newName = '';
-// // //
-// // //     await showDialog(
-// // //       context: context,
-// // //       builder: (_) => AlertDialog(
-// // //         title: const Text("Add to Playlist"),
-// // //         content: SingleChildScrollView(
-// // //           child: Column(
-// // //             mainAxisSize: MainAxisSize.min,
-// // //             children: [
-// // //               ...box.keys.map((key) {
-// // //                 final playlist = box.get(key);
-// // //                 return ListTile(
-// // //                   title: Text(playlist['name']),
-// // //                   onTap: () {
-// // //                     final items = List<Map>.from(playlist['items']);
-// // //                     items.removeWhere((e) => e['path'] == media.path);
-// // //                     items.add({
-// // //                       'path': media.path,
-// // //                       'isNetwork': media.isNetwork,
-// // //                     });
-// // //                     box.put(key, {'name': playlist['name'], 'items': items});
-// // //                     Navigator.pop(context);
-// // //                     _showSnack("Added to ${playlist['name']}");
-// // //                   },
-// // //                 );
-// // //               }).toList(),
-// // //               const Divider(),
-// // //               TextField(
-// // //                 decoration: const InputDecoration(
-// // //                   hintText: "New playlist name",
-// // //                 ),
-// // //                 onChanged: (v) => newName = v,
-// // //               ),
-// // //             ],
-// // //           ),
-// // //         ),
-// // //         actions: [
-// // //           TextButton(
-// // //             onPressed: () {
-// // //               if (newName.isEmpty) return;
-// // //               box.add({
-// // //                 'name': newName,
-// // //                 'items': [
-// // //                   {'path': media.path, 'isNetwork': media.isNetwork},
-// // //                 ],
-// // //               });
-// // //               Navigator.pop(context);
-// // //               _showSnack("Playlist created");
-// // //             },
-// // //             child: const Text("Create"),
-// // //           ),
-// // //         ],
-// // //       ),
-// // //     );
-// // //   }
-// // //
-// // //   /// ================= show all PLAYLIST =================
-// // //   void _showAllPlaylists() async {
-// // //     final box = Hive.box('playlists');
-// // //
-// // //     final result = await Navigator.push(
-// // //       context,
-// // //       MaterialPageRoute(builder: (_) => PlaylistListScreen(box: box)),
-// // //     );
-// // //
-// // //     if (result == null) return;
-// // //
-// // //     final playlist = box.get(result['playlistKey']);
-// // //     _playlist.clear();
-// // //
-// // //     for (final item in playlist['items']) {
-// // //       _playlist.add(
-// // //         MediaItem(path: item['path'], isNetwork: item['isNetwork']),
-// // //       );
-// // //     }
-// // //
-// // //     await _playMedia(result['startIndex']);
-// // //   }
-// // //
-// // //   Future<void> _loadPlaylistFromHive(dynamic key) async {
-// // //     final box = Hive.box('playlists');
-// // //     final playlist = box.get(key);
-// // //
-// // //     _playlist.clear();
-// // //
-// // //     for (final item in playlist['items']) {
-// // //       _playlist.add(
-// // //         MediaItem(path: item['path'], isNetwork: item['isNetwork']),
-// // //       );
-// // //     }
-// // //
-// // //     if (_playlist.isNotEmpty) {
-// // //       await _playMedia(0);
-// // //     }
-// // //   }
-// // //
-// // //   Future<bool> _confirmDeletePlaylist() async {
-// // //     bool confirm = false;
-// // //
-// // //     await showDialog(
-// // //       context: context,
-// // //       builder: (_) => AlertDialog(
-// // //         title: const Text("Delete Playlist"),
-// // //         content: const Text("Are you sure?"),
-// // //         actions: [
-// // //           TextButton(
-// // //             onPressed: () {
-// // //               confirm = false;
-// // //               Navigator.pop(context);
-// // //             },
-// // //             child: const Text("Cancel"),
-// // //           ),
-// // //           TextButton(
-// // //             onPressed: () {
-// // //               confirm = true;
-// // //               Navigator.pop(context);
-// // //             },
-// // //             child: const Text("Delete"),
-// // //           ),
-// // //         ],
-// // //       ),
-// // //     );
-// // //
-// // //     return confirm;
-// // //   }
-// // //
-// // //   /// ================= PLAYLIST VIEW =================
-// // //   void showPlaylist() {
-// // //     if (_playlist.isEmpty) return;
-// // //
-// // //     showModalBottomSheet(
-// // //       context: context,
-// // //       builder: (_) => ListView.builder(
-// // //         itemCount: _playlist.length,
-// // //         itemBuilder: (_, i) {
-// // //           final item = _playlist[i];
-// // //           return ListTile(
-// // //             leading: Icon(item.isNetwork ? Icons.wifi : Icons.folder),
-// // //             title: Text(item.path.split('/').last),
-// // //             selected: i == _currentIndex,
-// // //             onTap: () {
-// // //               Navigator.pop(context);
-// // //               _playMedia(i);
-// // //             },
-// // //           );
-// // //         },
-// // //       ),
-// // //     );
-// // //   }
-// // //
-// // //   /// ================= NEXT / PREVIOUS =================
-// // //   void nextVideo() {
-// // //     if (_currentIndex + 1 < _playlist.length) {
-// // //       _playMedia(_currentIndex + 1);
-// // //     }
-// // //   }
-// // //
-// // //   void previousVideo() {
-// // //     if (_currentIndex - 1 >= 0) {
-// // //       _playMedia(_currentIndex - 1);
-// // //     }
-// // //   }
-// // //
-// // //   /// ================= UI =================
-// // //   void _showSnack(String msg) {
-// // //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-// // //   }
-// // //
-// // //   @override
-// // //   void dispose() {
-// // //     _videoController?.dispose();
-// // //     _chewieController?.dispose();
-// // //     super.dispose();
-// // //   }
-// // //
-// // //   @override
-// // //   Widget build(BuildContext context) {
-// // //     return Scaffold(
-// // //       appBar: AppBar(
-// // //         title: const Text("VLC Style Player"),
-// // //         actions: [
-// // //           IconButton(
-// // //             icon: const Icon(Icons.library_music),
-// // //             onPressed: _showAllPlaylists,
-// // //           ),
-// // //
-// // //           IconButton(
-// // //             icon: const Icon(Icons.playlist_add),
-// // //             onPressed: _addCurrentMediaToPlaylist,
-// // //           ),
-// // //           IconButton(
-// // //             icon: const Icon(Icons.playlist_play),
-// // //             onPressed: showPlaylist,
-// // //           ),
-// // //           IconButton(
-// // //             icon: const Icon(Icons.wifi),
-// // //             onPressed: addNetworkVideoDialog,
-// // //           ),
-// // //         ],
-// // //       ),
-// // //       body: Column(
-// // //         children: [
-// // //           Expanded(
-// // //             child: Center(
-// // //               child:
-// // //               _chewieController != null &&
-// // //                   _videoController!.value.isInitialized
-// // //                   ? Chewie(key: _playerKey, controller: _chewieController!)
-// // //                   : const Text("No media loaded"),
-// // //             ),
-// // //           ),
-// // //           Padding(
-// // //             padding: const EdgeInsets.symmetric(vertical: 10),
-// // //             child: Row(
-// // //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-// // //               children: [
-// // //                 IconButton(
-// // //                   icon: const Icon(Icons.skip_previous),
-// // //                   onPressed: previousVideo,
-// // //                 ),
-// // //                 IconButton(
-// // //                   icon: const Icon(Icons.folder),
-// // //                   onPressed: pickLocalFiles,
-// // //                 ),
-// // //                 IconButton(
-// // //                   icon: const Icon(Icons.skip_next),
-// // //                   onPressed: nextVideo,
-// // //                 ),
-// // //               ],
-// // //             ),
-// // //           ),
-// // //         ],
-// // //       ),
-// // //     );
-// // //   }
-// // // }
-// // //
-// // //
-// // // class PlaylistItemsScreen extends StatelessWidget {
-// // //   final dynamic playlistKey;
-// // //   final Map playlistData;
-// // //
-// // //   const PlaylistItemsScreen({
-// // //     super.key,
-// // //     required this.playlistKey,
-// // //     required this.playlistData,
-// // //   });
-// // //
-// // //   @override
-// // //   Widget build(BuildContext context) {
-// // //     final items = List<Map>.from(playlistData['items']);
-// // //
-// // //     return Scaffold(
-// // //       appBar: AppBar(title: Text(playlistData['name'])),
-// // //       body: ReorderableListView.builder(
-// // //         itemCount: items.length,
-// // //         onReorder: (oldIndex, newIndex) {
-// // //           if (newIndex > oldIndex) newIndex--;
-// // //           final item = items.removeAt(oldIndex);
-// // //           items.insert(newIndex, item);
-// // //
-// // //           final box = Hive.box('playlists');
-// // //           box.put(playlistKey, {'name': playlistData['name'], 'items': items});
-// // //         },
-// // //         itemBuilder: (_, index) {
-// // //           final item = items[index];
-// // //           return ListTile(
-// // //             key: ValueKey(item['path']),
-// // //             leading: FutureBuilder(
-// // //               future: _buildThumbnail(
-// // //                 MediaItem(path: item['path'], isNetwork: item['isNetwork']),
-// // //               ),
-// // //               builder: (_, snapshot) {
-// // //                 if (!snapshot.hasData) {
-// // //                   return const SizedBox(
-// // //                     width: 50,
-// // //                     height: 50,
-// // //                     child: Center(
-// // //                       child: CircularProgressIndicator(strokeWidth: 2),
-// // //                     ),
-// // //                   );
-// // //                 }
-// // //                 return SizedBox(width: 60, height: 60, child: snapshot.data);
-// // //               },
-// // //             ),
-// // //
-// // //             title: Text(item['path'].split('/').last),
-// // //             onTap: () {
-// // //               Navigator.pop(context, {
-// // //                 'playlistKey': playlistKey,
-// // //                 'startIndex': index,
-// // //               });
-// // //             },
-// // //           );
-// // //         },
-// // //       ),
-// // //     );
-// // //   }
-// // //
-// // //   Future<Widget> _buildThumbnail(MediaItem item) async {
-// // //     if (item.isNetwork) {
-// // //       return const Icon(Icons.wifi, size: 40);
-// // //     }
-// // //
-// // //     final ext = item.path.split('.').last.toLowerCase();
-// // //     if (['mp3', 'aac', 'wav', 'm4a'].contains(ext)) {
-// // //       return const Icon(Icons.music_note, size: 40);
-// // //     }
-// // //
-// // //     final thumb = await VideoThumbnail.thumbnailFile(
-// // //       video: item.path,
-// // //       thumbnailPath: (await getTemporaryDirectory()).path,
-// // //       imageFormat: ImageFormat.JPEG,
-// // //       maxHeight: 120,
-// // //       quality: 75,
-// // //     );
-// // //
-// // //     return thumb != null
-// // //         ? Image.file(File(thumb), fit: BoxFit.cover)
-// // //         : const Icon(Icons.video_file);
-// // //   }
-// // // }
-// // //
-// // //
-// // // class PlaylistListScreen extends StatelessWidget {
-// // //   final Box box;
-// // //
-// // //   const PlaylistListScreen({super.key, required this.box});
-// // //
-// // //   @override
-// // //   Widget build(BuildContext context) {
-// // //     return Scaffold(
-// // //       appBar: AppBar(title: const Text("Playlists")),
-// // //       body: box.isEmpty
-// // //           ? const Center(child: Text("No playlists created"))
-// // //           : ListView.builder(
-// // //         itemCount: box.length,
-// // //         itemBuilder: (context, index) {
-// // //           final key = box.keyAt(index);
-// // //           final playlist = box.get(key);
-// // //
-// // //           return ListTile(
-// // //             leading: const Icon(Icons.queue_music),
-// // //             title: Text(playlist['name']),
-// // //             subtitle:
-// // //             Text("${playlist['items'].length} items"),
-// // //             onTap: () {
-// // //               Navigator.push(
-// // //                 context,
-// // //                 MaterialPageRoute(
-// // //                   builder: (_) => PlaylistItemsScreen(
-// // //                     playlistKey: key,
-// // //                     playlistData: playlist,
-// // //                   ),
-// // //                 ),
-// // //               );
-// // //             },
-// // //           );
-// // //         },
-// // //       ),
-// // //     );
-// // //   }
-// // // }
-// //
-// //
-// // import 'dart:io';
-// //
-// // import 'package:flutter/material.dart';
-// // import 'package:chewie/chewie.dart';
-// // import 'package:file_picker/file_picker.dart';
-// // import 'package:hive/hive.dart';
-// // import 'package:hive_flutter/hive_flutter.dart';
-// // import 'package:path_provider/path_provider.dart';
-// // import 'package:video_player/video_player.dart';
-// // import 'package:video_thumbnail/video_thumbnail.dart';
-// //
-// // void main() async {
-// //   WidgetsFlutterBinding.ensureInitialized();
-// //   await Hive.initFlutter();
-// //   await Hive.openBox('playlists');
-// //   runApp(const VideoPlayerApp());
-// // }
-// //
-// // /// ================= MEDIA MODEL =================
-// // class MediaItem {
-// //   final String path;
-// //   final bool isNetwork;
-// //
-// //   MediaItem({required this.path, required this.isNetwork});
-// // }
-// //
-// // /// ================= APP =================
-// // class VideoPlayerApp extends StatelessWidget {
-// //   const VideoPlayerApp({super.key});
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return MaterialApp(
-// //       debugShowCheckedModeBanner: false,
-// //       theme: ThemeData.dark(useMaterial3: true),
-// //       home: const HomeScreen(),
-// //     );
-// //   }
-// // }
-// //
-// // /// ================= HOME =================
-// // class HomeScreen extends StatefulWidget {
-// //   const HomeScreen({super.key});
-// //
-// //   @override
-// //   State<HomeScreen> createState() => _HomeScreenState();
-// // }
-// //
-// // class _HomeScreenState extends State<HomeScreen> {
-// //   VideoPlayerController? _videoController;
-// //   ChewieController? _chewieController;
-// //   Key _playerKey = UniqueKey();
-// //
-// //   final List<MediaItem> _playlist = [];
-// //   int _currentIndex = -1;
-// //   double _volume = 0.6;
-// //
-// //   /// ================= PLAY MEDIA =================
-// //   Future<void> _playMedia(int index) async {
-// //     if (index < 0 || index >= _playlist.length) return;
-// //
-// //     final media = _playlist[index];
-// //
-// //     await _videoController?.dispose();
-// //     // await _chewieController?.dispose();
-// //
-// //     try {
-// //       _videoController = media.isNetwork
-// //           ? VideoPlayerController.networkUrl(Uri.parse(media.path))
-// //           : VideoPlayerController.file(File(media.path));
-// //
-// //       await _videoController!.initialize();
-// //       _videoController!.setVolume(_volume);
-// //
-// //       _chewieController = ChewieController(
-// //         videoPlayerController: _videoController!,
-// //         autoPlay: true,
-// //         allowFullScreen: true,
-// //         allowPlaybackSpeedChanging: true,
-// //       );
-// //
-// //       _playerKey = UniqueKey();
-// //       _currentIndex = index;
-// //       setState(() {});
-// //     } catch (e) {
-// //       _showSnack("Unable to play media");
-// //     }
-// //   }
-// //
-// //   /// ================= PICK FILE =================
-// //   Future<void> pickLocalFiles() async {
-// //     final result = await FilePicker.platform.pickFiles(
-// //       allowMultiple: true,
-// //       type: FileType.custom,
-// //       allowedExtensions: ['mp4', 'mkv', 'avi', 'mp3', 'aac', 'wav', 'm4a'],
-// //     );
-// //
-// //     if (result == null) return;
-// //
-// //     final startIndex = _playlist.length;
-// //
-// //     for (final file in result.files) {
-// //       if (file.path != null) {
-// //         _playlist.add(MediaItem(path: file.path!, isNetwork: false));
-// //       }
-// //     }
-// //
-// //     await _playMedia(startIndex);
-// //   }
-// //
-// //   /// ================= NETWORK =================
-// //   Future<void> addNetworkVideoDialog() async {
-// //     String url = '';
-// //
-// //     await showDialog(
-// //       context: context,
-// //       builder: (_) => AlertDialog(
-// //         title: const Text("Add Network Media"),
-// //         content: TextField(
-// //           onChanged: (v) => url = v,
-// //           decoration: const InputDecoration(hintText: "https://..."),
-// //         ),
-// //         actions: [
-// //           TextButton(
-// //             onPressed: () => Navigator.pop(context),
-// //             child: const Text("Cancel"),
-// //           ),
-// //           TextButton(
-// //             onPressed: () => Navigator.pop(context),
-// //             child: const Text("Add"),
-// //           ),
-// //         ],
-// //       ),
-// //     );
-// //
-// //     if (!url.startsWith("http")) {
-// //       _showSnack("Invalid URL");
-// //       return;
-// //     }
-// //
-// //     _playlist.add(MediaItem(path: url, isNetwork: true));
-// //     await _playMedia(_playlist.length - 1);
-// //   }
-// //
-// //   /// ================= ADD TO PLAYLIST =================
-// //   Future<void> addToPlaylist() async {
-// //     if (_currentIndex < 0) return;
-// //
-// //     final media = _playlist[_currentIndex];
-// //     final box = Hive.box('playlists');
-// //     String newName = '';
-// //
-// //     await showDialog(
-// //       context: context,
-// //       builder: (_) => AlertDialog(
-// //         title: const Text("Add to Playlist"),
-// //         content: Column(
-// //           mainAxisSize: MainAxisSize.min,
-// //           children: [
-// //             ...box.keys.map((key) {
-// //               final playlist = Map<String, dynamic>.from(box.get(key));
-// //               return ListTile(
-// //                 title: Text(playlist['name']),
-// //                 onTap: () {
-// //                   final items = List<Map>.from(playlist['items']);
-// //                   items.removeWhere((e) => e['path'] == media.path);
-// //                   items.add({
-// //                     'path': media.path,
-// //                     'isNetwork': media.isNetwork,
-// //                   });
-// //                   box.put(key, {'name': playlist['name'], 'items': items});
-// //                   Navigator.pop(context);
-// //                   _showSnack("Added to ${playlist['name']}");
-// //                 },
-// //               );
-// //             }),
-// //             const Divider(),
-// //             TextField(
-// //               decoration:
-// //               const InputDecoration(hintText: "New playlist name"),
-// //               onChanged: (v) => newName = v,
-// //             ),
-// //           ],
-// //         ),
-// //         actions: [
-// //           TextButton(
-// //             onPressed: () {
-// //               if (newName.isEmpty) return;
-// //               box.add({
-// //                 'name': newName,
-// //                 'items': [
-// //                   {'path': media.path, 'isNetwork': media.isNetwork}
-// //                 ],
-// //               });
-// //               Navigator.pop(context);
-// //               _showSnack("Playlist created");
-// //             },
-// //             child: const Text("Create"),
-// //           ),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// //
-// //   /// ================= SHOW PLAYLIST =================
-// //   void showPlaylist() {
-// //     if (_playlist.isEmpty) {
-// //       _showSnack("Playlist empty");
-// //       return;
-// //     }
-// //
-// //     showModalBottomSheet(
-// //       context: context,
-// //       builder: (_) => ListView.builder(
-// //         itemCount: _playlist.length,
-// //         itemBuilder: (_, i) {
-// //           final item = _playlist[i];
-// //           return ListTile(
-// //             leading: Icon(item.isNetwork ? Icons.wifi : Icons.video_file),
-// //             title: Text(item.path.split('/').last),
-// //             selected: i == _currentIndex,
-// //             onTap: () {
-// //               Navigator.pop(context);
-// //               _playMedia(i);
-// //             },
-// //           );
-// //         },
-// //       ),
-// //     );
-// //   }
-// //
-// //   /// ================= NEXT / PREV =================
-// //   void next() {
-// //     if (_currentIndex + 1 < _playlist.length) {
-// //       _playMedia(_currentIndex + 1);
-// //     }
-// //   }
-// //
-// //   void prev() {
-// //     if (_currentIndex - 1 >= 0) {
-// //       _playMedia(_currentIndex - 1);
-// //     }
-// //   }
-// //
-// //   void _showSnack(String msg) {
-// //     ScaffoldMessenger.of(context)
-// //         .showSnackBar(SnackBar(content: Text(msg)));
-// //   }
-// //
-// //   @override
-// //   void dispose() {
-// //     _videoController?.dispose();
-// //     _chewieController?.dispose();
-// //     super.dispose();
-// //   }
-// //
-// //   /// ================= UI =================
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(
-// //         title: const Text("VLC Style Player"),
-// //         actions: [
-// //           IconButton(
-// //             icon: const Icon(Icons.library_music),
-// //             onPressed: () {
-// //               Navigator.push(
-// //                 context,
-// //                 MaterialPageRoute(
-// //                   builder: (_) =>
-// //                       PlaylistListScreen(box: Hive.box('playlists')),
-// //                 ),
-// //               );
-// //             },
-// //           ),
-// //           IconButton(
-// //             icon: const Icon(Icons.playlist_add),
-// //             onPressed: addToPlaylist,
-// //           ),
-// //           IconButton(
-// //             icon: const Icon(Icons.playlist_play),
-// //             onPressed: showPlaylist,
-// //           ),
-// //           IconButton(
-// //             icon: const Icon(Icons.wifi),
-// //             onPressed: addNetworkVideoDialog,
-// //           ),
-// //         ],
-// //       ),
-// //       body: Column(
-// //         children: [
-// //           Expanded(
-// //             child: Center(
-// //               child: (_chewieController != null &&
-// //                   _videoController != null &&
-// //                   _videoController!.value.isInitialized)
-// //                   ? Chewie(
-// //                 key: _playerKey,
-// //                 controller: _chewieController!,
-// //               )
-// //                   : const Text("Select media to play"),
-// //             ),
-// //           ),
-// //           Container(
-// //             padding: const EdgeInsets.symmetric(vertical: 8),
-// //             child: Row(
-// //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-// //               children: [
-// //                 IconButton(icon: const Icon(Icons.skip_previous), onPressed: prev),
-// //                 IconButton(
-// //                     icon: const Icon(Icons.folder_open),
-// //                     onPressed: pickLocalFiles),
-// //                 IconButton(icon: const Icon(Icons.skip_next), onPressed: next),
-// //               ],
-// //             ),
-// //           ),
-// //         ],
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // /// ================= PLAYLIST LIST =================
-// // class PlaylistListScreen extends StatelessWidget {
-// //   final Box box;
-// //
-// //   const PlaylistListScreen({super.key, required this.box});
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: const Text("Playlists")),
-// //       body: box.isEmpty
-// //           ? const Center(child: Text("No playlists created"))
-// //           : ListView.builder(
-// //         itemCount: box.length,
-// //         itemBuilder: (_, i) {
-// //           final key = box.keyAt(i);
-// //           final playlist = Map<String, dynamic>.from(box.get(key));
-// //           return ListTile(
-// //             leading: const Icon(Icons.queue_music),
-// //             title: Text(playlist['name']),
-// //             subtitle: Text("${playlist['items'].length} items"),
-// //             onTap: () {
-// //               Navigator.push(
-// //                 context,
-// //                 MaterialPageRoute(
-// //                   builder: (_) => PlaylistItemsScreen(
-// //                     playlistKey: key,
-// //                     playlistData: playlist,
-// //                   ),
-// //                 ),
-// //               );
-// //             },
-// //           );
-// //         },
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// // /// ================= PLAYLIST ITEMS =================
-// // class PlaylistItemsScreen extends StatelessWidget {
-// //   final dynamic playlistKey;
-// //   final Map playlistData;
-// //
-// //   const PlaylistItemsScreen({
-// //     super.key,
-// //     required this.playlistKey,
-// //     required this.playlistData,
-// //   });
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     final items = List<Map>.from(playlistData['items']);
-// //
-// //     return Scaffold(
-// //       appBar: AppBar(title: Text(playlistData['name'])),
-// //       body: ReorderableListView.builder(
-// //         itemCount: items.length,
-// //         onReorder: (oldIndex, newIndex) {
-// //           if (newIndex > oldIndex) newIndex--;
-// //           final item = items.removeAt(oldIndex);
-// //           items.insert(newIndex, item);
-// //
-// //           Hive.box('playlists')
-// //               .put(playlistKey, {'name': playlistData['name'], 'items': items});
-// //         },
-// //         itemBuilder: (_, index) {
-// //           final item = items[index];
-// //           return ListTile(
-// //             key: ValueKey(item['path']),
-// //             leading: FutureBuilder(
-// //               future: _thumbnail(item),
-// //               builder: (_, snap) =>
-// //               snap.hasData ? snap.data! : const Icon(Icons.video_file),
-// //             ),
-// //             title: Text(item['path'].split('/').last),
-// //             onTap: () {
-// //               Navigator.pop(context, {
-// //                 'playlistKey': playlistKey,
-// //                 'startIndex': index,
-// //               });
-// //             },
-// //           );
-// //         },
-// //       ),
-// //     );
-// //   }
-// //
-// //   Future<Widget> _thumbnail(Map item) async {
-// //     if (item['isNetwork']) return const Icon(Icons.wifi, size: 40);
-// //
-// //     final ext = item['path'].split('.').last;
-// //     if (['mp3', 'aac', 'wav', 'm4a'].contains(ext)) {
-// //       return const Icon(Icons.music_note, size: 40);
-// //     }
-// //
-// //     final thumb = await VideoThumbnail.thumbnailFile(
-// //       video: item['path'],
-// //       thumbnailPath: (await getTemporaryDirectory()).path,
-// //       imageFormat: ImageFormat.JPEG,
-// //       maxHeight: 120,
-// //     );
-// //
-// //     return thumb != null
-// //         ? Image.file(File(thumb), fit: BoxFit.cover)
-// //         : const Icon(Icons.video_file);
-// //   }
-// // }
-// //
-// //
-// // ////////////////////////////////////////////// part 2 /////////////////////////////////////////////////
-// //
-// // /*
-// // import 'dart:io';
-// //
-// // import 'package:flutter/material.dart';
-// // import 'package:file_picker/file_picker.dart';
-// // import 'package:chewie/chewie.dart';
-// // import 'package:video_player/video_player.dart';
-// //
-// // void main() {
-// //   runApp(const MyApp());
-// // }
-// //
-// // /// ================= APP =================
-// // class MyApp extends StatelessWidget {
-// //   const MyApp({super.key});
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return MaterialApp(
-// //       debugShowCheckedModeBanner: false,
-// //       theme: ThemeData(
-// //         useMaterial3: true,
-// //         fontFamily: 'Roboto',
-// //       ),
-// //       home: const HomeScreen(),
-// //     );
-// //   }
-// // }
-// //
-// // /// ================= HOME SCREEN =================
-// // class HomeScreen extends StatefulWidget {
-// //   const HomeScreen({super.key});
-// //
-// //   @override
-// //   State<HomeScreen> createState() => _HomeScreenState();
-// // }
-// //
-// // class _HomeScreenState extends State<HomeScreen> {
-// //   final List<File> pickedVideos = [];
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       backgroundColor: const Color(0xFFF7F8FA),
-// //
-// //       /// BOTTOM NAV
-// //       bottomNavigationBar: NavigationBar(
-// //         height: 64,
-// //         selectedIndex: 0,
-// //         destinations: const [
-// //           NavigationDestination(
-// //             icon: Icon(Icons.home_outlined),
-// //             selectedIcon: Icon(Icons.home),
-// //             label: "",
-// //           ),
-// //           NavigationDestination(
-// //             icon: Icon(Icons.folder_outlined),
-// //             selectedIcon: Icon(Icons.folder),
-// //             label: "",
-// //           ),
-// //           NavigationDestination(
-// //             icon: Icon(Icons.search_outlined),
-// //             selectedIcon: Icon(Icons.search),
-// //             label: "",
-// //           ),
-// //           NavigationDestination(
-// //             icon: Icon(Icons.settings_outlined),
-// //             selectedIcon: Icon(Icons.settings),
-// //             label: "",
-// //           ),
-// //         ],
-// //       ),
-// //
-// //       body: SafeArea(
-// //         child: Padding(
-// //           padding: const EdgeInsets.all(16),
-// //           child: ListView(
-// //             children: [
-// //               /// HEADER
-// //               Row(
-// //                 children: [
-// //                   Container(
-// //                     width: 44,
-// //                     height: 44,
-// //                     decoration: BoxDecoration(
-// //                       color: Colors.blue.shade50,
-// //                       shape: BoxShape.circle,
-// //                     ),
-// //                     child: const Icon(Icons.play_arrow,
-// //                         color: Colors.blue, size: 26),
-// //                   ),
-// //                   const SizedBox(width: 12),
-// //                   const Column(
-// //                     crossAxisAlignment: CrossAxisAlignment.start,
-// //                     children: [
-// //                       Text(
-// //                         "Video & Music Player",
-// //                         style: TextStyle(
-// //                           fontSize: 18,
-// //                           fontWeight: FontWeight.w600,
-// //                         ),
-// //                       ),
-// //                       SizedBox(height: 2),
-// //                       Text(
-// //                         "MEDIA PLAYER",
-// //                         style: TextStyle(
-// //                           fontSize: 11,
-// //                           color: Colors.grey,
-// //                           letterSpacing: 1,
-// //                         ),
-// //                       ),
-// //                     ],
-// //                   ),
-// //                   const Spacer(),
-// //                   Container(
-// //                     width: 40,
-// //                     height: 40,
-// //                     decoration: BoxDecoration(
-// //                       color: Colors.white,
-// //                       borderRadius: BorderRadius.circular(12),
-// //                       boxShadow: const [
-// //                         BoxShadow(
-// //                           color: Color(0x11000000),
-// //                           blurRadius: 12,
-// //                           offset: Offset(0, 6),
-// //                         )
-// //                       ],
-// //                     ),
-// //                     child: const Icon(Icons.search),
-// //                   ),
-// //                 ],
-// //               ),
-// //
-// //               const SizedBox(height: 24),
-// //
-// //               /// CATEGORY GRID
-// //               GridView(
-// //                 shrinkWrap: true,
-// //                 physics: const NeverScrollableScrollPhysics(),
-// //                 gridDelegate:
-// //                 const SliverGridDelegateWithFixedCrossAxisCount(
-// //                   crossAxisCount: 2,
-// //                   mainAxisSpacing: 16,
-// //                   crossAxisSpacing: 16,
-// //                   childAspectRatio: 1.25,
-// //                 ),
-// //                 children: [
-// //                   _categoryCard(
-// //                     icon: Icons.video_library,
-// //                     title: "Video",
-// //                     count: "Pick files",
-// //                     color: Colors.pink,
-// //                     onTap: _pickVideos,
-// //                   ),
-// //                   _categoryCard(
-// //                     icon: Icons.headphones,
-// //                     title: "Audio",
-// //                     count: "Music files",
-// //                     color: Colors.blue,
-// //                     onTap: () {},
-// //                   ),
-// //                   _categoryCard(
-// //                     icon: Icons.history,
-// //                     title: "Recent",
-// //                     count: "Recently played",
-// //                     color: Colors.orange,
-// //                     onTap: () {},
-// //                   ),
-// //                   _categoryCard(
-// //                     icon: Icons.favorite,
-// //                     title: "Favorite",
-// //                     count: "Saved items",
-// //                     color: Colors.red,
-// //                     onTap: () {},
-// //                   ),
-// //                 ],
-// //               ),
-// //
-// //               const SizedBox(height: 28),
-// //
-// //               /// VIDEO LIST
-// //               const Text(
-// //                 "Video",
-// //                 style: TextStyle(
-// //                   fontSize: 16,
-// //                   fontWeight: FontWeight.w600,
-// //                 ),
-// //               ),
-// //               const SizedBox(height: 12),
-// //
-// //               if (pickedVideos.isEmpty)
-// //                 const Padding(
-// //                   padding: EdgeInsets.only(top: 24),
-// //                   child: Center(
-// //                     child: Text(
-// //                       "No videos selected",
-// //                       style: TextStyle(color: Colors.grey),
-// //                     ),
-// //                   ),
-// //                 )
-// //               else
-// //                 ...pickedVideos.map((file) => _videoTile(file)).toList(),
-// //             ],
-// //           ),
-// //         ),
-// //       ),
-// //     );
-// //   }
-// //
-// //   /// ================= CATEGORY CARD =================
-// //   Widget _categoryCard({
-// //     required IconData icon,
-// //     required String title,
-// //     required String count,
-// //     required Color color,
-// //     required VoidCallback onTap,
-// //   }) {
-// //     return InkWell(
-// //       onTap: onTap,
-// //       borderRadius: BorderRadius.circular(22),
-// //       child: Container(
-// //         padding: const EdgeInsets.all(18),
-// //         decoration: BoxDecoration(
-// //           color: Colors.white,
-// //           borderRadius: BorderRadius.circular(22),
-// //           boxShadow: const [
-// //             BoxShadow(
-// //               color: Color(0x11000000),
-// //               blurRadius: 12,
-// //               offset: Offset(0, 6),
-// //             )
-// //           ],
-// //         ),
-// //         child: Column(
-// //           crossAxisAlignment: CrossAxisAlignment.start,
-// //           children: [
-// //             Container(
-// //               width: 44,
-// //               height: 44,
-// //               decoration: BoxDecoration(
-// //                 color: color.withOpacity(.15),
-// //                 shape: BoxShape.circle,
-// //               ),
-// //               child: Icon(icon, color: color),
-// //             ),
-// //             const Spacer(),
-// //             Text(
-// //               title,
-// //               style: const TextStyle(
-// //                 fontSize: 16,
-// //                 fontWeight: FontWeight.w600,
-// //               ),
-// //             ),
-// //             const SizedBox(height: 4),
-// //             Text(
-// //               count,
-// //               style: const TextStyle(color: Colors.grey),
-// //             ),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// //
-// //   /// ================= VIDEO TILE =================
-// //   Widget _videoTile(File file) {
-// //     return InkWell(
-// //       onTap: () {
-// //         Navigator.push(
-// //           context,
-// //           MaterialPageRoute(
-// //             builder: (_) => PlayerScreen(file: file),
-// //           ),
-// //         );
-// //       },
-// //       child: Container(
-// //         margin: const EdgeInsets.only(bottom: 14),
-// //         padding: const EdgeInsets.all(10),
-// //         decoration: BoxDecoration(
-// //           color: Colors.white,
-// //           borderRadius: BorderRadius.circular(16),
-// //           boxShadow: const [
-// //             BoxShadow(
-// //               color: Color(0x11000000),
-// //               blurRadius: 12,
-// //               offset: Offset(0, 6),
-// //             )
-// //           ],
-// //         ),
-// //         child: Row(
-// //           children: [
-// //             Container(
-// //               width: 60,
-// //               height: 60,
-// //               decoration: BoxDecoration(
-// //                 color: Colors.grey.shade300,
-// //                 borderRadius: BorderRadius.circular(12),
-// //               ),
-// //               child: const Icon(Icons.video_file),
-// //             ),
-// //             const SizedBox(width: 12),
-// //             Expanded(
-// //               child: Column(
-// //                 crossAxisAlignment: CrossAxisAlignment.start,
-// //                 children: [
-// //                   Text(
-// //                     file.path.split('/').last,
-// //                     maxLines: 1,
-// //                     overflow: TextOverflow.ellipsis,
-// //                     style: const TextStyle(fontWeight: FontWeight.w600),
-// //                   ),
-// //                   const SizedBox(height: 4),
-// //                   const Text(
-// //                     "Photos, videos, logos",
-// //                     style: TextStyle(color: Colors.grey, fontSize: 12),
-// //                   ),
-// //                   const SizedBox(height: 4),
-// //                   const Text(
-// //                     "00:01:03   102MB",
-// //                     style: TextStyle(fontSize: 12),
-// //                   ),
-// //                 ],
-// //               ),
-// //             ),
-// //             const Icon(Icons.more_vert),
-// //           ],
-// //         ),
-// //       ),
-// //     );
-// //   }
-// //
-// //   /// ================= PICK VIDEOS =================
-// //   Future<void> _pickVideos() async {
-// //     final result = await FilePicker.platform.pickFiles(
-// //       allowMultiple: true,
-// //       type: FileType.video,
-// //     );
-// //
-// //     if (result == null) return;
-// //
-// //     setState(() {
-// //       pickedVideos
-// //           .addAll(result.paths.whereType<String>().map(File.new));
-// //     });
-// //   }
-// // }
-// //
-// // /// ================= PLAYER SCREEN =================
-// // class PlayerScreen extends StatefulWidget {
-// //   final File file;
-// //
-// //   const PlayerScreen({super.key, required this.file});
-// //
-// //   @override
-// //   State<PlayerScreen> createState() => _PlayerScreenState();
-// // }
-// //
-// // class _PlayerScreenState extends State<PlayerScreen> {
-// //   VideoPlayerController? controller;
-// //   ChewieController? chewie;
-// //
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     _init();
-// //   }
-// //
-// //   Future<void> _init() async {
-// //     controller = VideoPlayerController.file(widget.file);
-// //     await controller!.initialize();
-// //
-// //     chewie = ChewieController(
-// //       videoPlayerController: controller!,
-// //       autoPlay: true,
-// //       allowFullScreen: true,
-// //     );
-// //
-// //     setState(() {});
-// //   }
-// //
-// //   @override
-// //   void dispose() {
-// //     controller?.dispose();
-// //     chewie?.dispose();
-// //     super.dispose();
-// //   }
-// //
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     return Scaffold(
-// //       appBar: AppBar(title: const Text("Player")),
-// //       body: Center(
-// //         child: chewie == null
-// //             ? const CustomLoader()
-// //             : Chewie(controller: chewie!),
-// //       ),
-// //     );
-// //   }
-// // }
-// //
-// //  */

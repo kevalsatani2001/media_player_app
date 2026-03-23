@@ -82,7 +82,11 @@ void main() async {
         BlocProvider<HomeCountBloc>(
           create: (context) => HomeCountBloc()..add(LoadCounts()),
         ),
+        // BlocProvider<ScreenSettingsCubit>(
+        //   create: (context) => ScreenSettingsCubit(),
+        // ),
         ChangeNotifierProvider(create: (_) => GlobalPlayer()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
         BlocProvider(create: (_) => ThemeBloc()),
         // BlocProvider(
         //   create: (_) =>
@@ -102,7 +106,12 @@ void main() async {
         BlocProvider<PlayerBloc>(create: (_) => PlayerBloc()),
         BlocProvider(create: (_) => MediaBloc()),
       ],
-      child: MyApp(),
+      child: BlocProvider(
+        create: (context) => ScreenSettingsCubit(
+          SettingsProvider(), // Create a new instance right here
+        ),
+        child:  MyApp(),
+      ),
     ),
   );
 }

@@ -1,5 +1,6 @@
-import 'dart:math' as Math;
+//////////////////////////////////// part 1 new video trim scareen//////////////////////////////////////
 
+import 'dart:math' as Math;
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
@@ -14,6 +15,7 @@ class VideoTrimScreen extends StatefulWidget {
 
 class _VideoTrimScreenState extends State<VideoTrimScreen> {
   final playerService = GlobalPlayerService();
+  final GlobalKey _videoViewerKey = GlobalKey();
   final Trimmer _trimmer = Trimmer();
   double _startValue = 0.0;
   double _endValue = 0.0;
@@ -24,6 +26,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   double _selectedCoverTime = 0.0;
   bool _isCoverSelecting = false;
   double _coverPos = 0.0;
+
+  bool _isSuccess = false;
+  String _savedVideoPath = "";
 
   final ValueNotifier<String> _estimateSizeNotifier = ValueNotifier<String>(
     "0 MB",
@@ -39,30 +44,31 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
   double _currentPercentage = 0.0;
   Timer? _progressTimer;
-  bool _isTrimmed = false; // àª¶à«àª‚ àª¯à«àªàª°à«‡ àªŸà«àª°à«€àª®àª¿àª‚àª— àª•àª°à«àª¯à«àª‚ àª›à«‡?
+  bool _isTrimmed = false;
 
   @override
   void initState() {
     super.initState();
+    playerService.controller?.pause();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    _loadVideo();
+
+    // àª¥à«‹àª¡à«‹ àªµàª¿àª²àª‚àª¬ àª†àªªà«‹ àªœà«‡àª¥à«€ UI àª°à«‡àª¨à«àª¡àª° àª¥àªˆ àªœàª¾àª¯
+    Future.delayed(const Duration(milliseconds: 500), () {
+
+      _loadVideo();
+    });
   }
 
-  // àª† àª«àª‚àª•à«àª¶àª¨ àªŸà«àª°à«€àª® àª•àª°à«‡àª²àª¾ àª­àª¾àª—àª¨à«€ àª¸àª¾àªˆàª àª—àª£àª¶à«‡
   String get _estimateSize {
     if (_totalDurationMs <= 0) return "0 B";
 
-    // àªŸà«àª°à«€àª® àª•àª°à«‡àª²à«‹ àª¸àª®àª¯: (End - Start)
     double trimDurationMs = _endValue - _startValue;
 
-    // àª¸à«‚àª¤à«àª°: (àª•à«àª² àª¬àª¾àªˆàªŸà«àª¸ / àª•à«àª² àª¸àª®àª¯) * àªŸà«àª°à«€àª® àª•àª°à«‡àª²à«‹ àª¸àª®àª¯
     double estimatedBytes =
         (_originalFileSizeBytes / _totalDurationMs) * trimDurationMs;
 
-    // àªœà«‹ àªŸà«àª°à«€àª® àª•àª°à«‡àª²à«€ àª¸àª¾àªˆàª àª¨à«‡àª—à«‡àªŸàª¿àªµ àª•à«‡ àª…àªœà«€àª¬ àª¹à«‹àª¯ àª¤à«‹ àª¸à«‡àª«à«àªŸà«€ àªšà«‡àª•
     if (estimatedBytes < 0) return "0 B";
 
-    // àª†àªªà«‹àª†àªª KB, MB àª•à«‡ GB àª®àª¾àª‚ àª•àª¨à«àªµàª°à«àªŸ àª•àª°àª¶à«‡
     return _formatBytes(estimatedBytes);
   }
 
@@ -87,85 +93,86 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         _selectedCoverFile = File(path);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cover frame captured! Ã°Å¸â€œÂ¸")),
+        const SnackBar(content: Text("Cover frame captured! ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸")),
       );
     }
   }
 
   void _loadVideo() async {
+    // àªªà«‡àªœ àª²à«‹àª¡ àª¥àª¤àª¾ àªœ àª¸à«àªŸà«‡àªŸ àª°à«€àª¸à«‡àªŸ àª•àª°à«‹
+    setState(() {
+      _isTrimmed = false;
+      _startValue = 0.0;
+      _currentPercentage = 0.0;
+    });
+
     try {
+      if (!await widget.file.exists()) return;
+
+      // àªœà«‚àª¨à«àª‚ àª•à«‹àªˆ àª•àª‚àªŸà«àª°à«‹àª²àª° àª¹à«‹àª¯ àª¤à«‹ àª¤à«‡àª¨à«‡ àªªàª¹à«‡àª²àª¾ àª•à«àª²à«€àª¨ àª¥àªµàª¾ àª¦à«‹
       await _trimmer.loadVideo(videoFile: widget.file);
 
-      // કંટ્રોલર ઈનીશિયલાઈઝ થાય ત્યાં સુધી વેઈટ કરો
+      // àª•àª‚àªŸà«àª°à«‹àª²àª° àª‡àª¨àª¿àª¶àª¿àª¯àª²àª¾àª‡àª àª¥àª¾àª¯ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àªµà«‡àªˆàªŸ àª•àª°à«‹
       int retry = 0;
-      while (_trimmer.videoPlayerController == null && retry < 50) {
-        await Future.delayed(const Duration(milliseconds: 100));
+      while (_trimmer.videoPlayerController == null && retry < 15) {
+        await Future.delayed(const Duration(milliseconds: 200));
         retry++;
       }
 
       if (_trimmer.videoPlayerController != null) {
         final controller = _trimmer.videoPlayerController!;
 
-        // આ લાઈન મહત્વની છે: વિડિયોને થોડો આગળ લઈ જઈને પાછો લાવો
-        await controller.seekTo(const Duration(milliseconds: 100));
-        await controller.pause(); // શરૂઆતમાં પોઝ રાખો
-        await controller.seekTo(Duration.zero);
+        if (!controller.value.isInitialized) {
+          await controller.initialize();
+        }
+
+        controller.addListener(_videoListener);
 
         final num bytes = await widget.file.length();
+        final double durationInSeconds = controller.value.duration.inSeconds.toDouble();
+        if (mounted) {
+          setState(() {
+            _originalFileSizeBytes = bytes.toDouble();
+            _totalDurationMs = controller.value.duration.inMilliseconds.toDouble();
+            _endValue = _totalDurationMs;
 
-        setState(() {
-          _originalFileSizeBytes = bytes.toDouble();
-          _totalDurationMs = controller.value.duration.inMilliseconds.toDouble();
-          _endValue = _totalDurationMs;
-          _isPlaying = false;
-
-          // બાકીની વિગતો...
-          _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
-          _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
-        });
+            if (durationInSeconds > 0) {
+              double totalBits = _originalFileSizeBytes * 8;
+              double bps = totalBits / durationInSeconds; // Bits per second
+              double mbps = bps / (1024 * 1024); // Megabits per second
+              _bitRate = "${mbps.toStringAsFixed(2)} Mbps";
+            } else {
+              _bitRate = "0 Mbps";
+            }
+            _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
+            _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+          });
+        }
       }
     } catch (e) {
-      debugPrint("Error: $e");
+      debugPrint("Error loading video: $e");
     }
   }
 
-  // void _loadVideo() async {
-  //   try {
-  //     // àªµàª¿àª¡àª¿àª¯à«‹ àª²à«‹àª¡ àª•àª°àªµàª¾àª¨à«àª‚ àª¶àª°à«‚ àª•àª°à«‹
-  //     await _trimmer.loadVideo(videoFile: widget.file);
-  //
-  //     // àª•àª‚àªŸà«àª°à«‹àª²àª° àª¤à«ˆàª¯àª¾àª° àª¥àª¾àª¯ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àª°àª¾àª¹ àªœà«àª“
-  //     int retryCount = 0;
-  //     while (_trimmer.videoPlayerController == null ||
-  //         !_trimmer.videoPlayerController!.value.isInitialized) {
-  //       await Future.delayed(const Duration(milliseconds: 200));
-  //       retryCount++;
-  //       if (retryCount > 25) break; // 5 àª¸à«‡àª•àª¨à«àª¡ àªªàª›à«€ àª…àªŸàª•à«€ àªœàª¶à«‡
-  //     }
-  //
-  //     final controller = _trimmer.videoPlayerController;
-  //     if (controller != null && mounted) {
-  //       final num bytes = await widget.file.length();
-  //       final duration = controller.value.duration;
-  //
-  //       setState(() {
-  //         _originalFileSizeBytes = bytes.toDouble();
-  //         _totalDurationMs = duration.inMilliseconds.toDouble();
-  //         _endValue = _totalDurationMs;
-  //
-  //         // Bitrate & Resolution
-  //         double mbps = (bytes * 8) / (duration.inSeconds * 1024 * 1024);
-  //         _bitRate = "${mbps.toStringAsFixed(2)} Mbps";
-  //         _resolution =
-  //         "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
-  //         _fileSize =
-  //         "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error loading video: $e");
-  //   }
-  // }
+// àª† àª«àª‚àª•à«àª¶àª¨àª¨à«‡ àª•à«àª²àª¾àª¸àª®àª¾àª‚ àª…àª²àª—àª¥à«€ àª²àª–à«‹
+  void _videoListener() {
+    // àªœà«‹ àªµàª¿àªœà«‡àªŸ àª¹àªœà« àª¸à«àª•à«àª°à«€àª¨ àªªàª° àª¹à«‹àª¯ àª…àª¨à«‡ àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«‹ àªœ àª†àª—àª³ àªµàª§à«‹
+    if (!mounted || _trimmer.videoPlayerController == null) return;
+
+    try {
+      final controller = _trimmer.videoPlayerController!;
+      // àª…àª¹à«€àª‚ àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àª•àª‚àªŸà«àª°à«‹àª²àª° àª‡àª¨àª¿àª¶àª¿àª¯àª²àª¾àª‡àªà«àª¡ àª›à«‡ àª•à«‡ àª¨àª¹à«€àª‚
+      if (controller.value.isInitialized) {
+        if (_isPlaying != controller.value.isPlaying) {
+          setState(() {
+            _isPlaying = controller.value.isPlaying;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Listener error catch: $e");
+    }
+  }
 
   String _getEstimateSize() {
     if (_trimmer.videoPlayerController == null) return _fileSize;
@@ -176,7 +183,6 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
     if (totalDurationMs <= 0) return _fileSize;
 
-    // àªŸà«àª°à«€àª® àª•àª°à«‡àª²àª¾ àª­àª¾àª—àª¨à«€ àª¸àª¾àªˆàª àª—àª£à«‹
     double estimatedBytes =
         (_originalFileSizeBytes / totalDurationMs) * trimDurationMs;
     double estimatedMB = estimatedBytes / (1024 * 1024);
@@ -186,140 +192,134 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
   void _updateEstimate() {
     if (_totalDurationMs <= 0) return;
-
     double trimDurationMs = _endValue - _startValue;
-    double estimatedBytes =
-        (_originalFileSizeBytes / _totalDurationMs) * trimDurationMs;
+    double estimatedBytes = (_originalFileSizeBytes / _totalDurationMs) * trimDurationMs;
     double estimatedMB = estimatedBytes / (1024 * 1024);
-
-    // àª†àª¨àª¾àª¥à«€ àª®àª¾àª¤à«àª° àª®à«‡àª¨à«àª¨à«€ àª…àª‚àª¦àª°àª¨à«€ àªŸà«‡àª•à«àª¸à«àªŸ àª¬àª¦àª²àª¾àª¶à«‡, àª†àª–à«àª‚ UI àª¨àª¹à«€àª‚
     _estimateSizeNotifier.value = "${estimatedMB.toStringAsFixed(2)} MB";
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    // AppThemeColors colors = Theme.of(context).extension<AppThemeColors>()!;
+
     return WillPopScope(
       onWillPop: () async {
+        await _trimmer.videoPlayerController?.pause();
         if (_isTrimmed) {
           _showDiscardDialog();
           return false;
-        } else {
-          // àªœà«‹ àª•à«‹àªˆ àªšà«‡àª¨à«àªœ àª¨àª¥à«€ àª…àª¨à«‡ àª¡àª¾àª¯àª°à«‡àª•à«àªŸ àª¬à«‡àª• àªœàª¾àª¯ àª›à«‡, àª¤à«‹ àªªàª£ àªªà«àª²à«‡àª¯àª° àªšàª¾àª²à« àª•àª°à«€ àª¦à«‡àªµà«‹
-          playerService.controller!.play();
-          return true;
         }
+        return true;
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-
-        body: Column(
+        body:  _isSuccess ? _buildSuccessUI(): Column(
           children: [
             _buildTopBar(),
-            // build àª®à«‡àª¥àª¡àª¨à«€ àª…àª‚àª¦àª°:
             Expanded(
               child: Center(
                 child: (_trimmer.videoPlayerController != null &&
                     _trimmer.videoPlayerController!.value.isInitialized)
-                    ? VideoViewer(
-                  key: UniqueKey(), // આ ઉમેરવાથી બ્લેક સ્ક્રીન કે લોડરનો પ્રોબ્લેમ સોલ્વ થશે
-                  trimmer: _trimmer,
-                )
-                    : const CircularProgressIndicator(),
+                    ? VideoViewer(trimmer: _trimmer) // àª…àª¹à«€àª‚àª¥à«€ UniqueKey àª¹àªŸàª¾àªµà«€ àª¦à«‹
+                    : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(color: Colors.blueAccent),
+                    const SizedBox(height: 10),
+                    const Text("Loading Video...", style: TextStyle(color: Colors.white)),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Container(
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.10),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
                   topRight: Radius.circular(12),
                 ),
               ),
-
               child: Column(
                 children: [
-                  SizedBox(height: 16),
-                  Center(
-                    child: TrimViewer(
-                      editorProperties: TrimEditorProperties(
-                        borderPaintColor: colors.primary,
-                        scrubberWidth: 2,
-                      ),
-                      trimmer: _trimmer,
-                      viewerWidth: MediaQuery.of(context).size.width,
-                     onChangeStart: (value) {
-                        _startValue = value;
-                        _updateEstimate();
-                        if (!_isTrimmed)
-                          setState(
-                                () => _isTrimmed = true,
-                          );
-                        },
-                      onChangeEnd: (value) {
-                        _endValue = value;
-                        _updateEstimate();
-                        if (!_isTrimmed) setState(() => _isTrimmed = true);
-                      },
-                      onChangePlaybackState: (value) =>
-                          setState(() => _isPlaying = value),
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // if (_selectedCoverFile != null)
-                      //   ClipRRect(
-                      //     borderRadius: BorderRadius.circular(4),
-                      //     child: Image.file(
-                      //       _selectedCoverFile!,
-                      //       height: 50,
-                      //       width: 40,
-                      //       fit: BoxFit.cover,
-                      //     ),
-                      //   ),
-                      // const SizedBox(width: 20),
-                      GestureDetector(
-                        // પ્લે બટન માટે આ લોજિક ટ્રાય કરો:
-                        onTap: () async {
-                          final controller = _trimmer.videoPlayerController;
-                          if (controller != null && controller.value.isInitialized) {
-                            if (controller.value.isPlaying) {
-                              await controller.pause();
-                            } else {
-                              await controller.play();
-                            }
-                            // setState કરવાની જરૂર નથી કારણ કે આપણે controller.addListener ઉમેર્યું છે
-                          }
-                        },
-                        child: AppImage(
-                          src: _isPlaying ? AppSvg.pauseVid : AppSvg.playVid,
-                          height: 45,
-                          width: 45,
-                        ),
-                      ),
+                  const SizedBox(height: 16),
+                  TrimViewer(
+                    trimmer: _trimmer,
+                    viewerWidth: MediaQuery.of(context).size.width,
+                    onChangeStart: (value) async {
+                      _startValue = value;
+                      _updateEstimate();
 
-                      // const SizedBox(width: 20),
-                      //
-                      // Column(
-                      //   children: [
-                      //     IconButton(
-                      //       icon: const Icon(
-                      //         Icons.add_a_photo_outlined,
-                      //         color: Colors.white,
-                      //         size: 30,
-                      //       ),
-                      //       onPressed: _setVideoCover,
-                      //     ),
-                      //     const Text(
-                      //       "Cover",
-                      //       style: TextStyle(color: Colors.white, fontSize: 10),
-                      //     ),
-                      //   ],
-                      // ),
-                    ],
+                      // àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‹àª àª•àª°àªµàª¾àª¨à«àª‚ àª²à«‹àªœàª¿àª•
+                      final controller = _trimmer.videoPlayerController;
+                      if (controller != null && controller.value.isPlaying) {
+                        await controller.pause();
+                        // Safe setState using addPostFrameCallback
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) setState(() => _isPlaying = false);
+                        });
+                      }
+
+                      if (!_isTrimmed) {
+                        _isTrimmed = true; // àªªà«‡àª²àª¾ àªµà«‡àª°à«€àªàª¬àª² àª¬àª¦àª²à«‹
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) setState(() {}); // àªªàª›à«€ àªàª• àªœ àªµàª¾àª° àª°àª¿àª¬àª¿àª²à«àª¡ àª•àª°à«‹
+                        });
+                      }
+                    },
+                    onChangeEnd: (value) {
+                      _endValue = value;
+                      _updateEstimate();
+
+                      if (!_isTrimmed) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) setState(() => _isTrimmed = true);
+                        });
+                      }
+                    },
+                    onChangePlaybackState: (value) {
+                      // Safe setState for playback state
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          setState(() {
+                            _isPlaying = value;
+                          });
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: () async {
+                      print("in side ontap ==> ");
+                      final controller = _trimmer.videoPlayerController;
+                      if (controller != null && controller.value.isInitialized) {
+                        print("in side if 1 st==> ");
+                        if (controller.value.isPlaying) {
+                          print("in side if ==> ");
+                          await controller.pause();
+                        } else {
+                          print("in side else ==> ");
+                          // àªœà«‹ àªµàª¿àª¡àª¿àª¯à«‹ àª›à«‡àª²à«àª²à«€ àª°à«‡àª¨à«àªœ (endValue) àªªàª° àªªàª¹à«‹àª‚àªšà«€ àª—àª¯à«‹ àª¹à«‹àª¯, àª¤à«‹ àª«àª°à«€àª¥à«€ startValue àª¥à«€ àª¶àª°à«‚ àª•àª°à«‹
+                          if (controller.value.position >= Duration(milliseconds: _endValue.toInt())) {
+                            await controller.seekTo(Duration(milliseconds: _startValue.toInt()));
+                          }
+                          await controller.play();
+                        }
+                        setState(() {
+                          _isPlaying = controller.value.isPlaying;
+                        });
+                      }
+                      else{
+                        await controller!.initialize();
+                      }
+                    },
+                    child: Icon(
+                      _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                      color: Colors.white,
+                      size: 50,
+                    ),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -328,6 +328,196 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // Duration àª«à«‹àª°à«àª®à«‡àªŸ àª®àª¾àªŸà«‡ àª«àª‚àª•à«àª¶àª¨
+  String _formatDuration(double milliseconds) {
+    Duration duration = Duration(milliseconds: milliseconds.toInt());
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$hours:$minutes:$seconds";
+  }
+
+  Widget _buildSuccessUI() {
+    return Container(
+      color: Colors.black,
+      width: double.infinity,
+      height: double.infinity,
+      child: Column(
+        children: [
+          // --- Top Bar ---
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const Expanded(
+                    child: Text("Export Success",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ),
+
+          // --- Main Content Area ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.greenAccent, size: 25),
+                      SizedBox(width: 15,),
+                      const Text("Saved Successfully!",
+                          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+
+                  // Video Card with Thumbnail
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: FutureBuilder<Uint8List?>(
+                              future: VideoThumbnail.thumbnailData(
+                                video: _savedVideoPath,
+                                imageFormat: ImageFormat.JPEG,
+                                quality: 85,
+                              ),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) return Image.memory(snapshot.data!, fit: BoxFit.cover);
+                                return Container(color: Colors.white10, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                              },
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // HH:MM:SS àª«à«‹àª°à«àª®à«‡àªŸ àª…àª¹à«€àª‚ àªµàªªàª°àª¾àª¶à«‡
+                              _buildDetailItem("DURATION", _formatDuration(_endValue - _startValue)),
+                              _buildDetailItem("SIZE", _getEstimateSize()),
+                              _buildDetailItem("FORMAT", "MP4"),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: AppText("File Location",color: Colors.white38,
+                              fontSize: 10,
+                              align: TextAlign.start,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15,vertical: 5),
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: AppText(_savedVideoPath,color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,),
+                          ),
+                        ),
+                        SizedBox(height: 10,),
+                      ],
+                    ),
+                  ),
+                  Spacer(),
+                  // --- 5 Social Direct Buttons ---
+                  AppButton(title: "share", onTap: () => Share.shareXFiles([XFile(_savedVideoPath)]),),
+                  Spacer(),
+
+                  // ElevatedButton.icon(
+                  //   onPressed: () => Share.shareXFiles([XFile(_savedVideoPath)]),
+                  //   icon: const Icon(Icons.share, size: 18),
+                  //   label: const Text("Share"),
+                  //   style: ElevatedButton.styleFrom(
+                  //     backgroundColor: Colors.blueAccent,
+                  //     foregroundColor: Colors.white,
+                  //     padding: const EdgeInsets.symmetric(vertical: 14),
+                  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  //     elevation: 0,
+                  //   ),
+                  // ),
+
+                ],
+              ),
+            ),
+          ),
+
+          // --- Ad Section ---
+          Container(
+            width: double.infinity,
+            // height: 250,
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Center(
+              child: SizedBox(
+                width: double.infinity,
+                child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+  Widget _buildDetailItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start, // àª²àª–àª¾àª£ àª¡àª¾àª¬à«€ àª¬àª¾àªœà« àª°àª¾àª–àªµàª¾
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // àª‰àªªàª°àª¨à«àª‚ àª²à«‡àª¬àª² (àª¨àª¾àª¨àª¾ àª…àª•à«àª·àª°à«‹àª®àª¾àª‚)
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white38, // àª†àª›à«‹ àª¸àª«à«‡àª¦ àª•àª²àª°
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        // àª¨à«€àªšà«‡àª¨à«€ àª•àª¿àª‚àª®àª¤ (àª˜àª¾àªŸàª¾ àª¸àª«à«‡àª¦ àª…àª•à«àª·àª°à«‹àª®àª¾àª‚)
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -350,7 +540,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white, size: 24),
-            onPressed: () {
+            onPressed: () async {
+              final controller = _trimmer.videoPlayerController;
+              if (controller != null && controller.value.isInitialized) {
+                if (controller.value.isPlaying) {
+                  await controller.pause();
+                }
+              }
               if (_isTrimmed) {
                 _showDiscardDialog();
               } else {
@@ -412,7 +608,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 _buildPopupItem("Format", "MP4"),
                 _buildPopupItem("Bit Rate", _bitRate),
                 // const PopupMenuDivider(height: 20),
-                 _buildPopupItem("Estimate Size", _estimateSize, isBold: true),
+                _buildPopupItem("Estimate Size", _estimateSize, isBold: true),
               ],
             ),
           ),
@@ -423,15 +619,15 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             onPressed: (!_isTrimmed || _isSaving) ? null :()async{
 
 
-                final controller = _trimmer.videoPlayerController;
-                if (controller != null && controller.value.isInitialized) {
-                  if (controller.value.isPlaying) {
-                    await controller.pause();
-                  } else {
-                    await controller.play();
-                  }
-                  // setState કરવાની જરૂર નથી કારણ કે આપણે controller.addListener ઉમેર્યું છે
+              final controller = _trimmer.videoPlayerController;
+              if (controller != null && controller.value.isInitialized) {
+                if (controller.value.isPlaying) {
+                  await controller.pause();
+                } else {
+                  await controller.play();
                 }
+                // setState àª•àª°àªµàª¾àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€ àª•àª¾àª°àª£ àª•à«‡ àª†àªªàª£à«‡ controller.addListener àª‰àª®à«‡àª°à«àª¯à«àª‚ àª›à«‡
+              }
               _showAdDialog();},
 
             child: Text(
@@ -555,9 +751,10 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       },
     );
   }
+  //////////////////////////////////// part 2 new video trim scareen/////////////////////////////////////////////////////////////////////////////////////////////
 
   _saveVideo() async {
-    _currentPercentage = 0.0; // Reset
+    _currentPercentage = 0.0;
     _showProcessingDialog();
 
     try {
@@ -568,41 +765,20 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         storageDir: StorageDir.temporaryDirectory,
         onSave: (outputPath) async {
           _progressTimer?.cancel();
-
-          if (Navigator.canPop(context)) {
-            Navigator.pop(context);
-          }
+          if (Navigator.canPop(context)) Navigator.pop(context); // àª²à«‹àª¡àª¿àª‚àª— àª¡àª¾àª¯àª²à«‹àª— àª¬àª‚àª§ àª•àª°à«‹
 
           if (outputPath != null && outputPath.isNotEmpty) {
-            try {
-              await Gal.putVideo(outputPath);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Video saved to gallery! âœ…"),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-
-              Future.delayed(const Duration(milliseconds: 300), () {
-                if (mounted) {
-                  Navigator.pop(
-                    context,
-                    outputPath,
-                  );
-                }
-              });
-            } catch (e) {
-              debugPrint("Gallery Save Error: $e");
-            }
+            await Gal.putVideo(outputPath);
+            setState(() {
+              _isSuccess = true;
+              _savedVideoPath = outputPath;
+            });
           }
         },
       );
     } catch (e) {
       _progressTimer?.cancel();
-      Navigator.pop(context);
-      debugPrint("Error: $e");
+      if (Navigator.canPop(context)) Navigator.pop(context);
     }
   }
 
@@ -647,7 +823,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 setState(() => _isPlaying = false);
                 Navigator.pop(context);
                 _playRewardedAd();
-                },
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
                 minimumSize: const Size(double.infinity, 50),
@@ -724,7 +900,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             ),
             const SizedBox(height: 20),
 
-            // à«¨. Title & Message
+            // Ã Â«Â¨. Title & Message
             const Text(
               "Discard changes?",
               style: TextStyle(
@@ -745,7 +921,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             ),
             const SizedBox(height: 30),
 
-            // à«©. Buttons Row
+            // Ã Â«Â©. Buttons Row
             Row(
               children: [
                 // Keep Editing Button (Cancel)
@@ -775,14 +951,14 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // à«§. àªªàª¹à«‡àª²àª¾ àªªà«àª²à«‡àª¯àª°àª¨à«‡ àª°àª¿àªà«àª¯à«àª® àª•àª°à«‹ àªœà«‡àª¥à«€ àª®à«‡àªˆàª¨ àª¸à«àª•à«àª°à«€àª¨ àªªàª° àª²à«‹àª¡àª° àª¨ àª«àª°à«‡
+                      // Ã Â«Â§. Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂÃ Â«ÂÃ ÂªÂ¯Ã Â«ÂÃ ÂªÂ® Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã Â«â€¡Ã ÂªË†Ã ÂªÂ¨ Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡Ã ÂªÂ° Ã ÂªÂ¨ Ã ÂªÂ«Ã ÂªÂ°Ã Â«â€¡
                       playerService.controller
-                          ?.play(); // àª“àª°àª¿àªœàª¿àª¨àª² àª«àª¾àªˆàª² àª«àª°à«€ àªªà«àª²à«‡ àª•àª°à«‹
+                          ?.play(); // Ã Âªâ€œÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨Ã ÂªÂ² Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ² Ã ÂªÂ«Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
 
-                      // à«¨. àª¡àª¾àª¯àª²à«‹àª— àª¬àª‚àª§ àª•àª°à«‹
+                      // Ã Â«Â¨. Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€” Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
                       Navigator.pop(context);
 
-                      // à«©. àªµàª¿àª¡àª¿àª¯à«‹ àªŸà«àª°à«€àª® àª¸à«àª•à«àª°à«€àª¨ àª¬àª‚àª§ àª•àª°à«‹
+                      // Ã Â«Â©. Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ® Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨ Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -812,15 +988,30 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
   @override
   void dispose() {
+    // à«§. àª¸à«Œàª¥à«€ àªªàª¹à«‡àª²àª¾ àªŸàª¾àªˆàª®àª° àª¬àª‚àª§ àª•àª°à«‹
     _progressTimer?.cancel();
+
+    // à«¨. àª²àª¿àª¸àª¨àª° àª¹àªŸàª¾àªµà«‹ àªœà«‡àª¥à«€ àª•à«‹àªˆ àª¸à«àªŸà«‡àªŸ àª…àªªàª¡à«‡àªŸ àªŸà«àª°àª¿àª—àª° àª¨ àª¥àª¾àª¯
+    _trimmer.videoPlayerController?.removeListener(_videoListener);
+
+    // à«©. àªµà«€àª¡àª¿àª¯à«‹ àª…àªŸàª•àª¾àªµà«‹ (àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«‹)
+    if (_trimmer.videoPlayerController != null) {
+      _trimmer.videoPlayerController!.pause();
+    }
+
+    // à«ª. àª¨à«‹àªŸàª¿àª«àª¾àª¯àª° àª•à«àª²à«€àª¨ àª•àª°à«‹
     _estimateSizeNotifier.dispose();
     _exportProgress.dispose();
-    // Trimmer àª†àª‚àª¤àª°àª¿àª• àª•àª‚àªŸà«àª°à«‹àª²àª°àª¨à«‡ àª¹à«‡àª¨à«àª¡àª² àª•àª°à«‡ àª›à«‡, àªªàª£ àª¸à«‡àª«à«àªŸà«€ àª®àª¾àªŸà«‡:
+
+    // à««. àª“àª°àª¿àªàª¨à«àªŸà«‡àª¶àª¨
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+
+    // à«¬. Trimmer àª¨à«‡ àª•à«àª²à«€àª¨ àª•àª°à«‹ (àª¨à«‹àª‚àª§: video_trimmer àª²àª¾àª‡àª¬à«àª°à«‡àª°à«€àª¨à«àª‚ àªªà«‹àª¤àª¾àª¨à«àª‚ àª‡àª¨à«àªŸàª°àª¨àª² àª®à«‡àª¨à«‡àªœàª®à«‡àª¨à«àªŸ àª¹à«‹àª¯ àª›à«‡)
+    // àªœà«‹ àª¤àª®à«‡ àª®à«‡àª¨à«àª¯à«àª…àª²à«€ dispose àª•àª°à«‹ àª›à«‹ àª¤à«‹ àª¤à«‡àª¨à«‡ àª›à«‡àª²à«àª²à«‡ àª°àª¾àª–à«‹.
     super.dispose();
   }
 }
@@ -871,7 +1062,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         _selectedCoverFile = File(path);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cover frame captured! Ã°Å¸â€œÂ¸")),
+        const SnackBar(content: Text("Cover frame captured! ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸")),
       );
     }
   }
@@ -925,7 +1116,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       //                     ScaffoldMessenger.of(context).showSnackBar(
       //                       const SnackBar(
       //                         content: Text(
-      //                           "Video saved successfully to gallery! âœ…",
+      //                           "Video saved successfully to gallery! Ã¢Å“â€¦",
       //                         ),
       //                         backgroundColor: Colors.green,
       //                         behavior: SnackBarBehavior
@@ -1139,7 +1330,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                        "Video saved successfully to gallery! âœ…",
+                        "Video saved successfully to gallery! Ã¢Å“â€¦",
                       ),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior
@@ -1183,5 +1374,4 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 }
 
  */
-
 

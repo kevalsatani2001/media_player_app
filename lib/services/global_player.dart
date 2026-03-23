@@ -1,11 +1,13 @@
 import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio_background/just_audio_background.dart' as bg;
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import '../models/media_item.dart' as my;
 import 'package:just_audio/just_audio.dart' hide PlayerState;
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 import 'notification_service.dart';
+//youtube_explode_dart:
 
 class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
@@ -56,9 +58,9 @@ class GlobalPlayerService {
     final entity = playlist[currentIndex];
     final file = await entity.file;
 
-    // ✅ Step 4: File Safety Check
+    // âœ… Step 4: File Safety Check
     if (file == null || !await file.exists()) {
-      print("❌ File not found / deleted");
+      print("âŒ File not found / deleted");
       playNext(onUpdate);
       return;
     }
@@ -74,7 +76,7 @@ class GlobalPlayerService {
 
       controller = VideoPlayerController.file(file);
 
-      // ✅ Step 5: Retry + Timeout
+      // âœ… Step 5: Retry + Timeout
       int retry = 0;
       while (retry < 2) {
         try {
@@ -84,10 +86,10 @@ class GlobalPlayerService {
           break;
         } catch (e) {
           retry++;
-          print("⚠️ Retry $retry");
+          print("âš ï¸ Retry $retry");
 
           if (retry >= 2) {
-            print("❌ Failed after retry");
+            print("âŒ Failed after retry");
             playNext(onUpdate);
             return;
           }
@@ -105,7 +107,7 @@ class GlobalPlayerService {
 
       await controller!.play();
 
-      // 🔥 Ensure video actually started
+      // ðŸ”¥ Ensure video actually started
       await Future.delayed(const Duration(milliseconds: 500));
       if (!controller!.value.isPlaying) {
         throw Exception("Video not playing");
@@ -126,9 +128,9 @@ class GlobalPlayerService {
       controller!.addListener(_currentListener!);
       onUpdate();
     } catch (e) {
-      print("❌ Video load failed: $e");
+      print("âŒ Video load failed: $e");
 
-      // 🔥 Auto skip
+      // ðŸ”¥ Auto skip
       playNext(onUpdate);
     }
   }
@@ -143,7 +145,7 @@ class GlobalPlayerService {
   void playNext(Function onUpdate) {
     if (playlist.isEmpty) return;
 
-    // ✅ Shuffle Fix
+    // âœ… Shuffle Fix
     if (isShuffle && playlist.length > 1) {
       final random = Random();
       currentIndex = random.nextInt(playlist.length);
@@ -173,16 +175,69 @@ class GlobalPlayerService {
         : controller!.play();
   }
 
-  Future<void> playNetworkStream(
-      String url, VoidCallback onInitialized) async {
-    await controller?.dispose();
-    controller = VideoPlayerController.networkUrl(Uri.parse(url));
 
-    await controller!.initialize();
-    isInitialized = true;
-    controller!.play();
-    onInitialized();
+
+  Future<void> playNetworkStream(String url, VoidCallback onUpdate) async {
+    // YouTube Explode àª¨à«‹ àª“àª¬à«àªœà«‡àª•à«àªŸ àª²àª¿àª®àª¿àªŸà«‡àª¡ àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àª®àª¾àªŸà«‡
+    final yt = YoutubeExplode();
+
+    try {
+      isInitialized = false;
+      onUpdate();
+
+      String finalUrl = url;
+
+      if (url.contains("youtube.com") || url.contains("youtu.be")) {
+        // à«§. àª®àª¾àª¤à«àª° Video ID àªàª•à«àª¸àªŸà«àª°à«‡àª•à«àªŸ àª•àª°à«‹ (àª•à«‹àªˆ àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àªµàª—àª°)
+        var videoId = VideoId.parseVideoId(url);
+        if (videoId == null) throw "Invalid YouTube URL";
+
+        // à«¨. àª®àª¾àª¤à«àª° àª¸à«àªŸà«àª°à«€àª® àª®à«‡àª¨àª¿àª«à«‡àª¸à«àªŸ àª«à«‡àªš àª•àª°à«‹ (àª† àª¸à«Œàª¥à«€ 'Lite' àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àª›à«‡)
+        var manifest = await yt.videos.streamsClient.getManifest(videoId);
+
+        // à«©. Muxed àª¸à«àªŸà«àª°à«€àª® àªªàª¸àª‚àª¦ àª•àª°à«‹ (àªœà«‡àª®àª¾àª‚ Audio + Video àª¬àª‚àª¨à«‡ àª¹à«‹àª¯)
+        // .withHighestBitrate() àª¨à«‡ àª¬àª¦àª²à«‡ .first àªµàª¾àªªàª°àªµàª¾àª¥à«€ àªªàª£ àª¸à«àªªà«€àª¡ àªµàª§àª¶à«‡
+        var streamInfo = manifest.muxed.withHighestBitrate();
+        finalUrl = streamInfo.url.toString();
+      }
+
+      // àªœà«‚àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª¨à«‡ àª¸àª¾àª« àª•àª°à«‹
+      if (controller != null) {
+        clearListener();
+        await controller!.dispose();
+        controller = null;
+      }
+
+      // àª¤àª®àª¾àª°àª¾ àªœ àªªà«àª²à«‡àª¯àª°àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª®àª¾àª‚ àª¨à«‡àªŸàªµàª°à«àª• URL àª¸à«‡àªŸ àª•àª°à«‹
+      controller = VideoPlayerController.networkUrl(
+        Uri.parse(finalUrl),
+        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      );
+
+      await controller!.initialize();
+
+      // àª²àª¿àª¸à«àªŸàª¨àª° àª¸à«‡àªŸ àª•àª°à«‹ àªœà«‡àª¥à«€ àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° àªšàª¾àª²à«‡
+      _currentListener = () {
+        if (isInitialized && controller != null) {
+          onUpdate();
+        }
+      };
+      controller!.addListener(_currentListener!);
+
+      isInitialized = true;
+      await controller!.play();
+      onUpdate();
+
+    } catch (e) {
+      print("âŒ Stream Error: $e");
+      isInitialized = false;
+      onUpdate();
+    } finally {
+      yt.close(); // àª•àª¨à«‡àª•à«àª¶àª¨ àª•à«àª²à«‹àª àª•àª°àªµà«àª‚ àª«àª°àªœàª¿àª¯àª¾àª¤ àª›à«‡
+    }
   }
+
+
 }
 
 extension SaveState on GlobalPlayerService {

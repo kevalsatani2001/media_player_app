@@ -45,6 +45,9 @@ export 'package:media_player/screens/video_trim_screen.dart';
 export 'package:flutter/rendering.dart';
 export 'package:screen_brightness/screen_brightness.dart';
 export 'package:volume_controller/volume_controller.dart';
+export 'package:wakelock_plus/wakelock_plus.dart';
+export 'package:battery_plus/battery_plus.dart';
+export 'package:visibility_detector/visibility_detector.dart';
 
 // Media & Storage
 export 'package:photo_manager/photo_manager.dart';

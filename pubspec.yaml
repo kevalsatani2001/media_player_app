@@ -67,9 +67,12 @@ dependencies:
   visibility_detector:
   screen_brightness:
   volume_controller: ^2.0.3
+  wakelock_plus: ^1.2.10
+  battery_plus: ^6.2.1
   gal:
   video_trimmer:
   video_thumbnail:
+  youtube_explode_dart:
 #  ffmpeg_kit_flutter_new: ^4.1.0
 #  google_fonts:
 
