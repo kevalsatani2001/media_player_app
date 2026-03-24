@@ -299,6 +299,14 @@ class _PlayerScreenState extends State<PlayerScreen>
     await _applySoftButtonsMode(s.softButtonsMode);
     await _applyKeepScreenOnValue(s.keepScreenOn);
     await _applyBrightnessValue(s.isBrightnessEnabled, s.brightness);
+    if (mounted) {
+      if (!s.showInterfaceAtStartup && _showControls) {
+        setState(() => _showControls = false);
+      } else if (s.showInterfaceAtStartup && !_showControls) {
+        setState(() => _showControls = true);
+        _startControlsTimer();
+      }
+    }
     _refreshBatteryIfNeeded();
   }
 
@@ -2655,7 +2663,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                           listener: (_, state) {
                             _applyScreenState(state);
                           },
-                          builder: (_, state) => _screenTabBloc(state),
+                          builder: (blocContext, state) => _screenTabBloc(
+                            state,
+                            blocContext.read<ScreenSettingsCubit>(),
+                          ),
                         ),
                       ),
                       Consumer<SettingsProvider>(
@@ -2856,8 +2867,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _screenTabBloc(ScreenSettingsState s) {
-    final cubit = context.read<ScreenSettingsCubit>();
+  Widget _screenTabBloc(ScreenSettingsState s, ScreenSettingsCubit cubit) {
     return ListView(
       padding: const EdgeInsets.all(10),
       children: [
