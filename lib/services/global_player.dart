@@ -14,8 +14,24 @@ class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
   VoidCallback? _currentListener;
 
+  /// Limits how often [loadVideo]'s [onUpdate] runs during playback so the player
+  /// UI is not rebuilt on every video frame. Play/pause, init, and duration
+  /// changes still notify immediately.
+  static const Duration _uiUpdateThrottle = Duration(milliseconds: 120);
+  bool? _uiThrottleLastPlaying;
+  bool _uiThrottleLastInitialized = false;
+  int _uiThrottleLastDurationMs = -1;
+  DateTime _uiThrottleLastNotify = DateTime.fromMillisecondsSinceEpoch(0);
+
   factory GlobalPlayerService() => _instance;
   GlobalPlayerService._internal();
+
+  void _resetUiThrottle() {
+    _uiThrottleLastPlaying = null;
+    _uiThrottleLastInitialized = false;
+    _uiThrottleLastDurationMs = -1;
+    _uiThrottleLastNotify = DateTime.fromMillisecondsSinceEpoch(0);
+  }
 
   final VideoPlaybackAdapter _videoAdapter = createDefaultVideoAdapter();
   VideoPlayerController? get controller => _videoAdapter.controller;
@@ -121,6 +137,7 @@ class GlobalPlayerService {
     }
 
     isInitialized = false;
+    _resetUiThrottle();
 
     try {
       if (controller != null) {
@@ -180,7 +197,24 @@ class GlobalPlayerService {
             return;
           }
         }
-        onUpdate();
+
+        final playing = _videoAdapter.isPlaying;
+        final initialized = _videoAdapter.isInitialized;
+        final durationMs = _videoAdapter.duration.inMilliseconds;
+        final playingChanged = _uiThrottleLastPlaying != playing;
+        final initChanged = _uiThrottleLastInitialized != initialized;
+        final durationChanged = _uiThrottleLastDurationMs != durationMs;
+        _uiThrottleLastPlaying = playing;
+        _uiThrottleLastInitialized = initialized;
+        _uiThrottleLastDurationMs = durationMs;
+
+        final now = DateTime.now();
+        final elapsed = now.difference(_uiThrottleLastNotify);
+        final throttleOk = elapsed >= _uiUpdateThrottle;
+        if (initChanged || playingChanged || durationChanged || throttleOk) {
+          _uiThrottleLastNotify = now;
+          onUpdate();
+        }
       };
 
       _videoAdapter.addListener(_currentListener!);

@@ -108,11 +108,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   double? _selectedAspectRatio;
   bool _applyRatioToAll = false;
 
-  // Screen settings runtime helpers
-  DateTime _now = DateTime.now();
+  // Screen settings runtime helpers — isolated from full-screen setState for smoothness
+  final ValueNotifier<DateTime> _clockNotifier = ValueNotifier(DateTime.now());
+  final ValueNotifier<int?> _batteryNotifier = ValueNotifier(null);
+  late final Listenable _clockBatteryListenable =
+      Listenable.merge([_clockNotifier, _batteryNotifier]);
   Timer? _clockTimer;
   final Battery _battery = Battery();
-  int? _batteryLevel;
   bool _pausedDueToObstruction = false;
 
 
@@ -336,7 +338,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _now = DateTime.now());
+      _clockNotifier.value = DateTime.now();
       _refreshBatteryIfNeeded();
     });
   }
@@ -367,6 +369,8 @@ class _PlayerScreenState extends State<PlayerScreen>
     _seekIconTimer?.cancel();
     _touchEffectTimer?.cancel();
     _clockTimer?.cancel();
+    _clockNotifier.dispose();
+    _batteryNotifier.dispose();
     _sleepTimer?.cancel();
     _setOrientation(false);
     // playerService.controller?.removeListener(_videoListener);
@@ -380,8 +384,8 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
     try {
       final level = await _battery.batteryLevel;
-      if (mounted && level != _batteryLevel) {
-        setState(() => _batteryLevel = level);
+      if (mounted && level != _batteryNotifier.value) {
+        _batteryNotifier.value = level;
       }
     } catch (_) {}
   }
@@ -871,10 +875,15 @@ class _PlayerScreenState extends State<PlayerScreen>
           _buildSeekIndicator(),
           _buildGestureIndicator(),
           // Custom Overlay for Controls
-          AnimatedOpacity(
-            opacity: _showControls || _isLocked ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 300),
-            child: _buildControlsOverlay(),
+          RepaintBoundary(
+            child: IgnorePointer(
+              ignoring: !_showControls && !_isLocked,
+              child: AnimatedOpacity(
+                opacity: _showControls || _isLocked ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: _buildControlsOverlay(),
+              ),
+            ),
           ),
           _buildScreenOverlays(settings),
           if (_overlayText != null)
@@ -1090,17 +1099,23 @@ class _PlayerScreenState extends State<PlayerScreen>
     final position = controller?.value.position ?? Duration.zero;
     final duration = controller?.value.duration ?? Duration.zero;
     final remaining = duration - position;
+    final pad = MediaQuery.paddingOf(context);
+    final double topInset = pad.top;
+    final double sideInset = pad.left;
 
     final List<Widget> overlays = [];
 
-    if (settings.showElapsedTime) {
+    // Corner chips only when top bar / controls are hidden — avoids stacking with top bar.
+    final bool showCornerOverlays = !_showControls;
+
+    if (showCornerOverlays && settings.showElapsedTime) {
       final double offset = settings.isCornerOffsetEnabled
           ? settings.cornerOffset.clamp(0.0, 150.0)
           : 0.0;
       overlays.add(
         Positioned(
-          left: 12 + offset,
-          top: 12,
+          left: 12 + sideInset + offset,
+          top: topInset + 12,
           child: _overlayChip(
             _formatDuration(position),
             bg: settings.screenTextBackgroundEnabled
@@ -1112,20 +1127,17 @@ class _PlayerScreenState extends State<PlayerScreen>
       );
     }
 
-    if (settings.showBatteryClock) {
+    if (showCornerOverlays && settings.showBatteryClock) {
       final double offset = settings.isCornerOffsetEnabled
           ? settings.cornerOffset.clamp(0.0, 150.0)
           : 0.0;
       overlays.add(
         Positioned(
-          right: 12 + offset,
-          top: 12,
-          child: _overlayChip(
-            "${_formatClock(_now)}${_batteryLevel != null ? " • ${_batteryLevel!}%" : ""}",
-            bg: settings.screenTextBackgroundEnabled
-                ? settings.screenTextBackgroundColor
-                : Colors.black54,
-            fg: settings.controlsColor,
+          right: 12 + pad.right + offset,
+          top: topInset + 12,
+          child: _overlayChipClockBattery(
+            settings: settings,
+            compactSeparator: true,
           ),
         ),
       );
@@ -1134,9 +1146,9 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (settings.screenTextPlaceAtBottom) {
       overlays.add(
         Positioned(
-          left: 12,
-          right: 12,
-          bottom: 12,
+          left: 12 + pad.left,
+          right: 12 + pad.right,
+          bottom: 12 + pad.bottom,
           child: Transform.translate(
             offset: Offset(
               _subtitleScrollPx.clamp(-400.0, 400.0) * 0.15,
@@ -1191,6 +1203,40 @@ class _PlayerScreenState extends State<PlayerScreen>
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
+      ),
+    );
+  }
+
+  Widget _overlayChipClockBattery({
+    required SettingsProvider settings,
+    required bool compactSeparator,
+  }) {
+    final bg = settings.screenTextBackgroundEnabled
+        ? settings.screenTextBackgroundColor
+        : Colors.black54;
+    final fg = settings.controlsColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: AnimatedBuilder(
+        animation: _clockBatteryListenable,
+        builder: (context, _) {
+          final bat = _batteryNotifier.value;
+          final sep = compactSeparator ? " • " : "  ";
+          final extra = bat != null ? "$sep$bat%" : "";
+          return Text(
+            "${_formatClock(_clockNotifier.value)}$extra",
+            style: TextStyle(
+              color: fg,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          );
+        },
       ),
     );
   }
@@ -1803,9 +1849,14 @@ class _PlayerScreenState extends State<PlayerScreen>
     bool isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
     final settings = Provider.of<SettingsProvider>(context);
+    final pad = MediaQuery.paddingOf(context);
     return Container(
-      height: isLandscape ? 60 : 100,
-      padding: EdgeInsets.only(top: isLandscape ? 0 : 30, left: 10, right: 10),
+      padding: EdgeInsets.only(
+        top: pad.top + (isLandscape ? 4 : 8),
+        left: pad.left + 10,
+        right: pad.right + 10,
+        bottom: 8,
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -1823,6 +1874,18 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
             onPressed: () => Navigator.pop(context),
           ),
+          if (settings.showElapsedTime)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                _formatDuration(playerService.currentPosition),
+                style: TextStyle(
+                  color: settings.controlsColor.withOpacity(0.95),
+                  fontSize: isLandscape ? 11 : 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           Expanded(
             child: Text(
               playerService.playlist[playerService.currentIndex].title ??
@@ -1838,13 +1901,20 @@ class _PlayerScreenState extends State<PlayerScreen>
           if (settings.displayBatteryClockInTitleBar)
             Padding(
               padding: const EdgeInsets.only(right: 6),
-              child: Text(
-                "${_formatClock(_now)}${_batteryLevel != null ? "  ${_batteryLevel!}%" : ""}",
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: AnimatedBuilder(
+                animation: _clockBatteryListenable,
+                builder: (context, _) {
+                  final bat = _batteryNotifier.value;
+                  final extra = bat != null ? "  $bat%" : "";
+                  return Text(
+                    "${_formatClock(_clockNotifier.value)}$extra",
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                },
               ),
             ),
           if (settings.screenRotationButton)
