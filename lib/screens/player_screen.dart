@@ -2994,21 +2994,19 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-// Slider Widget
+  // Slider Widget
   Widget _buildSlider(String title, double min, double max, double value, ValueChanged<double> onChange) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("$title: ${value.toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Text("$title: ${(value*100).toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
           Slider(value: value, min: min, max: max, activeColor: Colors.redAccent, onChanged: onChange),
         ],
       ),
     );
-  }
-
-// Switch Widget
+  }// Switch Widget
   Widget _buildSwitch(String title, bool value, ValueChanged<bool> onChange) {
     return SwitchListTile(
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
@@ -3421,3 +3419,18 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
+/*
+/ Slider Widget
+  Widget _buildSlider(String title, double min, double max, double value, ValueChanged<double> onChange) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("$title: ${(value*100).toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          Slider(value: value, min: min, max: max, activeColor: Colors.redAccent, onChanged: onChange),
+        ],
+      ),
+    );
+  }
+ */
