@@ -45,16 +45,17 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   double _currentPercentage = 0.0;
   Timer? _progressTimer;
   bool _isTrimmed = false;
+  bool _isLoadingVideo = true;
+  String? _loadError;
+  bool _didAttachVideoListener = false;
 
   @override
   void initState() {
     super.initState();
-    playerService.controller?.pause();
+    playerService.pauseVideo();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    // àª¥à«‹àª¡à«‹ àªµàª¿àª²àª‚àª¬ àª†àªªà«‹ àªœà«‡àª¥à«€ UI àª°à«‡àª¨à«àª¡àª° àª¥àªˆ àªœàª¾àª¯
-    Future.delayed(const Duration(milliseconds: 500), () {
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       _loadVideo();
     });
   }
@@ -99,37 +100,58 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   }
 
   void _loadVideo() async {
-    // àªªà«‡àªœ àª²à«‹àª¡ àª¥àª¤àª¾ àªœ àª¸à«àªŸà«‡àªŸ àª°à«€àª¸à«‡àªŸ àª•àª°à«‹
+    if (!mounted) return;
     setState(() {
+      _isLoadingVideo = true;
+      _loadError = null;
       _isTrimmed = false;
       _startValue = 0.0;
       _currentPercentage = 0.0;
+      _isPlaying = false;
     });
 
     try {
-      if (!await widget.file.exists()) return;
+      if (!await widget.file.exists()) {
+        if (mounted) {
+          setState(() {
+            _isLoadingVideo = false;
+            _loadError = "Video file not found.";
+          });
+        }
+        return;
+      }
 
-      // àªœà«‚àª¨à«àª‚ àª•à«‹àªˆ àª•àª‚àªŸà«àª°à«‹àª²àª° àª¹à«‹àª¯ àª¤à«‹ àª¤à«‡àª¨à«‡ àªªàª¹à«‡àª²àª¾ àª•à«àª²à«€àª¨ àª¥àªµàª¾ àª¦à«‹
-      await _trimmer.loadVideo(videoFile: widget.file);
+      // Trimmer load can occasionally stall on some codecs/filesystems.
+      await _trimmer
+          .loadVideo(videoFile: widget.file)
+          .timeout(const Duration(seconds: 20));
 
-      // àª•àª‚àªŸà«àª°à«‹àª²àª° àª‡àª¨àª¿àª¶àª¿àª¯àª²àª¾àª‡àª àª¥àª¾àª¯ àª¤à«àª¯àª¾àª‚ àª¸à«àª§à«€ àªµà«‡àªˆàªŸ àª•àª°à«‹
       int retry = 0;
       while (_trimmer.videoPlayerController == null && retry < 15) {
         await Future.delayed(const Duration(milliseconds: 200));
         retry++;
       }
 
-      if (_trimmer.videoPlayerController != null) {
-        final controller = _trimmer.videoPlayerController!;
-
-        if (!controller.value.isInitialized) {
-          await controller.initialize();
+      if (_trimmer.videoPlayerController == null) {
+        if (mounted) {
+          setState(() {
+            _isLoadingVideo = false;
+            _loadError = "Unable to initialize video preview.";
+          });
         }
+        return;
+      }
 
+      final controller = _trimmer.videoPlayerController!;
+      if (!_didAttachVideoListener) {
         controller.addListener(_videoListener);
+        _didAttachVideoListener = true;
+      }
 
+      if (controller.value.isInitialized) {
         final num bytes = await widget.file.length();
-        final double durationInSeconds = controller.value.duration.inSeconds.toDouble();
+        final double durationInSeconds =
+            controller.value.duration.inSeconds.toDouble();
         if (mounted) {
           setState(() {
             _originalFileSizeBytes = bytes.toDouble();
@@ -146,11 +168,30 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             }
             _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
             _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+            _isLoadingVideo = false;
           });
         }
+      } else if (mounted) {
+        setState(() {
+          _isLoadingVideo = false;
+          _loadError = "Video preview is not ready.";
+        });
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _isLoadingVideo = false;
+          _loadError = "Video loading timed out. Please try again.";
+        });
       }
     } catch (e) {
       debugPrint("Error loading video: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingVideo = false;
+          _loadError = "Failed to load video.";
+        });
+      }
     }
   }
 
@@ -219,14 +260,27 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             Expanded(
               child: Center(
                 child: (_trimmer.videoPlayerController != null &&
-                    _trimmer.videoPlayerController!.value.isInitialized)
-                    ? VideoViewer(trimmer: _trimmer) // àª…àª¹à«€àª‚àª¥à«€ UniqueKey àª¹àªŸàª¾àªµà«€ àª¦à«‹
+                    _trimmer.videoPlayerController!.value.isInitialized &&
+                    !_isLoadingVideo)
+                    ? VideoViewer(trimmer: _trimmer)
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(color: Colors.blueAccent),
+                    if (_loadError == null)
+                      const CircularProgressIndicator(color: Colors.blueAccent),
                     const SizedBox(height: 10),
-                    const Text("Loading Video...", style: TextStyle(color: Colors.white)),
+                    Text(
+                      _loadError ?? "Loading Video...",
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (_loadError != null) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: _loadVideo,
+                        child: const Text("Retry"),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -311,8 +365,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                           _isPlaying = controller.value.isPlaying;
                         });
                       }
-                      else{
-                        await controller!.initialize();
+                      else {
+                        _loadVideo();
                       }
                     },
                     child: Icon(
@@ -993,6 +1047,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
     // à«¨. àª²àª¿àª¸àª¨àª° àª¹àªŸàª¾àªµà«‹ àªœà«‡àª¥à«€ àª•à«‹àªˆ àª¸à«àªŸà«‡àªŸ àª…àªªàª¡à«‡àªŸ àªŸà«àª°àª¿àª—àª° àª¨ àª¥àª¾àª¯
     _trimmer.videoPlayerController?.removeListener(_videoListener);
+    _didAttachVideoListener = false;
 
     // à«©. àªµà«€àª¡àª¿àª¯à«‹ àª…àªŸàª•àª¾àªµà«‹ (àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«‹)
     if (_trimmer.videoPlayerController != null) {

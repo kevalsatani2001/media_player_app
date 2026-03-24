@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart' hide PlayerState;
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 import 'notification_service.dart';
+import 'video_playback_adapter.dart';
 //youtube_explode_dart:
 
 class GlobalPlayerService {
@@ -16,7 +17,12 @@ class GlobalPlayerService {
   factory GlobalPlayerService() => _instance;
   GlobalPlayerService._internal();
 
-  VideoPlayerController? controller;
+  final VideoPlaybackAdapter _videoAdapter = createDefaultVideoAdapter();
+  VideoPlayerController? get controller => _videoAdapter.controller;
+  set controller(VideoPlayerController? value) {
+    if (value == null) return;
+    _videoAdapter.attachController(value);
+  }
   List<AssetEntity> playlist = [];
   int currentIndex = 0;
 
@@ -28,6 +34,56 @@ class GlobalPlayerService {
   bool isMuted = false;
   double playbackSpeed = 1.0;
 
+  bool get hasController => _videoAdapter.controller != null;
+  bool get isVideoReady => _videoAdapter.isInitialized;
+  bool get isVideoPlaying => _videoAdapter.isPlaying;
+  Duration get currentPosition => _videoAdapter.position;
+  Duration get totalDuration => _videoAdapter.duration;
+  double get currentAspectRatio => _videoAdapter.aspectRatio;
+  Size get currentVideoSize => _videoAdapter.size;
+
+  Future<void> seekTo(Duration position) => _videoAdapter.seekTo(position);
+  Future<void> seekBy(Duration delta) async {
+    final target = (_videoAdapter.position + delta);
+    if (target < Duration.zero) {
+      await _videoAdapter.seekTo(Duration.zero);
+      return;
+    }
+    if (_videoAdapter.duration != Duration.zero && target > _videoAdapter.duration) {
+      await _videoAdapter.seekTo(_videoAdapter.duration);
+      return;
+    }
+    await _videoAdapter.seekTo(target);
+  }
+
+  Future<void> setPlaybackSpeed(double speed) async {
+    playbackSpeed = speed;
+    await _videoAdapter.setPlaybackSpeed(speed);
+  }
+  Future<bool> isPipSupported() => _videoAdapter.isPipSupported();
+  Future<bool> enterPipMode() => _videoAdapter.enterPip();
+  Future<void> pauseVideo() => _videoAdapter.pause();
+  Future<void> playVideo() => _videoAdapter.play();
+
+  /// True when the controller is at the real end (not the "zero duration" init state).
+  bool shouldAdvanceToNextVideo(
+    Duration position,
+    Duration duration,
+    bool controllerIsPlaying,
+  ) {
+    if (isLooping || controllerIsPlaying) return false;
+    final endMs = duration.inMilliseconds;
+    if (endMs <= 0) return false;
+    final posMs = position.inMilliseconds;
+    final startOfEndWindow = max(1, endMs - 500);
+    return posMs >= startOfEndWindow;
+  }
+  Future<void> setLooping(bool looping) => _videoAdapter.setLooping(looping);
+  Future<void> setVideoVolume(double value) => _videoAdapter.setVolume(value);
+  void addVideoListener(VoidCallback listener) => _videoAdapter.addListener(listener);
+  void removeVideoListener(VoidCallback listener) =>
+      _videoAdapter.removeListener(listener);
+
   Future<void> saveLastPlayed() async {
     if (controller == null || !isInitialized) return;
 
@@ -36,8 +92,7 @@ class GlobalPlayerService {
         : await Hive.openBox('last_played');
 
     await box.put('last_id', playlist[currentIndex].id);
-    await box.put(
-        'last_position', controller!.value.position.inMilliseconds);
+    await box.put('last_position', currentPosition.inMilliseconds);
     await box.put('last_index', currentIndex);
   }
 
@@ -70,17 +125,16 @@ class GlobalPlayerService {
     try {
       if (controller != null) {
         clearListener();
-        await controller!.dispose();
-        controller = null;
+        await _videoAdapter.dispose();
       }
 
-      controller = VideoPlayerController.file(file);
+      await _videoAdapter.openFile(file);
 
       // âœ… Step 5: Retry + Timeout
       int retry = 0;
       while (retry < 2) {
         try {
-          await controller!
+          await _videoAdapter
               .initialize()
               .timeout(const Duration(seconds: 10));
           break;
@@ -97,27 +151,31 @@ class GlobalPlayerService {
       }
 
       if (seekToMs != null) {
-        await controller!.seekTo(Duration(milliseconds: seekToMs));
+        await _videoAdapter.seekTo(Duration(milliseconds: seekToMs));
       }
 
       isInitialized = true;
 
-      controller!.setVolume(isMuted ? 0 : volume);
-      controller!.setLooping(isLooping);
+      await _videoAdapter.setVolume(isMuted ? 0 : volume);
+      await _videoAdapter.setLooping(isLooping);
 
-      await controller!.play();
+      await _videoAdapter.play();
 
-      // ðŸ”¥ Ensure video actually started
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!controller!.value.isPlaying) {
-        throw Exception("Video not playing");
+      // Give the engine time to start; do not auto-skip the playlist if `isPlaying`
+      // is still false (common right after first open while buffering).
+      for (var i = 0; i < 12; i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (_videoAdapter.isPlaying) break;
       }
 
       _currentListener = () {
         if (isInitialized && controller != null) {
-          if (controller!.value.position >= controller!.value.duration &&
-              !controller!.value.isPlaying &&
-              controller!.value.isInitialized) {
+          if (shouldAdvanceToNextVideo(
+                _videoAdapter.position,
+                _videoAdapter.duration,
+                _videoAdapter.isPlaying,
+              ) &&
+              _videoAdapter.isInitialized) {
             playNext(onUpdate);
             return;
           }
@@ -125,7 +183,7 @@ class GlobalPlayerService {
         onUpdate();
       };
 
-      controller!.addListener(_currentListener!);
+      _videoAdapter.addListener(_currentListener!);
       onUpdate();
     } catch (e) {
       print("âŒ Video load failed: $e");
@@ -137,7 +195,7 @@ class GlobalPlayerService {
 
   void clearListener() {
     if (controller != null && _currentListener != null) {
-      controller!.removeListener(_currentListener!);
+      _videoAdapter.removeListener(_currentListener!);
       _currentListener = null;
     }
   }
@@ -170,9 +228,7 @@ class GlobalPlayerService {
 
   void togglePlay() {
     if (controller == null) return;
-    controller!.value.isPlaying
-        ? controller!.pause()
-        : controller!.play();
+    _videoAdapter.isPlaying ? _videoAdapter.pause() : _videoAdapter.play();
   }
 
 
@@ -204,17 +260,13 @@ class GlobalPlayerService {
       // àªœà«‚àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª¨à«‡ àª¸àª¾àª« àª•àª°à«‹
       if (controller != null) {
         clearListener();
-        await controller!.dispose();
-        controller = null;
+        await _videoAdapter.dispose();
       }
 
       // àª¤àª®àª¾àª°àª¾ àªœ àªªà«àª²à«‡àª¯àª°àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª®àª¾àª‚ àª¨à«‡àªŸàªµàª°à«àª• URL àª¸à«‡àªŸ àª•àª°à«‹
-      controller = VideoPlayerController.networkUrl(
-        Uri.parse(finalUrl),
-        videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
-      );
+      await _videoAdapter.openNetwork(finalUrl);
 
-      await controller!.initialize();
+      await _videoAdapter.initialize();
 
       // àª²àª¿àª¸à«àªŸàª¨àª° àª¸à«‡àªŸ àª•àª°à«‹ àªœà«‡àª¥à«€ àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° àªšàª¾àª²à«‡
       _currentListener = () {
@@ -222,10 +274,10 @@ class GlobalPlayerService {
           onUpdate();
         }
       };
-      controller!.addListener(_currentListener!);
+      _videoAdapter.addListener(_currentListener!);
 
       isInitialized = true;
-      await controller!.play();
+      await _videoAdapter.play();
       onUpdate();
 
     } catch (e) {
@@ -234,6 +286,39 @@ class GlobalPlayerService {
       onUpdate();
     } finally {
       yt.close(); // àª•àª¨à«‡àª•à«àª¶àª¨ àª•à«àª²à«‹àª àª•àª°àªµà«àª‚ àª«àª°àªœàª¿àª¯àª¾àª¤ àª›à«‡
+    }
+  }
+
+  Future<void> loadExternalFilePath(
+    String path,
+    VoidCallback onUpdate, {
+    int? seekToMs,
+  }) async {
+    final file = File(path);
+    if (!await file.exists()) return;
+
+    try {
+      clearListener();
+      await _videoAdapter.openFile(file);
+      await _videoAdapter.initialize();
+
+      if (seekToMs != null) {
+        await _videoAdapter.seekTo(Duration(milliseconds: seekToMs));
+      }
+
+      await _videoAdapter.setVolume(isMuted ? 0 : volume);
+      await _videoAdapter.setLooping(isLooping);
+      await _videoAdapter.setPlaybackSpeed(playbackSpeed);
+
+      _currentListener = onUpdate;
+      _videoAdapter.addListener(_currentListener!);
+
+      isInitialized = true;
+      await _videoAdapter.play();
+      onUpdate();
+    } catch (_) {
+      isInitialized = false;
+      onUpdate();
     }
   }
 
@@ -249,7 +334,7 @@ extension SaveState on GlobalPlayerService {
 
     await box.put('video_data', {
       'index': currentIndex,
-      'position': controller!.value.position.inMilliseconds,
+      'position': currentPosition.inMilliseconds,
       'playlist_ids': playlist.map((e) => e.id).toList(),
     });
   }

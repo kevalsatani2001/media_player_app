@@ -107,7 +107,7 @@ void main() async {
         BlocProvider(create: (_) => MediaBloc()),
       ],
       child: BlocProvider(
-        create: (context) => ScreenSettingsCubit(
+        create: (context) => ScreenSettingsBloc(
           SettingsProvider(), // Create a new instance right here
         ),
         child:  MyApp(),
