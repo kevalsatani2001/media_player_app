@@ -38,6 +38,18 @@ import AVKit
           result(FlutterMethodNotImplemented)
         }
       }
+
+      let editorChannel = FlutterMethodChannel(name: "media_player/editor", binaryMessenger: controller.binaryMessenger)
+      editorChannel.setMethodCallHandler { (call, result) in
+          if call.method == "renameVideo" {
+              // iOS àª®àª¾àª‚ àª—à«‡àª²à«‡àª°à«€àª¨à«€ àª«àª¾àªˆàª²àª¨à«àª‚ àª¨àª¾àª® àª¨à«‡àªŸàª¿àªµ àª°à«€àª¤à«‡ àª¬àª¦àª²àªµà«àª‚ àª…àª˜àª°à«àª‚ àª›à«‡.
+              // àª…àª¤à«àª¯àª¾àª°à«‡ àª†àªªàª£à«‡ Flutter àª¬àª¾àªœà«àª¥à«€ àªœ PhotoManager àªµàª¾àªªàª°à«€àª¶à«àª‚.
+              // àªàªŸàª²à«‡ àª…àª¹à«€àª‚àª¥à«€ àª«àª•à«àª¤ 'false' àª…àª¥àªµàª¾ 'NotImplemented' àª®à«‹àª•àª²à«€àª àª›à«€àª.
+              result(FlutterMethodNotImplemented)
+          } else {
+              result(FlutterMethodNotImplemented)
+          }
+      }
     }
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

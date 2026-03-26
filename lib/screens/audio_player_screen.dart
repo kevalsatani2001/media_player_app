@@ -47,14 +47,12 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
 
     // 2. Pass list for playlist functionality
     if (widget.entityList != null && widget.entityList!.isNotEmpty) {
-      print("type is ======   1  ${player.currentType}");
       await player.initAndPlay(
         entities: widget.entityList!,
         selectedId: widget.entity.id,
       );
     } else {
       // Even for a single item, send it as a list
-      print("type is ======   2  ${player.currentType}");
       await player.initAndPlay(
         entities: [widget.entity],
         selectedId: widget.entity.id,

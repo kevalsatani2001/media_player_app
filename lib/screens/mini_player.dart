@@ -17,8 +17,13 @@ class SmartMiniPlayer extends StatefulWidget {
 }
 class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   final GlobalPlayer player = GlobalPlayer();
-  Timer? _timer;
   bool isAudioMiniMode = false;
+
+  // Keep mini-player dragging/moving state local and smooth.
+  // While dragging, we only rebuild the `Positioned` wrapper.
+  final ValueNotifier<Offset> _positionNotifier =
+      ValueNotifier(const Offset(245.4, 673.4));
+  bool _isPositionInitialized = false;
 
   @override
   void initState() {
@@ -33,14 +38,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     //   });
     // });
 
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      if (player.currentIndex == -1) return;
-      if (player.currentType == "video" &&
-          player.videoController != null &&
-          player.videoController!.value.isInitialized) {
-        if (mounted) setState(() {});
-      }
-    });
   }
 
   @override
@@ -48,7 +45,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     super.didChangeDependencies();
 
     // Fakt ek j var initialize karva mate jyare app start thay
-    if (!isPositionInitialized) {
+    if (!_isPositionInitialized) {
       final size = MediaQuery.of(context).size;
       final bool isVideo = player.currentType == "video";
 
@@ -58,22 +55,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       // final double pHeight = isVideo ? 100.0 : 70.0;
       // const double margin = 16.0;
 
-      setState(() {
-        // Right-Bottom corner starting position (Video/Audio banne mate alag calculate thase)
-        if(isVideo){
-          position = Offset(255.1, 655.1);
-        }
-        else{
-          position= Offset(185.4, 703.4);
-        }
-        isPositionInitialized = true;
-      });
+      // Right-Bottom corner starting position (Video/Audio banne mate alag calculate thase)
+      _positionNotifier.value = isVideo
+          ? const Offset(255.1, 655.1)
+          : const Offset(185.4, 703.4);
+      setState(() => _isPositionInitialized = true);
     }
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _positionNotifier.dispose();
     super.dispose();
   }
 
@@ -92,32 +84,43 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         const double margin = 16.0;
 
          // to automatic check kari ne screen ni andar push karo
-        if (isPositionInitialized && (position.dx + pWidth > size.width)) {
-          Future.delayed(Duration.zero, () {
-            if (mounted) {
-              setState(() {
-                position = Offset(size.width - pWidth - margin, position.dy);
-              });
-            }
-          });
+        final currentPos = _positionNotifier.value;
+        if (_isPositionInitialized && (currentPos.dx + pWidth > size.width)) {
+          final newDx = size.width - pWidth - margin;
+          if (newDx != currentPos.dx) {
+            // Avoid mutating state during build.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _positionNotifier.value =
+                  Offset(newDx, _positionNotifier.value.dy);
+            });
+          }
         }
 
         final bool isFloating = isVideo || widget.forceMiniMode;
 
         if (isFloating) {
+          final Widget bodyChild = _buildPlayerBody(size, isFloating);
           return Stack(
             children: [
-              Positioned(
-                left: position.dx,
-                top: position.dy,
-                child: _buildPlayerBody(size, isFloating),
+              ValueListenableBuilder<Offset>(
+                valueListenable: _positionNotifier,
+                child: bodyChild,
+                builder: (context, pos, child) {
+                  return Positioned(
+                    left: pos.dx,
+                    top: pos.dy,
+                    child: child!,
+                  );
+                },
               ),
             ],
           );
         } else {
+          final Widget bodyChild = _buildPlayerBody(size, isFloating);
           return Align(
             alignment: Alignment.bottomCenter,
-            child: _buildPlayerBody(size, isFloating),
+            child: bodyChild,
           );
         }
       },
@@ -371,34 +374,33 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final double pWidth = isVideo ? 150.0 : 210.0;
     final double pHeight = isVideo ? 100.0 : 70.0;
 
-    setState(() {
-      // Left side 0 thi Right side (width - playerWidth) sudhi
-      double newX = (position.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
-      // Top side 30 (Status bar) thi Bottom side (height - playerHeight - margin) sudhi
-      double newY = (position.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
-      position = Offset(newX, newY);
-    });
+    final pos = _positionNotifier.value;
+    // Left side 0 thi Right side (width - playerWidth) sudhi
+    final double newX =
+        (pos.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
+    // Top side 30 (Status bar) thi Bottom side (height - playerHeight - margin) sudhi
+    final double newY =
+        (pos.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
+    _positionNotifier.value = Offset(newX, newY);
   }
   void _snapToClosestCorner(Size screenSize) {
     final padding = MediaQuery.of(context).padding;
     final playerSize = _getCurrentPlayerSize(); // Ã°Å¸Å¸Â¢ Dynamic Size
     const double margin = 16.0;
 
-    double finalX = (position.dx + playerSize.width / 2 < screenSize.width / 2)
+    final pos = _positionNotifier.value;
+    double finalX = (pos.dx + playerSize.width / 2 < screenSize.width / 2)
         ? margin
         : screenSize.width - playerSize.width - margin;
 
     double finalY;
-    if (position.dy + playerSize.height / 2 < screenSize.height / 2) {
+    if (pos.dy + playerSize.height / 2 < screenSize.height / 2) {
       finalY = padding.top + margin;
     } else {
       finalY = screenSize.height - playerSize.height - 150;
     }
 
-    setState(() {
-      position = Offset(finalX, finalY);
-    });
-    print("f pos==> $position");
+    _positionNotifier.value = Offset(finalX, finalY);
   }
 
   Widget _buildAudioMiniPlayer({

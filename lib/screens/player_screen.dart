@@ -27,7 +27,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   static const List<Color> _presetColors = [
     Colors.white,
     Colors.black,
-    Colors.redAccent,
+    Color(0XFF3D57F9),
     Colors.blueAccent,
     Colors.greenAccent,
     Colors.yellowAccent,
@@ -227,7 +227,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     min: 1,
                     max: 120,
                     divisions: 119,
-                    activeColor: Colors.redAccent,
+                    activeColor: Color(0XFF3D57F9),
                     onChanged: (v) => setS(() => minutes = v.round()),
                   ),
                   Row(
@@ -243,7 +243,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       const Spacer(),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
+                          backgroundColor: Color(0XFF3D57F9),
                         ),
                         onPressed: () {
                           Navigator.pop(ctx);
@@ -1299,14 +1299,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                         decoration: BoxDecoration(
                           color: _isBrightnessGesture
                               ? Colors.orangeAccent
-                              : Colors.redAccent,
+                              : Color(0XFF3D57F9),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
                               color:
                               (_isBrightnessGesture
                                   ? Colors.orangeAccent
-                                  : Colors.redAccent)
+                                  : Color(0XFF3D57F9))
                                   .withOpacity(0.5),
                               blurRadius: 10,
                             ),
@@ -1635,7 +1635,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       src: AppSvg.icABRepeat,
                       label: "A-B Repeat",
                       color: _pointA != null
-                          ? Colors.redAccent
+                          ? Color(0XFF3D57F9)
                           : Colors.white,
                       onTap: _handleABRepeat,
                     ),
@@ -1645,7 +1645,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       src: AppSvg.icSwapVert,
                       label: "Flip",
                       color: _isFlipped
-                          ? Colors.redAccent
+                          ? Color(0XFF3D57F9)
                           : Colors.white,
                       onTap: () =>
                           setState(() => _isFlipped = !_isFlipped),
@@ -1656,7 +1656,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       src: AppSvg.icSwapHor,
                       label: "Mirror",
                       color: _isMirrored
-                          ? Colors.redAccent
+                          ? Color(0XFF3D57F9)
                           : Colors.white,
                       onTap: () =>
                           setState(() => _isMirrored = !_isMirrored),
@@ -1737,7 +1737,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     src: AppSvg.ic2x,
                     label: "Equalizer",
                     color: settings.equalizerEnabled
-                        ? Colors.redAccent
+                        ? Color(0XFF3D57F9)
                         : Colors.white,
                     onTap: () => _showEqualizerBottomSheet(settings),
                   ),
@@ -1746,7 +1746,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     src: AppSvg.ic2x,
                     label: "Sleep",
                     color: (_sleepSecondsLeft != null && _sleepSecondsLeft! > 0)
-                        ? Colors.redAccent
+                        ? Color(0XFF3D57F9)
                         : Colors.white,
                     onTap: _showSleepTimerSheet,
                   ),
@@ -1754,7 +1754,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   _controlItemWithLabel(
                     src: AppSvg.ic2x,
                     label: "Night",
-                    color: _nightModeDim ? Colors.redAccent : Colors.white,
+                    color: _nightModeDim ? Color(0XFF3D57F9) : Colors.white,
                     onTap: () =>
                         setState(() => _nightModeDim = !_nightModeDim),
                   ),
@@ -2046,7 +2046,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isCurrent ? Colors.redAccent : Colors.white,
+              color: isCurrent ? Color(0XFF3D57F9) : Colors.white,
               fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
               fontSize: 13,
             ),
@@ -2078,13 +2078,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                     isSelected
                         ? Icons.radio_button_checked
                         : Icons.radio_button_off,
-                    color: isSelected ? Colors.redAccent : Colors.white54,
+                    color: isSelected ? Color(0XFF3D57F9) : Colors.white54,
                     size: 20,
                   ),
                   title: Text(
                     key,
                     style: TextStyle(
-                      color: isSelected ? Colors.redAccent : Colors.white,
+                      color: isSelected ? Color(0XFF3D57F9) : Colors.white,
                       fontSize: 15,
                     ),
                   ),
@@ -2109,7 +2109,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
           value: _applyRatioToAll,
-          activeColor: Colors.redAccent,
+          activeColor: Color(0XFF3D57F9),
           controlAffinity: ListTileControlAffinity.leading,
           onChanged: (bool? value) {
             setState(() {
@@ -2205,7 +2205,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                           decoration: const InputDecoration(
                             enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.redAccent),
+                              borderSide: BorderSide(color: Color(0XFF3D57F9)),
                             ),
                             suffixText: "x",
                           ),
@@ -2237,7 +2237,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           value: currentSpeed,
                           min: 0.25,
                           max: 4.0,
-                          activeColor: Colors.redAccent,
+                          activeColor: Color(0XFF3D57F9),
                           onChanged: (value) => updateSpeed(value),
                         ),
                       ),
@@ -2327,7 +2327,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   suffixIcon: IconButton(
                     icon: const Icon(
                       Icons.content_paste,
-                      color: Colors.redAccent,
+                      color: Color(0XFF3D57F9),
                     ),
                     onPressed: () async {
                       // Clipboard Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€šÃ ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ°Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
@@ -2349,7 +2349,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: Color(0XFF3D57F9),
               ),
               onPressed: () {
                 String url = urlController.text.trim();
@@ -2464,7 +2464,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
             value: _showShortcutsInMenu,
-            activeColor: Colors.redAccent,
+            activeColor: Color(0XFF3D57F9),
             onChanged: (bool value) {
               setState(() => _showShortcutsInMenu = value);
             },
@@ -2479,7 +2479,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 value: Provider.of<SettingsProvider>(context).quickShortcuts[key],
-                activeColor: Colors.redAccent,
+                activeColor: Color(0XFF3D57F9),
                 checkColor: Colors.white,
                 onChanged: (bool? value) {
                   Provider.of<SettingsProvider>(context, listen: false)
@@ -2505,7 +2505,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           const Text(
             "TOOLS",
             style: TextStyle(
-              color: Colors.redAccent,
+              color: Color(0XFF3D57F9),
               fontWeight: FontWeight.bold,
               fontSize: 14,
               letterSpacing: 1.2,
@@ -2513,7 +2513,131 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
           const SizedBox(height: 10),
           _textButtonItem("Delete", () {}),
-          _textButtonItem("Rename", () {}),
+          if(Platform.isAndroid)...[
+            _textButtonItem("Rename", () async {
+// 1. àª•àª°àª¨à«àªŸ àªàª¸à«‡àªŸ àª®à«‡àª³àªµà«‹
+              AssetEntity currentAsset =
+              playerService.playlist[playerService.currentIndex];
+
+              if (Platform.isAndroid) {
+// àªàª•à«àª¸àªŸà«‡àª¨à«àª¶àª¨ àª…àª²àª— àª•àª°à«‹ (àªœà«‡àª® àª•à«‡ mp4)
+                String oldName = currentAsset.title ?? "video";
+                String extension = oldName.contains('.')
+                    ? oldName.split('.').last
+                    : "mp4";
+                String fileNameWithoutExtension = oldName.contains('.')
+                    ? oldName.substring(0, oldName.lastIndexOf('.'))
+                    : oldName;
+
+                TextEditingController _renameController = TextEditingController(
+                  text: fileNameWithoutExtension,
+                );
+
+// 2. àª¯à«àªàª°àª¨à«‡ àª¨àª¾àª® àªªà«‚àª›àªµàª¾ àª®àª¾àªŸà«‡ Dialog àª¬àª¤àª¾àªµà«‹
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Rename Video"),
+                    content: TextField(
+                      controller: _renameController,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        hintText: "Enter new name",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Cancel"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          String newTitle = _renameController.text.trim();
+                          if (newTitle.isEmpty) return;
+
+                          Navigator.pop(context); // Dialog àª¬àª‚àª§ àª•àª°à«‹
+
+// 3. Native Rename àªªà«àª°à«‹àª¸à«‡àª¸ àª¶àª°à«‚ àª•àª°à«‹
+                          File? originalFile = await currentAsset.file;
+                          if (originalFile != null) {
+                            try {
+                              const editChannel = MethodChannel(
+                                'media_player/editor',
+                              );
+
+// Native Android Method Call
+                              final bool
+                              isSuccess = await editChannel.invokeMethod(
+                                'renameVideo',
+                                {
+                                  'path': originalFile.path,
+                                  'newName': newTitle,
+                                  'isFavourite': currentAsset.isFavorite,
+// Extension àªµàª—àª°àª¨à«àª‚ àª¨àª¾àª® àª®à«‹àª•àª²à«‹, Native àª®àª¾àª‚ àª¹à«‡àª¨à«àª¡àª² àª¥àª¶à«‡
+                                },
+                              );
+
+                              if (isSuccess) {
+// àª«àª¾àªˆàª² àª¸àª¿àª¸à«àªŸàª®àª®àª¾àª‚ àª¨àª¾àª® àª¬àª¦àª²àª¾àªˆ àª—àª¯à«àª‚ àª›à«‡, àªàªŸàª²à«‡ àª†àªªàª£à«‡ àª®à«‡àª¨à«àª¯à«àª…àª²à«€
+// àªªà«àª²à«‡àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àªŸàª¾àªˆàªŸàª² àª…àªªàª¡à«‡àªŸ àª•àª°à«€ àª¶àª•à«€àª àªœà«‹ àªœàª°à«‚àª° àª¹à«‹àª¯ àª¤à«‹.
+
+// àª…àª¥àªµàª¾ PhotoManager àª¨à«‡ àª•àª¹à«‹ àª•à«‡ àª† ID àªµàª¾àª³à«€ àªàª¸à«‡àªŸ àª«àª°à«€ àª²à«‹àª¡ àª•àª°à«‡
+                                AssetEntity? updatedAsset =
+                                await AssetEntity.fromId(currentAsset.id);
+
+                                if (updatedAsset != null) {
+                                  setState(() {
+                                    playerService.playlist[playerService
+                                        .currentIndex] =
+                                        updatedAsset;
+                                  });
+                                }
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Video renamed successfully!"),
+                                  ),
+                                );
+                              } else {
+                                print("Rename Failed or Cancelled by User");
+                              }
+                            } catch (e) {
+                              print("Native Error: $e");
+                            }
+                          }
+                        },
+                        child: const Text("Rename"),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (Platform.isIOS) {
+// --- iOS àª®àª¾àªŸà«‡ Native àª•à«‹àª¡àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€, àª¸à«€àª§à«àª‚ PhotoManager àªµàª¾àªªàª°à«‹ ---
+
+// 1. àª«à«‡àªµàª°àª¿àªŸ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ (àªœà«‹ àªœàª°à«‚àª° àª¹à«‹àª¯ àª¤à«‹)
+                await PhotoManager.editor.darwin.favoriteAsset(
+                  entity: currentAsset,
+                  favorite: true,
+                );
+
+// 2. àª°à«€àª¨à«‡àª® àª®àª¾àªŸà«‡ (iOS àª®àª¾àª‚ àª°à«€àª¨à«‡àª® àª…àª˜àª°à«àª‚ àª¹à«‹àªµàª¾àª¥à«€ àª²à«‹àª•à«‹ àª«àª•à«àª¤ Title àª…àªªàª¡à«‡àªŸ àª•àª°à«‡ àª›à«‡)
+// àªœà«‹ àª¤àª®àª¾àª°à«‡ àª–àª°à«‡àª–àª° àª¨àªµà«‹ àªµà«€àª¡àª¿àª¯à«‹ àª¸à«‡àªµ àª•àª°àªµà«‹ àªœ àª¹à«‹àª¯ àª¤à«‹:
+/*
+                File? file = await currentAsset.file;
+                if (file != null) {
+                    await PhotoManager.editor.saveVideo(
+                    file,
+                    title: "New_Name.mp4",
+                 );
+                    // àª†àª¨àª¾àª¥à«€ àª¨àªµà«‹ àªµà«€àª¡àª¿àª¯à«‹ àª¬àª¨àª¶à«‡, àªœà«‚àª¨à«‹ àª¡àª¿àª²à«€àªŸ àª•àª°àªµà«‹ àªªàª¡àª¶à«‡.
+                }
+              */
+
+// await currentAsset.refresh();
+                setState(() {});
+              }
+            }),],
           _textButtonItem("Lock", () {}),
           _textButtonItem("Settings", () {}),
 
@@ -2522,7 +2646,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           const Text(
             "HELP",
             style: TextStyle(
-              color: Colors.redAccent,
+              color: Color(0XFF3D57F9),
               fontWeight: FontWeight.bold,
               fontSize: 14,
               letterSpacing: 1.2,
@@ -2595,7 +2719,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               const Text(
                 "Tools",
                 style: TextStyle(
-                  color: Colors.redAccent,
+                  color: Color(0XFF3D57F9),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -2644,7 +2768,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               const Text(
                 "Help",
                 style: TextStyle(
-                  color: Colors.redAccent,
+                  color: Color(0XFF3D57F9),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -2750,210 +2874,196 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _buildBottomSection() {
     final settings = Provider.of<SettingsProvider>(context);
-    final playedColor =
-        settings.progressBarCategory == "Flat"
-            ? settings.progressBarColor.withOpacity(0.8)
-            : settings.progressBarColor;
+    final playedColor = settings.progressBarCategory == "Flat"
+        ? settings.progressBarColor.withOpacity(0.8)
+        : settings.progressBarColor;
+
+    // àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° àª®àª¾àªŸà«‡àª¨à«‹ àª•à«‹àª®àª¨ àªµàª¿àªœà«‡àªŸ àªœà«‡àª¥à«€ àª•à«‹àª¡ àª°àª¿àªªà«€àªŸ àª¨ àª¥àª¾àª¯
+    Widget buildProgressBar() {
+      return Row(
+        children: [
+          Text(
+            _formatDuration(playerService.currentPosition),
+            style: TextStyle(color: settings.controlsColor, fontSize: 12),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: VideoProgressIndicator(
+                _playerController,
+                allowScrubbing: true,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                colors: VideoProgressColors(
+                  playedColor: playedColor,
+                  bufferedColor: Colors.white24,
+                  backgroundColor: Colors.white12,
+                ),
+              ),
+            ),
+          ),
+          Text(
+            settings.showRemainingTime
+                ? "-${_formatDuration(playerService.totalDuration - playerService.currentPosition)}"
+                : _formatDuration(playerService.totalDuration),
+            style: TextStyle(color: settings.controlsColor, fontSize: 12),
+          ),
+        ],
+      );
+    }
 
     return Container(
-      padding: const EdgeInsets.only(bottom: 0, left: 10, right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      // Safe Area àª®àª¾àªŸà«‡ àª¥à«‹àª¡à«àª‚ àª¬à«‹àªŸàª® àªªà«‡àª¡àª¿àª‚àª—
       child: Column(
+        mainAxisSize: MainAxisSize.min, // àªœàª°à«‚àª°à«€ àª¹à«‹àª¯ àª¤à«‡àªŸàª²à«€ àªœ àªœàª—à«àª¯àª¾ àª²à«‡àª¶à«‡
         children: [
-          if (!_isLocked && !settings.isProgressBarBelow) ...[
-            Row(
-              children: [
-                Text(
-                  _formatDuration(playerService.currentPosition),
-                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: VideoProgressIndicator(
-                      _playerController,
-                      allowScrubbing: true,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      colors: VideoProgressColors(
-                        playedColor: playedColor,
-                        bufferedColor: Colors.white24,
-                        backgroundColor: Colors.white12,
-                      ),
-                    ),
-                  ),
-                ),
-                Text(
-                  settings.showRemainingTime
-                      ? "-${_formatDuration(playerService.totalDuration - playerService.currentPosition)}"
-                      : _formatDuration(playerService.totalDuration),
-                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
-                ),
-              ],
-            ),
+          // 1. àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° (àªœà«‹ àª‰àªªàª° àª°àª¾àª–àªµàª¾àª¨à«‹ àª¹à«‹àª¯ àª¤à«‹)
+          if (!_isLocked && !settings.isProgressBarBelow) buildProgressBar(),
 
-            const SizedBox(height: 0),
-
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //
-            //   ],
-            // ),
-          ],
-
-
+          // 2. àª•àª‚àªŸà«àª°à«‹àª²à«àª¸ àª°à«‹ (Lock, Play/Pause, Fit, PiP)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // LOCK BUTTON
               IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
                 icon: Icon(
                   _isLocked ? Icons.lock_rounded : Icons.lock_open_rounded,
                   color: Colors.white,
                   size: 22,
                 ),
                 onPressed: () => setState(() {
-                  final settings = Provider.of<SettingsProvider>(context, listen: false);
                   _isLocked = !_isLocked;
-                  if (_isLocked) {
-                    _kidsLockSequence.clear();
-                  } else {
-                    _kidsLockSequence.clear();
-                    _startControlsTimer();
-                  }
+                  _kidsLockSequence.clear();
+                  if (!_isLocked) _startControlsTimer();
                 }),
               ),
-              if (!_isLocked) ...[
-                Row(
-                  children: [
-                    if (settings.forwardBackwardButton)
-                      IconButton(
-                        onPressed: () {
-                          final step = Duration(
-                            seconds: settings.moveInterval.round(),
-                          );
-                          playerService.seekBy(-step);
-                        },
-                        icon: const Icon(Icons.replay_10, color: Colors.white),
-                      ),
-                    if (settings.previousNextButton)
-                      _buildCircularButton(
-                        icon: AppSvg.skipPrev,
-                        onPressed: () =>
-                            playerService.playPrevious(() => setState(() {})),
-                      ),
-                    SizedBox(width: 20),
-                    GestureDetector(
-                      onTap: () {
-                        playerService.togglePlay();
-                        _startControlsTimer();
-                        setState(() {});
-                      },
-                      child: AppImage(
-                        src: playerService.isVideoPlaying
-                            ? AppSvg.pauseVid
-                            : AppSvg.playVid,
-                        height: 45,
-                        width: 45,
-                      ),
+
+              // MIDDLE CONTROLS (Only if not locked)
+              if (!_isLocked)
+                Expanded(
+                  // Expanded àª¥à«€ àª“àªµàª°àª«à«àª²à«‹ àª¨àª¹àª¿ àª¥àª¾àª¯
+                  child: FittedBox(
+                    // àª† àª¬àªŸàª¨à«‹àª¨à«‡ àª¸à«àª•à«àª°à«€àª¨ àª®à«àªœàª¬ àª¨àª¾àª¨àª¾-àª®à«‹àªŸàª¾ àª•àª°àª¶à«‡
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (settings.forwardBackwardButton)
+                          IconButton(
+                            onPressed: () => playerService.seekBy(
+                              Duration(seconds: -settings.moveInterval.round()),
+                            ),
+                            icon: const Icon(
+                              Icons.replay_10,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        if (settings.previousNextButton)
+                          _buildCircularButton(
+                            icon: AppSvg.skipPrev,
+                            onPressed: () => playerService.playPrevious(
+                                  () => setState(() {}),
+                            ),
+                          ),
+
+                        const SizedBox(width: 15),
+
+                        GestureDetector(
+                          onTap: () {
+                            playerService.togglePlay();
+                            _startControlsTimer();
+                            setState(() {});
+                          },
+                          child: AppImage(
+                            src: playerService.isVideoPlaying
+                                ? AppSvg.pauseVid
+                                : AppSvg.playVid,
+                            height: 48,
+                            width: 48,
+                          ),
+                        ),
+
+                        const SizedBox(width: 15),
+
+                        if (settings.previousNextButton)
+                          _buildCircularButton(
+                            icon: AppSvg.skipNext,
+                            onPressed: () =>
+                                playerService.playNext(() => setState(() {})),
+                          ),
+                        if (settings.forwardBackwardButton)
+                          IconButton(
+                            onPressed: () => playerService.seekBy(
+                              Duration(seconds: settings.moveInterval.round()),
+                            ),
+                            icon: const Icon(
+                              Icons.forward_10,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                      ],
                     ),
-                    SizedBox(width: 20),
-                    if (settings.previousNextButton)
-                      _buildCircularButton(
-                        icon: AppSvg.skipNext,
-                        onPressed: () =>
-                            playerService.playNext(() => setState(() {})),
+                  ),
+                ),
+
+              // RIGHT SIDE BUTTONS (Fit & PiP)
+              if (!_isLocked)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        _getFitIcon(_videoFit),
+                        color: Colors.white,
+                        size: 20,
                       ),
-                    if (settings.forwardBackwardButton)
-                      IconButton(
-                        onPressed: () {
-                          final step = Duration(
-                            seconds: settings.moveInterval.round(),
-                          );
-                          playerService.seekBy(step);
-                        },
-                        icon: const Icon(Icons.forward_10, color: Colors.white),
+                      onPressed: () {
+                        setState(() {
+                          if (_videoFit == BoxFit.contain)
+                            _videoFit = BoxFit.cover;
+                          else if (_videoFit == BoxFit.cover)
+                            _videoFit = BoxFit.fill;
+                          else if (_videoFit == BoxFit.fill)
+                            _videoFit = BoxFit.none;
+                          else
+                            _videoFit = BoxFit.contain;
+                          _overlayText = _getFitText(_videoFit);
+                        });
+                        _overlayTextTimer?.cancel();
+                        _overlayTextTimer = Timer(
+                          const Duration(seconds: 2),
+                              () {
+                            if (mounted) setState(() => _overlayText = null);
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 5),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.picture_in_picture_alt_rounded,
+                        color: Colors.white,
+                        size: 22,
                       ),
+                      onPressed: _enterPictureInPicture,
+                    ),
                   ],
                 ),
-                IconButton(
-                  icon: Icon(
-                    _getFitIcon(_videoFit),
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      if (_videoFit == BoxFit.contain) {
-                        _videoFit = BoxFit.cover;
-                      } else if (_videoFit == BoxFit.cover) {
-                        _videoFit = BoxFit.fill;
-                      } else if (_videoFit == BoxFit.fill) {
-                        _videoFit = BoxFit.none;
-                      } else {
-                        _videoFit = BoxFit.contain;
-                      }
-
-                      _overlayText = _getFitText(_videoFit);
-                    });
-
-                    _overlayTextTimer?.cancel();
-                    _overlayTextTimer = Timer(const Duration(seconds: 2), () {
-                      if (mounted) setState(() => _overlayText = null);
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(
-                    Icons.picture_in_picture_alt_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                  onPressed: _enterPictureInPicture,
-                ),
-              ],
             ],
           ),
-          if (!_isLocked && settings.isProgressBarBelow) ...[
-            Row(
-              children: [
-                Text(
-                  _formatDuration(playerService.currentPosition),
-                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: VideoProgressIndicator(
-                      _playerController,
-                      allowScrubbing: true,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      colors: VideoProgressColors(
-                        playedColor: playedColor,
-                        bufferedColor: Colors.white24,
-                        backgroundColor: Colors.white12,
-                      ),
-                    ),
-                  ),
-                ),
-                Text(
-                  settings.showRemainingTime
-                      ? "-${_formatDuration(playerService.totalDuration - playerService.currentPosition)}"
-                      : _formatDuration(playerService.totalDuration),
-                  style: TextStyle(color: settings.controlsColor, fontSize: 12),
-                ),
-              ],
-            ),
 
-            const SizedBox(height: 0),
+          // 3. àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° (àªœà«‹ àª¨à«€àªšà«‡ àª°àª¾àª–àªµàª¾àª¨à«‹ àª¹à«‹àª¯ àª¤à«‹)
+          if (!_isLocked && settings.isProgressBarBelow) buildProgressBar(),
 
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //
-            //   ],
-            // ),
-          ],
-          SizedBox(height: 16),
-
+          const SizedBox(height: 12), // Bottom spacing
         ],
       ),
     );
@@ -3166,7 +3276,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             Text(
               value,
               style: const TextStyle(
-                color: Colors.redAccent,
+                color: Color(0XFF3D57F9),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -3243,7 +3353,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                             leading: Icon(
                               Icons.check_circle_rounded,
                               color: isSelected
-                                  ? Colors.redAccent
+                                  ? Color(0XFF3D57F9)
                                   : Colors.transparent,
                               size: 20,
                             ),
@@ -3251,7 +3361,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                               "${speed}x",
                               style: TextStyle(
                                 color: isSelected
-                                    ? Colors.redAccent
+                                    ? Color(0XFF3D57F9)
                                     : Colors.white,
                                 fontSize: 16,
                                 fontWeight: isSelected
@@ -3353,7 +3463,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               children: [
                 const TabBar(
                   isScrollable: true,
-                  indicatorColor: Colors.redAccent,
+                  indicatorColor: Color(0XFF3D57F9),
                   tabs: [
                     Tab(text: "Style"), Tab(text: "Screen"), Tab(text: "Controls"),
                     Tab(text: "Navigation"), Tab(text: "Text"), Tab(text: "Layout"),
@@ -3477,7 +3587,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         _applyEqualizerSettings(settings);
                         setSheetState(() {});
                       },
-                      activeColor: Colors.redAccent,
+                      activeColor: Color(0XFF3D57F9),
                     ),
                     _buildDropdown(
                       "Reverb",
@@ -3571,7 +3681,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
         const Padding(
           padding: EdgeInsets.all(8.0),
-          child: Text("Gestures", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          child: Text("Gestures", style: TextStyle(color: Color(0XFF3D57F9), fontWeight: FontWeight.bold)),
         ),
         // 2 Column Grid for Gestures
         GridView.count(
@@ -3591,7 +3701,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         const SizedBox(height: 8),
         const Padding(
           padding: EdgeInsets.all(8.0),
-          child: Text("Quick Shortcuts", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          child: Text("Quick Shortcuts", style: TextStyle(color: Color(0XFF3D57F9), fontWeight: FontWeight.bold)),
         ),
         GridView.count(
           crossAxisCount: 2,
@@ -3858,7 +3968,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       trailing: DropdownButton<String>(
         value: current,
         dropdownColor: Colors.black,
-        style: const TextStyle(color: Colors.redAccent),
+        style: const TextStyle(color: Color(0XFF3D57F9)),
         items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
         onChanged: onChange,
       ),
@@ -3871,7 +3981,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       title: Text(title, style: TextStyle(color: onChange == null ? Colors.grey : Colors.white, fontSize: 13)),
       value: value,
       onChanged: onChange,
-      activeColor: Colors.redAccent,
+      activeColor: Color(0XFF3D57F9),
       controlAffinity: ListTileControlAffinity.leading,
       dense: true,
     );
@@ -3924,7 +4034,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             min: min,
             max: max,
             divisions: divisions,
-            activeColor: Colors.redAccent,
+            activeColor: Color(0XFF3D57F9),
             onChanged: onChange,
           ),
         ],
@@ -3938,7 +4048,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
       value: value,
       onChanged: onChange,
-      activeColor: Colors.redAccent,
+      activeColor: Color(0XFF3D57F9),
     );
   }
 
@@ -4293,7 +4403,7 @@ class SettingsProvider extends ChangeNotifier {
   String present = "Default";
   bool isFrameEnabled = true;
   Color controlsColor = Colors.white;
-  Color progressBarColor = Colors.redAccent;
+  Color progressBarColor = Color(0XFF3D57F9);
   String progressBarCategory = "Material";
   bool isProgressBarBelow = false;
 
@@ -4535,7 +4645,7 @@ class SettingsProvider extends ChangeNotifier {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text("$title: ${(value*100).toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          Slider(value: value, min: min, max: max, activeColor: Colors.redAccent, onChanged: onChange),
+          Slider(value: value, min: min, max: max, activeColor: Color(0XFF3D57F9), onChanged: onChange),
         ],
       ),
     );

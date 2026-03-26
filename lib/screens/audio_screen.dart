@@ -224,15 +224,21 @@ class _AudioBodyState extends State<_AudioBody>
   @override
   bool get wantKeepAlive => true;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _scrollController.addListener(() {
+  //     if (_scrollController.position.pixels >=
+  //         _scrollController.position.maxScrollExtent - 200) {
+  //       context.read<AudioBloc>().add(LoadMoreAudios());
+  //     }
+  //   });
+  // }
+
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        context.read<AudioBloc>().add(LoadMoreAudios());
-      }
-    });
+    _scrollController.addListener(_onScroll); // àª…àª¹à«€àª‚ àª®à«‡àª¥àª¡ àªàªŸà«‡àªš àª•àª°à«‹
   }
 
   @override
@@ -241,25 +247,194 @@ class _AudioBodyState extends State<_AudioBody>
     super.dispose();
   }
 
+  List<String> _getAlphabetList(List<AssetEntity> entities) {
+    Set<String> letters = {};
+    for (var entity in entities) {
+      String name = entity.title ?? "";
+      if (name.isEmpty) {
+        // àªœà«‹ àªŸàª¾àªˆàªŸàª² àª¨ àª¹à«‹àª¯ àª¤à«‹ àªªàª¾àª¥ àªªàª°àª¥à«€ àª¨àª¾àª® àª²à«‹
+        name = entity.id; // àª…àª¥àªµàª¾ àª¤àª®àª¾àª°à«€ àªªàª¾àª¸à«‡ àªœà«‡ àª°à«€àª¤à«‡ àª¨àª¾àª® àª†àªµàª¤à«àª‚ àª¹à«‹àª¯
+      }
+
+      if (name.isNotEmpty) {
+        String firstChar = name[0].toUpperCase();
+        if (RegExp(r'^[A-Z]').hasMatch(firstChar)) {
+          letters.add(firstChar);
+        } else {
+          letters.add('#');
+        }
+      }
+    }
+    List<String> sortedLetters = letters.toList()..sort((a, b) {
+      if (a == '#') return 1;
+      if (b == '#') return -1;
+      return a.compareTo(b);
+    });
+    return sortedLetters;
+  }
+
+  void _scrollToLetter(String letter, List<AssetEntity> entities) {
+    int targetIndex = -1;
+    for (int i = 0; i < entities.length; i++) {
+      String name = entities[i].title ?? "";
+      if (name.isNotEmpty && name[0].toUpperCase() == letter) {
+        targetIndex = i;
+        break;
+      }
+    }
+
+    if (targetIndex != -1) {
+      // Audio list item height àª…àª‚àª¦àª¾àªœà«‡ 75-80 àª›à«‡
+      double itemHeight = 75.0;
+      // Ads àª…àª¨à«‡ Padding àª§à«àª¯àª¾àª¨àª®àª¾àª‚ àª²à«‡àª¤àª¾ àª…àª‚àª¦àª¾àªœàª¿àª¤ àª“àª«àª¸à«‡àªŸ
+      double offset = targetIndex * itemHeight;
+
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+
+      setState(() {
+        _selectedLetter = letter;
+      });
+    }
+  }
+
+  String _selectedLetter = ''; // àª†àª¨à«‡ àª¸à«àªŸà«‡àªŸàª®àª¾àª‚ àª‰àªªàª° àªœàª¾àª¹à«‡àª° àª•àª°àªœà«‹
+
+
+
+  void _onScroll() {
+    /*
+    if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        context.read<AudioBloc>().add(LoadMoreAudios());
+      }
+     */
+    // --- 1. LOAD MORE LOGIC ---
+    if (_scrollController.position.extentAfter < 500) {
+      try {
+        final state = context.read<AudioBloc>().state;
+        if (state is AudioLoaded && state.hasMore) {
+          context.read<AudioBloc>().add(LoadMoreAudios());
+        }
+      } catch (e) {
+        debugPrint("Error in scroll: $e");
+      }
+    }
+
+    // --- 2. AUTO SELECT LETTER LOGIC ---
+    final state = context.read<AudioBloc>().state;
+    if (state is AudioLoaded) {
+      double currentOffset = _scrollController.offset;
+
+      // àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ àª†àªˆàªŸàª®àª¨à«€ àª…àª‚àª¦àª¾àªœàª¿àª¤ àª¹àª¾àªˆàªŸ (Padding àª…àª¨à«‡ Margin àª¸àª¾àª¥à«‡)
+      // ListTile + Padding = àª…àª‚àª¦àª¾àªœà«‡ 75.0 àª¥à«€ 80.0
+      double itemHeight = 75.0;
+
+      // àª…àª¤à«àª¯àª¾àª°à«‡ àª•àª¯àª¾ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªªàª° àª¯à«àªàª° àª›à«‡ àª¤à«‡ àª¶à«‹àª§à«‹
+      int currentIndex = (currentOffset / itemHeight).floor();
+
+      // àª°à«‡àª¨à«àªœ àªšà«‡àª•
+      if (currentIndex >= 0 && currentIndex < state.entities.length) {
+        final entity = state.entities[currentIndex];
+
+        // àª¨àª¾àª® àª®à«‡àª³àªµà«‹ (title àª…àª¥àªµàª¾ àª«àª¾àªˆàª² àª¨à«‡àª®)
+        String name = entity.title ?? "";
+
+        if (name.isNotEmpty) {
+          String firstChar = name[0].toUpperCase();
+          String currentLetter = RegExp(r'^[A-Z]').hasMatch(firstChar) ? firstChar : '#';
+
+          // àªªàª°àª«à«‹àª°à«àª®àª¨à«àª¸ àª®àª¾àªŸà«‡: àªœà«‹ àª…àª•à«àª·àª° àª¬àª¦àª²àª¾àª¯ àª¤à«‹ àªœ àª¸à«àªŸà«‡àªŸ àª…àªªàª¡à«‡àªŸ àª•àª°à«‹
+          if (_selectedLetter != currentLetter) {
+            setState(() {
+              _selectedLetter = currentLetter;
+            });
+          }
+        }
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+
     return BlocBuilder<AudioBloc, AudioState>(
       builder: (context, state) {
         List<AssetEntity> entities = [];
 
         if (state is AudioLoading) {
-          entities = state.entities;
           return Center(child: CustomLoader());
         } else if (state is AudioLoaded) {
-          entities = state.entities;
+          entities = List.from(state.entities);
+          // 1. A to Z àª¸à«‹àª°à«àªŸàª¿àª‚àª—
+          entities.sort((a, b) => (a.title ?? "").toLowerCase().compareTo((b.title ?? "").toLowerCase()));
         } else if (state is AudioError) {
           return Center(child: Text(state.message));
-        } else {
-          return Center(child: CustomLoader());
         }
 
-        return _buildAudioList(entities);
+        if (entities.isEmpty) return const SizedBox();
+
+        final alphabetList = _getAlphabetList(entities);
+
+        return Stack(
+          children: [
+            // àª®à«‡àªˆàª¨ àª“àª¡àª¿àª¯à«‹ àª²àª¿àª¸à«àªŸ
+            _buildAudioList(entities),
+
+            // 2. Alphabet Sidebar
+            Positioned(
+              right: 5,
+              top: 50,
+              bottom: 120, // MiniPlayer àª®àª¾àªŸà«‡ àªœàª—à«àª¯àª¾ àª›à«‹àª¡àªµàª¾
+              child: Container(
+                width: 30,
+                decoration: BoxDecoration(
+                  color: colors.blackColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return FittedBox(
+                      fit: BoxFit.contain,
+                      child: IntrinsicWidth(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: alphabetList.map((letter) {
+                            bool isActive = _selectedLetter == letter;
+                            return GestureDetector(
+                              onTap: () => _scrollToLetter(letter, entities),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isActive ? colors.primary.withOpacity(0.2) : Colors.transparent,
+                                ),
+                                child: Text(
+                                  letter,
+                                  style: TextStyle(
+                                    fontSize: isActive ? 16 : 12,
+                                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                    color: isActive ? colors.primary : colors.blackColor.withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
       },
     );
   }
