@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import '../utils/app_imports.dart';
+import 'audio_player_screen.dart';
 
 // Offset position = Offset.zero;
 
@@ -153,11 +154,11 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     return GestureDetector(
       onTap: () {
         if (player.currentMediaItem == null) return;
-        Navigator.push(context, MaterialPageRoute(builder: (_) => PlayerScreen(
+        Navigator.push(context, MaterialPageRoute(builder: (_) =>AudioPlayerScreen(
           entity: player.currentEntity!,
           // item: player.currentMediaItem!,
           index: player.currentIndex,
-          entityList: const [],
+          entityList: const [], item: player.currentMediaItem!,
         )));
       },
       child: Container(
@@ -551,12 +552,12 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => PlayerScreen(
+                builder: (_) => AudioPlayerScreen(
                   entity: player.currentEntity!,
-                  // item: item,
+                  // item: player.currentMediaItem!,
                   index: player.currentIndex,
-                  entityList: const [],
-                ),
+                  entityList: const [], item: player.currentMediaItem!,
+                )
               ),
             );
           },
@@ -669,11 +670,11 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => PlayerScreen(
+            builder: (_) => AudioPlayerScreen(
               entity: player.currentEntity!,
-              // item: item,
+              // item: player.currentMediaItem!,
               index: player.currentIndex,
-              entityList: const [],
+              entityList: const [], item: player.currentMediaItem!,
             ),
           ),
         );
