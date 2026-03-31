@@ -1,52 +1,6 @@
-
-
-/*
-/ Slider Widget
-  Widget _buildSlider(String title, double min, double max, double value, ValueChanged<double> onChange) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("$title: ${(value*100).toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          Slider(value: value, min: min, max: max, activeColor: Color(0XFF3D57F9), onChanged: onChange),
-        ],
-      ),
-    );
-  }
- */
-
-
-
-
-/*
-/*
-
-Equalizer (àª¸àª¾àª‰àª¨à«àª¡ àª¬àª¾àª°à«àª¸)
-
-
-<svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
-<rect x="10" y="16" width="3" height="8" rx="1.5" fill="white"/>
-<rect x="16" y="10" width="3" height="14" rx="1.5" fill="white"/>
-<rect x="22" y="14" width="3" height="10" rx="1.5" fill="white"/>
-</svg>
-
-Background Play (àª¹à«‡àª¡àª«à«‹àª¨)
-
-<svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
-<path d="M17.5 9C13.3579 9 10 12.3579 10 16.5V23C10 24.6569 11.3431 26 13 26H14C14.5523 26 15 25.5523 15 25V20C15 19.4477 14.5523 19 14 19H12V16.5C12 13.4624 14.4624 11 17.5 11C20.5376 11 23 13.4624 23 16.5V19H21C20.4477 19 20 19.4477 20 20V25C20 25.5523 20.4477 26 21 26H22C23.6569 26 25 24.6569 25 23V16.5C25 12.3579 21.6421 9 17.5 9Z" fill="white"/>
-</svg>
-
-
- */
- */
-
 import 'dart:math' show Random;
 import 'dart:ui' as ui;
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-
 import '../utils/app_imports.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -124,6 +78,13 @@ class _PlayerScreenState extends State<PlayerScreen>
   String _activeGestureType = 'none'; // 'none', 'seek', 'vertical'
   bool _isMoreMenuVisible = false;
   bool _isQueueVisible = false;
+  bool _isDisplayVisible = false;
+  bool _isPlayListVisible = false;
+  bool _iColorPickerVisible = false;
+  String _currentPickerTitle = "";
+  Color _currentSelectedColor = Colors.white;
+  ValueChanged<Color>? _currentColorOnPick;
+  MediaItem? mediaItem;
 
   bool _showShortcutsInMenu = false;
   static const MethodChannel _equalizerChannel = MethodChannel(
@@ -155,7 +116,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   double _selectedAspectRatio = 0.0;
   bool _applyRatioToAll = false;
 
-  // Screen settings runtime helpers â€” isolated from full-screen setState for smoothness
+  // Screen settings runtime helpers Ã¢â‚¬â€ isolated from full-screen setState for smoothness
   final ValueNotifier<DateTime> _clockNotifier = ValueNotifier(DateTime.now());
   final ValueNotifier<int?> _batteryNotifier = ValueNotifier(null);
   late final Listenable _clockBatteryListenable = Listenable.merge([
@@ -376,7 +337,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       settings.loadFromHive();
       _applyScreenSettings(settings);
-      _applyEqualizerSettings(settings);
+      _applyEqualizerSettings(settings, settings.equalizerReverb);
       if (settings.touchAction == "pauseResume") {
         setState(() {
           _showControls = false;
@@ -669,6 +630,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final size = MediaQuery.of(context).size;
     final touchAction = settings.touchAction;
 
+    // à«§. àªœà«‹ àª¸à«àª•à«àª°à«€àª¨ àª²à«‹àª• àª¹à«‹àª¯ àª¤à«‹
     if (_isLocked) {
       if (settings.lockMode != "lock") {
         _showKidsLockInstructionIfNeeded();
@@ -678,10 +640,12 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
+    // à«¨. àªœà«‹ àª“àªªà«àª¶àª¨ "pauseResume" àª¹à«‹àª¯
     if (touchAction == "pauseResume") {
       final y = _lastTapLocal?.dy ?? size.height / 2;
       final topZone = y < size.height * 0.15;
       final bottomZone = y > size.height * 0.82;
+
       if (topZone || bottomZone) {
         setState(() {
           if (_pauseResumeControlsPinned && _showControls) {
@@ -695,10 +659,12 @@ class _PlayerScreenState extends State<PlayerScreen>
         _controlsTimer?.cancel();
         return;
       }
+      // àªàªœ àªà«‹àª¨ àª¸àª¿àªµàª¾àª¯ àª—àª®à«‡ àª¤à«àª¯àª¾àª‚ àªŸàªš àª¥àª¾àª¯ àª¤à«‹ àª®àª¾àª¤à«àª° àªªà«àª²à«‡/àªªà«‹àª àª¥àª¶à«‡
       playerService.togglePlay();
       return;
     }
 
+    // à«©. àªœà«‹ àª“àªªà«àª¶àª¨ "showHideInterface" àª¹à«‹àª¯
     if (touchAction == "showHideInterface") {
       final nextVisible = !_showControls;
       setState(() => _showControls = nextVisible);
@@ -710,22 +676,41 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    playerService.togglePlay();
-    final playingAfter = playerService.isVideoPlaying;
-
-    setState(() {
-      if (touchAction == "showInterfacePauseResume") {
-        _showControls = true;
-      } else if (touchAction == "showInterfaceAndPauseResume") {
-        _showControls = !playingAfter;
+    // à«ª. àªœà«‹ àª“àªªà«àª¶àª¨ "showInterfacePauseResume" (àª‡àª¨à«àªŸàª°àª«à«‡àª¸ àª¬àª¤àª¾àªµà«‹ -> àªªà«‹àª/àª°àª¿àªà«àª¯à«àª®) àª¹à«‹àª¯
+    if (touchAction == "showInterfacePauseResume") {
+      if (!_showControls) {
+        // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª² àª¨àª¥à«€ àª¦à«‡àª–àª¾àª¤àª¾, àª¤à«‹ àª®àª¾àª¤à«àª° àª•àª‚àªŸà«àª°à«‹àª² àª¬àª¤àª¾àªµà«‹, àªµà«€àª¡àª¿àª¯à«‹ àª…àªŸàª•àª¶à«‡ àª¨àª¹àª¿
+        setState(() => _showControls = true);
+        if (settings.controlsInterfaceAutoHideEnabled) {
+          _startControlsTimer();
+        }
+      } else {
+        // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª² àªªàª¹à«‡àª²à«‡àª¥à«€ àªœ àª¦à«‡àª–àª¾àª¯ àª›à«‡, àª¤à«‹ àªµà«€àª¡àª¿àª¯à«‹ àªªà«àª²à«‡/àªªà«‹àª àª¥àª¶à«‡
+        playerService.togglePlay();
       }
-    });
-
-    if (settings.controlsInterfaceAutoHideEnabled) {
-      _startControlsTimer();
-    } else {
-      _controlsTimer?.cancel();
+      return;
     }
+
+    // à««. àªœà«‹ àª“àªªà«àª¶àª¨ "showInterfaceAndPauseResume" (àª‡àª¨à«àªŸàª°àª«à«‡àª¸ àª¬àª¤àª¾àªµà«‹ + àªªà«‹àª/àª°àª¿àªà«àª¯à«àª®) àª¹à«‹àª¯
+    if (touchAction == "showInterfaceAndPauseResume") {
+      // àª¬àª‚àª¨à«‡ àª•àª¾àª® àªàª•àª¸àª¾àª¥à«‡ àª¥àª¶à«‡
+      playerService.togglePlay();
+      final playingAfter = playerService.isVideoPlaying;
+
+      setState(() {
+        _showControls = !playingAfter;
+      });
+
+      if (settings.controlsInterfaceAutoHideEnabled) {
+        _startControlsTimer();
+      } else {
+        _controlsTimer?.cancel();
+      }
+      return;
+    }
+
+    // Default Case (àªœà«‹ àª•à«‹àªˆ àª“àªªà«àª¶àª¨ àª®à«‡àªš àª¨ àª¥àª¾àª¯ àª¤à«‹ àª¨à«‹àª°à«àª®àª² àªªà«àª²à«‡/àªªà«‹àª)
+    playerService.togglePlay();
   }
 
   Widget _buildLockedProgressRow(SettingsProvider settings) {
@@ -883,7 +868,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          /*
+/*
           Transform.scale(
             scale: _videoScale,
             child: Center(
@@ -915,7 +900,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         child: Container(
                           color: Colors.black.withOpacity(
                             0.3,
-                          ), // àª¥à«‹àª¡à«‹ àª¡àª¾àª°à«àª•àª¨à«‡àª¸ àª†àªªàªµàª¾ àª®àª¾àªŸà«‡
+                          ), // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â€¹ Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€¢Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂ¸ Ã Âªâ€ Ã ÂªÂªÃ ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
                         ),
                       ),
                     ],
@@ -923,7 +908,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
               ),
             ),
-          // Video Surface
+// Video Surface
           RepaintBoundary(
             key: _globalKey,
             child: Transform(
@@ -933,7 +918,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   _isMirrored ? 3.14159 : 0,
                 ) // Mirror (Y-axis rotation)
                 ..rotateX(_isFlipped ? 3.14159 : 0),
-              // Vertical Flip (X-axis rotation)
+// Vertical Flip (X-axis rotation)
               child: Transform.translate(
                 offset: _videoPanOffset,
                 child: Transform.scale(
@@ -966,7 +951,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           _buildSeekIndicator(),
           _buildGestureIndicator(),
-          // Custom Overlay for Controls
+// Custom Overlay for Controls
           RepaintBoundary(
             child: IgnorePointer(
               ignoring: !_showControls && !_isLocked,
@@ -988,7 +973,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  // This keeps the box tight around the text
+// This keeps the box tight around the text
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -1196,7 +1181,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     final List<Widget> overlays = [];
 
-    // Corner chips only when top bar / controls are hidden â€” avoids stacking with top bar.
+// Corner chips only when top bar / controls are hidden Ã¢â‚¬â€ avoids stacking with top bar.
     final bool showCornerOverlays = !_showControls;
 
     if (showCornerOverlays && settings.showElapsedTime) {
@@ -1316,7 +1301,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         animation: _clockBatteryListenable,
         builder: (context, _) {
           final bat = _batteryNotifier.value;
-          final sep = compactSeparator ? " â€¢ " : "  ";
+          final sep = compactSeparator ? " • " : "  ";
 
           final clockStr = _formatClock(_clockNotifier.value, context);
 
@@ -1330,7 +1315,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             })
                 .join('');
 
-            extra = "$sep$batStr%"; // '%' àª¬àª§àª¾àª®àª¾àª‚ àª¸à«‡àª® àªœ àª°àª¹à«‡àª¶à«‡
+            extra = "$sep$batStr%";
           }
 
           return AppText(
@@ -1348,12 +1333,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     int hour = dt.hour;
     int minute = dt.minute;
 
-    // àª•àª²àª¾àª• (Hour) àª¨à«‡ àª²à«‹àª•àª²àª¾àªˆàª àª•àª°à«‹
     String h = hour < 10
         ? "${context.tr('_0')}${context.tr('_$hour')}"
         : "${context.tr('_' + (hour ~/ 10).toString())}${context.tr('_' + (hour % 10).toString())}";
 
-    // àª®àª¿àª¨àª¿àªŸ (Minute) àª¨à«‡ àª²à«‹àª•àª²àª¾àªˆàª àª•àª°à«‹
     String m = minute < 10
         ? "${context.tr('_0')}${context.tr('_$minute')}"
         : "${context.tr('_' + (minute ~/ 10).toString())}${context.tr('_' + (minute % 10).toString())}";
@@ -1367,8 +1350,8 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (_gestureValue == null) return const SizedBox.shrink();
 
     return Align(
-      // Brightness (Left Swipe) -> Design Right Side
-      // Volume (Right Swipe) -> Design Left Side
+// Brightness (Left Swipe) -> Design Right Side
+// Volume (Right Swipe) -> Design Left Side
       alignment: _isBrightnessGesture
           ? Alignment.centerRight
           : Alignment.centerLeft,
@@ -1395,7 +1378,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 size: 30,
               ),
 
-              //////////////////////////////////////////////////////////////////////// part 3 new player scareen//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// part 3 new player scareen//////////////////////////////////////////////////////////
               const SizedBox(height: 15),
               Container(
                 width: 6,
@@ -1521,7 +1504,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (_activeGestureType == 'vertical') {
       if (details.localFocalPoint.dx < width / 2) {
         if (!(settings.gestures["Brightness"] ?? false)) return;
-        // Brightness Logic
+// Brightness Logic
         _isBrightnessGesture = true;
         _brightness = (_brightness - deltaY / 200).clamp(0.0, 1.0);
         settings.updateSetting(() => settings.brightness = _brightness);
@@ -1529,7 +1512,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         await ScreenBrightness().setApplicationScreenBrightness(_brightness);
       } else {
         if (!(settings.gestures["Volume"] ?? false)) return;
-        // Volume Logic
+// Volume Logic
         _isBrightnessGesture = false;
         playerService.volume = (playerService.volume - deltaY / 200).clamp(
           0.0,
@@ -1586,7 +1569,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget _buildSeekIndicator() {
     return Stack(
         children: [
-        // Backward Indicator (Left Side)
+// Backward Indicator (Left Side)
         if (_showBackwardIcon)
     Align(
       alignment: Alignment.centerLeft,
@@ -1617,7 +1600,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         ),
       ),
     ),
-          // Forward Indicator (Right Side)
+// Forward Indicator (Right Side)
           if (_showForwardIcon)
             Align(
               alignment: Alignment.centerRight,
@@ -2049,7 +2032,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onPressed: () {
-              // playerService.controller?.pause();
+// playerService.controller?.pause();
               _scaffoldKey.currentState?.openEndDrawer();
             },
           ),
@@ -2061,7 +2044,21 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget _buildSideMenu() {
     double drawerWidth =
     MediaQuery.of(context).orientation == Orientation.landscape
-        ? MediaQuery.of(context).size.width * 0.35
+        ? !(!_isRatioVisible &&
+        !_isQueueVisible &&
+        !_isMoreMenuVisible &&
+        !_isDisplayVisible &&
+        !_iColorPickerVisible &&
+        !_isPlayListVisible)
+        ? MediaQuery.of(context).size.width * 0.7
+        : MediaQuery.of(context).size.width * 0.35
+        : !(!_isRatioVisible &&
+        !_isQueueVisible &&
+        !_isMoreMenuVisible &&
+        !_isDisplayVisible &&
+        _iColorPickerVisible &&
+        !_isPlayListVisible)
+        ? MediaQuery.of(context).size.width * 0.9
         : MediaQuery.of(context).size.width * 0.75;
 
     return SizedBox(
@@ -2071,7 +2068,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // Header Section (Dynamic based on _isMoreMenuVisible)
+// Header Section (Dynamic based on _isMoreMenuVisible)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 15,
@@ -2079,17 +2076,31 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
                 child: Row(
                   children: [
-                    if (_isMoreMenuVisible || _isQueueVisible)
+                    if (_isRatioVisible ||
+                        _isQueueVisible ||
+                        _isMoreMenuVisible ||
+                        _isDisplayVisible ||
+                        _iColorPickerVisible ||
+                        _isPlayListVisible)
                       IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () => setState(() {
                           _isMoreMenuVisible = false;
                           _isQueueVisible = false;
+                          _isDisplayVisible = false;
+                          _iColorPickerVisible = false;
+                          _isDisplayVisible = false;
+                          _isPlayListVisible = false;
                         }),
                       ),
 
                     AppText(
-                      _isQueueVisible
+// _iColorPickerVisible?_currentPickerTitle:
+                      _isPlayListVisible
+                          ? "playlist"
+                          : _isDisplayVisible
+                          ? "display"
+                          : _isQueueVisible
                           ? "playingQueue"
                           : (_isMoreMenuVisible ? "more" : "quickMenu"),
                       color: Colors.white,
@@ -2097,18 +2108,42 @@ class _PlayerScreenState extends State<PlayerScreen>
                       fontWeight: FontWeight.bold,
                     ),
                     const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.pop(context),
-                    ),
+                    if (!_isMoreMenuVisible &&
+                        !_isDisplayVisible &&
+                        !_isPlayListVisible)
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white70),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                   ],
                 ),
               ),
               const Divider(color: Colors.white24, height: 1),
 
-              // Content Section
+// Content Section
               Expanded(
-                child: _isQueueVisible
+                child:
+// _iColorPickerVisible
+//     ?MyColorPickerWidget(
+//   title: _currentPickerTitle,
+//   initialColor: _currentSelectedColor,
+//   onPick: _currentColorOnPick!,
+//   onApply: () {
+//     // àª…àªªà«àª²àª¾àª¯ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àªªà«‡àªœàª¨àª¾ àª®à«‡àª¨à« àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
+//     setState(() {
+//       _iColorPickerVisible = false;
+//       _isRatioVisible = false;
+//       _isQueueVisible = false;
+//       _isMoreMenuVisible = false;
+//       _isDisplayVisible = true;
+//     });
+//   },
+// ):
+                _isPlayListVisible
+                    ? PlaylistSelectorView(currentItem: mediaItem!)
+                    : _isDisplayVisible
+                    ? _buildDisplaySetting()
+                    : _isQueueVisible
                     ? _buildQueueList()
                     : (_isRatioVisible
                     ? _buildRatioMenu()
@@ -2120,6 +2155,337 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPlayListView(MediaItem currentItem) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final playlistBox = Hive.box('playlists');
+
+    final filteredPlaylists = playlistBox.values.where((playlist) {
+      return (playlist as PlaylistModel).type == currentItem.type;
+    }).toList();
+
+// à«§. àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¨à«‡ àª‡àª¨à«àª¡à«‡àª•à«àª¸àª¨à«‡ àª…àª¹à«€àª‚ àª¡àª¿àª•à«àª²à«‡àª° àª•àª°à«‹ àªœà«‡àª¥à«€ àª°à«€àª¬àª¿àª²à«àª¡ àª¥àªµàª¾ àªªàª° àª¡à«‡àªŸàª¾ àª¨ àª­à«‚àª²àª¾àª¯
+    final TextEditingController nameController = TextEditingController();
+    dynamic selectedPlaylistIndex;
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+// --- àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ àª¸à«‡àª•à«àª¶àª¨ ---
+              if (filteredPlaylists.isNotEmpty) ...[
+                AppText(
+                  "selectExistingPlaylist",
+                  fontSize: 14,
+                  color: colors.dialogueSubTitle,
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int>(
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: colors.textFieldFill,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  dropdownColor: colors.background,
+                  hint: AppText(
+                    "choosePlaylist",
+                    color: colors.dialogueSubTitle,
+                  ),
+                  value: selectedPlaylistIndex,
+                  items: List.generate(filteredPlaylists.length, (index) {
+                    final playlist = filteredPlaylists[index] as PlaylistModel;
+                    return DropdownMenuItem(
+                      value: index,
+                      child: Text(
+                        playlist.name,
+                        style: TextStyle(color: colors.appBarTitleColor),
+                      ),
+                    );
+                  }),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedPlaylistIndex = value;
+                      nameController
+                          .clear(); // àªœà«‹ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ àª¸àª¿àª²à«‡àª•à«àªŸ àª¥àª¾àª¯ àª¤à«‹ àªŸà«‡àª•à«àª¸à«àªŸ àª•à«àª²àª¿àª¯àª° àª¥àª¶à«‡
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+              ],
+
+// --- àª¨àªµà«àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµàªµàª¾àª¨à«àª‚ àª¸à«‡àª•à«àª¶àª¨ ---
+              AppText(
+                "orCreateNew",
+                fontSize: 14,
+                color: colors.dialogueSubTitle,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: nameController,
+                style: TextStyle(color: colors.appBarTitleColor),
+                decoration: InputDecoration(
+                  hintText: "enterName",
+                  hintStyle: TextStyle(
+                    color: colors.dialogueSubTitle.withOpacity(0.5),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (v) {
+// àªœà«‹ àªŸàª¾àª‡àªª àª•àª°àªµàª¾àª¨à«àª‚ àªšàª¾àª²à« àª¥àª¾àª¯, àª¤à«‹ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ àª°à«€àª¸à«‡àªŸ àª•àª°à«€ àª¦à«‹
+                  if (v.trim().isNotEmpty && selectedPlaylistIndex != null) {
+                    setState(() {
+                      selectedPlaylistIndex = null;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+// --- àªàª•à«àª¶àª¨ àª¬àªŸàª¨à«àª¸ ---
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      title: "cancel",
+                      backgroundColor: colors.whiteColor,
+                      textColor: colors.dialogueSubTitle,
+                      onTap: () {
+                        nameController.dispose();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: AppButton(
+                      title: "add",
+                      onTap: () {
+                        final String newName = nameController.text.trim();
+
+// àª«àª‚àª•à«àª¶àª¨àª¾àª²àª¿àªŸà«€ à«§: àªàª•à«àªàª¿àª¸à«àªŸàª¿àª‚àª— àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àªšà«‡àª• àª•àª°à«€àª¨à«‡ àªàª¡ àª•àª°àªµà«àª‚
+                        if (selectedPlaylistIndex != null) {
+                          final playlist =
+                          filteredPlaylists[selectedPlaylistIndex]
+                          as PlaylistModel;
+
+                          bool isAlreadyExist = playlist.items.any(
+                                (e) => e.path == currentItem.path,
+                          );
+
+                          if (!isAlreadyExist) {
+                            playlist.items.add(currentItem);
+
+// Hive àª®àª¾àª‚ àª•àª¨à«àª«àª°à«àª® àª¡à«‡àªŸàª¾ àª…àªªàª¡à«‡àªŸ àª•àª°àªµàª¾ àª®àª¾àªŸà«‡ put àªµàª¾àªªàª°àªµà«àª‚
+                            final int originalKey = playlist.key;
+                            playlistBox.put(originalKey, playlist);
+
+                            nameController.dispose();
+                            Navigator.pop(context);
+                            AppToast.show(
+                              context,
+                              "${context.tr("addedTo")} ${playlist.name}",
+                              type: ToastType.success,
+                            );
+                          } else {
+                            AppToast.show(
+                              context,
+                              "${context.tr("alreadyExistIn")} ${playlist.name}",
+                              type: ToastType.info,
+                            );
+                          }
+                        }
+// àª«àª‚àª•à«àª¶àª¨àª¾àª²àª¿àªŸà«€ à«¨: àª¨àªµà«àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¬àª¨àª¾àªµà«€àª¨à«‡ àªàª¡ àª•àª°àªµà«àª‚
+                        else if (newName.isNotEmpty) {
+                          final newPlaylist = PlaylistModel(
+                            name: newName,
+                            items: [currentItem],
+                            type: currentItem.type,
+                          );
+
+                          playlistBox.add(newPlaylist);
+
+                          nameController.dispose();
+                          Navigator.pop(context);
+                          AppToast.show(
+                            context,
+                            context.tr("newPlaylistCreated"),
+                            type: ToastType.success,
+                          );
+                        }
+// àªœà«‹ àª¬àª‚àª¨à«‡àª®àª¾àª‚àª¥à«€ àª•àª‚àªˆ àª¸àª¿àª²à«‡àª•à«àªŸ àª¨ àª•àª°à«àª¯à«àª‚ àª¹à«‹àª¯
+                        else {
+                          AppToast.show(
+                            context,
+                            context.tr("pleaseSelectOrCreate"),
+                            type: ToastType.info,
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDisplaySetting() {
+    return DefaultTabController(
+        length: 6,
+        child: Column(
+        children: [
+// --- Handle Bar ---
+        const SizedBox(height: 12),
+// Container(
+//   width: 50,
+//   height: 5,
+//   decoration: BoxDecoration(
+//     color: Colors.white12,
+//     // borderRadius: BorderRadius.circular(10),
+//   ),
+// ),
+
+// --- Header ---
+// Padding(
+//   padding: const EdgeInsets.fromLTRB(25, 10, 15, 10),
+//   child: Row(
+//     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//     children: [
+//       const AppText(
+//         "settings",
+//         color: Colors.white,
+//         fontSize: 24,
+//         fontWeight: FontWeight.w900,
+//         letterSpacing: 0.5,
+//       ),
+//       IconButton(
+//         onPressed: () => Navigator.pop(context),
+//         icon: const Icon(
+//           Icons.close_rounded,
+//           color: Colors.white70,
+//         ),
+//         style: IconButton.styleFrom(
+//           backgroundColor: Colors.white.withOpacity(0.05),
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(15),
+//           ),
+//         ),
+//       ),
+//     ],
+//   ),
+// ),
+
+// --- Floating Modern Tab Bar ---
+    Container(
+    height: 38,
+    margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.05),
+    borderRadius: BorderRadius.circular(12),
+    ),
+    child: TabBar(
+    isScrollable: true,
+    tabAlignment: TabAlignment.start,
+      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.tab,
+
+      indicator: BoxDecoration(
+        color: const Color(0XFF3D57F9),
+        borderRadius: BorderRadius.circular(8),
+      ),
+
+      labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.white38,
+
+// Ã ÂªÂ«Ã Â«â€¹Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ Ã Â«Â§Ã Â«Â¨-Ã Â«Â§Ã Â«Â© Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã Â«â€¡
+      labelStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 12.5,
+        letterSpacing: 0.3,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontWeight: FontWeight.w500,
+        fontSize: 12.5,
+      ),
+
+      tabs: [
+        Tab(text: context.tr("style")),
+        Tab(text: context.tr("screen")),
+        Tab(text: context.tr("controls")),
+        Tab(text: context.tr("navigation")),
+        Tab(text: context.tr("text")),
+        Tab(text: context.tr("layout")),
+      ],
+    ),
+    ),
+
+          const SizedBox(height: 15),
+
+// --- Content Area ---
+          Expanded(
+            child: ClipRRect(
+// borderRadius: const BorderRadius.vertical(
+//   top: Radius.circular(30),
+// ),
+              child: Container(
+// color: Colors.black12,
+                child: TabBarView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    Consumer<SettingsProvider>(
+                      builder: (_, s, __) => _styleTab(s),
+                    ),
+
+                    BlocProvider(
+                      create: (ctx) => ScreenSettingsBloc(
+                        Provider.of<SettingsProvider>(context, listen: false),
+                      ),
+                      child: BlocConsumer<ScreenSettingsBloc, ScreenSettingsState>(
+//////////////////////////////////////////////////////////////////////// part 6 new player scareen//////////////////////////////////////////////////////////
+                        listener: (_, state) => _applyScreenState(state),
+                        builder: (blocContext, state) => _screenTabBloc(
+                          state,
+                          blocContext.read<ScreenSettingsBloc>(),
+                        ),
+                      ),
+                    ),
+
+                    Consumer<SettingsProvider>(
+                      builder: (_, s, __) => _controlsTab(s),
+                    ),
+                    Consumer<SettingsProvider>(
+                      builder: (_, s, __) => _navigationTab(s),
+                    ),
+                    Consumer<SettingsProvider>(
+                      builder: (_, s, __) => _textTab(s),
+                    ),
+                    Consumer<SettingsProvider>(
+                      builder: (_, s, __) => _layoutTab(s),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+        ),
     );
   }
 
@@ -2188,7 +2554,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 bool isSelected = _selectedAspectRatio == _ratioValues[key];
                 return ListTile(
                   leading: Icon(
-                    //////////////////////////////////////////////////////////////////////// part 4 new player scareen//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// part 4 new player scareen//////////////////////////////////////////////////////////
                     isSelected
                         ? Icons.radio_button_checked
                         : Icons.radio_button_off,
@@ -2213,7 +2579,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
         const Divider(color: Colors.white24),
 
-        // Apply to all videos Checkbox
+// Apply to all videos Checkbox
         CheckboxListTile(
           title: const AppText(
             "applyToAllVideos",
@@ -2285,7 +2651,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                   const SizedBox(height: 25),
 
-                  // --- Row 1: [-] [TextField] [+] ---
+// --- Row 1: [-] [TextField] [+] ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -2332,7 +2698,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                   const SizedBox(height: 30),
 
-                  // --- Row 2: [Slider] [Reset Icon] ---
+// --- Row 2: [Slider] [Reset Icon] ---
                   Row(
                     children: [
                       Expanded(
@@ -2352,7 +2718,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     ],
                   ),
 
-                  // Slider Labels
+// Slider Labels
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
@@ -2436,8 +2802,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                       color: Color(0XFF3D57F9),
                     ),
                     onPressed: () async {
-                      // final data = await Clipboard.getData('text/plain');
-                      // if (data != null) urlController.text = data.text!;
+// final data = await Clipboard.getData('text/plain');
+// if (data != null) urlController.text = data.text!;
                     },
                   ),
                 ),
@@ -2485,6 +2851,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       ),
     );
   }
+
   Widget _buildMainMenuGrid() {
     return SingleChildScrollView(
       child: Column(
@@ -2515,11 +2882,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Icons.settings_display,
                 "display",
                 onTapCustom: () {
-                  Navigator.pop(context);
-                  _showDisplaySettings(context);
+                  setState(() => _isDisplayVisible = true);
                 },
+// onTapCustom: () {
+//   Navigator.pop(context);
+//   _showDisplaySettings(context);
+// },
               ),
-              // _menuGridItem(Icons.bookmark_border, "Bookmark"),
+// _menuGridItem(Icons.bookmark_border, "Bookmark"),
               _menuGridItem(
                 Icons.content_cut,
                 "cut",
@@ -2554,12 +2924,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                   AssetEntity currentAsset =
                   playerService.playlist[playerService.currentIndex];
 
-                  // àªªàª¾àª¥ àª®à«‡àª³àªµà«‹
+// Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ³Ã ÂªÂµÃ Â«â€¹
                   String? filePath = await getFile(currentAsset);
 
                   if (filePath != null) {
-                    addToPlaylist(
-                      MediaItem(
+                    setState(() {
+                      _isPlayListVisible = true;
+                      mediaItem = MediaItem(
                         path: filePath,
                         isNetwork: false,
                         type: currentAsset.type == AssetType.audio
@@ -2567,9 +2938,20 @@ class _PlayerScreenState extends State<PlayerScreen>
                             : "video",
                         id: currentAsset.id,
                         isFavourite: currentAsset.isFavorite,
-                      ),
-                      context,
-                    );
+                      );
+                    });
+// addToPlaylist(
+//   MediaItem(
+//     path: filePath,
+//     isNetwork: false,
+//     type: currentAsset.type == AssetType.audio
+//         ? "audio"
+//         : "video",
+//     id: currentAsset.id,
+//     isFavourite: currentAsset.isFavorite,
+//   ),
+//   context,
+// );
                   } else {
                     AppToast.show(
                       context,
@@ -2612,7 +2994,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   _showNetworkStreamDialog();
                 },
               ),
-              // _menuGridItem(Icons.help_outline, "Tutorial"),
+// _menuGridItem(Icons.help_outline, "Tutorial"),
               _menuGridItem(
                 Icons.more_horiz,
                 "more",
@@ -2625,7 +3007,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
           const Divider(color: Colors.white24),
 
-          // --- Shortcuts Switch ---
+// --- Shortcuts Switch ---
           SwitchListTile(
             title: const AppText(
               "shortcuts",
@@ -2639,7 +3021,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             },
           ),
 
-          // --- Checkbox List
+// --- Checkbox List
           if (_showShortcutsInMenu)
             ...Provider.of<SettingsProvider>(context).quickShortcuts.keys.map((
                 String key,
@@ -2688,146 +3070,146 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _buildMoreCategoryMenu() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           const AppText(
-            "tools",
-            color: Color(0XFF3D57F9),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            letterSpacing: 1.2,
-          ),
-          const SizedBox(height: 10),
-          _textButtonItem("delete", () async {
-            int currentIndex = playerService.currentIndex;
+          "tools",
+          color: Color(0XFF3D57F9),
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          letterSpacing: 1.2,
+        ),
+        const SizedBox(height: 10),
+        _textButtonItem("delete", () async {
+          int currentIndex = playerService.currentIndex;
 
-            bool? isDeleted = await deleteCurrentItem(
-              context,
-              playerService.playlist[currentIndex],
-            );
+          bool? isDeleted = await deleteCurrentItem(
+            context,
+            playerService.playlist[currentIndex],
+          );
 
-            if (isDeleted == true) {
-              setState(() {
-                playerService.playlist.removeAt(currentIndex);
+          if (isDeleted == true) {
+            setState(() {
+              playerService.playlist.removeAt(currentIndex);
 
-                if (playerService.playlist.isEmpty) {
-                  Navigator.pop(context);
-                  return;
-                }
+              if (playerService.playlist.isEmpty) {
+                Navigator.pop(context);
+                return;
+              }
 
-                if (currentIndex >= playerService.playlist.length) {
-                  playerService.currentIndex =
-                      playerService.playlist.length - 1;
-                }
+              if (currentIndex >= playerService.playlist.length) {
+                playerService.currentIndex =
+                    playerService.playlist.length - 1;
+              }
 
-                playerService.loadVideo(() {
-                  if (mounted) setState(() {});
-                });
+              playerService.loadVideo(() {
+                if (mounted) setState(() {});
               });
+            });
 
-              context.read<VideoBloc>().add(
-                LoadVideosFromGallery(showLoading: false),
-              );
-            }
-          }),
-          if (Platform.isAndroid) ...[
-            _textButtonItem("rename", () async {
-              AssetEntity currentAsset =
-              playerService.playlist[playerService.currentIndex];
+            context.read<VideoBloc>().add(
+              LoadVideosFromGallery(showLoading: false),
+            );
+          }
+        }),
+        if (Platform.isAndroid) ...[
+    _textButtonItem("rename", () async {
+    AssetEntity currentAsset =
+    playerService.playlist[playerService.currentIndex];
 
-              if (Platform.isAndroid) {
-                String oldName = currentAsset.title ?? "video";
-                String extension = oldName.contains('.')
-                    ? oldName.split('.').last
-                    : "mp4";
-                String fileNameWithoutExtension = oldName.contains('.')
-                    ? oldName.substring(0, oldName.lastIndexOf('.'))
-                    : oldName;
+    if (Platform.isAndroid) {
+    String oldName = currentAsset.title ?? "video";
+    String extension = oldName.contains('.')
+    ? oldName.split('.').last
+        : "mp4";
+    String fileNameWithoutExtension = oldName.contains('.')
+    ? oldName.substring(0, oldName.lastIndexOf('.'))
+        : oldName;
 
-                TextEditingController _renameController = TextEditingController(
-                  text: fileNameWithoutExtension,
-                );
+    TextEditingController _renameController = TextEditingController(
+    text: fileNameWithoutExtension,
+    );
 
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const AppText("renameVideo"),
-                    content: TextField(
-                      controller: _renameController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: context.tr("enterNewName"),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const AppText("cancel"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          String newTitle = _renameController.text.trim();
-                          if (newTitle.isEmpty) return;
+    showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+    title: const AppText("renameVideo"),
+    content: TextField(
+    controller: _renameController,
+    autofocus: true,
+    decoration: InputDecoration(
+    hintText: context.tr("enterNewName"),
+    border: OutlineInputBorder(),
+    ),
+    ),
+    actions: [
+    TextButton(
+    onPressed: () => Navigator.pop(context),
+    child: const AppText("cancel"),
+    ),
+    ElevatedButton(
+    onPressed: () async {
+    String newTitle = _renameController.text.trim();
+    if (newTitle.isEmpty) return;
 
-                          Navigator.pop(context);
+    Navigator.pop(context);
 
-                          File? originalFile = await currentAsset.file;
-                          if (originalFile != null) {
-                            try {
-                              const editChannel = MethodChannel(
-                                'media_player/editor',
-                              );
+    File? originalFile = await currentAsset.file;
+    if (originalFile != null) {
+    try {
+    const editChannel = MethodChannel(
+    'media_player/editor',
+    );
 
-                              // Native Android Method Call
-                              final bool isSuccess = await editChannel
-                                  .invokeMethod('renameVideo', {
-                                'path': originalFile.path,
-                                'newName': newTitle,
-                                'isFavourite': currentAsset.isFavorite,
-                              });
+// Native Android Method Call
+    final bool isSuccess = await editChannel
+        .invokeMethod('renameVideo', {
+    'path': originalFile.path,
+    'newName': newTitle,
+    'isFavourite': currentAsset.isFavorite,
+    });
 
-                              if (isSuccess) {
-                                AssetEntity? updatedAsset =
-                                await AssetEntity.fromId(currentAsset.id);
+    if (isSuccess) {
+    AssetEntity? updatedAsset =
+    await AssetEntity.fromId(currentAsset.id);
 
-                                if (updatedAsset != null) {
-                                  setState(() {
-                                    playerService.playlist[playerService
-                                        .currentIndex] =
-                                        updatedAsset;
-                                  });
-                                }
+    if (updatedAsset != null) {
+    setState(() {
+    playerService.playlist[playerService
+        .currentIndex] =
+    updatedAsset;
+    });
+    }
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: AppText(
-                                      "videoRenamedSuccessfully",
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                print("Rename Failed or Cancelled by User");
-                              }
-                            } catch (e) {
-                              print("Native Error: $e");
-                            }
-                          }
-                        },
-                        child: const AppText("rename"),
-                      ),
-                    ],
-                  ),
-                );
-              } else if (Platform.isIOS) {
-                await PhotoManager.editor.darwin.favoriteAsset(
-                  entity: currentAsset,
-                  favorite: true,
-                );
+    ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+    content: AppText(
+    "videoRenamedSuccessfully",
+    ),
+    ),
+    );
+    } else {
+    print("Rename Failed or Cancelled by User");
+    }
+    } catch (e) {
+    print("Native Error: $e");
+    }
+    }
+    },
+    child: const AppText("rename"),
+    ),
+    ],
+    ),
+    );
+    } else if (Platform.isIOS) {
+      await PhotoManager.editor.darwin.favoriteAsset(
+        entity: currentAsset,
+        favorite: true,
+      );
 
-                /*
+/*
                 File? file = await currentAsset.file;
                 if (file != null) {
                     await PhotoManager.editor.saveVideo(
@@ -2837,28 +3219,28 @@ class _PlayerScreenState extends State<PlayerScreen>
                    }
               */
 
-                // await currentAsset.refresh();
-                setState(() {});
-              }
-            }),
-          ],
-          _textButtonItem("lock", () {}),
-          _textButtonItem("settings", () {}),
-
-          const SizedBox(height: 30),
-
-          const AppText(
-            "help_upper",
-            color: Color(0XFF3D57F9),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            letterSpacing: 1.2,
-          ),
-          const SizedBox(height: 10),
-          _textButtonItem("faq", () {}),
-          _textButtonItem("about", () {}),
+// await currentAsset.refresh();
+      setState(() {});
+    }
+    }),
         ],
-      ),
+            _textButtonItem("lock", () {}),
+            _textButtonItem("settings", () {}),
+
+            const SizedBox(height: 30),
+
+            const AppText(
+              "help_upper",
+              color: Color(0XFF3D57F9),
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              letterSpacing: 1.2,
+            ),
+            const SizedBox(height: 10),
+            _textButtonItem("faq", () {}),
+            _textButtonItem("about", () {}),
+          ],
+        ),
     );
   }
 
@@ -2913,7 +3295,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category 1: Tools
+// Category 1: Tools
               const AppText(
                 "tools",
                 color: Color(0XFF3D57F9),
@@ -2948,7 +3330,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
               const Divider(color: Colors.white24, height: 30),
 
-              // Category 2: Help
+// Category 2: Help
               const AppText(
                 "help",
                 color: Color(0XFF3D57F9),
@@ -2965,7 +3347,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       Icons.question_answer_outlined,
                       color: Colors.white,
                     ),
-                    //////////////////////////////////////////////////////////////////////// part 5 new player scareen//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// part 5 new player scareen//////////////////////////////////////////////////////////
                     label: const AppText("faq", color: Colors.white),
                   ),
                   TextButton.icon(
@@ -3012,13 +3394,13 @@ class _PlayerScreenState extends State<PlayerScreen>
               width: 45,
             ),
 
-            // Icon(
-            //   playerService.controller!.value.isPlaying
-            //       ? Icons.pause_rounded
-            //       : Icons.play_arrow_rounded,
-            //   size: 60,
-            //   color: Colors.white,
-            // ),
+// Icon(
+//   playerService.controller!.value.isPlaying
+//       ? Icons.pause_rounded
+//       : Icons.play_arrow_rounded,
+//   size: 60,
+//   color: Colors.white,
+// ),
           ),
         ),
         const SizedBox(width: 40),
@@ -3098,7 +3480,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // LOCK BUTTON
+// LOCK BUTTON
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -3114,7 +3496,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 }),
               ),
 
-              // MIDDLE CONTROLS (Only if not locked)
+// MIDDLE CONTROLS (Only if not locked)
               if (!_isLocked)
                 Expanded(
                   child: FittedBox(
@@ -3182,7 +3564,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                 ),
 
-              // RIGHT SIDE BUTTONS (Fit & PiP)
+// RIGHT SIDE BUTTONS (Fit & PiP)
               if (!_isLocked)
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -3235,11 +3617,12 @@ class _PlayerScreenState extends State<PlayerScreen>
           if (!_isLocked && settings.isProgressBarBelow) buildProgressBar(),
 
           const SizedBox(height: 12),
-          // Bottom spacing
+// Bottom spacing
         ],
       ),
     );
   }
+
   String _getFitText(BoxFit fit) {
     switch (fit) {
       case BoxFit.contain:
@@ -3311,7 +3694,11 @@ class _PlayerScreenState extends State<PlayerScreen>
       );
     } catch (e) {
       print("Screenshot Error: $e");
-      AppToast.show(context, context.tr("errorSavingScreenShot"), type: ToastType.error);
+      AppToast.show(
+        context,
+        context.tr("errorSavingScreenShot"),
+        type: ToastType.error,
+      );
     }
   }
 
@@ -3374,33 +3761,36 @@ class _PlayerScreenState extends State<PlayerScreen>
                 const Divider(color: Colors.white12, thickness: 1),
                 const SizedBox(height: 10),
 
-                // 1. Playback Speed Item
+// 1. Playback Speed Item
                 _buildSettingsTile(
                   icon: Icons.speed_rounded,
                   title: "playbackSpeed",
-                  value: _formatPlaybackSpeed(playerService.playbackSpeed, context),
+                  value: _formatPlaybackSpeed(
+                    playerService.playbackSpeed,
+                    context,
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _showSpeedSelection();
                   },
                 ),
 
-                // _buildSettingsTile(
-                //   icon: Icons.aspect_ratio_rounded,
-                //   title: "Aspect Ratio",
-                //   value: _getFitText(_videoFit),
-                //   onTap: () {
-                //     Navigator.pop(context);
-                //     // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¤ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â®ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ Aspect Ratio ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¬ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¦ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂµÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¾ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â«ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¶ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¨ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â² ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¶ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹
-                //   },
-                // ),
-                //
-                // _buildSettingsTile(
-                //   icon: Icons.subtitles_rounded,
-                //   title: "Subtitles",
-                //   value: "Off",
-                //   onTap: () {},
-                // ),
+// _buildSettingsTile(
+//   icon: Icons.aspect_ratio_rounded,
+//   title: "Aspect Ratio",
+//   value: _getFitText(_videoFit),
+//   onTap: () {
+//     Navigator.pop(context);
+//     // ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â®ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ Aspect Ratio ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂµÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹
+//   },
+// ),
+//
+// _buildSettingsTile(
+//   icon: Icons.subtitles_rounded,
+//   title: "Subtitles",
+//   value: "Off",
+//   onTap: () {},
+// ),
               ],
             ),
           ),
@@ -3410,24 +3800,27 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   String _formatPlaybackSpeed(double speed, BuildContext context) {
-    // 1. Convert the speed double value to a string (e.g., 1.25)
+// 1. Convert the speed double value to a string (e.g., 1.25)
     String speedStr = speed.toString();
 
-    // 2. Split the string into individual characters and translate digits
-    String localizedSpeed = speedStr.split('').map((char) {
-      // Check if the character is a digit between 0 and 9
+// 2. Split the string into individual characters and translate digits
+    String localizedSpeed = speedStr
+        .split('')
+        .map((char) {
+// Check if the character is a digit between 0 and 9
       if (RegExp(r'[0-9]').hasMatch(char)) {
-        // Find the localized translation key like '_0', '_1', etc.
+// Find the localized translation key like '_0', '_1', etc.
         String localizedDigit = context.tr('_$char');
 
-        // If translation is not found, keep the original digit (e.g., '1')
+// If translation is not found, keep the original digit (e.g., '1')
         return localizedDigit != '_$char' ? localizedDigit : char;
       }
-      // Keep dots (.) as they are
+// Keep dots (.) as they are
       return char;
-    }).join('');
+    })
+        .join('');
 
-    // 3. Append 'x' at the end of the localized speed (e.g., à«§.à««x)
+// 3. Append 'x' at the end of the localized speed (e.g., Ã Â«Â§.Ã Â«Â«x)
     return "${localizedSpeed}x";
   }
 
@@ -3502,7 +3895,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const SizedBox(height: 15),
-                  // Handle
+// Handle
                   Container(
                     width: 40,
                     height: 4,
@@ -3639,7 +4032,8 @@ class _PlayerScreenState extends State<PlayerScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent, // àª•àª¾àªš àªœà«‡àªµà«€ àª…àª¸àª° àª®àª¾àªŸà«‡
+      backgroundColor: Colors.transparent,
+      // Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÅ¡ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«â‚¬ Ã Âªâ€¦Ã ÂªÂ¸Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
       builder: (context) {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -3729,7 +4123,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.white38,
 
-                      // àª«à«‹àª¨à«àªŸ àª¸àª¾àªˆàª à«§à«¨-à«§à«© àª°àª¾àª–àªµà«€ àªœà«‡àª¥à«€ àª®à«‹àªŸà«àª‚ àª¨àª¾ àª²àª¾àª—à«‡
+                      // Ã ÂªÂ«Ã Â«â€¹Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ Ã Â«Â§Ã Â«Â¨-Ã Â«Â§Ã Â«Â© Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã Â«â€¡
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12.5,
@@ -3826,10 +4220,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       try {
         final supported = await playerService.isPipSupported();
         if (!supported) {
-          AppToast.show(
-            context,
-            context.tr("pipNotSupportedAndroid"),
-          );
+          AppToast.show(context, context.tr("pipNotSupportedAndroid"));
           return;
         }
         final entered = await playerService.enterPipMode();
@@ -3841,35 +4232,21 @@ class _PlayerScreenState extends State<PlayerScreen>
           );
         }
       } catch (_) {
-        AppToast.show(
-          context,
-          context.tr("pipError"),
-          type: ToastType.error,
-        );
+        AppToast.show(context, context.tr("pipError"), type: ToastType.error);
       }
     } else if (Platform.isIOS) {
       try {
         final supported = await playerService.isPipSupported();
         if (!supported) {
-          AppToast.show(
-            context,
-            context.tr("pipNotSupportedIOS"),
-          );
+          AppToast.show(context, context.tr("pipNotSupportedIOS"));
           return;
         }
         final entered = await playerService.enterPipMode();
         if (!entered) {
-          AppToast.show(
-            context,
-            context.tr("pipUnavailableIOS"),
-          );
+          AppToast.show(context, context.tr("pipUnavailableIOS"));
         }
       } catch (_) {
-        AppToast.show(
-          context,
-          context.tr("pipError"),
-          type: ToastType.error,
-        );
+        AppToast.show(context, context.tr("pipError"), type: ToastType.error);
       }
     }
   }
@@ -3908,7 +4285,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         settings.updateSetting(
                               () => settings.equalizerEnabled = v,
                         );
-                        _applyEqualizerSettings(settings);
+                        _applyEqualizerSettings(
+                          settings,
+                          settings.equalizerReverb,
+                        );
                         setSheetState(() {});
                       },
                       activeColor: Color(0XFF3D57F9),
@@ -3916,13 +4296,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                     _buildDropdown(
                       "reverb",
                       [
-                        context.tr("none"),
-                        context.tr("smallRoom"),
-                        context.tr("mediumRoom"),
-                        context.tr("largeRoom"),
-                        context.tr("mediumHall"),
-                        context.tr("largeHall"),
-                        context.tr("plate"),
+                        "none",
+                        "smallRoom",
+                        "mediumRoom",
+                        "largeRoom",
+                        "mediumHall",
+                        "largeHall",
+                        "plate",
                       ],
                       settings.equalizerReverb,
                           (v) {
@@ -3930,7 +4310,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         settings.updateSetting(
                               () => settings.equalizerReverb = v,
                         );
-                        _applyEqualizerSettings(settings);
+                        _applyEqualizerSettings(
+                          settings,
+                          settings.equalizerReverb,
+                        );
                         setSheetState(() {});
                       },
                     ),
@@ -3944,7 +4327,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         settings.updateSetting(
                               () => settings.equalizerBassBoost = v,
                         );
-                        _applyEqualizerSettings(settings);
+                        _applyEqualizerSettings(
+                          settings,
+                          settings.equalizerReverb,
+                        );
                         setSheetState(() {});
                       }
                           : (_) {},
@@ -3959,7 +4345,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                         settings.updateSetting(
                               () => settings.equalizerVirtualizer = v,
                         );
-                        _applyEqualizerSettings(settings);
+                        _applyEqualizerSettings(
+                          settings,
+                          settings.equalizerReverb,
+                        );
                         setSheetState(() {});
                       }
                           : (_) {},
@@ -3974,14 +4363,41 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Future<void> _applyEqualizerSettings(SettingsProvider settings) async {
+  Future<void> _applyEqualizerSettings(
+      SettingsProvider settings,
+      String reverb,
+      ) async {
+    //  _applyEqualizerSettings( settings,settings.equalizerReverb);
+    String reverbPreset = "None";
+    switch (reverb) {
+      case "smallRoom":
+        reverbPreset = "Small Room";
+        break;
+      case "mediumRoom":
+        reverbPreset = "Medium Room";
+        break;
+      case "largeRoom":
+        reverbPreset = "Large Room";
+        break;
+      case "mediumHall":
+        reverbPreset = "Medium Hall";
+        break;
+      case "largeHall":
+        reverbPreset = "Large Hall";
+        break;
+      case "plate":
+        reverbPreset = "Plate";
+        break;
+      default:
+        reverbPreset = "None";
+    }
     try {
       await _equalizerChannel.invokeMethod("setEnabled", {
         "enabled": settings.equalizerEnabled,
       });
       if (!settings.equalizerEnabled) return;
       await _equalizerChannel.invokeMethod("setReverb", {
-        "value": settings.equalizerReverb,
+        "value": reverbPreset,
       });
       await _equalizerChannel.invokeMethod("setBassBoost", {
         "value": settings.equalizerBassBoost,
@@ -3989,8 +4405,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       await _equalizerChannel.invokeMethod("setVirtualizer", {
         "value": settings.equalizerVirtualizer,
       });
-    } catch (_) {
-      // ignore platform-specific errors
+    } catch (e) {
+      // print("Equalizer Error: $e");
     }
   }
 
@@ -4025,11 +4441,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 const Divider(color: Colors.white10, height: 25),
                 _buildDropdown(
                   "lockMode",
-                  [
-                    "lock",
-                    "kidsLock",
-                    "kidsLockTouchEffects",
-                  ],
+                  ["lock", "kidsLock", "kidsLockTouchEffects"],
                   s.lockMode,
                       (v) => s.updateSetting(() => s.lockMode = v!),
                 ),
@@ -4042,14 +4454,16 @@ class _PlayerScreenState extends State<PlayerScreen>
           // --- 2. Gestures Grid ---
           _buildAttractiveHeader(Icons.gesture_rounded, "gestures"),
           _buildSettingsCard(
-            padding: const EdgeInsets.all(12), // àª—à«àª°à«€àª¡ àª®àª¾àªŸà«‡ àª¥à«‹àª¡à«€ àª“àª›à«€ àªªà«‡àª¡àª¿àª‚àª—
+            padding: const EdgeInsets.all(12),
+            // Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¡ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â‚¬ Ã Âªâ€œÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂªÃ Â«â€¡Ã ÂªÂ¡Ã ÂªÂ¿Ã Âªâ€šÃ Âªâ€”
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: gestureItems.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 3.5, // à«¨ àª²àª¾àª‡àª¨àª¨àª¾ àªŸà«‡àª•à«àª¸à«àªŸ àª®àª¾àªŸà«‡ àª¬à«‡àª¸à«àªŸ àª°à«‡àª¶àª¿àª¯à«‹
+                childAspectRatio: 3.5,
+                // Ã Â«Â¨ Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÅ¸Ã Â«â€¡Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â€¡Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ°Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 10,
               ),
@@ -4134,6 +4548,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       ),
     );
   }
+
   Widget _buildCustomCheckbox(
       String title,
       bool value,
@@ -4144,7 +4559,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       onTap: isEnabled ? () => onChange(!value) : null,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6), // àª¥à«‹àª¡à«€ àª‰àª­à«€ àª¸à«àªªà«‡àª¸ àª†àªªà«‹
+        padding: const EdgeInsets.symmetric(vertical: 0),
+        // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â‚¬ Ã Âªâ€°Ã ÂªÂ­Ã Â«â‚¬ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂªÃ Â«â€¡Ã ÂªÂ¸ Ã Âªâ€ Ã ÂªÂªÃ Â«â€¹
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -4175,7 +4591,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 color: isEnabled
                     ? Colors.white.withOpacity(0.9)
                     : Colors.white24,
-                fontSize: 12.5,
+                fontSize: 12,
                 height: 1.2,
                 fontWeight: FontWeight.w500,
               ),
@@ -4269,7 +4685,6 @@ class _PlayerScreenState extends State<PlayerScreen>
               color: Colors.white.withOpacity(0.3),
               fontSize: 11,
               fontStyle: FontStyle.italic,
-
             ),
           ),
         ],
@@ -4279,188 +4694,188 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _textTab(SettingsProvider s) {
     return Material(
-      color: Colors.transparent,
-      child: RawScrollbar(
+        color: Colors.transparent,
+        child: RawScrollbar(
         thickness: 4,
         radius: const Radius.circular(10),
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-          physics: const BouncingScrollPhysics(),
+    child: ListView(
+    padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+    physics: const BouncingScrollPhysics(),
+    children: [
+    // --- 1. Typography (Font & Size) ---
+    _buildAttractiveHeader(Icons.text_fields_rounded, "typography"),
+    _buildSettingsCard(
+    child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+    _buildDropdown(
+    "fontFamily", // 7. Font Family Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+    [
+    "selectFontFolder", // 8.
+    "default", // 9.
+    "mono", // 10.
+    "sansSerif", // 11.
+    "serif", // 12.
+    ],
+    s.font,
+    (v) => s.updateSetting(() => s.font = v!),
+    ),
+    const Divider(color: Colors.white10, height: 30),
+    _buildSlider(
+    "fontSize",
+    16,
+    60,
+    s.fontSize,
+    (v) => s.updateSetting(() => s.fontSize = v),
+    ),
+    const SizedBox(height: 15),
+    _buildSlider(
+    "textScale",
+    50,
+    400,
+    s.textScale,
+    (v) => s.updateSetting(() => s.textScale = v),
+    ),
+    const Divider(color: Colors.white10, height: 30),
+
+    // Color & Bold - Wrap prevents "RenderBox was not laid out"
+    Wrap(
+    spacing: 12,
+    runSpacing: 12,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+    SizedBox(
+    width: 170,
+    child: _buildColorTile(
+    "textColor",
+    s.textColor,
+    onPick: (c) => s.updateSetting(() => s.textColor = c),
+    ),
+    ),
+    _buildCustomCheckbox(
+    "boldText",
+    s.isBold,
+    (v) => s.updateSetting(() => s.isBold = v!),
+    ),
+    ],
+    ),
+    ],
+    ),
+    ),
+
+    const SizedBox(height: 25),
+
+    // --- 2. Text Effects (Background & Border) ---
+    _buildAttractiveHeader(Icons.layers_outlined, "visualEffects"),
+    _buildSettingsCard(
+    child: Column(
+    children: [
+    _buildColorTileRow(
+    "background",
+    s.subtitleBackgroundEnabled,
+    s.subtitleBackgroundColor,
+    onCheck: (v) => s.updateSetting(
+    () => s.subtitleBackgroundEnabled = v ?? false,
+    ),
+    onPick: (c) =>
+    s.updateSetting(() => s.subtitleBackgroundColor = c),
+    ),
+    const Divider(color: Colors.white10, height: 25),
+    _buildColorTileRow(
+    "borderStroke",
+    s.hasBorder,
+    s.borderColor,
+    onCheck: (v) => s.updateSetting(() => s.hasBorder = v!),
+    onPick: (c) => s.updateSetting(() => s.borderColor = c),
+    ),
+    if (s.hasBorder) ...[
+    const SizedBox(height: 15),
+    _buildSlider(
+    "borderWidth",
+    50,
+    300,
+    s.borderSize,
+    (v) => s.updateSetting(() => s.borderSize = v),
+    ),
+    _buildCustomCheckbox(
+    "improveStrokeRendering",
+    s.improveStrokeRendering,
+    (v) => s.updateSetting(
+    () => s.improveStrokeRendering = v ?? true,
+    ),
+    ),
+    ],
+      const Divider(color: Colors.white10, height: 25),
+
+// Effects Wrap
+      Wrap(
+        spacing: 20,
+        runSpacing: 10,
+        children: [
+          _buildCustomCheckbox(
+            "shadow",
+            s.shadowEnabled,
+                (v) =>
+                s.updateSetting(() => s.shadowEnabled = v ?? true),
+          ),
+          _buildCustomCheckbox(
+            "fadeOut",
+            s.fadeOutEnabled,
+                (v) => s.updateSetting(
+                  () => s.fadeOutEnabled = v ?? false,
+            ),
+          ),
+        ],
+      ),
+    ],
+    ),
+    ),
+
+      const SizedBox(height: 25),
+
+// --- 3. Advanced Rendering (SSA/ASS) ---
+      _buildAttractiveHeader(
+        Icons.high_quality_rounded,
+        "advancedRendering",
+      ),
+      _buildSettingsCard(
+        child: Column(
           children: [
-            // --- 1. Typography (Font & Size) ---
-            _buildAttractiveHeader(Icons.text_fields_rounded, "typography"),
-            _buildSettingsCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDropdown(
-                    "fontFamily", // 7. Font Family àª®àª¾àªŸà«‡
-                    [
-                      "selectFontFolder", // 8.
-                      "default",          // 9.
-                      "mono",             // 10.
-                      "sansSerif",        // 11.
-                      "serif",           // 12.
-                    ],
-                    s.font,
-                        (v) => s.updateSetting(() => s.font = v!),
-                  ),
-                  const Divider(color: Colors.white10, height: 30),
-                  _buildSlider(
-                    "fontSize",
-                    16,
-                    60,
-                    s.fontSize,
-                        (v) => s.updateSetting(() => s.fontSize = v),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildSlider(
-                    "textScale",
-                    50,
-                    400,
-                    s.textScale,
-                        (v) => s.updateSetting(() => s.textScale = v),
-                  ),
-                  const Divider(color: Colors.white10, height: 30),
-
-                  // Color & Bold - Wrap prevents "RenderBox was not laid out"
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 170,
-                        child: _buildColorTile(
-                          "textColor",
-                          s.textColor,
-                          onPick: (c) => s.updateSetting(() => s.textColor = c),
-                        ),
-                      ),
-                      _buildCustomCheckbox(
-                        "boldText",
-                        s.isBold,
-                            (v) => s.updateSetting(() => s.isBold = v!),
-                      ),
-                    ],
-                  ),
-                ],
+            _buildCustomCheckbox(
+              "improveSSARendering",
+              s.improveSsaRendering,
+                  (v) => s.updateSetting(
+                    () => s.improveSsaRendering = v ?? true,
               ),
             ),
-
-            const SizedBox(height: 25),
-
-            // --- 2. Text Effects (Background & Border) ---
-            _buildAttractiveHeader(Icons.layers_outlined, "visualEffects"),
-            _buildSettingsCard(
-              child: Column(
-                children: [
-                  _buildColorTileRow(
-                    "background",
-                    s.subtitleBackgroundEnabled,
-                    s.subtitleBackgroundColor,
-                    onCheck: (v) => s.updateSetting(
-                          () => s.subtitleBackgroundEnabled = v ?? false,
-                    ),
-                    onPick: (c) =>
-                        s.updateSetting(() => s.subtitleBackgroundColor = c),
-                  ),
-                  const Divider(color: Colors.white10, height: 25),
-                  _buildColorTileRow(
-                    "borderStroke",
-                    s.hasBorder,
-                    s.borderColor,
-                    onCheck: (v) => s.updateSetting(() => s.hasBorder = v!),
-                    onPick: (c) => s.updateSetting(() => s.borderColor = c),
-                  ),
-                  if (s.hasBorder) ...[
-                    const SizedBox(height: 15),
-                    _buildSlider(
-                      "borderWidth",
-                      50,
-                      300,
-                      s.borderSize,
-                          (v) => s.updateSetting(() => s.borderSize = v),
-                    ),
-                    _buildCustomCheckbox(
-                      "improveStrokeRendering",
-                      s.improveStrokeRendering,
-                          (v) => s.updateSetting(
-                            () => s.improveStrokeRendering = v ?? true,
-                      ),
-                    ),
-                  ],
-                  const Divider(color: Colors.white10, height: 25),
-
-                  // Effects Wrap
-                  Wrap(
-                    spacing: 20,
-                    runSpacing: 10,
-                    children: [
-                      _buildCustomCheckbox(
-                        "shadow",
-                        s.shadowEnabled,
-                            (v) =>
-                            s.updateSetting(() => s.shadowEnabled = v ?? true),
-                      ),
-                      _buildCustomCheckbox(
-                        "fadeOut",
-                        s.fadeOutEnabled,
-                            (v) => s.updateSetting(
-                              () => s.fadeOutEnabled = v ?? false,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+            const Divider(color: Colors.white10, height: 20),
+            _buildCustomCheckbox(
+              "complexScriptsRendering",
+              s.improveComplexScriptRendering,
+                  (v) => s.updateSetting(
+                    () => s.improveComplexScriptRendering = v ?? true,
               ),
             ),
-
-            const SizedBox(height: 25),
-
-            // --- 3. Advanced Rendering (SSA/ASS) ---
-            _buildAttractiveHeader(
-              Icons.high_quality_rounded,
-              "advancedRendering",
+            const Divider(color: Colors.white10, height: 20),
+            _buildCustomCheckbox(
+              "ignoreSSAFontSpecifications",
+              s.ignoreSsaFont,
+                  (v) => s.updateSetting(() => s.ignoreSsaFont = v ?? false),
             ),
-            _buildSettingsCard(
-              child: Column(
-                children: [
-                  _buildCustomCheckbox(
-                    "improveSSARendering",
-                    s.improveSsaRendering,
-                        (v) => s.updateSetting(
-                          () => s.improveSsaRendering = v ?? true,
-                    ),
-                  ),
-                  const Divider(color: Colors.white10, height: 20),
-                  _buildCustomCheckbox(
-                    "complexScriptsRendering",
-                    s.improveComplexScriptRendering,
-                        (v) => s.updateSetting(
-                          () => s.improveComplexScriptRendering = v ?? true,
-                    ),
-                  ),
-                  const Divider(color: Colors.white10, height: 20),
-                  _buildCustomCheckbox(
-                    "ignoreSSAFontSpecifications",
-                    s.ignoreSsaFont,
-                        (v) => s.updateSetting(() => s.ignoreSsaFont = v ?? false),
-                  ),
-                  const Divider(color: Colors.white10, height: 20),
-                  _buildCustomCheckbox(
-                    "ignoreSSAFontExp",
-                    s.ignoreBrokenSsaFonts,
-                        (v) => s.updateSetting(
-                          () => s.ignoreBrokenSsaFonts = v ?? false,
-                    ),
-                  ),
-                ],
+            const Divider(color: Colors.white10, height: 20),
+            _buildCustomCheckbox(
+              "ignoreSSAFontExp",
+              s.ignoreBrokenSsaFonts,
+                  (v) => s.updateSetting(
+                    () => s.ignoreBrokenSsaFonts = v ?? false,
               ),
             ),
           ],
         ),
       ),
+    ],
+    ),
+        ),
     );
   }
 
@@ -4471,7 +4886,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
         physics: const BouncingScrollPhysics(),
         children: [
-          // --- 1. Positioning & Alignment ---
+// --- 1. Positioning & Alignment ---
           _buildAttractiveHeader(Icons.layers_outlined, "positioning"),
           _buildSettingsCard(
             child: Column(
@@ -4480,16 +4895,16 @@ class _PlayerScreenState extends State<PlayerScreen>
                 _buildDropdown(
                   "textAlignment", // translated key for "Text Alignment"
                   [
-                    "left",   // translated key for "Left"
+                    "left", // translated key for "Left"
                     "center", // translated key for "Center"
-                    "right",  // translated key for "Right"
+                    "right", // translated key for "Right"
                   ],
                   s.layoutAlignment,
                       (v) => s.updateSetting(() => s.layoutAlignment = v!),
                 ),
                 const Divider(color: Colors.white10, height: 30),
 
-                // Bottom Margins Slider
+// Bottom Margins Slider
                 _buildSlider(
                   "bottomMargin",
                   0,
@@ -4500,7 +4915,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                 const SizedBox(height: 10),
 
-                // Fit Subtitles Checkbox
+// Fit Subtitles Checkbox
                 _buildCustomCheckbox(
                   "fitSubtitlesIntoVideoSize",
                   s.fitSubtitlesIntoVideoSize,
@@ -4514,18 +4929,18 @@ class _PlayerScreenState extends State<PlayerScreen>
 
           const SizedBox(height: 25),
 
-          // --- 2. Layout Background ---
+// --- 2. Layout Background ---
           _buildAttractiveHeader(Icons.fullscreen_rounded, "layoutBackground"),
           _buildSettingsCard(
             child: Column(
               children: [
-                // Background Toggle & Color Row using Wrap for safety
+// Background Toggle & Color Row using Wrap for safety
                 Wrap(
                   spacing: 15,
                   runSpacing: 15,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    // Toggle Checkbox
+// Toggle Checkbox
                     _buildCustomCheckbox(
                       "enableBackground",
                       s.layoutBackgroundEnabled,
@@ -4534,7 +4949,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       ),
                     ),
 
-                    // Color Picker (Only visible/active if enabled)
+// Color Picker (Only visible/active if enabled)
                     if (s.layoutBackgroundEnabled)
                       SizedBox(
                         width: 160,
@@ -4553,7 +4968,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                   const Divider(color: Colors.white10, height: 30),
                   const AppText(
                     "thisAddsASolidBackdrop",
-                    color: Colors.white38, fontSize: 12,
+                    color: Colors.white38,
+                    fontSize: 12,
                   ),
                 ],
               ],
@@ -4562,7 +4978,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
           const SizedBox(height: 25),
 
-          // --- 3. Additional Info (Optional) ---
+// --- 3. Additional Info (Optional) ---
           Center(
             child: AppText(
               "changesAreAppliedInRealTime",
@@ -4584,7 +5000,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       child: RawScrollbar(
         controller: _styleScrollController,
         thumbColor: const Color(0XFF3D57F9).withOpacity(0.6),
-        // àª¤àª®àª¾àª°à«‹ àª¥à«€àª® àª•àª²àª°
+// Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂ¥Ã Â«â‚¬Ã ÂªÂ® Ã Âªâ€¢Ã ÂªÂ²Ã ÂªÂ°
         thickness: 4,
         radius: const Radius.circular(10),
         fadeDuration: const Duration(milliseconds: 500),
@@ -4594,9 +5010,9 @@ class _PlayerScreenState extends State<PlayerScreen>
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
           physics: const BouncingScrollPhysics(),
           children: [
-            //////////////////////////////////////////////////////////////////////// part 7 new player scareen//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////// part 7 new player scareen//////////////////////////////////////////////////////////
 
-            // --- 1. Appearance  ---
+// --- 1. Appearance  ---
             _buildAttractiveHeader(Icons.auto_awesome_rounded, "appearance"),
             _buildSettingsCard(
               child: Column(
@@ -4619,7 +5035,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 25),
 
-            // --- 2. Themes & Colors ---
+// --- 2. Themes & Colors ---
             _buildAttractiveHeader(Icons.palette_rounded, "themesColors"),
             _buildSettingsCard(
               child: Column(
@@ -4648,7 +5064,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 25),
 
-            // --- 3. Progress Bar Settings ---
+// --- 3. Progress Bar Settings ---
             _buildAttractiveHeader(
               Icons.slow_motion_video_rounded,
               "progressBar",
@@ -4674,11 +5090,12 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 20),
 
-            // Footer Note
+// Footer Note
             Center(
               child: AppText(
                 "customThemesApply",
-                color: Colors.white24, fontSize: 11,
+                color: Colors.white24,
+                fontSize: 11,
               ),
             ),
           ],
@@ -4740,7 +5157,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
           physics: const BouncingScrollPhysics(),
           children: [
-            // --- à«§. Display & Orientation ---
+// --- Ã Â«Â§. Display & Orientation ---
             _buildAttractiveHeader(
               Icons.screen_rotation_rounded,
               "displayOrientation",
@@ -4749,7 +5166,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               child: Column(
                 children: [
                   _buildDropdown(
-                    "orientation", // 'Orientation' àª®àª¾àªŸà«‡àª¨à«€ àª•à«€
+                    "orientation",
                     [
                       "landscape",
                       "reverseLandscape",
@@ -4763,23 +5180,16 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                   const Divider(color: Colors.white10, height: 25),
                   _buildDropdown(
-                    "fullScreenMode", // 'Full Screen Mode' àª®àª¾àªŸà«‡àª¨à«€ àª•à«€
-                    [
-                      "on",
-                      "off",
-                      "autoSwitch",
-                    ],
+                    "fullScreenMode",
+// 'Full Screen Mode' Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¢Ã Â«â‚¬
+                    ["on", "off", "autoSwitch"],
                     s.fullScreenMode,
                         (v) => v != null ? cubit.updateFullScreenMode(v) : null,
                   ),
                   const Divider(color: Colors.white10, height: 25),
                   _buildDropdown(
-                    "softButtons", // 'Soft Buttons' àª®àª¾àªŸà«‡àª¨à«€ àª•à«€
-                    [
-                      "show",
-                      "hide",
-                      "autoHide",
-                    ],
+                    "softButtons", // 'Soft Buttons' Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¢Ã Â«â‚¬
+                    ["show", "hide", "autoHide"],
                     s.softButtonsMode,
                         (v) => v != null ? cubit.updateSoftButtonsMode(v) : null,
                   ),
@@ -4789,7 +5199,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 25),
 
-            // --- 2. Brightness Control ---
+// --- 2. Brightness Control ---
             _buildAttractiveHeader(Icons.wb_sunny_rounded, "brightness"),
             _buildSettingsCard(
               child: Column(
@@ -4815,11 +5225,8 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 25),
 
-            // --- 3. On-Screen Information ---
-            _buildAttractiveHeader(
-              Icons.info_outline_rounded,
-              "onScreenInfo",
-            ),
+// --- 3. On-Screen Information ---
+            _buildAttractiveHeader(Icons.info_outline_rounded, "onScreenInfo"),
             _buildSettingsCard(
               child: Column(
                 children: [
@@ -4887,7 +5294,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             const SizedBox(height: 25),
 
-            // --- 4. Advanced System Settings ---
+// --- 4. Advanced System Settings ---
             _buildAttractiveHeader(
               Icons.settings_suggest_rounded,
               "systemBehavior",
@@ -4938,6 +5345,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       ),
     );
   }
+
   Widget _buildColorTileRow(
       String title,
       bool isEnabled,
@@ -4951,7 +5359,10 @@ class _PlayerScreenState extends State<PlayerScreen>
         const SizedBox(width: 10),
         GestureDetector(
           onTap: isEnabled
-              ? () => _openColorPicker(title, color, onPick)
+              ? () {
+// _iColorPickerVisible = true;
+            _openColorPicker(title, color, onPick);
+          }
               : null,
           child: Container(
             width: 35,
@@ -4983,15 +5394,19 @@ class _PlayerScreenState extends State<PlayerScreen>
   void _applyOrientation(String? value) {
     switch (value) {
       case "landscape":
-        SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+        ]);
         break;
       case "reverseLandscape":
-        SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeRight]);
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeRight,
+        ]);
         break;
       case "autoRotationLandscape":
         SystemChrome.setPreferredOrientations([
           DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
+          DeviceOrientation.landscapeRight,
         ]);
         break;
       case "autoRotation":
@@ -5006,7 +5421,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
-  // Dropdown Widget
+// Dropdown Widget
   Widget _buildDropdown(
       String label,
       List<String> options,
@@ -5020,7 +5435,6 @@ class _PlayerScreenState extends State<PlayerScreen>
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: AppText(
             label,
-
             color: Colors.white.withOpacity(0.5),
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -5030,7 +5444,8 @@ class _PlayerScreenState extends State<PlayerScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05), // àª†àª›à«àª‚ àª—à«àª²àª¾àª¸ àª²à«àª•
+            color: Colors.white.withOpacity(0.05),
+// Ã Âªâ€ Ã Âªâ€ºÃ Â«ÂÃ Âªâ€š Ã Âªâ€”Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¾Ã ÂªÂ¸ Ã ÂªÂ²Ã Â«ÂÃ Âªâ€¢
             borderRadius: BorderRadius.circular(15),
             border: Border.all(color: Colors.white10, width: 1),
           ),
@@ -5052,7 +5467,12 @@ class _PlayerScreenState extends State<PlayerScreen>
               items: options.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: AppText(value),
+                  child: AppText(
+                    value,
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 );
               }).toList(),
               onChanged: onChanged,
@@ -5063,36 +5483,44 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  /// Label: actual slider value (not `value * 100`). Brightness-style 0.1â€“1.0 shows as percent.
-  String _formatSliderLabel(double min, double max, double value, BuildContext context) {
+  /// Label: actual slider value (not `value * 100`). Brightness-style 0.1Ã¢â‚¬â€œ1.0 shows as percent.
+  String _formatSliderLabel(
+      double min,
+      double max,
+      double value,
+      BuildContext context,
+      ) {
     String resultStr = "";
 
-    // 1. If it needs to be shown as a percentage (between 0.09 and 1.0)
+// 1. If it needs to be shown as a percentage (between 0.09 and 1.0)
     if (max <= 1.0 && min >= 0.09 && min < 1.0) {
       resultStr = "${(value * 100).round()}%";
     }
-    // 2. If the value is a whole number (e.g., converting 5.0 to 5)
+// 2. If the value is a whole number (e.g., converting 5.0 to 5)
     else if (value == value.roundToDouble()) {
       resultStr = value.round().toString();
     }
-    // 3. If the value is a decimal number (e.g., converting 1.25 to 1.3)
+// 3. If the value is a decimal number (e.g., converting 1.25 to 1.3)
     else {
       resultStr = value.toStringAsFixed(1);
     }
 
-    // ðŸ’¡ Proper way to split the characters and translate digits
-    return resultStr.split('').map((char) {
-      // Check if the character is a digit between 0 and 9
+// Ã°Å¸â€™Â¡ Proper way to split the characters and translate digits
+    return resultStr
+        .split('')
+        .map((char) {
+// Check if the character is a digit between 0 and 9
       if (RegExp(r'[0-9]').hasMatch(char)) {
-        // Find the localized translation key like '_0', '_1', etc.
+// Find the localized translation key like '_0', '_1', etc.
         String localizedDigit = context.tr('_$char');
 
-        // If translation is not found, keep the original digit (e.g., '4')
+// If translation is not found, keep the original digit (e.g., '4')
         return localizedDigit != '_$char' ? localizedDigit : char;
       }
-      // Keep dots (.) and percentage signs (%) as they are
+// Keep dots (.) and percentage signs (%) as they are
       return char;
-    }).join('');
+    })
+        .join('');
   }
 
   int? _sliderDivisions(double min, double max) {
@@ -5107,7 +5535,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     return n;
   }
 
-  // Slider Widget
+// Slider Widget
   Widget _buildSlider(
       String title,
       double min,
@@ -5118,7 +5546,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final double clamped = value.clamp(min, max);
     final int? divisions = _sliderDivisions(min, max);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -5127,7 +5555,9 @@ class _PlayerScreenState extends State<PlayerScreen>
             color: Colors.white70,
             fontSize: 12,
           ),
+          SizedBox(height: 5),
           Slider(
+            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
             value: clamped,
             min: min,
             max: max,
@@ -5140,20 +5570,52 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  // Switch Widget
+// Switch Widget
   Widget _buildSwitch(String title, bool value, ValueChanged<bool> onChange) {
     return SwitchListTile(
-      title: AppText(
-          title,
-          color: Colors.white, fontSize: 14
-      ),
+      title: AppText(title, color: Colors.white, fontSize: 14),
       value: value,
       onChanged: onChange,
       activeColor: Color(0XFF3D57F9),
     );
   }
 
-  // Color Box Widget
+// Color Box Widget
+// Widget _buildColorTile(
+//     String title,
+//     Color color, {
+//       ValueChanged<Color>? onPick,
+//       bool enabled = true,
+//     }) {
+//   return ListTile(
+//     title: AppText(
+//       title,
+//       color: enabled ? Colors.white : Colors.grey,
+//       fontSize: 14,
+//     ),
+//     onTap: (onPick != null && enabled)
+//         ? () {
+//       // àª…àª¹àª¿àª¯àª¾àª‚ àª¡à«‡àªŸàª¾ àª¸à«‡àªµ àª•àª°à«‹ àª…àª¨à«‡ àªªà«€àª•àª° àª“àªªàª¨ àª•àª°à«‹
+//       setState(() {
+//         _currentPickerTitle = title;
+//         _currentSelectedColor = color;
+//         _currentColorOnPick = onPick;
+//         _iColorPickerVisible = true; // àªªà«€àª•àª° àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡
+//       });
+//     }
+//         : null,
+//     trailing: Container(
+//       width: 24,
+//       height: 24,
+//       decoration: BoxDecoration(
+//         color: color,
+//         shape: BoxShape.circle,
+//         border: Border.all(color: Colors.white),
+//       ),
+//     ),
+//   );
+// }
+
   Widget _buildColorTile(
       String title,
       Color color, {
@@ -5254,215 +5716,315 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                   border: Border.all(color: Colors.white.withOpacity(0.08)),
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Handle Bar
-                      Container(
-                        width: 50,
-                        height: 5,
-                        margin: const EdgeInsets.only(bottom: 25),
-                        decoration: BoxDecoration(
-                          color: Colors.white12,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isTightWidth = constraints.maxWidth < 420;
+                    final mq = MediaQuery.of(context);
+                    final isLandscape =
+                        mq.orientation == Orientation.landscape;
+                    // Keep the picker usable on short landscape screens.
+                    final pickerMaxHeight = isLandscape
+                        ? (mq.size.height * 0.42).clamp(220.0, 320.0)
+                        : 360.0;
 
-                      // --- Header: Title & Interactive Hex Input ---
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppText(
-                              title,
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          // Hex Input Field
-                          Container(
-                            width: 130,
-                            height: 45,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: const Color(0XFF3D57F9).withOpacity(0.3),
-                                width: 1.5,
+                    final header = isTightWidth
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppText(
+                                title,
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0XFF3D57F9,
-                                  ).withOpacity(0.05),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
+                              const SizedBox(height: 12),
+                              _hexInputBox(
+                                controller: hexController,
+                                onChanged: updatePickerFromHex,
+                              ),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              Expanded(
+                                child: AppText(
+                                  title,
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              SizedBox(
+                                width: 160,
+                                child: _hexInputBox(
+                                  controller: hexController,
+                                  onChanged: updatePickerFromHex,
+                                ),
+                              ),
+                            ],
+                          );
+
+                    final scrollController = ScrollController();
+                    return Scrollbar(
+                      controller: scrollController,
+                      thumbVisibility: true,
+                      interactive: true,
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              // Portrait: keep the premium narrow sheet look.
+                              // Landscape: allow full width so picker can place sliders on the right (like your screenshot).
+                              maxWidth:
+                                  isLandscape ? constraints.maxWidth : 560,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Handle Bar
+                                Container(
+                                  width: 50,
+                                  height: 5,
+                                  margin: const EdgeInsets.only(bottom: 25),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white12,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+
+                                // --- Header: Title & Interactive Hex Input ---
+                                header,
+                                const SizedBox(height: 25),
+
+                                // --- Color Wheel Section ---
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.02),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.05),
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: isLandscape
+                                            ? constraints.maxWidth
+                                            : 560,
+                                        maxHeight: pickerMaxHeight,
+                                      ),
+                                      child: isLandscape
+                                          ? SizedBox(
+                                              width: constraints.maxWidth,
+                                              height: pickerMaxHeight,
+                                              child: FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                alignment: Alignment.center,
+                                                child: ColorPicker(
+                                                  pickerColor: selectedColor,
+                                                  onColorChanged:
+                                                      updateHexFromPicker,
+                                                  pickerAreaHeightPercent: 0.7,
+                                                  enableAlpha: true,
+                                                  displayThumbColor: true,
+                                                  paletteType:
+                                                      PaletteType.hsvWithHue,
+                                                  labelTypes: const [],
+                                                  pickerAreaBorderRadius:
+                                                      BorderRadius.circular(
+                                                    100,
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : ColorPicker(
+                                              pickerColor: selectedColor,
+                                              onColorChanged:
+                                                  updateHexFromPicker,
+                                              pickerAreaHeightPercent: 0.7,
+                                              enableAlpha: true,
+                                              displayThumbColor: true,
+                                              paletteType:
+                                                  PaletteType.hsvWithHue,
+                                              labelTypes: const [],
+                                              pickerAreaBorderRadius:
+                                                  BorderRadius.circular(100),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 30),
+
+                                // --- Modern Quick Presets ---
+                                Column(
+                                  children: [
+                                    const AppText(
+                                      "quickSelect",
+                                      color: Colors.white24,
+                                      fontSize: 10,
+                                      letterSpacing: 1.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    const SizedBox(height: 15),
+                                    Wrap(
+                                      spacing: 15,
+                                      runSpacing: 15,
+                                      alignment: WrapAlignment.center,
+                                      children: [
+                                        _presetCircle(
+                                            Colors.red, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                            Colors.green, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                            Colors.blue, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                          const Color(0XFF3D57F9),
+                                          setModalState,
+                                          (c) {
+                                            updateHexFromPicker(c);
+                                          },
+                                        ),
+                                        _presetCircle(
+                                            Colors.white, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                            Colors.orange, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                            Colors.purple, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                        _presetCircle(
+                                            Colors.black, setModalState, (c) {
+                                          updateHexFromPicker(c);
+                                        }),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 35),
+
+                                // --- Action Button ---
+                                GestureDetector(
+                                  onTap: () {
+                                    onPick(selectedColor);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    height: 55,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0XFF3D57F9),
+                                          Color(0XFF2A40C7)
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(18),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0XFF3D57F9)
+                                              .withOpacity(0.3),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const AppText(
+                                      "applySelection",
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                            child: TextField(
-                              controller: hexController,
-                              onChanged: updatePickerFromHex,
-                              textAlign: TextAlign.center,
-                              cursorColor: const Color(0XFF3D57F9),
-                              style: const TextStyle(
-                                color: Color(0XFF3D57F9),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                                letterSpacing: 1.5,
-                                fontFamily: 'monospace',
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "FFFFFFFF",
-                                hintStyle: TextStyle(
-                                  color: Colors.white.withOpacity(0.1),
-                                  fontSize: 12,
-                                ),
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                prefixIcon: const Padding(
-                                  padding: EdgeInsets.only(left: 12, right: 4),
-                                  child: AppText(
-                                    "#",
-                                    color: Colors.white24,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                prefixIconConstraints: const BoxConstraints(
-                                  minWidth: 0,
-                                  minHeight: 0,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 25),
-
-                      // --- Color Wheel Section ---
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.02),
-                          // shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                        child: ColorPicker(
-                          pickerColor: selectedColor,
-                          onColorChanged: updateHexFromPicker,
-                          pickerAreaHeightPercent: 0.7,
-                          enableAlpha: true,
-                          displayThumbColor: true,
-                          paletteType: PaletteType.hsvWithHue,
-                          labelTypes: const [],
-                          pickerAreaBorderRadius: BorderRadius.circular(
-                            100,
-                          ), // àª¸àª°à«àª•àª² àªœà«‡àªµà«‹ àª²à«àª•
-                        ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // --- Modern Quick Presets ---
-                      Column(
-                        children: [
-                          const AppText(
-                            "quickSelect",
-                            color: Colors.white24,
-                            fontSize: 10,
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          const SizedBox(height: 15),
-                          Wrap(
-                            spacing: 15,
-                            runSpacing: 15,
-                            alignment: WrapAlignment.center,
-                            children: [
-                              _presetCircle(Colors.red, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                              _presetCircle(Colors.green, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                              _presetCircle(Colors.blue, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                              _presetCircle(
-                                const Color(0XFF3D57F9),
-                                setModalState,
-                                    (c) {
-                                  updateHexFromPicker(c);
-                                },
-                              ),
-                              _presetCircle(Colors.white, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                              _presetCircle(Colors.orange, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-
-                              //////////////////////////////////////////////////////////////////////// part 8 new player scareen//////////////////////////////////////////////////////////
-                              _presetCircle(Colors.purple, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                              _presetCircle(Colors.black, setModalState, (c) {
-                                updateHexFromPicker(c);
-                              }),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 35),
-
-                      // --- Action Button ---
-                      GestureDetector(
-                        onTap: () {
-                          onPick(selectedColor);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          height: 55,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0XFF3D57F9), Color(0XFF2A40C7)],
-                            ),
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0XFF3D57F9).withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: const AppText(
-                            "applySelection",
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
             );
           },
         );
       },
+    );
+  }
+
+  Widget _hexInputBox({
+    required TextEditingController controller,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Container(
+      height: 45,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: const Color(0XFF3D57F9).withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0XFF3D57F9).withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        textAlign: TextAlign.center,
+        cursorColor: const Color(0XFF3D57F9),
+        style: const TextStyle(
+          color: Color(0XFF3D57F9),
+          fontWeight: FontWeight.w800,
+          fontSize: 14,
+          letterSpacing: 1.5,
+          fontFamily: 'monospace',
+        ),
+        decoration: InputDecoration(
+          hintText: "FFFFFFFF",
+          hintStyle: TextStyle(
+            color: Colors.white.withOpacity(0.1),
+            fontSize: 12,
+          ),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          prefixIcon: const Padding(
+            padding: EdgeInsets.only(left: 12, right: 4),
+            child: AppText(
+              "#",
+              color: Colors.white24,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 0,
+            minHeight: 0,
+          ),
+        ),
+      ),
     );
   }
 
@@ -5579,7 +6141,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       },
       child: const AppText(
         "apply",
-        color: Colors.white, fontWeight: FontWeight.bold,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
       ),
     );
   }
@@ -5591,7 +6154,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       ValueChanged<double> onChanged,
       bool isLandscape,
       ) {
-    // Landscape àª®àª¾àª‚ àª¹àª¾àªˆàªŸ àª“àª›à«€ àª°àª¾àª–àªµà«€ àªªàª¡à«‡
+    // Landscape Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã ÂªÂ¾Ã ÂªË†Ã ÂªÅ¸ Ã Âªâ€œÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡
     double sliderHeight = isLandscape ? 120 : 180;
 
     return Column(
@@ -5626,7 +6189,8 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
               // Rotated Slider
               RotatedBox(
-                quarterTurns: 3, // àª†àª¨àª¾àª¥à«€ àª¸à«àª²àª¾àª‡àª¡àª° àª‰àª­à«àª‚ àª¥àªˆ àªœàª¶à«‡
+                quarterTurns: 3,
+                // Ã Âªâ€ Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¡Ã ÂªÂ° Ã Âªâ€°Ã ÂªÂ­Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¥Ã ÂªË† Ã ÂªÅ“Ã ÂªÂ¶Ã Â«â€¡
                 child: SliderTheme(
                   data: SliderThemeData(
                     trackHeight: 0,
@@ -5668,7 +6232,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       case "Screen Rotation":
         return "screenRotation";
       case "Playback speed":
-        return "playbackSpeed"; // àª† àª¤àª®àª¾àª°àª¾ àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àª¨àª¹à«‹àª¤à«àª‚ àªªàª£ àª®à«‡àªªàª®àª¾àª‚ àª¹àª¤à«àª‚ àªàªŸàª²à«‡ àª‰àª®à«‡àª°à«€ àª¦à«€àª§à«àª‚ àª›à«‡
+        return "playbackSpeed"; // Ã Âªâ€  Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¿Ã ÂªÂ¸Ã Â«ÂÃ ÂªÅ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂ¤Ã Â«ÂÃ Âªâ€š Ã ÂªÂªÃ ÂªÂ£ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂªÃ ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã ÂªÂ¤Ã Â«ÂÃ Âªâ€š Ã ÂªÂÃ ÂªÅ¸Ã ÂªÂ²Ã Â«â€¡ Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂ¦Ã Â«â‚¬Ã ÂªÂ§Ã Â«ÂÃ Âªâ€š Ã Âªâ€ºÃ Â«â€¡
       case "Background play":
         return "backgroundPlay";
       case "Loop":
@@ -5741,6 +6305,7 @@ class ScreenSettingsState {
     required this.pausePlaybackIfObstructed,
     required this.showInterfaceAtStartup,
   });
+
   factory ScreenSettingsState.fromProvider(SettingsProvider s) {
     return ScreenSettingsState(
       orientation: s.orientation,
@@ -5941,7 +6506,6 @@ class ScreenSettingsBloc
     state.copyWith(screenTextBottomColor: value),
         () => _provider.screenTextBottomColor = value,
   );
-
   void updateScreenRotationButton(bool value) => _emitAndSync(
     state.copyWith(screenRotationButton: value),
         () => _provider.screenRotationButton = value,
@@ -6069,11 +6633,11 @@ class SettingsProvider extends ChangeNotifier {
   bool previousNextButton = true;
   bool displayCurrentPositionWhileChanging = true;
   bool equalizerEnabled = false;
-  String equalizerReverb = "None";
+  String equalizerReverb = "none";
   double equalizerBassBoost = 0.0;
   double equalizerVirtualizer = 0.0;
 
-  String layoutAlignment = "Center";
+  String layoutAlignment = "center";
   double bottomMargins = 20.0;
   bool layoutBackgroundEnabled = false;
   Color layoutBackgroundColor = Colors.black54;
@@ -6242,3 +6806,288 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
  */
+
+class PlaylistSelectorView extends StatefulWidget {
+  final MediaItem currentItem;
+
+  const PlaylistSelectorView({Key? key, required this.currentItem})
+      : super(key: key);
+
+  @override
+  State<PlaylistSelectorView> createState() => _PlaylistSelectorViewState();
+}
+
+class _PlaylistSelectorViewState extends State<PlaylistSelectorView> {
+  late final TextEditingController _nameController;
+  dynamic _selectedPlaylistIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final playlistBox = Hive.box('playlists');
+
+    final filteredPlaylists = playlistBox.values.where((playlist) {
+      return (playlist as PlaylistModel).type == widget.currentItem.type;
+    }).toList();
+
+    // MediaQuery àª¥à«€ àª¸à«àª•à«àª°à«€àª¨àª¨à«€ àª¸àª¾àªˆàª àª…àª¨à«‡ àª“àª°àª¿àªàª¨à«àªŸà«‡àª¶àª¨ àª®à«‡àª³àªµà«‹
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    return Container(
+      // àªœà«‹ àª†àª¡à«€ àª¸à«àª•à«àª°à«€àª¨ àª¹à«‹àª¯ àª¤à«‹ àª¡àª¾àª¯àª²à«‹àª—àª¨à«€ àª¹àª¾àª‡àªŸ àª²àª¿àª®àª¿àªŸà«‡àª¡ àª•àª°à«€ àª¦àªˆàª àªœà«‡àª¥à«€ àªàª°àª° àª¨ àª†àªµà«‡
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.6
+            : mediaQuery.size.height * 0.7,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ==========================================
+              // à«§. àªàª•à«àªàª¿àª¸à«àªŸàª¿àª‚àª— àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¸à«‡àª•à«àª¶àª¨
+              // ==========================================
+              if (filteredPlaylists.isNotEmpty) ...[
+                AppText(
+                  "selectExistingPlaylist",
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colors.dialogueSubTitle,
+                ),
+                const SizedBox(height: 8), // àª†àª¡à«€ àª¸à«àª•à«àª°à«€àª¨ àª®àª¾àªŸà«‡ àª¸à«àªªà«‡àª¸ àª“àª›à«€ àª•àª°à«€
+                DropdownButtonFormField<int>(
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  dropdownColor: colors.background,
+                  hint: AppText(
+                    "choosePlaylist",
+                    color: colors.dialogueSubTitle.withOpacity(0.7),
+                  ),
+                  value: _selectedPlaylistIndex,
+                  items: List.generate(filteredPlaylists.length, (index) {
+                    final playlist = filteredPlaylists[index] as PlaylistModel;
+                    return DropdownMenuItem(
+                      value: index,
+                      child: Text(
+                        playlist.name,
+                        style: TextStyle(
+                          color: colors.appBarTitleColor,
+                          fontSize: 15,
+                        ),
+                      ),
+                    );
+                  }),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedPlaylistIndex = value;
+                      _nameController.clear();
+                    });
+                  },
+                ),
+
+                // àªœà«‹ àª†àª¡à«€ àª¸à«àª•à«àª°à«€àª¨ àª¹à«‹àª¯ àª¤à«‹ àªµàªšà«àªšà«‡àª¨à«àª‚ 'or' àªµàª¾àª³à«àª‚ àª¸à«‡àª•à«àª¶àª¨ àª¨àª¾àª¨à«àª‚ àª°àª¾àª–à«€àª
+                SizedBox(height: isLandscape ? 12 : 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: colors.dialogueSubTitle.withOpacity(0.2),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: AppText(
+                        "or",
+                        fontSize: 12,
+                        color: colors.dialogueSubTitle.withOpacity(0.5),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(
+                        color: colors.dialogueSubTitle.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: isLandscape ? 12 : 20),
+              ],
+
+              // ==========================================
+              // à«¨. àª¨àªµà«àª‚ àªªà«àª²à«‡àª²àª¿àª¸à«àªŸ àª¸à«‡àª•à«àª¶àª¨
+              // ==========================================
+              AppText(
+                "orCreateNew",
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.dialogueSubTitle,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nameController,
+                style: TextStyle(color: colors.appBarTitleColor, fontSize: 15),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  hintText: context.tr("enterName"),
+                  hintStyle: TextStyle(
+                    color: colors.dialogueSubTitle.withOpacity(0.5),
+                    fontSize: 15,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onChanged: (v) {
+                  if (v.trim().isNotEmpty && _selectedPlaylistIndex != null) {
+                    setState(() {
+                      _selectedPlaylistIndex = null;
+                    });
+                  }
+                },
+              ),
+
+              SizedBox(height: isLandscape ? 16 : 24),
+
+              // ==========================================
+              // 3. Button Section with Fixed Height for Landscape
+              // ==========================================
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      // Set a fixed height of 48 so it doesn't shrink in landscape mode
+                      height: 48,
+                      child: AppButton(
+                        title: "cancel",
+                        backgroundColor: colors.whiteColor,
+                        textColor: colors.dialogueSubTitle,
+                        onTap: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: SizedBox(
+                      // Fixed height for Add button as well
+                      height: 48,
+                      child: AppButton(
+                        title: "add",
+                        onTap: () {
+                          final String newName = _nameController.text.trim();
+
+                          // Add to existing playlist
+                          if (_selectedPlaylistIndex != null) {
+                            final playlist =
+                            filteredPlaylists[_selectedPlaylistIndex]
+                            as PlaylistModel;
+                            bool isAlreadyExist = playlist.items.any(
+                                  (e) => e.path == widget.currentItem.path,
+                            );
+
+                            if (!isAlreadyExist) {
+                              playlist.items.add(widget.currentItem);
+                              final int originalKey = playlist.key;
+                              playlistBox.put(originalKey, playlist);
+
+                              Navigator.pop(context);
+                              AppToast.show(
+                                context,
+                                "${context.tr("addedTo")} ${playlist.name}",
+                                type: ToastType.success,
+                              );
+                            } else {
+                              AppToast.show(
+                                context,
+                                "${context.tr("alreadyExistIn")} ${playlist.name}",
+                                type: ToastType.info,
+                              );
+                            }
+                          }
+                          // Create new playlist
+                          else if (newName.isNotEmpty) {
+                            bool isDuplicateName = filteredPlaylists.any(
+                                  (playlist) =>
+                              (playlist as PlaylistModel).name
+                                  .trim()
+                                  .toLowerCase() ==
+                                  newName.toLowerCase(),
+                            );
+
+                            if (isDuplicateName) {
+                              AppToast.show(
+                                context,
+                                context.tr("playlistNameAlreadyExists"),
+                                type: ToastType.info,
+                                // type: ToastType.warning,
+                              );
+                              return;
+                            }
+
+                            final newPlaylist = PlaylistModel(
+                              name: newName,
+                              items: [widget.currentItem],
+                              type: widget.currentItem.type,
+                            );
+
+                            playlistBox.add(newPlaylist);
+                            Navigator.pop(context);
+                            AppToast.show(
+                              context,
+                              context.tr("newPlaylistCreated"),
+                              type: ToastType.success,
+                            );
+                          } else {
+                            AppToast.show(
+                              context,
+                              context.tr("pleaseSelectOrCreate"),
+                              type: ToastType.info,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

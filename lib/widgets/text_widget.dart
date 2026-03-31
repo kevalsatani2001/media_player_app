@@ -19,8 +19,7 @@ class AppText extends StatelessWidget {
   final FontStyle fontStyle;
   final AppFontFamily fontFamily;
 
-  const AppText(
-    this.text, {
+  const AppText(this.text, {
     super.key,
     this.fontSize = 14,
     this.fontWeight = FontWeight.w400,
@@ -47,51 +46,31 @@ class AppText extends StatelessWidget {
   }
 
   TextStyle _textStyle(BuildContext context, Color color) {
-    final fontSizeSp = R.sp(context, fontSize);
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
 
+    final double fontSizeSp = isLandscape ? fontSize : R.sp(context, fontSize);
+    String family;
     switch (fontFamily) {
       case AppFontFamily.oleoScript:
-        return TextStyle(
-          fontFamily: "Olio Script",
-          fontSize: fontSizeSp,
-          fontWeight: fontWeight,
-          fontStyle: fontStyle,
-          height: height,
-          letterSpacing: letterSpacing,
-          color: color,
-        );
-
-      case AppFontFamily.inter:
-        return TextStyle(
-          fontSize: fontSizeSp,
-          fontWeight: fontWeight,
-          fontStyle: fontStyle,
-          height: height,
-          letterSpacing: letterSpacing,
-          color: color,
-          fontFamily: "Inter",
-        );
+        family = "Olio Script";
+        break;
       case AppFontFamily.roboto:
-        return TextStyle(
-          fontSize: fontSizeSp,
-          fontWeight: fontWeight,
-          fontStyle: fontStyle,
-          height: height,
-          letterSpacing: letterSpacing,
-          color: color,
-          fontFamily: "Roboto",
-        );
-
+        family = "Roboto";
+        break;
       default:
-        return TextStyle(
-          fontSize: fontSizeSp,
-          fontWeight: fontWeight,
-          fontStyle: fontStyle,
-          height: height,
-          letterSpacing: letterSpacing,
-          color: color,
-          fontFamily: "inter",
-        );
+        family = "Inter";
+        break;
     }
+
+    return TextStyle(
+      fontSize: fontSizeSp,
+      fontWeight: fontWeight,
+      fontStyle: fontStyle,
+      height: height,
+      letterSpacing: letterSpacing,
+      color: color,
+      fontFamily: family,
+    );
   }
 }
