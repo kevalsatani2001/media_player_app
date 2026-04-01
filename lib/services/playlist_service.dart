@@ -1,14 +1,4 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
-import 'package:hive/hive.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager/platform_utils.dart';
-import '../models/media_item.dart';
-
-import 'package:bloc/bloc.dart';
-
-import '../models/playlist_model.dart';
+import '../utils/app_imports.dart';
 
 class FavouriteChangeBloc
     extends Bloc<FavouriteChangeEvent, FavouriteChangeState> {
@@ -40,9 +30,12 @@ class FavouriteChanged extends FavouriteChangeState {
 class PlaylistService {
   PlaylistService();
 
-  // static Box get _box => Hive.box('playlists');
   static Box get _box => Hive.box('playlists');
   static final Box favBox = Hive.box('favourites');
+
+  static final ValueNotifier<String> favouriteSignal = ValueNotifier<String>(
+    '',
+  );
 
   static List<PlaylistModel> getPlaylistsByType(String type) {
     return _box.values
@@ -53,11 +46,7 @@ class PlaylistService {
 
   static List getPlaylists() => _box.values.toList();
 
-  /// Toggle favourite in playlist & sync with device
-  /// Returns new favourite state
   Future<bool> toggleFavourite(AssetEntity entity) async {
-    FavouriteChangeBloc favouriteChangeBloc = FavouriteChangeBloc();
-
     final file = await entity.file;
     if (file == null) return false;
 
@@ -110,8 +99,9 @@ class PlaylistService {
         }
       }
     }
+    favouriteSignal.value =
+    "${entity.id}_${DateTime.now().millisecondsSinceEpoch}";
 
-    favouriteChangeBloc.add(FavouriteUpdated(entity));
     return !isCurrentlyFav;
   }
 
@@ -154,29 +144,4 @@ class PlaylistService {
       box.add(newPlaylist);
     }
   }
-
-  //
-  // static void createPlaylist(String name, MediaItem? firstItem) {
-  //   final box = Hive.box('playlists');
-  //
-  //   box.add({
-  //     'name': name,
-  //     'items': firstItem != null ? [firstItem.toMap()] : [],
-  //   });
-  // }
-  //
-  //
-  // static void addToPlaylist(dynamic key, MediaItem item) {
-  //   final playlistBox = Hive.box<List<MediaItem>>('playlists');
-  //   final playlist = playlistBox.get(key, defaultValue: <MediaItem>[])!;
-  //
-  //   final exists = playlist.any((e) => e.path == item.path);
-  //   if (exists) return;
-  //
-  //   playlist.add(item);
-  //   playlistBox.put(key, playlist);
-  // }
-
-  //
-  // static List getPlaylists() => _box.values.toList();
 }

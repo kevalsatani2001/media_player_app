@@ -1,16 +1,14 @@
 import 'dart:ui' as ui;
-
 import '../utils/app_imports.dart';
 import 'audio_player_screen.dart';
 
-// Offset position = Offset.zero;
 
 class SmartMiniPlayer extends StatefulWidget {
-  final bool forceMiniMode; // Aa option pass karva mate
+  final bool forceMiniMode;
 
   const SmartMiniPlayer({
     super.key,
-    this.forceMiniMode = false, // Default false, etle ke bottom bar dekhase
+    this.forceMiniMode = false,
   });
 
   @override
@@ -19,44 +17,22 @@ class SmartMiniPlayer extends StatefulWidget {
 class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   final GlobalPlayer player = GlobalPlayer();
   bool isAudioMiniMode = false;
-
-  // Keep mini-player dragging/moving state local and smooth.
-  // While dragging, we only rebuild the `Positioned` wrapper.
   final ValueNotifier<Offset> _positionNotifier =
-      ValueNotifier(const Offset(245.4, 673.4));
+  ValueNotifier(const Offset(245.4, 673.4));
   bool _isPositionInitialized = false;
 
   @override
   void initState() {
     super.initState();
     player.restoreLastSession();
-
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   final size = MediaQuery.of(context).size;
-    //   setState(() {
-    //     position = Offset(size.width - 170, size.height - 250);
-    //   });
-    // });
-
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // Fakt ek j var initialize karva mate jyare app start thay
     if (!_isPositionInitialized) {
       final size = MediaQuery.of(context).size;
       final bool isVideo = player.currentType == "video";
-
-
-      // // Type mujab width ane height
-      // final double pWidth = isVideo ? 150.0 : 210.0;
-      // final double pHeight = isVideo ? 100.0 : 70.0;
-      // const double margin = 16.0;
-
-      // Right-Bottom corner starting position (Video/Audio banne mate alag calculate thase)
       _positionNotifier.value = isVideo
           ? const Offset(255.1, 655.1)
           : const Offset(185.4, 703.4);
@@ -84,12 +60,10 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         final double pWidth = isVideo ? 150.0 : 210.0;
         const double margin = 16.0;
 
-         // to automatic check kari ne screen ni andar push karo
         final currentPos = _positionNotifier.value;
         if (_isPositionInitialized && (currentPos.dx + pWidth > size.width)) {
           final newDx = size.width - pWidth - margin;
           if (newDx != currentPos.dx) {
-            // Avoid mutating state during build.
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
               _positionNotifier.value =
@@ -141,7 +115,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           child: isVideo
               ? _buildVideoMiniPlayer(size: size, isSmall: size.width < 360)
               : (widget.forceMiniMode
-              ? _buildAudioFloatingPlayer(size: size) // Chotu Floating Audio
+              ? _buildAudioFloatingPlayer(size: size)
               : _buildAudioMiniPlayer(size: size, isSmall: size.width < 360)), // Full Bottom Audio
         ),
       ),
@@ -163,10 +137,10 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       },
       child: Container(
         width: 210,
-        height: 70, // Ekdum sleek height
+        height: 70,
         decoration: BoxDecoration(
-          color: colors.secondaryText, // Dark Premium Look (Tame tamara colors mujab badli shako)
-          borderRadius: BorderRadius.circular(12), // Capsule Shape
+          color: colors.secondaryText,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.blueAccent.withOpacity(0.3),
@@ -263,7 +237,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                       if (player.currentEntity != null)
                         SizedBox(
                           height: 16, width: 16,
-                          child: FittedBox(child: FavouriteButton(entity: player.currentEntity!)),
+                          child: FittedBox(
+                            child: GestureDetector(
+                              onTap: () async {
+                                context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+                              },
+                              child: FavouriteButton(
+                                key: ValueKey('${player.currentEntity?.id}_${player.currentEntity?.isFavorite}'),
+                                entity: player.currentEntity!,
+                              ),
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -324,44 +308,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     );
   }
 
-// Helper for smaller buttons
-  Widget _miniControlBtn(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Icon(icon, size: 24, color: Colors.black87),
-    );
-  }
-
-  Widget _playPauseButtonSmall() {
-    // GlobalPlayer mathi state lese
-    return CupertinoButton(
-      padding: EdgeInsets.zero, // Extra padding kadhi nakva mate
-      child: AppImage(
-        src: player.isPlaying ? AppSvg.pauseVid : AppSvg.playVid,
-        height: 30,
-        width: 30,
-      ),
-      onPressed: () => player.isPlaying ? player.pause() : player.resume(),
-    );
-  }
-  Widget _audioProgressBarSmall() {
-    return StreamBuilder<Duration>(
-      stream: player.audioPlayer.positionStream,
-      builder: (context, snapshot) {
-        final pos = snapshot.data?.inMilliseconds ?? 0;
-        final dur = player.audioPlayer.duration?.inMilliseconds ?? 1;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: LinearProgressIndicator(
-            value: (pos / dur).clamp(0.0, 1.0),
-            backgroundColor: Colors.blue.withOpacity(0.1),
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-            minHeight: 2,
-          ),
-        );
-      },
-    );
-  }
   Size _getCurrentPlayerSize() {
     if (player.currentType == "video") {
       return const Size(150.0, 100.0); // Video size
@@ -378,15 +324,15 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final pos = _positionNotifier.value;
     // Left side 0 thi Right side (width - playerWidth) sudhi
     final double newX =
-        (pos.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
+    (pos.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
     // Top side 30 (Status bar) thi Bottom side (height - playerHeight - margin) sudhi
     final double newY =
-        (pos.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
+    (pos.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
     _positionNotifier.value = Offset(newX, newY);
   }
   void _snapToClosestCorner(Size screenSize) {
     final padding = MediaQuery.of(context).padding;
-    final playerSize = _getCurrentPlayerSize(); // Ã°Å¸Å¸Â¢ Dynamic Size
+    final playerSize = _getCurrentPlayerSize(); // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Dynamic Size
     const double margin = 16.0;
 
     final pos = _positionNotifier.value;
@@ -443,11 +389,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                 ),
                 if (player.currentEntity != null) ...[
                   SizedBox(width: 16),
-                  FavouriteButton(
-                    key: ValueKey(
-                      '${player.currentEntity?.id}_${player.currentEntity?.isFavorite}',
+                  GestureDetector(
+                    onTap: () async {
+                      // àª…àª¹àª¿àª¯àª¾àª‚ àªªàª£ àª¸à«‡àª® Bloc Event àª«àª¾àª¯àª° àª•àª°à«‹
+                      context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+                    },
+                    child: FavouriteButton(
+                      key: ValueKey(
+                        '${player.currentEntity?.id}_${player.currentEntity?.isFavorite}',
+                      ),
+                      entity: player.currentEntity!,
                     ),
-                    entity: player.currentEntity!,
                   ),
                 ],
                 SizedBox(width: 8),
@@ -552,12 +504,12 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => AudioPlayerScreen(
-                  entity: player.currentEntity!,
-                  // item: player.currentMediaItem!,
-                  index: player.currentIndex,
-                  entityList: const [], item: player.currentMediaItem!,
-                )
+                  builder: (_) => AudioPlayerScreen(
+                    entity: player.currentEntity!,
+                    // item: player.currentMediaItem!,
+                    index: player.currentIndex,
+                    entityList: const [], item: player.currentMediaItem!,
+                  )
               ),
             );
           },
@@ -732,20 +684,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         }
       },
     );
-  }
-
-  String _formatDuration(int ms) {
-    if (ms < 0) ms = 0;
-
-    int totalSeconds = ms ~/ 1000;
-
-    final int hours = totalSeconds ~/ 3600;
-    final int minutes = (totalSeconds % 3600) ~/ 60;
-    final int seconds = totalSeconds % 60;
-
-    return "${hours.toString().padLeft(2, '0')}:"
-        "${minutes.toString().padLeft(2, '0')}:"
-        "${seconds.toString().padLeft(2, '0')}";
   }
 }
 

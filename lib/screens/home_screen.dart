@@ -416,7 +416,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
       BuildContext context,
       AssetEntity entity,
       int index,
-      ) async {
+      ) async
+  {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -437,7 +438,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
         "id": entity.id,
         "path": file.path,
         "isNetwork": false,
-        "isFavourite": isFavorite,
+        "isFavourite": true,
         "type": entity.type == AssetType.audio ? "audio" : "video",
       });
       AppToast.show(
@@ -465,10 +466,14 @@ class _HomePageState extends State<HomePage> with RouteAware {
     }
 
     final AssetEntity? newEntity = await entity.obtainForNewProperties();
+
     if (!mounted || newEntity == null) return;
 
-    context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
-    context.read<HomeCountBloc>().add(LoadCounts());
+    final state = context.read<VideoBloc>().state;
+    if (state is VideoLoaded) {
+      state.entities[index] = newEntity;
+    }
+
     setState(() {});
   }
 

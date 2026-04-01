@@ -19,12 +19,54 @@ class PlaylistItemsScreen extends StatefulWidget {
 class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   late List<MediaItem> currentItems;
   int _playClickCount = 0;
-  bool favState = false;
+
+  // Subscription to keep an eye on the Hive box
+  StreamSubscription? _favBoxSubscription;
 
   @override
   void initState() {
     super.initState();
     currentItems = List.from(widget.items);
+
+    // 1. Directly watch the Hive box.
+    // This will trigger immediately if data changes from anywhere in the app (like the audio screen or player).
+    final favBox = Hive.box('favourites');
+    _favBoxSubscription = favBox.watch().listen((event) {
+      _refreshPlaylistState();
+    });
+
+    // Check data once in the initial state as well
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshPlaylistState();
+    });
+  }
+
+  @override
+  void dispose() {
+    _favBoxSubscription?.cancel();
+    super.dispose();
+  }
+
+  // 2. This function will refresh the entire list whenever data changes
+  void _refreshPlaylistState() {
+    if (!mounted) return;
+
+    setState(() {
+      final favBox = Hive.box('favourites');
+
+      // We create a whole new list (Deep Copy) in memory so that Flutter definitely rebuilds the UI
+      currentItems = widget.items.map((item) {
+        final newItem = MediaItem(
+          id: item.id,
+          path: item.path,
+          type: item.type,
+          // Live data is checked from Hive here
+          isFavourite: favBox.containsKey(item.path),
+          isNetwork: item.isNetwork,
+        );
+        return newItem;
+      }).toList();
+    });
   }
 
   @override
@@ -47,7 +89,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         ),
         title: AppText(widget.name, fontSize: 18, fontWeight: FontWeight.w600),
       ),
-      body: widget.items.isEmpty
+      body: currentItems.isEmpty
           ? const Center(child: AppText("playlistEmpty", fontSize: 16))
           : GlobalPlayer().currentType == "video"
           ? Stack(
@@ -71,9 +113,8 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   Widget _buildItemList() {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
     const int adInterval = 4;
-    int totalCount = widget.items.length + (widget.items.length ~/ adInterval);
+    int totalCount = currentItems.length + (currentItems.length ~/ adInterval);
 
     return ListView.builder(
       itemCount: totalCount,
@@ -88,23 +129,19 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
         }
 
         final int actualIndex = i - (i ~/ (adInterval + 1));
-        if (actualIndex >= widget.items.length) return const SizedBox.shrink();
+        if (actualIndex >= currentItems.length) return const SizedBox.shrink();
 
-        final item = widget.items[actualIndex];
+        final item = currentItems[actualIndex];
         return AppTransition(
           index: i,
-          child: _buildMediaCard(context, item, colors, actualIndex),
+          child: _buildMediaCard(context, item, actualIndex),
         );
       },
     );
   }
 
-  Widget _buildMediaCard(
-      BuildContext context,
-      MediaItem item,
-      AppThemeColors colors,
-      int index,
-      ) {
+  Widget _buildMediaCard(BuildContext context, MediaItem item, int index) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 15),
       child: GestureDetector(
@@ -135,7 +172,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                   ),
                 ),
                 const SizedBox(width: 13),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +192,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                         color: colors.textFieldBorder,
                       ),
                       const SizedBox(height: 5),
-                      // Duration & Size Row
                       Row(
                         children: [
                           _buildDuration(item, colors),
@@ -253,15 +288,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     final playlistService = PlaylistService();
     final newFavState = await playlistService.toggleFavourite(entity);
 
-    setState(() {
-      currentItems[index].isFavourite = newFavState;
-    });
-
     AppToast.show(
       context,
       newFavState
-          ? "${context.tr("addedToFavourite")}"
-          : "${context.tr("removedFromFavourites")}",
+          ? context.tr("addedToFavourite")
+          : context.tr("removedFromFavourites"),
       type: newFavState ? ToastType.success : ToastType.info,
     );
   }
@@ -308,13 +339,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     }
   }
 
-  // Duration Helper
   Widget _buildDuration(MediaItem item, AppThemeColors colors) {
     return FutureBuilder<AssetEntity?>(
       future: AssetEntity.fromId(item.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const AppText("00:00", fontSize: 10);
-
         final entity = snapshot.data!;
         return AppText(
           formatDuration(entity.duration),
@@ -326,7 +355,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     );
   }
 
-  // File Size Helper
   Widget _buildFileSize(
       MediaItem item,
       AppThemeColors colors,
@@ -342,10 +370,8 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data == null) return const SizedBox();
         final bytes = snapshot.data!.lengthSync();
-        final mb = bytes / (1024 * 1024);
         return AppText(
           formatSize(bytes, context),
-          // '${mb.toStringAsFixed(1)} MB',
           fontSize: 10,
           fontWeight: FontWeight.w500,
           color: colors.appBarTitleColor,
@@ -358,9 +384,9 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     _playClickCount++;
 
     void startNavigation() async {
-      int index = widget.items.indexOf(item);
+      int index = currentItems.indexOf(item);
 
-      List<AssetEntity> entityList = widget.items.map((media) {
+      List<AssetEntity> entityList = currentItems.map((media) {
         return AssetEntity(
           id: media.id,
           typeInt: media.type == "audio" ? 3 : 2,
@@ -374,23 +400,22 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       if (!mounted) return;
 
       if (item.type == "audio") {
-         Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => AudioPlayerScreen(
               entityList: entityList,
               entity: entityList[index],
-              item: widget.items[index],
+              item: currentItems[index],
               index: index,
-              isPlaylist:
-              true,
+              isPlaylist: true,
             ),
           ),
         ).then((_) {
-          if (mounted) setState(() {});
+          _refreshPlaylistState();
         });
       } else {
-         Navigator.push(
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PlayerScreen(
@@ -400,7 +425,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
             ),
           ),
         ).then((_) {
-          if (mounted) setState(() {});
+          _refreshPlaylistState();
         });
       }
     }
