@@ -366,13 +366,14 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                             fontSize: 12,
                           ),
                         ),
-                        PopupMenuItem(
-                          value: _AudioMoreAction.setAsRingtone,
-                          child: AppText(
-                            "setAsRingtone",
-                            fontSize: 12,
+                        if (Platform.isAndroid)
+                          PopupMenuItem(
+                            value: _AudioMoreAction.setAsRingtone,
+                            child: AppText(
+                              "setAsRingtone",
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
                         PopupMenuItem(
                           value: _AudioMoreAction.setSleepTimer,
                           child: AppText(
@@ -679,16 +680,17 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                                 : colors.blackColor.withOpacity(0.7),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            _showEqualizerBottomSheet();
-                          },
-                          icon: Icon(
-                            Icons.equalizer_rounded,
-                            size: 22,
-                            color: colors.blackColor.withOpacity(0.7),
+                        if (Platform.isAndroid)
+                          IconButton(
+                            onPressed: () {
+                              _showEqualizerBottomSheet();
+                            },
+                            icon: Icon(
+                              Icons.equalizer_rounded,
+                              size: 22,
+                              color: colors.blackColor.withOpacity(0.7),
+                            ),
                           ),
-                        ),
                         IconButton(
                           onPressed: () async {
                             await player.toggleLoopMode();
