@@ -1,10 +1,13 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:just_audio_background/just_audio_background.dart' as bg;
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import '../models/media_item.dart' as my;
 import 'package:just_audio/just_audio.dart' hide PlayerState;
 import '../utils/app_imports.dart';
+import 'package:on_audio_query_forked/on_audio_query.dart';
+import 'package:palette_generator/palette_generator.dart';
 import 'connectivity_service.dart';
 import 'notification_service.dart';
 import 'video_playback_adapter.dart';
@@ -388,6 +391,9 @@ class GlobalPlayer extends ChangeNotifier {
     _listenToNetworkChanges();
   }
 
+   Future<List<AssetEntity>> get currentEntities async => await _getCurrentEntities();
+  List<AssetEntity> currentEntitiesList = [];
+
   void _listenToNetworkChanges() {
     _networkSubscription = Connectivity().onConnectivityChanged.listen((
         results,
@@ -413,6 +419,7 @@ class GlobalPlayer extends ChangeNotifier {
   }
 
   final AudioPlayer audioPlayer = AudioPlayer();
+  final OnAudioQuery _audioQuery = OnAudioQuery();
   VideoPlayerController? videoController;
   // ChewieController? chewieController;
 
@@ -421,6 +428,7 @@ class GlobalPlayer extends ChangeNotifier {
   AssetEntity? currentEntity;
   String? currentType;
   bool isShuffle = false;
+  double playbackSpeed = 1.0;
   bool _isLoading = false;
 
   Offset miniPlayerPosition = const Offset(20, 500); // Default position
@@ -468,6 +476,15 @@ class GlobalPlayer extends ChangeNotifier {
       }
       notifyListeners();
     });
+  }
+
+  // --- Playback Speed (audio only) ---
+  Future<void> setPlaybackSpeed(double speed) async {
+    playbackSpeed = speed;
+    if (currentType == 'audio') {
+      await audioPlayer.setSpeed(speed);
+    }
+    notifyListeners();
   }
 
   // --- Shuffle Logic ---
@@ -526,6 +543,7 @@ class GlobalPlayer extends ChangeNotifier {
           currentEntity = await AssetEntity.fromId(entities[newIndex].id);
 
           await audioPlayer.seek(Duration.zero, index: currentIndex);
+          await audioPlayer.setSpeed(playbackSpeed);
           audioPlayer.play();
 
           _isLoading = false;
@@ -535,6 +553,8 @@ class GlobalPlayer extends ChangeNotifier {
         await _clearPreviousPlayer();
 
         queue = await _convertEntitiesToMediaItems(entities);
+        currentEntitiesList = entities;
+        if (queue.isEmpty) return;
         currentIndex = newIndex;
         currentType = queue[currentIndex].type;
         currentEntity = await AssetEntity.fromId(queue[currentIndex].id);
@@ -557,22 +577,72 @@ class GlobalPlayer extends ChangeNotifier {
   }
 
   Future<void> _setupAudioQueue() async {
-    final audioSources = queue.map((item) {
-      return AudioSource.uri(
-        Uri.file(item.path),
-        tag: bg.MediaItem(
-          id: item.id,
-          title: item.path.split('/').last,
-          artist: "Local Media",
+    // just_audio_background notification often uses `extras['android.color']`
+    // (and optionally `artUri`) for the current track. To keep startup fast,
+    // we extract palette only for `currentIndex` (not for the whole queue).
+    Color? extractedColor;
+    Uri? artUri;
+
+    try {
+      if (currentIndex >= 0 && currentIndex < queue.length) {
+        final currentItem = queue[currentIndex];
+        final Uint8List? artwork = await _audioQuery.queryArtwork(
+          Platform.isIOS ? currentItem.id.hashCode : int.tryParse(currentItem.id) ?? 0,
+          ArtworkType.AUDIO,
+          size: 500,
+        );
+
+        if (artwork != null && artwork.isNotEmpty) {
+          final palette = await PaletteGenerator.fromImageProvider(
+            MemoryImage(artwork),
+          );
+          extractedColor =
+              palette.lightMutedColor?.color ?? palette.dominantColor?.color;
+
+          final tempDir = await getTemporaryDirectory();
+          final File artworkFile = File('${tempDir.path}/thumb_${currentItem.id}.jpg');
+          await artworkFile.writeAsBytes(artwork);
+          artUri = Uri.file(artworkFile.path);
+        }
+      }
+    } catch (_) {
+      // ignore palette failures; notification will fall back to default colors
+    }
+
+    final defaultColorValue = const Color(0xFF3D57F9).value;
+    final currentColorValue = (extractedColor?.value ?? defaultColorValue);
+
+    final audioSources = queue.asMap().map((i, item) {
+      final title = item.path.split('/').last;
+
+      // Only set color/artUri for the currently playing track to avoid heavy work.
+      final isCurrent = i == currentIndex;
+      return MapEntry(
+        i,
+        AudioSource.uri(
+          Uri.file(item.path),
+          tag: bg.MediaItem(
+            id: item.id,
+            title: title,
+            displayTitle: title,
+            artist: "Local Media",
+            artUri: isCurrent ? artUri : null,
+            extras: <String, dynamic>{
+              'android.color': isCurrent ? currentColorValue : defaultColorValue,
+            },
+          ),
         ),
       );
-    }).toList();
+    }).values.toList();
 
     await audioPlayer.setAudioSource(
       ConcatenatingAudioSource(children: audioSources),
       initialIndex: currentIndex,
       initialPosition: Duration.zero,
     );
+
+    // Apply speed for audio immediately after loading the new queue.
+    await audioPlayer.setSpeed(playbackSpeed);
   }
 
   Future<void> refreshCurrentEntity() async {
@@ -588,21 +658,21 @@ class GlobalPlayer extends ChangeNotifier {
   Future<List<my.MediaItem>> _convertEntitiesToMediaItems(
       List<AssetEntity> entities,
       ) async {
-    List<my.MediaItem> items = [];
-    for (var entity in entities) {
-      final file = await entity.file;
-      if (file != null) {
-        print("entity.type is ====== ${entity.type}");
-        items.add(
-          my.MediaItem(
-            id: entity.id,
-            path: file.path,
-            type: entity.type == AssetType.audio ? 'audio' : 'video',
-            isNetwork: false,
-            isFavourite: entity.isFavorite,
-          ),
-        );
-      }
+    final files = await Future.wait(entities.map((entity) => entity.file));
+    final List<my.MediaItem> items = [];
+    for (int i = 0; i < entities.length; i++) {
+      final file = files[i];
+      if (file == null) continue;
+      final entity = entities[i];
+      items.add(
+        my.MediaItem(
+          id: entity.id,
+          path: file.path,
+          type: entity.type == AssetType.audio ? 'audio' : 'video',
+          isNetwork: false,
+          isFavourite: entity.isFavorite,
+        ),
+      );
     }
     return items;
   }
@@ -698,6 +768,7 @@ class GlobalPlayer extends ChangeNotifier {
 
   Future<List<AssetEntity>> _getCurrentEntities() async {
     List<AssetEntity> list = [];
+
     for (var item in queue) {
       final ent = await AssetEntity.fromId(item.id);
       if (ent != null) list.add(ent);
@@ -758,7 +829,7 @@ class GlobalPlayer extends ChangeNotifier {
         AppToast.show(
           currentContext,
           "Internet connection lost. Video cannot be played.",
-          type: ToastType.error, // àªœà«‹ àª¤àª®àª¾àª°à«€ àªàªªàª®àª¾àª‚ type àª¸àªªà«‹àª°à«àªŸ àª•àª°àª¤à«àª‚ àª¹à«‹àª¯ àª¤à«‹
+          type: ToastType.error,
         );
       }
 

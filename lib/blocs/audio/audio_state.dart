@@ -7,7 +7,7 @@ abstract class AudioState {
 class AudioInitial extends AudioState {}
 
 class AudioLoading extends AudioState {
-  final List<AssetEntity> entities; // 🔴 આ પ્રોપર્ટી ઉમેરો
+  final List<AssetEntity> entities;
 
   AudioLoading({this.entities = const []});
 }
@@ -53,6 +53,11 @@ class AudioError extends AudioState {
 }
 
 class LoadMoreAudios extends AudioEvent {}
+
+class AlbumsLoaded extends AudioState {
+  final List<AssetPathEntity> albums;
+  AlbumsLoaded(this.albums);
+}
 
 
 

@@ -2,23 +2,21 @@ import 'dart:ui' as ui;
 import '../utils/app_imports.dart';
 import 'audio_player_screen.dart';
 
-
 class SmartMiniPlayer extends StatefulWidget {
   final bool forceMiniMode;
 
-  const SmartMiniPlayer({
-    super.key,
-    this.forceMiniMode = false,
-  });
+  const SmartMiniPlayer({super.key, this.forceMiniMode = false});
 
   @override
   State<SmartMiniPlayer> createState() => _SmartMiniPlayerState();
 }
+
 class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   final GlobalPlayer player = GlobalPlayer();
   bool isAudioMiniMode = false;
-  final ValueNotifier<Offset> _positionNotifier =
-  ValueNotifier(const Offset(245.4, 673.4));
+  final ValueNotifier<Offset> _positionNotifier = ValueNotifier(
+    const Offset(245.4, 673.4),
+  );
   bool _isPositionInitialized = false;
 
   @override
@@ -46,7 +44,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -66,8 +63,10 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
           if (newDx != currentPos.dx) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
-              _positionNotifier.value =
-                  Offset(newDx, _positionNotifier.value.dy);
+              _positionNotifier.value = Offset(
+                newDx,
+                _positionNotifier.value.dy,
+              );
             });
           }
         }
@@ -82,21 +81,14 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                 valueListenable: _positionNotifier,
                 child: bodyChild,
                 builder: (context, pos, child) {
-                  return Positioned(
-                    left: pos.dx,
-                    top: pos.dy,
-                    child: child!,
-                  );
+                  return Positioned(left: pos.dx, top: pos.dy, child: child!);
                 },
               ),
             ],
           );
         } else {
           final Widget bodyChild = _buildPlayerBody(size, isFloating);
-          return Align(
-            alignment: Alignment.bottomCenter,
-            child: bodyChild,
-          );
+          return Align(alignment: Alignment.bottomCenter, child: bodyChild);
         }
       },
     );
@@ -116,7 +108,10 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
               ? _buildVideoMiniPlayer(size: size, isSmall: size.width < 360)
               : (widget.forceMiniMode
               ? _buildAudioFloatingPlayer(size: size)
-              : _buildAudioMiniPlayer(size: size, isSmall: size.width < 360)), // Full Bottom Audio
+              : _buildAudioMiniPlayer(
+            size: size,
+            isSmall: size.width < 360,
+          )), // Full Bottom Audio
         ),
       ),
     );
@@ -126,14 +121,42 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (player.currentMediaItem == null) return;
-        Navigator.push(context, MaterialPageRoute(builder: (_) =>AudioPlayerScreen(
-          entity: player.currentEntity!,
-          // item: player.currentMediaItem!,
-          index: player.currentIndex,
-          entityList: const [], item: player.currentMediaItem!,
-        )));
+
+        List<AssetEntity> entities = await player.currentEntities;
+
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                AudioPlayerScreen(
+                  entity: player.currentEntity!,
+                  // item: player.currentMediaItem!,
+                  index: player.currentIndex,
+                  entityList: player.currentEntitiesList,
+                  item: player.currentMediaItem!,
+                ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+
+              var tween = Tween(
+                begin: begin,
+                end: end,
+              ).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+        );
       },
       child: Container(
         width: 210,
@@ -187,7 +210,11 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     child: const CircleAvatar(
                       radius: 22,
                       backgroundColor: Color(0xFF2A2A2A),
-                      child: Icon(Icons.music_note_rounded, color: Colors.blueAccent, size: 24),
+                      child: Icon(
+                        Icons.music_note_rounded,
+                        color: Colors.blueAccent,
+                        size: 24,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -199,7 +226,8 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          player.currentMediaItem?.path.split('/').last ?? "Unknown",
+                          player.currentMediaItem?.path.split('/').last ??
+                              "Unknown",
                           maxLines: 1,
                           style: const TextStyle(
                             color: Colors.white,
@@ -213,11 +241,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _smallIconBtn(Icons.skip_previous_rounded, () => player.playPrevious()),
+                            _smallIconBtn(
+                              Icons.skip_previous_rounded,
+                                  () => player.playPrevious(),
+                            ),
                             const SizedBox(width: 8),
                             _playPauseFloating(), // Blue Glow Play Button
                             const SizedBox(width: 8),
-                            _smallIconBtn(Icons.skip_next_rounded, () => player.playNext()),
+                            _smallIconBtn(
+                              Icons.skip_next_rounded,
+                                  () => player.playNext(),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 14),
@@ -231,19 +265,28 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     children: [
                       GestureDetector(
                         onTap: () => player.stopAndClose(),
-                        child: const Icon(Icons.close_rounded, size: 16, color: Colors.white54),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: Colors.white54,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       if (player.currentEntity != null)
                         SizedBox(
-                          height: 16, width: 16,
+                          height: 16,
+                          width: 16,
                           child: FittedBox(
                             child: GestureDetector(
                               onTap: () async {
-                                context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+                                context.read<AudioBloc>().add(
+                                  LoadAudios(showLoading: false),
+                                );
                               },
                               child: FavouriteButton(
-                                key: ValueKey('${player.currentEntity?.id}_${player.currentEntity?.isFavorite}'),
+                                key: ValueKey(
+                                  '${player.currentEntity?.id}_${player.currentEntity?.isFavorite}',
+                                ),
                                 entity: player.currentEntity!,
                               ),
                             ),
@@ -270,7 +313,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     child: LinearProgressIndicator(
                       value: (pos / dur).clamp(0.0, 1.0),
                       backgroundColor: Colors.white10,
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.blueAccent,
+                      ),
                       minHeight: 1.5,
                     ),
                   );
@@ -312,9 +357,10 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     if (player.currentType == "video") {
       return const Size(150.0, 100.0); // Video size
     } else {
-      return const Size(210.0, 70.0);  // Audio floating size
+      return const Size(210.0, 70.0); // Audio floating size
     }
   }
+
   void _updatePosition(DragUpdateDetails details) {
     final size = MediaQuery.of(context).size;
     final bool isVideo = player.currentType == "video";
@@ -322,14 +368,17 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final double pHeight = isVideo ? 100.0 : 70.0;
 
     final pos = _positionNotifier.value;
-    // Left side 0 thi Right side (width - playerWidth) sudhi
-    final double newX =
-    (pos.dx + details.delta.dx).clamp(0.0, size.width - pWidth);
-    // Top side 30 (Status bar) thi Bottom side (height - playerHeight - margin) sudhi
-    final double newY =
-    (pos.dy + details.delta.dy).clamp(30.0, size.height - pHeight - 100);
+    final double newX = (pos.dx + details.delta.dx).clamp(
+      0.0,
+      size.width - pWidth,
+    );
+    final double newY = (pos.dy + details.delta.dy).clamp(
+      30.0,
+      size.height - pHeight - 100,
+    );
     _positionNotifier.value = Offset(newX, newY);
   }
+
   void _snapToClosestCorner(Size screenSize) {
     final padding = MediaQuery.of(context).padding;
     final playerSize = _getCurrentPlayerSize(); // ÃƒÂ°Ã…Â¸Ã…Â¸Ã‚Â¢ Dynamic Size
@@ -371,7 +420,6 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AppImage(
-
                   src: AppSvg.musicUnselected,
                   height: isSmall ? 18 : 22,
                   color: colors.blackColor,
@@ -392,7 +440,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                   GestureDetector(
                     onTap: () async {
                       // àª…àª¹àª¿àª¯àª¾àª‚ àªªàª£ àª¸à«‡àª® Bloc Event àª«àª¾àª¯àª° àª•àª°à«‹
-                      context.read<AudioBloc>().add(LoadAudios(showLoading: false));
+                      context.read<AudioBloc>().add(
+                        LoadAudios(showLoading: false),
+                      );
                     },
                     child: FavouriteButton(
                       key: ValueKey(
@@ -423,12 +473,18 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                         children: [
                           CupertinoButton(
                             onPressed: () => player.playPrevious(),
-                            child: AppImage(src: AppSvg.skipPrev,color: colors.blackColor,),
+                            child: AppImage(
+                              src: AppSvg.skipPrev,
+                              color: colors.blackColor,
+                            ),
                           ),
                           _playPauseButton(Colors.black),
                           CupertinoButton(
                             onPressed: () => player.playNext(),
-                            child: AppImage(src: AppSvg.skipNext,color: colors.blackColor,),
+                            child: AppImage(
+                              src: AppSvg.skipNext,
+                              color: colors.blackColor,
+                            ),
                           ),
                         ],
                       ),
@@ -481,6 +537,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       },
     );
   }
+
   Widget _buildVideoMiniPlayer({
     required Size size,
     required bool isSmall,
@@ -499,17 +556,18 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
         final videoKey = ValueKey(player.videoController.hashCode);
 
         return GestureDetector(
-          onTap: () {
+          onTap: () async {
             if (item == null) return;
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => AudioPlayerScreen(
-                    entity: player.currentEntity!,
-                    // item: player.currentMediaItem!,
-                    index: player.currentIndex,
-                    entityList: const [], item: player.currentMediaItem!,
-                  )
+                builder: (_) => AudioPlayerScreen(
+                  entity: player.currentEntity!,
+                  // item: player.currentMediaItem!,
+                  index: player.currentIndex,
+                  entityList: player.currentEntitiesList,
+                  item: player.currentMediaItem!,
+                ),
               ),
             );
           },
@@ -518,8 +576,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color:
-              Colors.black,
+              color: Colors.black,
             ),
             clipBehavior: Clip.antiAlias,
             child: Stack(
@@ -617,17 +674,40 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     final size = MediaQuery.of(context).size;
     return GestureDetector(
       key: key,
-      onTap: () {
+      onTap: () async {
         if (item == null) return;
+
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => AudioPlayerScreen(
-              entity: player.currentEntity!,
-              // item: player.currentMediaItem!,
-              index: player.currentIndex,
-              entityList: const [], item: player.currentMediaItem!,
-            ),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                AudioPlayerScreen(
+                  entity: player.currentEntity!,
+                  // item: player.currentMediaItem!,
+                  index: player.currentIndex,
+                  entityList: player.currentEntitiesList,
+                  item: player.currentMediaItem!,
+                ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOut;
+
+              var tween = Tween(
+                begin: begin,
+                end: end,
+              ).chain(CurveTween(curve: curve));
+              var offsetAnimation = animation.drive(tween);
+
+              return SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(
+              milliseconds: 400,
+            ), // àªàª¨àª¿àª®à«‡àª¶àª¨àª¨à«€ àª¸à«àªªà«€àª¡
           ),
         );
       },

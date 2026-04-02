@@ -9,6 +9,7 @@ import android.media.audiofx.Equalizer
 import android.media.audiofx.PresetReverb
 import android.media.audiofx.Virtualizer
 import android.provider.MediaStore   // àª† àª²àª¾àªˆàª¨ àª‰àª®à«‡àª°à«‹
+import android.media.RingtoneManager
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -21,6 +22,7 @@ import java.io.File                   // àª† àª²àª¾àªˆàª¨ àª�
 class MainActivity : AudioServiceActivity() {
     private val pipChannel = "media_player/pip"
     private val eqChannel = "media_player/equalizer"
+    private val ringtoneChannel = "media_player/ringtone"
     private val editChannel = "media_player/editor" // àª¨àªµà«‹ àªšà«‡àª¨àª²
     private var equalizer: Equalizer? = null
     private var bassBoost: BassBoost? = null
@@ -75,6 +77,38 @@ class MainActivity : AudioServiceActivity() {
                         result.success(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     }
                     else -> result.notImplemented()
+                }
+            }
+
+        // --- Ringtone channel ---
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, ringtoneChannel)
+            .setMethodCallHandler { call, result ->
+                try {
+                    when (call.method) {
+                        "setRingtone" -> {
+                            val id = call.argument<Int>("id") ?: -1
+                            if (id < 0) {
+                                result.error("INVALID_ARGS", "id is invalid", null)
+                                return@setMethodCallHandler
+                            }
+
+                            val uri = Uri.withAppendedPath(
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                id.toString()
+                            )
+
+                            RingtoneManager.setActualDefaultRingtoneUri(
+                                applicationContext,
+                                RingtoneManager.TYPE_RINGTONE,
+                                uri
+                            )
+                            result.success(true)
+                        }
+
+                        else -> result.notImplemented()
+                    }
+                } catch (e: Exception) {
+                    result.error("RINGTONE_FAILED", e.message, null)
                 }
             }
 

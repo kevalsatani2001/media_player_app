@@ -1,5 +1,8 @@
+import 'package:on_audio_query_forked/on_audio_query.dart';
+
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
+import 'audio_album_screen.dart';
 import 'audio_player_screen.dart';
 
 int _audioClickCount = 0;
@@ -15,11 +18,12 @@ class AudioScreen extends StatefulWidget {
 
 class _AudioScreenState extends State<AudioScreen> {
   final GlobalPlayer player = GlobalPlayer();
+  VoidCallback? _favouriteSignalListener;
 
   @override
   void initState() {
     super.initState();
-    PlaylistService.favouriteSignal.addListener(() async {
+    _favouriteSignalListener = () async {
       if (!mounted) return;
       final signalValue = PlaylistService.favouriteSignal.value;
       if (signalValue.isEmpty) return;
@@ -35,17 +39,19 @@ class _AudioScreenState extends State<AudioScreen> {
           final AssetEntity? newEntity = await state.entities[listIndex]
               .obtainForNewProperties();
           if (newEntity != null) {
-            setState(() {
-              state.entities[listIndex] = newEntity;
-            });
+            context.read<AudioBloc>().add(UpdateAudioItem(newEntity, listIndex));
           }
         }
       }
-    });
+    };
+    PlaylistService.favouriteSignal.addListener(_favouriteSignalListener!);
   }
 
   @override
   void dispose() {
+    if (_favouriteSignalListener != null) {
+      PlaylistService.favouriteSignal.removeListener(_favouriteSignalListener!);
+    }
     super.dispose();
   }
 
@@ -71,20 +77,13 @@ class _AudioScreenState extends State<AudioScreen> {
                   .obtainForNewProperties();
 
               if (newEntity != null) {
-                final updatedEntities = List<AssetEntity>.from(state.entities);
-                updatedEntities[listIndex] = newEntity;
-
-                audioBloc.emit(state.copyWith(entities: updatedEntities));
-
-                setState(() {});
+                audioBloc.add(UpdateAudioItem(newEntity, listIndex));
               }
             }
           }
         }
       },
-      child: BlocProvider(
-        create: (_) => AudioBloc(Hive.box('audios'))..add(LoadAudios()),
-        child: widget.isComeHomeScreen
+      child: widget.isComeHomeScreen
             ? Scaffold(
           appBar: AppBar(
             leading: Padding(
@@ -107,36 +106,45 @@ class _AudioScreenState extends State<AudioScreen> {
             ),
 
             actions: [
+              // --- Album Button ---
               GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const SearchScreen(),
+                      builder: (_) =>  AudioAlbumScreen(),
                     ),
                   );
                 },
-                child: TweenAnimationBuilder(
-                  tween: Tween<double>(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  builder: (context, double val, child) =>
-                      Transform.scale(scale: val, child: child),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: colors.textFieldFill,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: AppImage(
-                        src: AppSvg.searchIcon,
-                        color: colors.blackColor,
-                      ),
-                    ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
                   ),
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.album_rounded, color: colors.blackColor, size: 22),
                 ),
               ),
-              SizedBox(width: 15),
+              const SizedBox(width: 10),
+
+              // àª¤àª®àª¾àª°à«àª‚ àªœà«‚àª¨à«àª‚ Search Button
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SearchScreen()),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: AppImage(src: AppSvg.searchIcon, color: colors.blackColor),
+                ),
+              ),
+              const SizedBox(width: 15),
             ],
           ),
           body: SafeArea(
@@ -246,7 +254,6 @@ class _AudioScreenState extends State<AudioScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 }
@@ -264,8 +271,26 @@ class _AudioBodyState extends State<_AudioBody>
   String _selectedLetter = '';
 
   final Map<String, int> _letterIndices = {};
+  final Map<String, Future<File?>> _fileFutureCache = {};
+  final Map<String, Future<Uint8List?>> _artworkFutureCache = {};
 
   final double _itemHeight = 80.0;
+
+  Future<File?> _fileFutureFor(AssetEntity audio) {
+    return _fileFutureCache.putIfAbsent(audio.id, () => audio.file);
+  }
+
+  Future<Uint8List?> _artworkFutureFor(AssetEntity audio) {
+    return _artworkFutureCache.putIfAbsent(
+      audio.id,
+      () => _audioQuery.queryArtwork(
+        Platform.isIOS ? audio.id.hashCode : int.tryParse(audio.id) ?? 0,
+        ArtworkType.AUDIO,
+        format: ArtworkFormat.JPEG,
+        size: 200,
+      ),
+    );
+  }
 
   @override
   bool get wantKeepAlive => true;
@@ -378,9 +403,13 @@ class _AudioBodyState extends State<_AudioBody>
 
         _calculateLetterIndices(entities, adInterval);
 
+        final currentPlayingId = context.select<GlobalPlayer, String?>(
+          (p) => p.currentEntity?.id,
+        );
+
         return Stack(
           children: [
-            _buildAudioList(entities, adInterval),
+            _buildAudioList(entities, adInterval, currentPlayingId),
 
             // Alphabet Sidebar
             Positioned(
@@ -440,7 +469,11 @@ class _AudioBodyState extends State<_AudioBody>
     );
   }
 
-  Widget _buildAudioList(List<AssetEntity> entities, int adInterval) {
+  Widget _buildAudioList(
+    List<AssetEntity> entities,
+    int adInterval,
+    String? currentPlayingId,
+  ) {
     int adCount = entities.length ~/ adInterval;
     if (entities.isNotEmpty && entities.length < adInterval) {
       adCount = 1;
@@ -475,18 +508,14 @@ class _AudioBodyState extends State<_AudioBody>
 
           final audio = entities[actualIndex];
 
-          return Consumer<GlobalPlayer>(
-            builder: (context, player, child) {
-              final bool isCurrentPlaying =
-                  player.currentEntity?.id == audio.id;
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: AppTransition(
-                  index: index,
-                  child: FutureBuilder<File?>(
-                    future: audio.file,
-                    builder: (context, snapshot) {
+          final bool isCurrentPlaying = currentPlayingId == audio.id;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: AppTransition(
+              index: index,
+              child: FutureBuilder<File?>(
+                future: _fileFutureFor(audio),
+                builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return ListTile(
                           leading: Icon(
@@ -498,7 +527,7 @@ class _AudioBodyState extends State<_AudioBody>
                       }
                       final file = snapshot.data!;
 
-                      return Padding(
+                  return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 7.5),
                         child: GestureDetector(
                           onTap: () => _handleOnTap(entities, audio, file),
@@ -533,11 +562,9 @@ class _AudioBodyState extends State<_AudioBody>
                           ),
                         ),
                       );
-                    },
-                  ),
-                ),
-              );
-            },
+                },
+              ),
+            ),
           );
         },
       ),
@@ -548,8 +575,8 @@ class _AudioBodyState extends State<_AudioBody>
     void openAudioPlayer() {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => AudioPlayerScreen(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => AudioPlayerScreen(
             entityList: entities,
             entity: audio,
             item: MediaItem(
@@ -560,12 +587,23 @@ class _AudioBodyState extends State<_AudioBody>
               type: 'audio',
             ),
           ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // àª† àª•à«‹àª¡ àªªà«‡àªœàª¨à«‡ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª…àª¨à«‡ àª‰àªªàª°àª¥à«€ àª¨à«€àªšà«‡ àª²àªˆ àªœàª¶à«‡
+            const begin = Offset(0.0, 1.0); // à«§.à«¦ àªàªŸàª²à«‡ àª•à«‡ àª›à«‡àª• àª¨à«€àªšà«‡àª¥à«€ àª¶àª°à«‚ àª¥àª¶à«‡
+            const end = Offset.zero; // à«¦.à«¦ àªàªŸàª²à«‡ àª•à«‡ àª¨à«‹àª°à«àª®àª² àªœàª—à«àª¯àª¾àª àª†àªµà«€ àªœàª¶à«‡
+            const curve = Curves.easeInOut;
+
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var offsetAnimation = animation.drive(tween);
+
+            return SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 400), // àªàª¨àª¿àª®à«‡àª¶àª¨àª¨à«€ àª¸à«àªªà«€àª¡
         ),
-      ).then((_) {
-        if (mounted) {
-          context.read<AudioBloc>().add(LoadAudios(showLoading: false));
-        }
-      });
+      );
     }
 
     _audioClickCount++;
@@ -581,6 +619,38 @@ class _AudioBodyState extends State<_AudioBody>
     }
   }
 
+  // Widget _buildLeadingIcon(
+  //   AssetEntity audio,
+  //   AppThemeColors colors,
+  //   bool isPlaying,
+  // ) {
+  //   return Container(
+  //     height: 50,
+  //     width: 50,
+  //     decoration: BoxDecoration(
+  //       borderRadius: BorderRadius.circular(10),
+  //       color: colors.blackColor.withOpacity(0.38),
+  //     ),
+  //     child: Stack(
+  //       alignment: Alignment.center,
+  //       children: [
+  //         AppImage(
+  //           src: AppSvg.musicUnselected,
+  //           height: 22,
+  //           color: colors.whiteColor,
+  //         ),
+  //         if (isPlaying)
+  //           AppImage(
+  //             src: GlobalPlayer().isPlaying
+  //                 ? AppSvg.playerPause
+  //                 : AppSvg.playerResume,
+  //             height: 18,
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
+  final OnAudioQuery _audioQuery = OnAudioQuery();
   Widget _buildLeadingIcon(
       AssetEntity audio,
       AppThemeColors colors,
@@ -593,22 +663,43 @@ class _AudioBodyState extends State<_AudioBody>
         borderRadius: BorderRadius.circular(10),
         color: colors.blackColor.withOpacity(0.38),
       ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AppImage(
-            src: AppSvg.musicUnselected,
-            height: 22,
-            color: colors.whiteColor,
-          ),
-          if (isPlaying)
-            AppImage(
-              src: GlobalPlayer().isPlaying
-                  ? AppSvg.playerPause
-                  : AppSvg.playerResume,
-              height: 18,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            FutureBuilder<Uint8List?>(
+              future: _artworkFutureFor(audio),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data != null && snapshot.data!.isNotEmpty) {
+                  return Image.memory(
+                    snapshot.data!,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  );
+                }
+
+                return AppImage(
+                  src: AppSvg.musicUnselected,
+                  height: 22,
+                  color: colors.whiteColor,
+                );
+              },
             ),
-        ],
+
+            if (isPlaying)
+              Container(
+                color: Colors.black.withOpacity(0.3),
+                child: AppImage(
+                  src: GlobalPlayer().isPlaying
+                      ? AppSvg.playerPause
+                      : AppSvg.playerResume,
+                  height: 18,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -683,7 +774,8 @@ class _AudioBodyState extends State<_AudioBody>
       AssetEntity audio,
       MediaMenuAction action,
       int index,
-      ) async {
+      ) async
+  {
     switch (action) {
       case MediaMenuAction.detail:
         routeToDetailPage(context, audio);
@@ -725,7 +817,8 @@ class _AudioBodyState extends State<_AudioBody>
       BuildContext context,
       AssetEntity entity,
       int index,
-      ) async {
+      ) async
+  {
     final favBox = Hive.box('favourites');
     final bool isFavorite = entity.isFavorite;
 
@@ -788,7 +881,7 @@ class _AudioBodyState extends State<_AudioBody>
             (element) => element.id == entity.id,
       );
       if (listIndex != -1) {
-        state.entities[listIndex] = newEntity;
+        context.read<AudioBloc>().add(UpdateAudioItem(newEntity, listIndex));
       }
     }
     context.read<FavouriteChangeBloc>().add(FavouriteUpdated(newEntity));
@@ -798,3 +891,8 @@ class _AudioBodyState extends State<_AudioBody>
     // context.read<AudioBloc>().add(LoadAudios(showLoading: false));
   }
 }
+
+
+
+
+

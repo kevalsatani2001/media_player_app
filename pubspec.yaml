@@ -74,6 +74,9 @@ dependencies:
   video_thumbnail:
   youtube_explode_dart:
   flutter_colorpicker:
+  on_audio_query_forked:
+  palette_generator:
+  marquee:
 #  ffmpeg_kit_flutter_new: ^4.1.0
 #  google_fonts:
 
