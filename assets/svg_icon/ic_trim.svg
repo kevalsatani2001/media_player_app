@@ -1,0 +1,31 @@
+<svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!--    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9" />-->
+
+    <g transform="translate(7, 7) scale(0.85)">
+        <path
+            d="M21.5 2.5h-19c-1.10457 0 -2 0.89543 -2 2v15c0 1.1046 0.89543 2 2 2h19c1.1046 0 2 -0.8954 2 -2v-15c0 -1.10457 -0.8954 -2 -2 -2"
+            stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M0.5 6.5h23" stroke="white" stroke-width="1.2" stroke-linecap="round"
+            stroke-linejoin="round" />
+        <path d="M0.5 17.5h23" stroke="white" stroke-width="1.2" stroke-linecap="round"
+            stroke-linejoin="round" />
+
+        <!-- Dots -->
+        <circle cx="3.76" cy="4.5" r="0.5" fill="white" />
+        <circle cx="7.88" cy="4.5" r="0.5" fill="white" />
+        <circle cx="12" cy="4.5" r="0.5" fill="white" />
+        <circle cx="16.12" cy="4.5" r="0.5" fill="white" />
+        <circle cx="20.24" cy="4.5" r="0.5" fill="white" />
+
+        <circle cx="3.76" cy="19.5" r="0.5" fill="white" />
+        <circle cx="7.88" cy="19.5" r="0.5" fill="white" />
+        <circle cx="12" cy="19.5" r="0.5" fill="white" />
+        <circle cx="16.12" cy="19.5" r="0.5" fill="white" />
+        <circle cx="20.24" cy="19.5" r="0.5" fill="white" />
+
+        <!-- Play Button -->
+        <path
+            d="M15 12.67c0.1389 -0.0487 0.2592 -0.1393 0.3443 -0.2594 0.0851 -0.12 0.1308 -0.2635 0.1308 -0.4106 0 -0.1472 -0.0457 -0.2907 -0.1308 -0.4107s-0.2054 -0.2106 -0.3443 -0.2593l-5 -2.33003c-0.0497 -0.02467 -0.10446 -0.03751 -0.15997 -0.03751s-0.11027 0.01284 -0.16 0.03751c-0.04498 0.03416 -0.08179 0.07791 -0.10773 0.12807 -0.02595 0.05017 -0.04039 0.10549 -0.04227 0.16193V14.59c0.00188 0.0564 0.01632 0.1117 0.04227 0.1619 0.02594 0.0502 0.06275 0.0939 0.10773 0.1281 0.03922 0.0449 0.089 0.0794 0.14485 0.1004 0.05586 0.0209 0.11604 0.0277 0.17512 0.0196z"
+            fill="white" />
+    </g>
+</svg>

@@ -13,3 +13,5 @@ class UpdateAudioItem extends AudioEvent {
   final int index;
   UpdateAudioItem(this.entity, this.index);
 }
+
+class LoadAlbums extends AudioEvent {}

@@ -81,6 +81,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   bool _isDisplayVisible = false;
   bool _isPlayListVisible = false;
   bool _iColorPickerVisible = false;
+  bool _isDeleteVisible = false;
+  bool _isRenameVisible = false;
+  bool _isNetWorkStreamVisible = false;
+  bool _isInfoVisible = false;
   String _currentPickerTitle = "";
   Color _currentSelectedColor = Colors.white;
   ValueChanged<Color>? _currentColorOnPick;
@@ -309,6 +313,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     final box = Hive.box('last_played');
     String? lastId = box.get('last_id');
@@ -1685,7 +1693,8 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildExtraControlsHeader() {
+  Widget _buildExtraControlsHeader()
+  {
     final settings = Provider.of<SettingsProvider>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 0),
@@ -1757,7 +1766,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                           if (_isShortcutEnabled(settings, "Trim"))
                             _controlItemWithLabel(
-                              src: AppSvg.likeIcon,
+                              src: AppSvg.icTrim,
                               label: "trim",
                               onTap: () async {
                                 await playerService.pauseVideo();
@@ -1821,7 +1830,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         if (_isShortcutEnabled(settings, "Equalizer"))
                           _controlItemWithLabel(
-                            src: AppSvg.ic2x,
+                            src: AppSvg.icEqualizer,
                             label: "equalizer",
                             color: settings.equalizerEnabled
                                 ? Color(0XFF3D57F9)
@@ -1830,7 +1839,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         if (_isShortcutEnabled(settings, "Sleep"))
                           _controlItemWithLabel(
-                            src: AppSvg.ic2x,
+                            src: AppSvg.icSleep,
                             label: "sleep",
                             color:
                             (_sleepSecondsLeft != null &&
@@ -1841,7 +1850,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         if (_isShortcutEnabled(settings, "Night"))
                           _controlItemWithLabel(
-                            src: AppSvg.ic2x,
+                            src: AppSvg.icDarkMode,
                             label: "night",
                             color: _nightModeDim
                                 ? Color(0XFF3D57F9)
@@ -1851,7 +1860,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         if (_isShortcutEnabled(settings, "BgPlay"))
                           _controlItemWithLabel(
-                            src: AppSvg.ic2x,
+                            src: AppSvg.icBgPlay,
                             label: "bgPlay",
                             onTap: _onBackgroundPlayHint,
                           ),
@@ -1909,35 +1918,45 @@ class _PlayerScreenState extends State<PlayerScreen>
     required String label,
     required VoidCallback onTap,
     Color color = Colors.white,
-  }) {
+  })
+  {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    return GestureDetector(
-      onTap: () {
-        onTap();
-        _startControlsTimer();
-      },
-      child: Container(
-        height: 35,
-        width: 35,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: settings.controlsBgColor,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppImage(
-              src: src,
-              height: 35,
-              width: 35,
-              color: settings.controlsColor,
-            ),
-            if (_isExtraControlsExpanded) ...[
-              const SizedBox(height: 6),
-              AppText(label, maxLines: 1, color: Colors.white, fontSize: 10),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: GestureDetector(
+        onTap: () {
+          onTap();
+          _startControlsTimer();
+        },
+        child: SizedBox(
+          width: 35,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: settings.controlsBgColor,
+                ),
+                padding: const EdgeInsets.all(0),
+                child: AppImage(
+                  src: src,
+                  height: 35,
+                  width: 35,
+                  color: settings.controlsColor,
+                ),
+              ),
+              if (_isExtraControlsExpanded) ...[
+                const SizedBox(height: 6),
+                AppText(
+                    label,
+                    maxLines: 1,
+                    color: Colors.white,
+                    fontSize: 10
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -2068,7 +2087,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         child: SafeArea(
           child: Column(
             children: [
-// Header Section (Dynamic based on _isMoreMenuVisible)
+              // Header Section (Dynamic based on _isMoreMenuVisible)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 15,
@@ -2081,7 +2100,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         _isMoreMenuVisible ||
                         _isDisplayVisible ||
                         _iColorPickerVisible ||
-                        _isPlayListVisible)
+                        _isPlayListVisible||_isDeleteVisible||_isRenameVisible||_isNetWorkStreamVisible||_isInfoVisible)
                       IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () => setState(() {
@@ -2091,12 +2110,16 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _iColorPickerVisible = false;
                           _isDisplayVisible = false;
                           _isPlayListVisible = false;
+                          _isDeleteVisible = false;
+                          _isRenameVisible = false;
+                          _isNetWorkStreamVisible = false;
+                          _isInfoVisible = false;
                         }),
                       ),
 
                     AppText(
-// _iColorPickerVisible?_currentPickerTitle:
-                      _isPlayListVisible
+                      // _iColorPickerVisible?_currentPickerTitle:
+                      _isInfoVisible?"info":_isNetWorkStreamVisible?"networkStream": _isRenameVisible?"rename":_isDeleteVisible?"delete":_isPlayListVisible
                           ? "playlist"
                           : _isDisplayVisible
                           ? "display"
@@ -2110,7 +2133,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     const Spacer(),
                     if (!_isMoreMenuVisible &&
                         !_isDisplayVisible &&
-                        !_isPlayListVisible)
+                        !_isPlayListVisible&&!_isDeleteVisible&&!_isRenameVisible&&!_isNetWorkStreamVisible&&!_isInfoVisible)
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white70),
                         onPressed: () => Navigator.pop(context),
@@ -2120,31 +2143,31 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
               const Divider(color: Colors.white24, height: 1),
 
-// Content Section
+              // Content Section
               Expanded(
                 child:
-// _iColorPickerVisible
-//     ?MyColorPickerWidget(
-//   title: _currentPickerTitle,
-//   initialColor: _currentSelectedColor,
-//   onPick: _currentColorOnPick!,
-//   onApply: () {
-//     // àª…àªªà«àª²àª¾àª¯ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àªªà«‡àªœàª¨àª¾ àª®à«‡àª¨à« àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
-//     setState(() {
-//       _iColorPickerVisible = false;
-//       _isRatioVisible = false;
-//       _isQueueVisible = false;
-//       _isMoreMenuVisible = false;
-//       _isDisplayVisible = true;
-//     });
-//   },
-// ):
+                // _iColorPickerVisible
+                //     ?MyColorPickerWidget(
+                //   title: _currentPickerTitle,
+                //   initialColor: _currentSelectedColor,
+                //   onPick: _currentColorOnPick!,
+                //   onApply: () {
+                //     // àª…àªªà«àª²àª¾àª¯ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àªªà«‡àªœàª¨àª¾ àª®à«‡àª¨à« àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
+                //     setState(() {
+                //       _iColorPickerVisible = false;
+                //       _isRatioVisible = false;
+                //       _isQueueVisible = false;
+                //       _isMoreMenuVisible = false;
+                //       _isDisplayVisible = true;
+                //     });
+                //   },
+                // ):
                 _isPlayListVisible
                     ? PlaylistSelectorView(currentItem: mediaItem!)
                     : _isDisplayVisible
                     ? _buildDisplaySetting()
                     : _isQueueVisible
-                    ? _buildQueueList()
+                    ? _buildQueueList():_isDeleteVisible?_buildDeleteView():_isRenameVisible?_buildRenameView():_isNetWorkStreamVisible?_buildNetworkStreamView():_isInfoVisible?_buildInfoView(playerService.playlist[playerService.currentIndex])
                     : (_isRatioVisible
                     ? _buildRatioMenu()
                     : (_isMoreMenuVisible
@@ -2859,9 +2882,9 @@ class _PlayerScreenState extends State<PlayerScreen>
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 3,
-            mainAxisSpacing: 15,
-            crossAxisSpacing: 10,
+            crossAxisCount: 4,
+            mainAxisSpacing: 5,
+            crossAxisSpacing: 5,
             padding: const EdgeInsets.all(15),
             children: [
               _menuGridItem(
@@ -2884,12 +2907,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                 onTapCustom: () {
                   setState(() => _isDisplayVisible = true);
                 },
-// onTapCustom: () {
-//   Navigator.pop(context);
-//   _showDisplaySettings(context);
-// },
+                // onTapCustom: () {
+                //   Navigator.pop(context);
+                //   _showDisplaySettings(context);
+                // },
               ),
-// _menuGridItem(Icons.bookmark_border, "Bookmark"),
+              // _menuGridItem(Icons.bookmark_border, "Bookmark"),
               _menuGridItem(
                 Icons.content_cut,
                 "cut",
@@ -2924,7 +2947,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   AssetEntity currentAsset =
                   playerService.playlist[playerService.currentIndex];
 
-// Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ³Ã ÂªÂµÃ Â«â€¹
+                  // Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ³Ã ÂªÂµÃ Â«â€¹
                   String? filePath = await getFile(currentAsset);
 
                   if (filePath != null) {
@@ -2940,18 +2963,18 @@ class _PlayerScreenState extends State<PlayerScreen>
                         isFavourite: currentAsset.isFavorite,
                       );
                     });
-// addToPlaylist(
-//   MediaItem(
-//     path: filePath,
-//     isNetwork: false,
-//     type: currentAsset.type == AssetType.audio
-//         ? "audio"
-//         : "video",
-//     id: currentAsset.id,
-//     isFavourite: currentAsset.isFavorite,
-//   ),
-//   context,
-// );
+                    // addToPlaylist(
+                    //   MediaItem(
+                    //     path: filePath,
+                    //     isNetwork: false,
+                    //     type: currentAsset.type == AssetType.audio
+                    //         ? "audio"
+                    //         : "video",
+                    //     id: currentAsset.id,
+                    //     isFavourite: currentAsset.isFavorite,
+                    //   ),
+                    //   context,
+                    // );
                   } else {
                     AppToast.show(
                       context,
@@ -2971,10 +2994,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Icons.info_outline,
                 "info",
                 onTapCustom: () {
-                  showInfoDialog(
-                    context,
-                    playerService.playlist[playerService.currentIndex],
-                  );
+                  setState(() => _isInfoVisible = true);
+                  // showInfoDialog(
+                  //   context,
+                  //   playerService.playlist[playerService.currentIndex],
+                  // );
                 },
               ),
               _menuGridItem(
@@ -2991,15 +3015,36 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Icons.language,
                 "stream",
                 onTapCustom: () {
-                  _showNetworkStreamDialog();
+                  setState(() => _isNetWorkStreamVisible = true);
+                  // _showNetworkStreamDialog();
                 },
               ),
-// _menuGridItem(Icons.help_outline, "Tutorial"),
+              // _menuGridItem(Icons.help_outline, "Tutorial"),
+
+              // _menuGridItem(
+              //   Icons.more_horiz,
+              //   "more",
+              //   onTapCustom: () {
+              //     setState(() => _isMoreMenuVisible = true);
+              //   },
+              // ),
+
+
+              //_isDeleteVisible = false;
               _menuGridItem(
-                Icons.more_horiz,
-                "more",
+                Icons.delete,
+                "delete",
                 onTapCustom: () {
-                  setState(() => _isMoreMenuVisible = true);
+                  setState(() => _isDeleteVisible = true);
+                },
+              ),
+
+              //_isRenameVisible = false;
+              _menuGridItem(
+                Icons.edit,
+                "rename",
+                onTapCustom: () {
+                  setState(() => _isRenameVisible = true);
                 },
               ),
             ],
@@ -3007,7 +3052,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
           const Divider(color: Colors.white24),
 
-// --- Shortcuts Switch ---
+          // --- Shortcuts Switch ---
           SwitchListTile(
             title: const AppText(
               "shortcuts",
@@ -3021,7 +3066,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             },
           ),
 
-// --- Checkbox List
+          // --- Checkbox List
           if (_showShortcutsInMenu)
             ...Provider.of<SettingsProvider>(context).quickShortcuts.keys.map((
                 String key,
@@ -3067,6 +3112,519 @@ class _PlayerScreenState extends State<PlayerScreen>
       return null;
     }
   }
+  Widget _buildDeleteView() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final mediaQuery = MediaQuery.of(context);
+    final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    // Current index અને entity મેળવો
+    int currentIndex = playerService.currentIndex;
+    final entity = playerService.playlist[currentIndex];
+
+    return Container(
+      // Landscape મોડમાં ઓવરફ્લો અટકાવવા માટે constraints
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.6
+            : mediaQuery.size.height * 0.7,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, // Left aligned title
+            children: [
+              // ==========================================
+              // ૧. ટાઇટલ સેક્શન
+              // ==========================================
+              AppText(
+                'deleteThisFile',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.dialogueSubTitle,
+              ),
+              const SizedBox(height: 12),
+
+              // ==========================================
+              // ૨. મેસેજ સેક્શન
+              // ==========================================
+              AppText(
+                'areYouSureWantDeleteThisFile',
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+                color: colors.appBarTitleColor, // મેઈન ટેક્સ્ટ કલર
+              ),
+
+              SizedBox(height: isLandscape ? 20 : 30),
+
+              // ==========================================
+              // ૩. બટન સેક્શન (Fixed Height 48)
+              // ==========================================
+              Row(
+                children: [
+                  // NO Button (Cancel)
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: AppButton(
+                        title: "no",
+                        textColor: colors.dialogueSubTitle,
+                        backgroundColor: colors.whiteColor,
+                        onTap: () => Navigator.pop(context, false),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // YES Button (Delete Logic)
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: AppButton(
+                        title: "yes",
+                        textColor: Colors.white,
+                        backgroundColor: colors.primary,
+                        onTap: () async {
+                          // 1. Native File Delete logic
+                          final List<String> result = await PhotoManager.editor.deleteWithIds([entity.id]);
+
+                          if (result.isNotEmpty) {
+                            // 2. Playlist Update Logic
+                            setState(() {
+                              playerService.playlist.removeAt(currentIndex);
+
+                              if (playerService.playlist.isEmpty) {
+                                Navigator.pop(context);
+                                return;
+                              }
+
+                              if (currentIndex >= playerService.playlist.length) {
+                                playerService.currentIndex = playerService.playlist.length - 1;
+                              }
+
+                              playerService.loadVideo(() {
+                                if (mounted) setState(() {});
+                              });
+                            });
+
+                            // 3. Bloc & Toast Update
+                            if (context.mounted) {
+                              context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+                              AppToast.show(context, context.tr("fileDeletedSuccessfully"), type: ToastType.error);
+
+                              if (playerService.playlist.isNotEmpty) {
+                                Navigator.pop(context, true);
+                              }
+                            }
+                          } else {
+                            // Fail Logic
+                            if (context.mounted) {
+                              AppToast.show(context, context.tr("failedToDeleteFile"), type: ToastType.error);
+                              Navigator.pop(context, false);
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRenameView() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final mediaQuery = MediaQuery.of(context);
+    final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    // 1. Current video/asset અને તેનું નામ મેળવો
+    AssetEntity currentAsset = playerService.playlist[playerService.currentIndex];
+    String oldName = currentAsset.title ?? "video";
+
+    // એક્સટેન્શન અલગ કરો
+    String fileNameWithoutExtension = oldName.contains('.')
+        ? oldName.substring(0, oldName.lastIndexOf('.'))
+        : oldName;
+
+    TextEditingController _renameController = TextEditingController(
+      text: fileNameWithoutExtension,
+    );
+
+    return Container(
+      // તમારી UI મુજબ Landscape માં સ્ક્રીન ફાટી ન જાય તે માટે constraints
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.6
+            : mediaQuery.size.height * 0.7,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ==========================================
+              // ૧. ટાઇટલ સેક્શન
+              // ==========================================
+              AppText(
+                'renameVideo',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.dialogueSubTitle,
+              ),
+              const SizedBox(height: 8),
+
+              // ==========================================
+              // ૨. ઇનપુટ સેક્શન (તમારી થીમ મુજબ)
+              // ==========================================
+              TextField(
+                controller: _renameController,
+                autofocus: true,
+                style: TextStyle(color: colors.appBarTitleColor, fontSize: 15),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.14), // તમારો ઓપેસિટી કલર
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  hintText: context.tr("enterNewName"),
+                  hintStyle: TextStyle(
+                    color: colors.dialogueSubTitle.withOpacity(0.5),
+                    fontSize: 15,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12), // તમારો રેડિયસ
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+              // Landscape હોય તો સ્પેસ ઓછી રાખવાની તમારી ટ્રીક
+              SizedBox(height: isLandscape ? 16 : 24),
+
+              // ==========================================
+              // ૩. બટન સેક્શન (Fixed Height 48)
+              // ==========================================
+              Row(
+                children: [
+                  // Cancel Button
+                  Expanded(
+                    child: SizedBox(
+                      height: 48, // ફિક્સ હાઇટ જેથી લેન્ડસ્કેપમાં દબાઈ ન જાય
+                      child: AppButton(
+                        title: "cancel",
+                        backgroundColor: colors.whiteColor,
+                        textColor: colors.dialogueSubTitle,
+                        onTap: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Rename Button
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: AppButton(
+                        title: "rename",
+                        onTap: () async {
+                          String newTitle = _renameController.text.trim();
+                          if (newTitle.isEmpty) return;
+
+                          // Platform Wise Logic (તમારું નેટિવ લોજિક)
+                          if (Platform.isAndroid) {
+                            File? originalFile = await currentAsset.file;
+                            if (originalFile != null) {
+                              try {
+                                const editChannel = MethodChannel('media_player/editor');
+
+                                final bool isSuccess = await editChannel.invokeMethod('renameVideo', {
+                                  'path': originalFile.path,
+                                  'newName': newTitle,
+                                  'isFavourite': currentAsset.isFavorite,
+                                });
+
+                                if (isSuccess) {
+                                  AssetEntity? updatedAsset = await AssetEntity.fromId(currentAsset.id);
+
+                                  if (updatedAsset != null && context.mounted) {
+                                    setState(() {
+                                      playerService.playlist[playerService.currentIndex] = updatedAsset;
+                                    });
+                                  }
+
+                                  if (context.mounted) {
+                                    AppToast.show(context, context.tr("videoRenamedSuccessfully"), type: ToastType.success);
+                                    Navigator.pop(context, true);
+                                  }
+                                } else {
+                                  print("Rename Failed or Cancelled by User");
+                                }
+                              } catch (e) {
+                                print("Native Error: $e");
+                              }
+                            }
+                          } else if (Platform.isIOS) {
+                            await PhotoManager.editor.darwin.favoriteAsset(
+                              entity: currentAsset,
+                              favorite: true,
+                            );
+
+                            if (context.mounted) {
+                              setState(() {});
+                              Navigator.pop(context, true);
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNetworkStreamView() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final mediaQuery = MediaQuery.of(context);
+    final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    TextEditingController urlController = TextEditingController();
+
+    return Container(
+      // Landscape મોડમાં ઓવરફ્લો અટકાવવા માટે constraints
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.6
+            : mediaQuery.size.height * 0.7,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start, // Left aligned title
+            children: [
+              // ==========================================
+              // ૧. ટાઇટલ સેક્શન
+              // ==========================================
+              AppText(
+                "networkStream",
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: colors.dialogueSubTitle,
+              ),
+              const SizedBox(height: 12),
+
+              // ==========================================
+              // ૨. સબટાઇટલ અને ઇનપુટ સેક્શન
+              // ==========================================
+              AppText(
+                "enterVideoStream",
+                color: colors.appBarTitleColor,
+                fontSize: 15,
+              ),
+              const SizedBox(height: 8),
+
+              TextField(
+                controller: urlController,
+                autofocus: true,
+                style: TextStyle(color: colors.appBarTitleColor, fontSize: 15),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.14), // તમારી થીમ મુજબ
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  hintText: "http://example.com/video.mp4",
+                  hintStyle: TextStyle(
+                    color: colors.dialogueSubTitle.withOpacity(0.5),
+                    fontSize: 15,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  // Paste Icon
+                  suffixIcon: IconButton(
+                    icon: const Icon(
+                      Icons.content_paste,
+                      color: Color(0XFF3D57F9), // તમારો બ્રાન્ડ બ્લુ કલર
+                    ),
+                    onPressed: () async {
+                      // final data = await Clipboard.getData('text/plain');
+                      // if (data != null) urlController.text = data.text!;
+                    },
+                  ),
+                ),
+              ),
+
+              SizedBox(height: isLandscape ? 16 : 24),
+
+              // ==========================================
+              // ૩. બટન સેક્શન (Fixed Height 48)
+              // ==========================================
+              Row(
+                children: [
+                  // Cancel Button
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: AppButton(
+                        title: "cancel",
+                        textColor: colors.dialogueSubTitle,
+                        backgroundColor: colors.whiteColor,
+                        onTap: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Play Stream Button
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: AppButton(
+                        title: "playStream",
+                        textColor: Colors.white,
+                        backgroundColor: colors.primary, // #3D57F9
+                        onTap: () {
+                          String url = urlController.text.trim();
+                          if (url.isNotEmpty && Uri.parse(url).isAbsolute) {
+                            Navigator.pop(context); // ડાયલોગ બંધ કરો
+                            Navigator.pop(context); // જો બોટમશીટ હોય તો તેને પણ બંધ કરો
+
+                            playerService.playNetworkStream(url, () {
+                              if (mounted) setState(() {});
+                            });
+                          } else {
+                            // જો URL ખોટું હોય તો Toast બતાવી શકો છો
+                            AppToast.show(
+                                context,
+                                context.tr("pleaseEnterValidUrl"),
+                                type: ToastType.info
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoView(AssetEntity entity) {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final mediaQuery = MediaQuery.of(context);
+    final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.7
+            : mediaQuery.size.height * 0.8,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 固定 Title Section (પેડિંગ સાથે)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 20, 15, 10),
+            child: AppText(
+              "fileInformation",
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colors.dialogueSubTitle,
+            ),
+          ),
+
+          // Scrollable Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
+                children: [
+                  _buildInfoRow('Title', entity.title ?? "Unknown", colors),
+                  _buildInfoRow('Format', entity.mimeType ?? "Video", colors),
+                  _buildInfoRow('Duration', entity.videoDuration.toString() + " sec", colors),
+                  _buildInfoRow('Size', "${(entity.size.width).toInt()} x ${(entity.size.height).toInt()}", colors),
+                  _buildInfoRow('Created', entity.createDateTime.toString().split('.').first, colors),
+                  _buildInfoRow('Modified', entity.modifiedDateTime.toString().split('.').first, colors),
+                  _buildInfoRow('Path', entity.relativePath ?? 'N/A', colors),
+                  const SizedBox(height: 10),
+                ],
+              ),
+            ),
+          ),
+
+          // Close Button Section
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: SizedBox(
+              height: 48,
+              width: double.infinity,
+              child: AppButton(
+                title: "close",
+                backgroundColor: colors.primary,
+                onTap: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, AppThemeColors colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: AppText(
+              label,
+              fontSize: 13,
+              color: colors.dialogueSubTitle.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 5,
+            child: AppText(
+              value,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: colors.appBarTitleColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildMoreCategoryMenu() {
     return SingleChildScrollView(

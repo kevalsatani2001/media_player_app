@@ -59,6 +59,11 @@ class AppSvg {
   static const String icLoopActive = '$_svgPath/ic_loop_active.svg';
   static const String icZoomOut = '$_svgPath/ic_zoomout.svg';
   static const String icZoomIn = '$_svgPath/ic_zoomin.svg';
+  static const String icEqualizer = '$_svgPath/ic_equlizer.svg';
+  static const String icBgPlay = '$_svgPath/ic_bg_play.svg';
+  static const String icSleep = '$_svgPath/ic_sleep.svg';
+  static const String icTrim = '$_svgPath/ic_trim.svg';
+  static const String icDelete = '$_svgPath/ic_delete.svg';
 
   // ===========================================================================
   // SEARCH FUNCTIONALITY

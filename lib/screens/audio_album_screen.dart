@@ -10,7 +10,7 @@ class AudioAlbumScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    // context.read<AudioBloc>().add(LoadAlbums());
+    context.read<AudioBloc>().add(LoadAlbums());
 
     return Scaffold(
       appBar: AppBar(

@@ -1,0 +1,8 @@
+<svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background Circle (Optional) -->
+    <!--    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9" />-->
+    <!-- Trash Can Path -->
+    <path
+        d="M11 14H24M13 14V23.5C13 24.8807 14.1193 26 15.5 26H19.5C20.8807 26 22 24.8807 22 23.5V14M15 14V12C15 11.4477 15.4477 11 16 11H19C19.5523 11 20 11.4477 20 12V14M16 18V22M19 18V22"
+        stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

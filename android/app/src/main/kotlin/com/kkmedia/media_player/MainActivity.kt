@@ -1,34 +1,36 @@
 package com.kkmedia.media_player
 
+import android.app.Activity
 import android.app.PictureInPictureParams
+import android.app.RecoverableSecurityException
 import android.content.ContentValues
-import android.net.Uri
-import android.os.Build
+import android.content.Intent            // <--- Add this line
+import android.content.IntentSender
+import android.media.RingtoneManager
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
 import android.media.audiofx.PresetReverb
 import android.media.audiofx.Virtualizer
-import android.provider.MediaStore   // àª† àª²àª¾àªˆàª¨ àª‰àª®à«‡àª°à«‹
-import android.media.RingtoneManager
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.provider.Settings          // <--- Ensure this is here
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import android.app.Activity
-import android.app.RecoverableSecurityException
-import android.content.IntentSender
 import io.flutter.plugin.common.MethodChannel.Result
-import java.io.File                   // àª† àª²àª¾àªˆàª¨ àª‰àª®à«‡àª°à«‹
+import java.io.File
 
 class MainActivity : AudioServiceActivity() {
     private val pipChannel = "media_player/pip"
     private val eqChannel = "media_player/equalizer"
     private val ringtoneChannel = "media_player/ringtone"
-    private val editChannel = "media_player/editor" // àª¨àªµà«‹ àªšà«‡àª¨àª²
+    private val editChannel = "media_player/editor"
     private var equalizer: Equalizer? = null
     private var bassBoost: BassBoost? = null
     private var virtualizer: Virtualizer? = null
     private var reverb: PresetReverb? = null
-    // àª† àªµà«‡àª°àª¿àªàª¬àª²à«àª¸ àª…àª¹à«€àª‚ (Class level) àª¹à«‹àªµàª¾ àªœà«‹àªˆàª
+
     private var pendingResult: Result? = null
     private var pendingNewName: String? = null
     private var pendingFavouriteResult: Boolean? = null
@@ -47,12 +49,12 @@ class MainActivity : AudioServiceActivity() {
                     val newName = call.argument<String>("newName")
                     val isFavourite = call.argument<Boolean>("isFavourite")
 
-                    if (filePath != null && newName != null&&isFavourite != null) {
+                    if (filePath != null && newName != null && isFavourite != null) {
                         pendingResult = result
                         pendingFilePath = filePath
                         pendingNewName = newName
                         pendingFavouriteResult = isFavourite
-                        renameAndroidMedia(filePath, newName,isFavourite)
+                        renameAndroidMedia(filePath, newName, isFavourite)
                     } else {
                         result.error("INVALID_ARGS", "Path or Name is null", null)
                     }
@@ -67,15 +69,18 @@ class MainActivity : AudioServiceActivity() {
                 when (call.method) {
                     "enterPip" -> {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            val success = enterPictureInPictureMode(PictureInPictureParams.Builder().build())
+                            val success =
+                                enterPictureInPictureMode(PictureInPictureParams.Builder().build())
                             result.success(success)
                         } else {
                             result.success(false)
                         }
                     }
+
                     "isPipSupported" -> {
                         result.success(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     }
+
                     else -> result.notImplemented()
                 }
             }
@@ -85,26 +90,47 @@ class MainActivity : AudioServiceActivity() {
             .setMethodCallHandler { call, result ->
                 try {
                     when (call.method) {
+                        "checkPermission" -> {
+                            // Returns true if we already have permission
+                            val canWrite = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                android.provider.Settings.System.canWrite(applicationContext)
+                            } else {
+                                true
+                            }
+                            result.success(canWrite)
+                        }
+
+                        "openPermissionSettings" -> {
+                            // Opens the system settings screen for your app
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                val intent = Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS).apply {
+                                    data = Uri.parse("package:$packageName")
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } else {
+                                result.success(true)
+                            }
+                        }
+
                         "setRingtone" -> {
-                            val id = call.argument<Int>("id") ?: -1
-                            if (id < 0) {
-                                result.error("INVALID_ARGS", "id is invalid", null)
+                            val idArg = call.argument<Number>("id")
+                            if (idArg == null) {
+                                result.error("INVALID_ARGS", "id is null", null)
                                 return@setMethodCallHandler
                             }
 
-                            val uri = Uri.withAppendedPath(
-                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                                id.toString()
-                            )
+                            // Check permission one last time before setting
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !android.provider.Settings.System.canWrite(applicationContext)) {
+                                result.error("PERMISSION_DENIED", "WRITE_SETTINGS not granted", null)
+                                return@setMethodCallHandler
+                            }
 
-                            RingtoneManager.setActualDefaultRingtoneUri(
-                                applicationContext,
-                                RingtoneManager.TYPE_RINGTONE,
-                                uri
-                            )
+                            val uri = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, idArg.toLong().toString())
+                            RingtoneManager.setActualDefaultRingtoneUri(applicationContext, RingtoneManager.TYPE_RINGTONE, uri)
                             result.success(true)
                         }
-
                         else -> result.notImplemented()
                     }
                 } catch (e: Exception) {
@@ -125,20 +151,25 @@ class MainActivity : AudioServiceActivity() {
                             reverb?.enabled = enabled
                             result.success(true)
                         }
+
                         "setBassBoost" -> {
-                            val percent = (call.argument<Double>("value") ?: 0.0).coerceIn(0.0, 100.0)
+                            val percent =
+                                (call.argument<Double>("value") ?: 0.0).coerceIn(0.0, 100.0)
                             ensureAudioEffects()
                             val strength = (percent * 10).toInt().coerceIn(0, 1000).toShort()
                             bassBoost?.setStrength(strength)
                             result.success(true)
                         }
+
                         "setVirtualizer" -> {
-                            val percent = (call.argument<Double>("value") ?: 0.0).coerceIn(0.0, 100.0)
+                            val percent =
+                                (call.argument<Double>("value") ?: 0.0).coerceIn(0.0, 100.0)
                             ensureAudioEffects()
                             val strength = (percent * 10).toInt().coerceIn(0, 1000).toShort()
                             virtualizer?.setStrength(strength)
                             result.success(true)
                         }
+
                         "setReverb" -> {
                             val reverbName = call.argument<String>("value") ?: "None"
                             ensureAudioEffects()
@@ -154,6 +185,7 @@ class MainActivity : AudioServiceActivity() {
                             reverb?.preset = preset
                             result.success(true)
                         }
+
                         else -> result.notImplemented()
                     }
                 } catch (e: Exception) {
@@ -185,7 +217,8 @@ class MainActivity : AudioServiceActivity() {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
                 cursor.close()
 
-                val contentUri = Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id.toString())
+                val contentUri =
+                    Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id.toString())
 
                 val contentValues = ContentValues().apply {
                     // àª¨àª¾àª® àª¬àª¦àª²àªµàª¾ àª®àª¾àªŸà«‡
@@ -223,13 +256,21 @@ class MainActivity : AudioServiceActivity() {
     }
 
     // 3. onActivityResult àª®àª¾àª‚ àªªàª£ 3 àª†àª°à«àª—à«àª¯à«àª®à«‡àª¨à«àªŸà«àª¸ àª¸àª¾àª¥à«‡ àª•à«‹àª² àª•àª°à«‹
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: android.content.Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: android.content.Intent?
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == EDIT_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (pendingFilePath != null && pendingNewName != null && pendingFavouriteResult != null) {
                     // àª…àª¹à«€àª‚ 3 àª†àª°à«àª—à«àª¯à«àª®à«‡àª¨à«àªŸ àªªàª¾àª¸ àª•àª°à«€
-                    renameAndroidMedia(pendingFilePath!!, pendingNewName!!, pendingFavouriteResult!!)
+                    renameAndroidMedia(
+                        pendingFilePath!!,
+                        pendingNewName!!,
+                        pendingFavouriteResult!!
+                    )
                 }
             } else {
                 pendingResult?.success(false)
