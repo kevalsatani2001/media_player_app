@@ -473,11 +473,34 @@ class GlobalPlayer extends ChangeNotifier {
 
     audioPlayer.playerStateStream.listen((state) {
       if (currentIndex == -1) return;
-      if (state.processingState == ProcessingState.completed) {
-        playNext();
-      }
+      // ConcatenatingAudioSource advances tracks internally; loop modes are handled
+      // by just_audio. Do not call playNext() here — it broke loop/shuffle and
+      // wrapped the queue when playback naturally completed.
       notifyListeners();
     });
+
+    audioPlayer.shuffleModeEnabledStream.listen((enabled) {
+      if (isShuffle != enabled) {
+        isShuffle = enabled;
+        notifyListeners();
+      }
+    });
+
+    audioPlayer.loopModeStream.listen((mode) {
+      if (loopMode != mode) {
+        loopMode = mode;
+        notifyListeners();
+      }
+    });
+  }
+
+  /// Applies saved [loopMode] / [isShuffle] to [audioPlayer] after a new source loads.
+  Future<void> _applyAudioPlaybackModes() async {
+    if (currentType != 'audio') return;
+    try {
+      await audioPlayer.setLoopMode(loopMode);
+      await audioPlayer.setShuffleModeEnabled(isShuffle);
+    } catch (_) {}
   }
 
   // --- Playback Speed (audio only) ---
@@ -491,34 +514,18 @@ class GlobalPlayer extends ChangeNotifier {
 
   // --- Shuffle Logic ---
   Future<void> toggleShuffle() async {
-    isShuffle = !isShuffle;
+    if (currentType != 'audio') return;
 
-    if (currentType == 'audio') {
-      await audioPlayer.setShuffleModeEnabled(isShuffle);
-    } else {
-      if (isShuffle) {
-        queue.shuffle();
-      } else {}
-    }
+    isShuffle = !isShuffle;
+    await audioPlayer.setShuffleModeEnabled(isShuffle);
+    isShuffle = audioPlayer.shuffleModeEnabled;
     notifyListeners();
   }
 
   // --- Loop Logic ---
   Future<void> toggleLoopMode() async {
-    // if (currentType == 'audio') {
-    //   if (loopMode == LoopMode.off) {
-    //     loopMode = LoopMode.all;
-    //   } else if (loopMode == LoopMode.all) {
-    //     loopMode = LoopMode.one;
-    //   } else {
-    //     loopMode = LoopMode.off;
-    //   }
-    //   await audioPlayer.setLoopMode(loopMode);
-    // } else {
-    //   // bool currentLoop = chewieController?.looping ?? false;
-    //   // chewieController?.dispose();
-    //   // videoController?.setLooping(!currentLoop);
-    // }
+    if (currentType != 'audio') return;
+
     if (loopMode == LoopMode.off) {
       loopMode = LoopMode.all;
     } else if (loopMode == LoopMode.all) {
@@ -527,6 +534,7 @@ class GlobalPlayer extends ChangeNotifier {
       loopMode = LoopMode.off;
     }
     await audioPlayer.setLoopMode(loopMode);
+    loopMode = audioPlayer.loopMode;
     notifyListeners();
   }
 
@@ -554,6 +562,7 @@ class GlobalPlayer extends ChangeNotifier {
 
           await audioPlayer.seek(Duration.zero, index: currentIndex);
           await audioPlayer.setSpeed(playbackSpeed);
+          await _applyAudioPlaybackModes();
           audioPlayer.play();
 
           _isLoading = false;
@@ -653,6 +662,7 @@ class GlobalPlayer extends ChangeNotifier {
 
     // Apply speed for audio immediately after loading the new queue.
     await audioPlayer.setSpeed(playbackSpeed);
+    await _applyAudioPlaybackModes();
   }
 
   Future<void> refreshCurrentEntity() async {
@@ -759,18 +769,38 @@ class GlobalPlayer extends ChangeNotifier {
 
   Future<void> playNext() async {
     if (currentType == "video") {
-      // dispose();
       Navigator.pop;
       return;
     }
     if (queue.isEmpty) return;
-    int nextIndex = (currentIndex + 1) % queue.length;
+    if (currentType == 'audio') {
+      try {
+        await audioPlayer.seekToNext();
+      } catch (_) {
+        if (queue.isEmpty) return;
+        final nextIndex = (currentIndex + 1) % queue.length;
+        await _playMediaAtIndex(nextIndex);
+      }
+      return;
+    }
+    final nextIndex = (currentIndex + 1) % queue.length;
     await _playMediaAtIndex(nextIndex);
   }
 
   Future<void> playPrevious() async {
     if (queue.isEmpty) return;
-    int prevIndex = (currentIndex - 1 < 0)
+    if (currentType == 'audio') {
+      try {
+        await audioPlayer.seekToPrevious();
+      } catch (_) {
+        final prevIndex = (currentIndex - 1 < 0)
+            ? queue.length - 1
+            : currentIndex - 1;
+        await _playMediaAtIndex(prevIndex);
+      }
+      return;
+    }
+    final prevIndex = (currentIndex - 1 < 0)
         ? queue.length - 1
         : currentIndex - 1;
     await _playMediaAtIndex(prevIndex);
