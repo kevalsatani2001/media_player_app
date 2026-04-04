@@ -345,154 +345,288 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
 
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: colors.dropdownBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: colors.blackColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
+      barrierColor: colors.blackColor.withOpacity(0.45),
+      builder: (sheetCtx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.52,
+          minChildSize: 0.35,
+          maxChildSize: 0.92,
+          expand: false,
+          builder: (ctx, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: colors.dropdownBg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.blackColor.withOpacity(0.18),
+                    blurRadius: 24,
+                    offset: const Offset(0, -6),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.playlist_add, color: colors.blackColor),
-                    title: AppText('addToPlaylist', fontSize: 14),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      final file = await entity.file;
-                      if (file == null || !context.mounted) return;
-                      addToPlaylist(
-                        MediaItem(
-                          id: entity.id,
-                          path: file.path,
-                          isNetwork: false,
-                          type: 'audio',
-                          isFavourite: entity.isFavorite,
-                        ),
-                        context,
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.info_outline, color: colors.blackColor),
-                    title: AppText('properties', fontSize: 14),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      routeToDetailPage(context, entity);
-                    },
-                  ),
-                  if (Platform.isAndroid)
-                    ListTile(
-                      leading: Icon(Icons.ring_volume, color: colors.blackColor),
-                      title: AppText('setAsRingtone', fontSize: 14),
-                      onTap: () async {
-                        Navigator.pop(ctx);
-                        await _handleSetAsRingtone(context, entity);
-                      },
-                    ),
-                  ListTile(
-                    leading: Icon(Icons.bedtime_outlined, color: colors.blackColor),
-                    title: AppText('setSleepTimer', fontSize: 14),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _showSleepTimerBottomSheet(context);
-                    },
-                  ),
-                  const Divider(height: 1),
-                  BlocBuilder<AudioPlaybackCubit, AudioPlaybackState>(
-                    builder: (context, playback) {
-                      return ListTile(
-                        leading: Icon(Icons.shuffle, color: colors.blackColor),
-                        title: AppText('shuffle', fontSize: 14),
-                        trailing: playback.isShuffle
-                            ? Icon(Icons.check_circle, color: colors.primary, size: 22)
-                            : null,
-                        onTap: () {
-                          context.read<AudioPlaybackCubit>().toggleShuffle();
-                        },
-                      );
-                    },
-                  ),
-                  BlocBuilder<AudioPlaybackCubit, AudioPlaybackState>(
-                    builder: (context, playback) {
-                      return ListTile(
-                        leading: Icon(Icons.repeat, color: colors.blackColor),
-                        title: AppText('repeat', fontSize: 14),
-                        subtitle: Text(
-                          playback.loopMode == LoopMode.off
-                              ? context.tr('off')
-                              : playback.loopMode == LoopMode.all
-                                  ? 'All queue'
-                                  : 'One track',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colors.dialogueSubTitle,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                child: SafeArea(
+                  top: false,
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 44,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: colors.textFieldBorder.withOpacity(0.55),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        onTap: () {
-                          context.read<AudioPlaybackCubit>().toggleLoop();
+                      ),
+                      AppText(
+                        'quickMenu',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: colors.appBarTitleColor,
+                      ),
+                      const SizedBox(height: 6),
+                      AppText(
+                        getTitle(),
+                        fontSize: 13,
+                        maxLines: 2,
+                        color: colors.dialogueSubTitle,
+                      ),
+                      const SizedBox(height: 18),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.playlist_add_rounded,
+                        titleKey: 'addToPlaylist',
+                        onTap: () async {
+                          final file = await entity.file;
+                          if (file == null || !context.mounted) return;
+                          addToPlaylist(
+                            MediaItem(
+                              id: entity.id,
+                              path: file.path,
+                              isNetwork: false,
+                              type: 'audio',
+                              isFavourite: entity.isFavorite,
+                            ),
+                            context,
+                          );
                         },
-                      );
-                    },
+                      ),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.info_outline_rounded,
+                        titleKey: 'properties',
+                        onTap: () {
+                          routeToDetailPage(context, entity);
+                        },
+                      ),
+                      if (Platform.isAndroid)
+                        _moreMenuTile(
+                          sheetCtx: sheetCtx,
+                          colors: colors,
+                          icon: Icons.ring_volume_rounded,
+                          titleKey: 'setAsRingtone',
+                          onTap: () async {
+                            await _handleSetAsRingtone(context, entity);
+                          },
+                        ),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.bedtime_outlined,
+                        titleKey: 'setSleepTimer',
+                        onTap: () {
+                          _showSleepTimerBottomSheet(context);
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: colors.dividerColor.withOpacity(0.6),
+                        ),
+                      ),
+                      BlocBuilder<AudioPlaybackCubit, AudioPlaybackState>(
+                        builder: (blocCtx, playback) {
+                          return _moreMenuTile(
+                            sheetCtx: sheetCtx,
+                            colors: colors,
+                            icon: Icons.shuffle_rounded,
+                            titleKey: 'shuffle',
+                            trailing: playback.isShuffle
+                                ? Icon(
+                                    Icons.check_circle_rounded,
+                                    color: colors.primary,
+                                    size: 24,
+                                  )
+                                : null,
+                            popOnTap: false,
+                            onTap: () {
+                              blocCtx.read<AudioPlaybackCubit>().toggleShuffle();
+                            },
+                          );
+                        },
+                      ),
+                      BlocBuilder<AudioPlaybackCubit, AudioPlaybackState>(
+                        builder: (blocCtx, playback) {
+                          final sub = playback.loopMode == LoopMode.off
+                              ? blocCtx.tr('off')
+                              : playback.loopMode == LoopMode.all
+                                  ? 'All queue'
+                                  : 'One track';
+                          return _moreMenuTile(
+                            sheetCtx: sheetCtx,
+                            colors: colors,
+                            icon: Icons.repeat_rounded,
+                            titleKey: 'repeat',
+                            subtitleText: sub,
+                            popOnTap: false,
+                            onTap: () {
+                              blocCtx.read<AudioPlaybackCubit>().toggleLoop();
+                            },
+                          );
+                        },
+                      ),
+                      if (Platform.isAndroid)
+                        _moreMenuTile(
+                          sheetCtx: sheetCtx,
+                          colors: colors,
+                          icon: Icons.equalizer_rounded,
+                          titleKey: 'equalizer',
+                          onTap: () {
+                            _showEqualizerBottomSheet();
+                          },
+                        ),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.flag_outlined,
+                        titleKey: 'abSetPointA',
+                        onTap: () {
+                          _abSetPointAFromMenu();
+                        },
+                      ),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.flag_rounded,
+                        titleKey: 'abSetPointB',
+                        enabled: _pointA != null && _pointB == null,
+                        onTap: () {
+                          _abSetPointBFromMenu();
+                        },
+                      ),
+                      _moreMenuTile(
+                        sheetCtx: sheetCtx,
+                        colors: colors,
+                        icon: Icons.clear_all_rounded,
+                        titleKey: 'abClearRepeat',
+                        enabled: _pointA != null || _pointB != null,
+                        onTap: () {
+                          _abClearRepeatFromMenu();
+                        },
+                      ),
+                    ],
                   ),
-                  if (Platform.isAndroid)
-                    ListTile(
-                      leading: Icon(Icons.equalizer, color: colors.blackColor),
-                      title: AppText('equalizer', fontSize: 14),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        _showEqualizerBottomSheet();
-                      },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _moreMenuTile({
+    required BuildContext sheetCtx,
+    required AppThemeColors colors,
+    required IconData icon,
+    required String titleKey,
+    String? subtitleText,
+    Widget? trailing,
+    VoidCallback? onTap,
+    bool enabled = true,
+    bool popOnTap = true,
+  }) {
+    final effectiveTap = !enabled
+        ? null
+        : () {
+            if (popOnTap) Navigator.pop(sheetCtx);
+            onTap?.call();
+          };
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: colors.cardBackground,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(
+            color: colors.textFieldBorder.withOpacity(0.45),
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: effectiveTap,
+          splashColor: colors.primary.withOpacity(0.12),
+          highlightColor: colors.primary.withOpacity(0.06),
+          child: Opacity(
+            opacity: enabled ? 1 : 0.42,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(11),
                     ),
-                  ListTile(
-                    leading: Icon(Icons.flag_outlined, color: colors.blackColor),
-                    title: AppText('abSetPointA', fontSize: 14),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _abSetPointAFromMenu();
-                    },
+                    child: Icon(icon, color: colors.primary, size: 22),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.flag, color: colors.blackColor),
-                    title: AppText('abSetPointB', fontSize: 14),
-                    enabled: _pointA != null && _pointB == null,
-                    onTap: _pointA != null && _pointB == null
-                        ? () {
-                            Navigator.pop(ctx);
-                            _abSetPointBFromMenu();
-                          }
-                        : null,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText(
+                          titleKey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colors.appBarTitleColor,
+                        ),
+                        if (subtitleText != null) ...[
+                          const SizedBox(height: 3),
+                          Text(
+                            subtitleText,
+                            style: Theme.of(sheetCtx).textTheme.bodySmall?.copyWith(
+                                  fontSize: 12,
+                                  color: colors.dialogueSubTitle,
+                                ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                  ListTile(
-                    leading: Icon(Icons.clear_all, color: colors.blackColor),
-                    title: AppText('abClearRepeat', fontSize: 14),
-                    enabled: _pointA != null || _pointB != null,
-                    onTap: (_pointA != null || _pointB != null)
-                        ? () {
-                            Navigator.pop(ctx);
-                            _abClearRepeatFromMenu();
-                          }
-                        : null,
-                  ),
+                  if (trailing != null) trailing,
                 ],
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 

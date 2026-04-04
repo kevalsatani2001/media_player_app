@@ -288,6 +288,8 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
     final playlistService = PlaylistService();
     final newFavState = await playlistService.toggleFavourite(entity);
 
+    if (!mounted) return;
+
     AppToast.show(
       context,
       newFavState
@@ -295,6 +297,26 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           : context.tr("removedFromFavourites"),
       type: newFavState ? ToastType.success : ToastType.info,
     );
+
+    // Keep [AudioBloc] in sync with the gallery list (same as [AudioScreen._toggleFavourite]).
+    // [favouriteSignal] alone is not enough when AudioScreen is not mounted or listener races.
+    final AssetEntity? newEntity = await entity.obtainForNewProperties();
+    if (!mounted || newEntity == null) return;
+
+    if (GlobalPlayer().currentEntity?.id == entity.id) {
+      await GlobalPlayer().refreshCurrentEntity();
+    }
+
+    final audioState = context.read<AudioBloc>().state;
+    if (audioState is AudioLoaded) {
+      final listIndex = audioState.entities.indexWhere(
+        (e) => e.id == entity.id,
+      );
+      if (listIndex != -1) {
+        context.read<AudioBloc>().add(UpdateAudioItem(newEntity, listIndex));
+      }
+    }
+    context.read<FavouriteChangeBloc>().add(FavouriteUpdated(newEntity));
   }
 
   PopupMenuItem<MediaMenuAction> _buildPopupItem(
