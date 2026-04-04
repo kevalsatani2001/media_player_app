@@ -84,44 +84,44 @@ class _AudioScreenState extends State<AudioScreen> {
         }
       },
       child: widget.isComeHomeScreen
-            ? Scaffold(
-          appBar: AppBar(
-            leading: Padding(
-              padding: const EdgeInsets.all(16),
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: AppImage(
-                  src: AppSvg.backArrowIcon,
-                  height: 20,
-                  width: 20,
-                  color: colors.blackColor,
-                ),
+          ? Scaffold(
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(
+                src: AppSvg.backArrowIcon,
+                height: 20,
+                width: 20,
+                color: colors.blackColor,
               ),
             ),
-            centerTitle: true,
-            title: AppText(
-              "audio",
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
-            ),
+          ),
+          centerTitle: true,
+          title: AppText(
+            "audio",
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
 
-            actions: [
+          actions: [
               // --- Album Button ---
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
                     MaterialPageRoute(
                       builder: (_) =>  AudioAlbumScreen(),
                     ),
-                  );
-                },
+                );
+              },
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     color: colors.textFieldFill,
                   ),
-                  padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                   child: Icon(Icons.album_rounded, color: colors.blackColor, size: 22),
                 ),
               ),
@@ -145,115 +145,115 @@ class _AudioScreenState extends State<AudioScreen> {
                 ),
               ),
               const SizedBox(width: 15),
+          ],
+        ),
+        body: SafeArea(
+          child: GlobalPlayer().currentType == "video"
+              ? Stack(
+            children: [
+              Column(children: [Expanded(child: _AudioBody())]),
+              const SmartMiniPlayer(),
+            ],
+          )
+              : Column(
+            children: [
+              Expanded(child: _AudioBody()),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: const SmartMiniPlayer(),
+              ),
             ],
           ),
-          body: SafeArea(
-            child: GlobalPlayer().currentType == "video"
-                ? Stack(
-              children: [
-                Column(children: [Expanded(child: _AudioBody())]),
-                const SmartMiniPlayer(),
-              ],
-            )
-                : Column(
-              children: [
-                Expanded(child: _AudioBody()),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: const SmartMiniPlayer(),
-                ),
-              ],
-            ),
-          ),
-        )
-            : GlobalPlayer().currentType == "video"
-            ? Stack(
-          children: [
-            Column(
-              children: [
-                CommonAppBar(
-                  title: "videMusicPlayer",
-                  subTitle: "mediaPlayer",
-                  actionWidget: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SearchScreen(),
-                        ),
-                      );
-                    },
-                    child: TweenAnimationBuilder(
-                      tween: Tween<double>(begin: 0.8, end: 1.0),
-                      duration: const Duration(milliseconds: 500),
-                      builder: (context, double val, child) =>
-                          Transform.scale(scale: val, child: child),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: colors.textFieldFill,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: AppImage(
-                            src: AppSvg.searchIcon,
-                            color: colors.blackColor,
-                          ),
-                        ),
+        ),
+      )
+          : GlobalPlayer().currentType == "video"
+          ? Stack(
+        children: [
+          Column(
+            children: [
+              CommonAppBar(
+                title: "videMusicPlayer",
+                subTitle: "mediaPlayer",
+                actionWidget: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SearchScreen(),
                       ),
-                    ),
-                  ),
-                ),
-                Divider(color: colors.dividerColor),
-                Expanded(child: _AudioBody()),
-              ],
-            ),
-            const SmartMiniPlayer(),
-          ],
-        )
-            : Column(
-          children: [
-            CommonAppBar(
-              title: "videMusicPlayer",
-              subTitle: "mediaPlayer",
-              actionWidget: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SearchScreen(),
-                    ),
-                  );
-                },
-                child: TweenAnimationBuilder(
-                  tween: Tween<double>(begin: 0.8, end: 1.0),
-                  duration: const Duration(milliseconds: 500),
-                  builder: (context, double val, child) =>
-                      Transform.scale(scale: val, child: child),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: colors.textFieldFill,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: AppImage(
-                        src: AppSvg.searchIcon,
-                        color: colors.blackColor,
+                    );
+                  },
+                  child: TweenAnimationBuilder(
+                    tween: Tween<double>(begin: 0.8, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    builder: (context, double val, child) =>
+                        Transform.scale(scale: val, child: child),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: colors.textFieldFill,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: AppImage(
+                          src: AppSvg.searchIcon,
+                          color: colors.blackColor,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+              Divider(color: colors.dividerColor),
+              Expanded(child: _AudioBody()),
+            ],
+          ),
+          const SmartMiniPlayer(),
+        ],
+      )
+          : Column(
+        children: [
+          CommonAppBar(
+            title: "videMusicPlayer",
+            subTitle: "mediaPlayer",
+            actionWidget: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                    MaterialPageRoute(
+                      builder: (_) => const SearchScreen(),
+                    ),
+                );
+              },
+              child: TweenAnimationBuilder(
+                tween: Tween<double>(begin: 0.8, end: 1.0),
+                duration: const Duration(milliseconds: 500),
+                builder: (context, double val, child) =>
+                    Transform.scale(scale: val, child: child),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: colors.textFieldFill,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AppImage(
+                      src: AppSvg.searchIcon,
+                      color: colors.blackColor,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            Divider(color: colors.dividerColor),
-            Expanded(child: _AudioBody()),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: const SmartMiniPlayer(),
-            ),
-          ],
-        ),
+          ),
+          Divider(color: colors.dividerColor),
+          Expanded(child: _AudioBody()),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: const SmartMiniPlayer(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -509,13 +509,13 @@ class _AudioBodyState extends State<_AudioBody>
           final audio = entities[actualIndex];
 
           final bool isCurrentPlaying = currentPlayingId == audio.id;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: AppTransition(
-              index: index,
-              child: FutureBuilder<File?>(
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: AppTransition(
+                  index: index,
+                  child: FutureBuilder<File?>(
                 future: _fileFutureFor(audio),
-                builder: (context, snapshot) {
+                    builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return ListTile(
                           leading: Icon(
@@ -527,7 +527,7 @@ class _AudioBodyState extends State<_AudioBody>
                       }
                       final file = snapshot.data!;
 
-                  return Padding(
+                      return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 7.5),
                         child: GestureDetector(
                           onTap: () => _handleOnTap(entities, audio, file),
@@ -562,9 +562,9 @@ class _AudioBodyState extends State<_AudioBody>
                           ),
                         ),
                       );
-                },
-              ),
-            ),
+                    },
+                  ),
+                ),
           );
         },
       ),
@@ -665,9 +665,9 @@ class _AudioBodyState extends State<_AudioBody>
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
             FutureBuilder<Uint8List?>(
               future: _artworkFutureFor(audio),
               builder: (context, snapshot) {
@@ -681,24 +681,24 @@ class _AudioBodyState extends State<_AudioBody>
                 }
 
                 return AppImage(
-                  src: AppSvg.musicUnselected,
-                  height: 22,
-                  color: colors.whiteColor,
+            src: AppSvg.musicUnselected,
+            height: 22,
+            color: colors.whiteColor,
                 );
               },
-            ),
+          ),
 
-            if (isPlaying)
+          if (isPlaying)
               Container(
                 color: Colors.black.withOpacity(0.3),
                 child: AppImage(
-                  src: GlobalPlayer().isPlaying
-                      ? AppSvg.playerPause
-                      : AppSvg.playerResume,
-                  height: 18,
+              src: GlobalPlayer().isPlaying
+                  ? AppSvg.playerPause
+                  : AppSvg.playerResume,
+              height: 18,
                 ),
-              ),
-          ],
+            ),
+        ],
         ),
       ),
     );

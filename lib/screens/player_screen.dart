@@ -1,6 +1,7 @@
 import 'dart:math' show Random;
 import 'dart:ui' as ui;
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -100,6 +101,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// When true, "Pause/resume" mode keeps chrome visible until edge toggled.
   bool _pauseResumeControlsPinned = false;
+
+  /// User dismissed the pause native ad; reset when playback resumes.
+  bool _pauseNativeAdDismissedThisSession = false;
 
   Offset _videoPanOffset = Offset.zero;
   double _subtitleScrollPx = 0;
@@ -329,10 +333,17 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     if (widget.entityList.isNotEmpty) {
       playerService.init(widget.entityList, widget.index, () {
-        if (mounted) {
-          _checkVideoEnd();
-          setState(() {});
-        }
+        if (!mounted) return;
+        _checkVideoEnd();
+        setState(() {
+          final ctl = playerService.controller;
+          if (ctl != null &&
+              ctl.value.isInitialized &&
+              ctl.value.isPlaying &&
+              _pauseNativeAdDismissedThisSession) {
+            _pauseNativeAdDismissedThisSession = false;
+          }
+        });
       }, seekToMs: seekTo);
     }
 
@@ -505,6 +516,15 @@ class _PlayerScreenState extends State<PlayerScreen>
       }
     }
     _refreshBatteryIfNeeded();
+  }
+
+  bool get _shouldShowPauseNativeAdOverlay {
+    final c = playerService.controller;
+    if (c == null || !c.value.isInitialized) return false;
+    if (c.value.isPlaying) return false;
+    if (_pauseNativeAdDismissedThisSession) return false;
+    if (AdHelper.isFullScreenAdShowing) return false;
+    return true;
   }
 
   void _checkVideoEnd() {
@@ -956,6 +976,17 @@ class _PlayerScreenState extends State<PlayerScreen>
               child: IgnorePointer(
                 child: Container(color: Colors.black.withOpacity(0.48)),
               ),
+            ),
+          if (_shouldShowPauseNativeAdOverlay)
+            PauseVideoNativeAdLayer(
+              key: ValueKey(
+                'pause_native_${playerService.currentIndex}_${widget.entity.id}',
+              ),
+              onDismiss: () {
+                if (mounted) {
+                  setState(() => _pauseNativeAdDismissedThisSession = true);
+                }
+              },
             ),
           _buildSeekIndicator(),
           _buildGestureIndicator(),
@@ -2875,6 +2906,105 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
+  /// Same layout as [_menuGridItem] (white icon + label); toggles favourite for the
+  /// current queue item and syncs playlist / blocs — avoids embedding [FavouriteButton]
+  /// which uses different styling and did not match this drawer.
+  Future<void> _togglePlayerSidebarFavourite(AssetEntity entity) async {
+    final file = await entity.file;
+    if (file == null) {
+      if (!mounted) return;
+      AppToast.show(
+        context,
+        context.tr('fileNotFoundMsg'),
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    final playlistService = PlaylistService();
+    final newFavState = await playlistService.toggleFavourite(entity);
+
+    if (!mounted) return;
+
+    AppToast.show(
+      context,
+      newFavState
+          ? context.tr('addedToFavourite')
+          : context.tr('removedFromFavourites'),
+      type: newFavState ? ToastType.success : ToastType.info,
+    );
+
+    final AssetEntity? newEntity = await entity.obtainForNewProperties();
+    if (!mounted || newEntity == null) return;
+
+    final i = playerService.currentIndex;
+    if (i >= 0 &&
+        i < playerService.playlist.length &&
+        playerService.playlist[i].id == entity.id) {
+      playerService.playlist[i] = newEntity;
+    }
+
+    try {
+      final gp = GlobalPlayer();
+      if (gp.currentEntity?.id == entity.id) {
+        await gp.refreshCurrentEntity();
+      }
+    } catch (_) {}
+
+    try {
+      final audioState = context.read<AudioBloc>().state;
+      if (audioState is AudioLoaded) {
+        final listIndex =
+            audioState.entities.indexWhere((e) => e.id == entity.id);
+        if (listIndex != -1) {
+          context.read<AudioBloc>().add(UpdateAudioItem(newEntity, listIndex));
+        }
+      }
+    } catch (_) {}
+
+    try {
+      context.read<FavouriteChangeBloc>().add(FavouriteUpdated(newEntity));
+    } catch (_) {}
+
+    try {
+      context.read<VideoBloc>().add(LoadVideosFromGallery(showLoading: false));
+    } catch (_) {}
+
+    if (mounted) setState(() {});
+  }
+
+  Widget _sidebarFavouriteGridItem() {
+    final idx = playerService.currentIndex;
+    if (idx < 0 || idx >= playerService.playlist.length) {
+      return _menuGridItem(
+        Icons.favorite_border,
+        'favourite',
+        onTapCustom: () {},
+      );
+    }
+    final entity = playerService.playlist[idx];
+    return InkWell(
+      onTap: () => _togglePlayerSidebarFavourite(entity),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            entity.isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: Colors.white,
+            size: 28,
+          ),
+          const SizedBox(height: 8),
+          AppText(
+            'favourite',
+            align: TextAlign.center,
+            color: Colors.white70,
+            fontSize: 11,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMainMenuGrid() {
     return SingleChildScrollView(
       child: Column(
@@ -2939,7 +3069,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   }, seekToMs: lastPosition);
                 },
               ),
-              _menuGridItem(Icons.favorite_border, "favourite"),
+              _sidebarFavouriteGridItem(),
               _menuGridItem(
                 Icons.playlist_add,
                 "playlist",

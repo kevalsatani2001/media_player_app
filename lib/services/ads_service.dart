@@ -1,8 +1,18 @@
+import 'dart:math' show min;
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 
 class AdHelper {
+  /// AdMob **native** test unit — replace with your production native ad unit IDs.
+  /// See https://developers.google.com/admob/android/test-ads
+  static String get nativeVideoPauseOverlayId {
+    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/2247696110';
+    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/3986624511';
+    return '';
+  }
+
   static String get bannerId {
     if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/6300978111';
     if (Platform.isIOS) return 'ca-app-pub-3940256099942544/2934735716';
@@ -469,5 +479,252 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
     // While loading (or if load hasn't finished), show shimmer
     return AdHelper._buildShimmerPlaceholder(widget.size);
+  }
+}
+
+/// Centered **native template** ad over a dimmed scrim — for video pause (MX-style).
+/// Uses the same AdMob native pipeline on Android and iOS (no extra native code).
+class PauseVideoNativeAdLayer extends StatefulWidget {
+  final VoidCallback onDismiss;
+
+  const PauseVideoNativeAdLayer({super.key, required this.onDismiss});
+
+  @override
+  State<PauseVideoNativeAdLayer> createState() =>
+      _PauseVideoNativeAdLayerState();
+}
+
+class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
+  NativeAd? _nativeAd;
+  bool _loaded = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAd());
+  }
+
+  Future<void> _loadAd() async {
+    if (!mounted) return;
+    final id = AdHelper.nativeVideoPauseOverlayId;
+    if (id.isEmpty) {
+      setState(() => _failed = true);
+      return;
+    }
+
+    final results = await Connectivity().checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) {
+      if (mounted) setState(() => _failed = true);
+      return;
+    }
+
+    await _nativeAd?.dispose();
+    _nativeAd = null;
+    if (!mounted) return;
+
+    final ad = NativeAd(
+      adUnitId: id,
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) setState(() => _loaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('Pause native ad failed: $error');
+          ad.dispose();
+          if (mounted) {
+            setState(() {
+              _failed = true;
+              _nativeAd = null;
+              _loaded = false;
+            });
+          }
+        },
+      ),
+      request: const AdRequest(),
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.medium,
+        mainBackgroundColor: const Color(0xFFF8F8F8),
+        cornerRadius: 12,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: const Color(0xFF3D57F9),
+          style: NativeTemplateFontStyle.bold,
+          size: 13.5,
+        ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.black87,
+          size: 15,
+          style: NativeTemplateFontStyle.bold,
+        ),
+        secondaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.black54,
+          size: 12,
+        ),
+        tertiaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.black45,
+          size: 11,
+        ),
+      ),
+    );
+
+    setState(() {
+      _nativeAd = ad;
+      _loaded = false;
+      _failed = false;
+    });
+
+    ad.load();
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Material(
+        type: MaterialType.transparency,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final maxW = min(constraints.maxWidth * 0.92, 400.0);
+            final adH = min(constraints.maxHeight * 0.55, 380.0);
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {},
+                    child: ColoredBox(
+                      color: Colors.black.withOpacity(0.48),
+                    ),
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: maxW,
+                          constraints: BoxConstraints(maxHeight: adH + 24),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.35),
+                                blurRadius: 22,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: _failed
+                                ? SizedBox(
+                                    width: maxW,
+                                    height: 120,
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Text(
+                                          'Ad unavailable',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : (!_loaded || _nativeAd == null)
+                                    ? SizedBox(
+                                        width: maxW,
+                                        height: 260,
+                                        child: const Center(
+                                          child: CircularProgressIndicator(
+                                            color: Color(0xFF3D57F9),
+                                          ),
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        width: maxW,
+                                        height: adH,
+                                        child: AdWidget(ad: _nativeAd!),
+                                      ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade700,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'Ad',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: -6,
+                          right: -6,
+                          child: Material(
+                            color: Colors.black54,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: widget.onDismiss,
+                              child: const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: widget.onDismiss,
+                      child: Text(
+                        'Close',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }
