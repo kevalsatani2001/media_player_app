@@ -123,7 +123,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
           Align(
               alignment: Alignment.bottomRight,
               child: _buildResumeFAB()),
-          const SmartMiniPlayer(forceMiniMode: true),
+          // const SmartMiniPlayer(forceMiniMode: true),
         ],
       ),
     );

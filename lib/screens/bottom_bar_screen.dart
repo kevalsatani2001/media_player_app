@@ -3,14 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
 import 'package:media_player/core/constants.dart';
 import 'package:media_player/screens/audio_screen.dart';
+import 'package:media_player/screens/mini_player.dart';
 import 'package:media_player/screens/setting_screen.dart';
 import 'package:media_player/screens/video_screen.dart';
 import 'package:media_player/widgets/image_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
+import 'package:media_player/widgets/safe_asset_thumbnail.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../blocs/bottom_nav/bottom_nav_event.dart';
@@ -18,15 +18,11 @@ import '../blocs/bottom_nav/bottom_nav_state.dart';
 import '../blocs/bottom_nav/botton_nav_bloc.dart';
 import '../blocs/home/home_tab_bloc.dart';
 import '../blocs/local/local_bloc.dart';
-import '../blocs/local/local_event.dart';
-import '../blocs/local/local_state.dart';
-import '../blocs/video/video_event.dart';
+import '../services/global_player.dart';
 import '../utils/app_colors.dart';
-import '../utils/app_string.dart';
 import '../widgets/app_button.dart';
 import '../widgets/custom_loader.dart';
 import '../widgets/gallary_item_widget.dart';
-import '../blocs/video/video_bloc.dart';
 import '../widgets/text_widget.dart';
 import 'home_screen.dart';
 
@@ -48,11 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       providers: [
         BlocProvider(create: (_) => LocaleBloc()),
         BlocProvider(create: (_) => HomeTabBloc()),
-        BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
-        BlocProvider(
-          create: (_) =>
-              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
-        ), // Bottom nav bloc
+        BlocProvider(create: (_) => BottomNavBloc()),
+        // VideoBloc / AudioBloc come from app root (main.dart) — do not nest
+        // another VideoBloc here or tabs will reload and lose scroll every visit.
       ],
       child: BlocBuilder<BottomNavBloc, BottomNavState>(
         builder: (context, bottomState) {
@@ -178,7 +172,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     //   ),
                     // ),
                     Expanded(
-                      child: _buildBodyForBottomTab(bottomState.selectedIndex),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IndexedStack(
+                            index: bottomState.selectedIndex,
+                            sizing: StackFit.expand,
+                            children: [
+                              HomePage(),
+                              VideoScreen(
+                                isComeHomeScreen: false,
+                                showMiniPlayer: false,
+                              ),
+                              AudioScreen(
+                                isComeHomeScreen: false,
+                                showMiniPlayer: false,
+                              ),
+                              SettingScreen(),
+                            ],
+                          ),
+                          Consumer<GlobalPlayer>(
+                            builder: (context, player, _) {
+                              // Docked bar on Audio tab when playing audio; floating elsewhere.
+                              final audioTab = bottomState.selectedIndex == 2;
+                              final isVideo = player.currentType == 'video';
+                              return SmartMiniPlayer(
+                                forceMiniMode: !audioTab || isVideo,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     Container(
                       width: double.infinity,
@@ -260,82 +284,6 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
-
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => LocaleBloc()),
-        BlocProvider(create: (_) => HomeTabBloc()),
-        BlocProvider(create: (_) => BottomNavBloc()), // Bottom nav bloc
-        BlocProvider(
-          create: (_) =>
-              VideoBloc(Hive.box('videos'))..add(LoadVideosFromGallery()),
-        ), // Bottom nav bloc
-      ],
-      child: BlocBuilder<BottomNavBloc, BottomNavState>(
-        builder: (context, bottomState) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(
-                bottomState.selectedIndex == 0
-                    ? 'Media Player'
-                    : bottomState.selectedIndex == 1
-                    ? 'Videos'
-                    : bottomState.selectedIndex == 2
-                    ? 'Audio'
-                    : 'Settings',
-              ),
-            ),
-            body: _buildBodyForBottomTab(bottomState.selectedIndex),
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: bottomState.selectedIndex,
-              onTap: (index) =>
-                  context.read<BottomNavBloc>().add(SelectBottomTab(index)),
-              type: BottomNavigationBarType.fixed,
-              items: [
-                BottomNavigationBarItem(
-                  icon: Container(
-                    height: 30,
-                    width: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: AppImage(src: AppSvg.homeUnselected),
-                  ),
-                  activeIcon: Container(
-                    height: 50,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: AppImage(
-                      src: AppSvg.homeSelected,
-                      height: 30,
-                      width: 30,
-                    ),
-                  ),
-                  label: AppStrings.get(context, 'home'),
-                ),
-                BottomNavigationBarItem(
-                  icon: AppImage(src: AppSvg.videoUnselected),
-                  activeIcon: AppImage(src: AppSvg.videoSelected),
-                  label: AppStrings.get(context, 'video'),
-                ),
-                BottomNavigationBarItem(
-                  icon: AppImage(src: AppSvg.musicUnselected),
-                  activeIcon: AppImage(src: AppSvg.musicSelected),
-                  label: AppStrings.get(context, 'audio'),
-                ),
-                BottomNavigationBarItem(
-                  icon: AppImage(src: AppSvg.settingUnselected),
-                  activeIcon: AppImage(src: AppSvg.settingSelected),
-                  label: AppStrings.get(context, 'settings'),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
   }
 
   _buildBottomNavItem(
@@ -365,87 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 : unSelectedIcon,
           ),
         ),
-      ),
-    );
-  }
-
-  // Switch body content based on bottom nav index
-  Widget _buildBodyForBottomTab(int index) {
-    switch (index) {
-      case 0:
-        return HomePage();
-      // return _buildHomeTab();
-      case 1:
-        return BlocProvider(
-          create: (_) =>
-              VideoBloc(Hive.box('videos'))
-                ..add(LoadVideosFromGallery(showLoading: false)),
-          child: VideoScreen(isComeHomeScreen: false),
-        );
-      // return VideoScreen(isComeHomeScreen: false);
-      // return _buildVideoSection();
-      case 2:
-        return AudioScreen(isComeHomeScreen: false);
-      case 3:
-        return SettingScreen();
-      // return _buildSettingsTab();
-      default:
-        return const SizedBox();
-    }
-  }
-
-  Widget _buildSettingsTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // BlocBuilder<ThemeBloc, ThemeState>(
-          //   builder: (context, themeState) {
-          //     return ListTile(
-          //       leading: Icon(Icons.light_mode,
-          //         // themeState.isDark ? Icons.dark_mode : Icons.light_mode,
-          //       ),
-          //       title: Text(AppStrings.get(context, 'theme')),
-          //       trailing: Switch(
-          //         value: themeState.isDark,
-          //         onChanged: (_) =>
-          //             context.read<ThemeBloc>().add(ToggleTheme()),
-          //       ),
-          //     );
-          //   },
-          // ),
-          const SizedBox(height: 20),
-          BlocBuilder<LocaleBloc, LocaleState>(
-            builder: (context, localeState) {
-              return Row(
-                children: [
-                  Text('${AppStrings.get(context, 'language')}: '),
-                  const SizedBox(width: 16),
-                  DropdownButton<Locale>(
-                    value: localeState.locale,
-                    items: AppStrings.translations.keys.map((langCode) {
-                      // get the display name of the language from translations
-                      final langName =
-                          AppStrings.translations[langCode]?['language'] ??
-                          langCode;
-                      return DropdownMenuItem<Locale>(
-                        value: Locale(langCode),
-                        child: Text(langName),
-                      );
-                    }).toList(),
-                    onChanged: (locale) {
-                      if (locale != null) {
-                        context.read<LocaleBloc>().add(ChangeLocale(locale));
-                        setState(() {});
-                      }
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -941,28 +808,25 @@ class _LivePhotosWidgetState extends State<LivePhotosWidget> {
   }
 
   Widget _buildImage(BuildContext context) {
-    return AssetEntityImage(
-      widget.entity,
-      isOriginal: widget.useOrigin == true,
+    final thumbSize = widget.useOrigin
+        ? const ThumbnailSize.square(500)
+        : const ThumbnailSize.square(200);
+    return SafeAssetThumbnail(
+      entity: widget.entity,
+      thumbnailSize: thumbSize,
       fit: BoxFit.contain,
-      loadingBuilder: (_, Widget child, ImageChunkEvent? progress) {
-        if (progress != null) {
-          final double? value;
-          if (progress.expectedTotalBytes != null) {
-            value =
-                progress.cumulativeBytesLoaded / progress.expectedTotalBytes!;
-          } else {
-            value = null;
-          }
-          return Center(
-            child: SizedBox.fromSize(
-              size: const Size.square(30),
-              child: CircularProgressIndicator(value: value),
-            ),
-          );
-        }
-        return child;
-      },
+      loading: Center(
+        child: SizedBox.fromSize(
+          size: const Size.square(30),
+          child: const CircularProgressIndicator(),
+        ),
+      ),
+      placeholder: const ColoredBox(
+        color: Colors.black26,
+        child: Center(
+          child: Icon(Icons.videocam, color: Colors.white54, size: 48),
+        ),
+      ),
     );
   }
 
@@ -1025,28 +889,16 @@ class _CopyToAnotherGalleryPageState extends State<CopyToAnotherGalleryPage> {
         children: <Widget>[
           AspectRatio(
             aspectRatio: 1,
-            child: AssetEntityImage(
-              widget.assetEntity,
+            child: SafeAssetThumbnail(
+              entity: widget.assetEntity,
               thumbnailSize: const ThumbnailSize.square(150),
-              loadingBuilder: (_, Widget child, ImageChunkEvent? progress) {
-                if (progress == null) {
-                  return child;
-                }
-                final double? value;
-                if (progress.expectedTotalBytes != null) {
-                  value =
-                      progress.cumulativeBytesLoaded /
-                      progress.expectedTotalBytes!;
-                } else {
-                  value = null;
-                }
-                return Center(
-                  child: SizedBox.fromSize(
-                    size: const Size.square(40),
-                    child: CircularProgressIndicator(value: value),
-                  ),
-                );
-              },
+              fit: BoxFit.cover,
+              loading: Center(
+                child: SizedBox.fromSize(
+                  size: const Size.square(40),
+                  child: const CircularProgressIndicator(),
+                ),
+              ),
             ),
           ),
           DropdownButton<AssetPathEntity>(
@@ -1445,26 +1297,16 @@ class _MoveToAnotherExampleState extends State<MoveToAnotherExample> {
   }
 
   Widget _buildPreview() {
-    return AssetEntityImage(
-      widget.entity,
+    return SafeAssetThumbnail(
+      entity: widget.entity,
       thumbnailSize: const ThumbnailSize.square(150),
-      loadingBuilder: (_, Widget child, ImageChunkEvent? progress) {
-        if (progress == null) {
-          return child;
-        }
-        final double? value;
-        if (progress.expectedTotalBytes != null) {
-          value = progress.cumulativeBytesLoaded / progress.expectedTotalBytes!;
-        } else {
-          value = null;
-        }
-        return Center(
-          child: SizedBox.fromSize(
-            size: const Size.square(40),
-            child: CircularProgressIndicator(value: value),
-          ),
-        );
-      },
+      fit: BoxFit.cover,
+      loading: Center(
+        child: SizedBox.fromSize(
+          size: const Size.square(40),
+          child: const CircularProgressIndicator(),
+        ),
+      ),
     );
   }
 

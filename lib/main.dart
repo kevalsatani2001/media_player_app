@@ -36,7 +36,14 @@ void main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  await PhotoManager.requestPermissionExtend();
+  await PhotoManager.requestPermissionExtend(
+    requestOption: PermissionRequestOption(
+      androidPermission: AndroidPermission(
+        type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
+        mediaLocation: false,
+      ),
+    ),
+  );
   // final String initialLang = HiveService.languageCode.isEmpty
   //     ? PlatformDispatcher.instance.locale.languageCode
   //     : HiveService.languageCode;

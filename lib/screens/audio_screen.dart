@@ -9,8 +9,14 @@ int _audioClickCount = 0;
 
 class AudioScreen extends StatefulWidget {
   bool isComeHomeScreen;
+  /// When false, shell (e.g. bottom nav) owns [SmartMiniPlayer] — avoids duplicate [Hero] in [IndexedStack].
+  final bool showMiniPlayer;
 
-  AudioScreen({super.key, this.isComeHomeScreen = true});
+  AudioScreen({
+    super.key,
+    this.isComeHomeScreen = true,
+    this.showMiniPlayer = true,
+  });
 
   @override
   State<AudioScreen> createState() => _AudioScreenState();
@@ -149,111 +155,197 @@ class _AudioScreenState extends State<AudioScreen> {
         ),
         body: SafeArea(
           child: GlobalPlayer().currentType == "video"
-              ? Stack(
-            children: [
-              Column(children: [Expanded(child: _AudioBody())]),
-              const SmartMiniPlayer(),
-            ],
-          )
-              : Column(
-            children: [
-              Expanded(child: _AudioBody()),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: const SmartMiniPlayer(),
-              ),
-            ],
-          ),
+              ? (widget.showMiniPlayer
+                  ? Stack(
+                      children: [
+                        Column(children: [Expanded(child: _AudioBody())]),
+                        const SmartMiniPlayer(),
+                      ],
+                    )
+                  : Column(children: [Expanded(child: _AudioBody())]))
+              : (widget.showMiniPlayer
+                  ? Column(
+                      children: [
+                        Expanded(child: _AudioBody()),
+                        const Align(
+                          alignment: Alignment.bottomCenter,
+                          child: SmartMiniPlayer(),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [Expanded(child: _AudioBody())],
+                    )),
         ),
       )
           : GlobalPlayer().currentType == "video"
-          ? Stack(
-        children: [
-          Column(
-            children: [
-              CommonAppBar(
-                title: "videMusicPlayer",
-                subTitle: "mediaPlayer",
-                actionWidget: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SearchScreen(),
-                      ),
-                    );
-                  },
-                  child: TweenAnimationBuilder(
-                    tween: Tween<double>(begin: 0.8, end: 1.0),
-                    duration: const Duration(milliseconds: 500),
-                    builder: (context, double val, child) =>
-                        Transform.scale(scale: val, child: child),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: colors.textFieldFill,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: AppImage(
-                          src: AppSvg.searchIcon,
-                          color: colors.blackColor,
+          ? (widget.showMiniPlayer
+              ? Stack(
+                  children: [
+                    Column(
+                      children: [
+                        CommonAppBar(
+                          title: "videMusicPlayer",
+                          subTitle: "mediaPlayer",
+                          actionWidget: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SearchScreen(),
+                                ),
+                              );
+                            },
+                            child: TweenAnimationBuilder(
+                              tween: Tween<double>(begin: 0.8, end: 1.0),
+                              duration: const Duration(milliseconds: 500),
+                              builder: (context, double val, child) =>
+                                  Transform.scale(scale: val, child: child),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: colors.textFieldFill,
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: AppImage(
+                                    src: AppSvg.searchIcon,
+                                    color: colors.blackColor,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Divider(color: colors.dividerColor),
+                        Expanded(child: _AudioBody()),
+                      ],
+                    ),
+                    const SmartMiniPlayer(),
+                  ],
+                )
+              : Column(
+                  children: [
+                    CommonAppBar(
+                      title: "videMusicPlayer",
+                      subTitle: "mediaPlayer",
+                      actionWidget: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SearchScreen(),
+                            ),
+                          );
+                        },
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0.8, end: 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          builder: (context, double val, child) =>
+                              Transform.scale(scale: val, child: child),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: colors.textFieldFill,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: AppImage(
+                                src: AppSvg.searchIcon,
+                                color: colors.blackColor,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              Divider(color: colors.dividerColor),
-              Expanded(child: _AudioBody()),
-            ],
-          ),
-          const SmartMiniPlayer(),
-        ],
-      )
-          : Column(
-        children: [
-          CommonAppBar(
-            title: "videMusicPlayer",
-            subTitle: "mediaPlayer",
-            actionWidget: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                    MaterialPageRoute(
-                      builder: (_) => const SearchScreen(),
+                    Divider(color: colors.dividerColor),
+                    Expanded(child: _AudioBody()),
+                  ],
+                ))
+          : (widget.showMiniPlayer
+              ? Column(
+                  children: [
+                    CommonAppBar(
+                      title: "videMusicPlayer",
+                      subTitle: "mediaPlayer",
+                      actionWidget: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SearchScreen(),
+                            ),
+                          );
+                        },
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0.8, end: 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          builder: (context, double val, child) =>
+                              Transform.scale(scale: val, child: child),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: colors.textFieldFill,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: AppImage(
+                                src: AppSvg.searchIcon,
+                                color: colors.blackColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                );
-              },
-              child: TweenAnimationBuilder(
-                tween: Tween<double>(begin: 0.8, end: 1.0),
-                duration: const Duration(milliseconds: 500),
-                builder: (context, double val, child) =>
-                    Transform.scale(scale: val, child: child),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: colors.textFieldFill,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AppImage(
-                      src: AppSvg.searchIcon,
-                      color: colors.blackColor,
+                    Divider(color: colors.dividerColor),
+                    Expanded(child: _AudioBody()),
+                    const Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SmartMiniPlayer(),
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Divider(color: colors.dividerColor),
-          Expanded(child: _AudioBody()),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: const SmartMiniPlayer(),
-          ),
-        ],
-      ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    CommonAppBar(
+                      title: "videMusicPlayer",
+                      subTitle: "mediaPlayer",
+                      actionWidget: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SearchScreen(),
+                            ),
+                          );
+                        },
+                        child: TweenAnimationBuilder(
+                          tween: Tween<double>(begin: 0.8, end: 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          builder: (context, double val, child) =>
+                              Transform.scale(scale: val, child: child),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: colors.textFieldFill,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: AppImage(
+                                src: AppSvg.searchIcon,
+                                color: colors.blackColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Divider(color: colors.dividerColor),
+                    Expanded(child: _AudioBody()),
+                  ],
+                )),
     );
   }
 }
@@ -380,23 +472,62 @@ class _AudioBodyState extends State<_AudioBody>
     final colors = Theme.of(context).extension<AppThemeColors>()!;
 
     return BlocBuilder<AudioBloc, AudioState>(
+      buildWhen: (previous, current) =>
+          current is AudioLoaded ||
+          current is AudioLoading ||
+          current is AudioError ||
+          current is AudioInitial,
       builder: (context, state) {
-        List<AssetEntity> entities = [];
-
-        if (state is AudioLoading) {
-          return Center(child: CustomLoader());
-        } else if (state is AudioLoaded) {
-          entities = List.from(state.entities);
-          entities.sort(
-                (a, b) => (a.title ?? "").toLowerCase().compareTo(
-              (b.title ?? "").toLowerCase(),
-            ),
-          );
-        } else if (state is AudioError) {
-          return Center(child: Text(state.message));
+        if (state is AudioInitial || state is AudioLoading) {
+          return const MediaShimmerLoading();
         }
 
-        if (entities.isEmpty) return const SizedBox();
+        if (state is AudioError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () {
+                      context.read<AudioBloc>().add(LoadAudios());
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: AppText('retry', fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (state is! AudioLoaded) {
+          return const MediaShimmerLoading();
+        }
+
+        List<AssetEntity> entities = List.from(state.entities);
+        entities.sort(
+          (a, b) => (a.title ?? "").toLowerCase().compareTo(
+                (b.title ?? "").toLowerCase(),
+              ),
+        );
+
+        if (entities.isEmpty) {
+          return Center(
+            child: AppText(
+              'noResultFound',
+              fontSize: 15,
+              color: colors.blackColor.withOpacity(0.6),
+            ),
+          );
+        }
 
         const int adInterval = 5;
         final alphabetList = _getAlphabetList(entities);

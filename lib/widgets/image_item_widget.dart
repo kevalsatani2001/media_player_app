@@ -3,12 +3,12 @@ import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import '../core/constants.dart';
 import '../screens/home_screen.dart';
 import '../utils/app_colors.dart';
 import 'common_methods.dart';
 import 'image_widget.dart';
+import 'safe_asset_thumbnail.dart';
 
 enum MediaMenuAction {
   detail,
@@ -208,20 +208,17 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                 ),
                 clipBehavior: Clip.antiAlias,
                 // Ã°Å¸â€â€˜ important
-                child: AssetEntityImage(
-                  entity,
+                child: SafeAssetThumbnail(
+                  entity: entity,
                   thumbnailSize: const ThumbnailSize(160, 120),
-                  // 2x for quality
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
+                  placeholder: const Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 20,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               SizedBox(width: 13),
@@ -526,31 +523,12 @@ Widget? assetAntityImage(AssetEntity entity) {
     return videoPlaceholder(isAudio: true);
   }
 
-  return FutureBuilder<File?>(
-    future: entity.file,
-    builder: (context, snapshot) {
-      if (!snapshot.hasData || snapshot.data == null) {
-        return videoPlaceholder(isAudio: false);
-      }
-
-      final file = snapshot.data!;
-
-      if (!file.existsSync() || file.lengthSync() == 0) {
-        return videoPlaceholder(isAudio: false);
-      }
-
-      return AssetEntityImage(
-        entity,
-        width: double.infinity,
-        isOriginal: false,
-        thumbnailSize: const ThumbnailSize.square(150),
-        thumbnailFormat: ThumbnailFormat.jpeg,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          debugPrint("Thumbnail Error: $error");
-          return videoPlaceholder(isAudio: false);
-        },
-      );
-    },
+  return SafeAssetThumbnail(
+    entity: entity,
+    thumbnailSize: const ThumbnailSize.square(150),
+    format: ThumbnailFormat.jpeg,
+    width: double.infinity,
+    fit: BoxFit.cover,
+    placeholder: videoPlaceholder(isAudio: false),
   );
 }

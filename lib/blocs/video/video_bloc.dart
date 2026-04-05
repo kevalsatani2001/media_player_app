@@ -58,41 +58,101 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       }
       // ૨. તરત જ Loading સ્ટેટમાં જૂનો ડેટા બતાવો (સ્ક્રીન ખાલી નહીં થાય)
       // emit(VideoLoading(entities: cachedEntities));
-    } else if (event.showLoading!) {
+    } else if (event.showLoading) {
       emit(VideoLoading());
     }
-    // ૩. હવે PhotoManager થી સાચો પાથ અને નવો ડેટા લાવો
-    final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
-      type: RequestType.video,
+
+    final perm = await PhotoManager.requestPermissionExtend(
+      requestOption: PermissionRequestOption(
+        androidPermission: AndroidPermission(
+          type: RequestType.fromTypes([RequestType.audio, RequestType.video]),
+          mediaLocation: false,
+        ),
+      ),
     );
-
-    if (paths.isNotEmpty) {
-      final AssetPathEntity mainPath = paths[0]; // "All Audios" પાથ
-      final int totalCount = await mainPath.assetCountAsync;
-      final List<AssetEntity> latestEntities = await mainPath.getAssetListRange(
-        start: 0,
-        end: totalCount,
-      );
-
-      latestEntities.sort((a, b) {
-        final na = (a.title ?? a.id).toLowerCase();
-        final nb = (b.title ?? b.id).toLowerCase();
-        return na.compareTo(nb);
-      });
-
-      // ૪. Hive અપડેટ કરો
-      await box.clear();
-      await box.addAll(latestEntities.map((e) => e.id).toList());
-
-      // ૫. હવે તમારી બધી Required પ્રોપર્ટીઝ સાથે AudioLoaded ઈમિટ કરો
-      emit(VideoLoaded(
-        entities: latestEntities,
-        path: mainPath,
-        page: 0,
-        totalCount: totalCount,
-        hasMore: false,
+    if (!perm.hasAccess) {
+      emit(VideoError(
+        'Video access denied. Open Settings → Permissions, allow Photos & video, then retry.',
       ));
+      return;
     }
+
+    Future<List<AssetPathEntity>> loadPaths({required bool onlyAll}) {
+      return PhotoManager.getAssetPathList(
+        type: RequestType.video,
+        hasAll: true,
+        onlyAll: onlyAll,
+      );
+    }
+
+    var paths = await loadPaths(onlyAll: true);
+    if (paths.isEmpty) {
+      paths = await loadPaths(onlyAll: false);
+    }
+
+    if (paths.isEmpty) {
+      emit(VideoError(
+        'No videos found. If files are on an SD card, wait for media scan then retry.',
+      ));
+      return;
+    }
+
+    var bestIdx = 0;
+    var bestCount = await paths[0].assetCountAsync;
+    for (var i = 1; i < paths.length; i++) {
+      final c = await paths[i].assetCountAsync;
+      if (c > bestCount) {
+        bestCount = c;
+        bestIdx = i;
+      }
+    }
+
+    List<AssetEntity> latestEntities;
+    AssetPathEntity mainPath;
+
+    if (bestCount > 0) {
+      mainPath = paths[bestIdx];
+      latestEntities =
+          await mainPath.getAssetListRange(start: 0, end: bestCount);
+    } else {
+      final byId = <String, AssetEntity>{};
+      for (final p in paths) {
+        final n = await p.assetCountAsync;
+        if (n == 0) continue;
+        final chunk = await p.getAssetListRange(start: 0, end: n);
+        for (final e in chunk) {
+          if (e.type == AssetType.video) {
+            byId[e.id] = e;
+          }
+        }
+      }
+      latestEntities = byId.values.toList();
+      mainPath = paths.first;
+    }
+
+    if (latestEntities.isEmpty) {
+      emit(VideoError(
+        'No videos found. If files are on an SD card, wait for media scan then retry.',
+      ));
+      return;
+    }
+
+    latestEntities.sort((a, b) {
+      final na = (a.title ?? a.id).toLowerCase();
+      final nb = (b.title ?? b.id).toLowerCase();
+      return na.compareTo(nb);
+    });
+
+    await box.clear();
+    await box.addAll(latestEntities.map((e) => e.id).toList());
+
+    emit(VideoLoaded(
+      entities: latestEntities,
+      path: mainPath,
+      page: 0,
+      totalCount: latestEntities.length,
+      hasMore: false,
+    ));
   }
 
   Future<void> _onLoadMoreVideos(LoadMoreVideos event, Emitter<VideoState> emit) async {
@@ -187,7 +247,7 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       }
       // ૨. તરત જ Loading સ્ટેટમાં જૂનો ડેટા બતાવો (સ્ક્રીન ખાલી નહીં થાય)
       // emit(VideoLoading(entities: cachedEntities));
-    } else if (event.showLoading!) {
+    } else if (event.showLoading) {
       emit(VideoLoading());
     }
     // ૩. હવે PhotoManager થી સાચો પાથ અને નવો ડેટા લાવો

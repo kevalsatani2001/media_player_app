@@ -5,8 +5,14 @@ import '../utils/app_imports.dart';
 
 class VideoScreen extends StatefulWidget {
   bool isComeHomeScreen;
+  /// When false, no in-screen mini player (e.g. main shell provides one — avoids duplicate [Hero] tags in [IndexedStack]).
+  final bool showMiniPlayer;
 
-  VideoScreen({super.key, this.isComeHomeScreen = true});
+  VideoScreen({
+    super.key,
+    this.isComeHomeScreen = true,
+    this.showMiniPlayer = true,
+  });
 
   @override
   State<VideoScreen> createState() => _VideoScreenState();
@@ -52,10 +58,8 @@ class _VideoScreenState extends State<VideoScreen> {
       }
 
       if (currentIndex >= 0 && currentIndex < state.entities.length) {
-        var entity = state.entities[currentIndex];
-        String name = (entity is AssetEntity)
-            ? (entity.title ?? "")
-            : (entity as my.MediaItem).path.split('/').last;
+        final entity = state.entities[currentIndex];
+        final name = entity.title ?? "";
 
         if (name.isNotEmpty) {
           String firstChar = name[0].toUpperCase();
@@ -85,85 +89,68 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    final box = Hive.box('videos');
 
     if (widget.isComeHomeScreen) {
-      return BlocProvider(
-        create: (_) =>
-        VideoBloc(Hive.box('videos'))
-          ..add(LoadVideosFromGallery(showLoading: false)),
-        child: Builder(
-          builder: (context) {
-            return Scaffold(
-              appBar: AppBar(
-                leading: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: AppImage(
-                      src: AppSvg.backArrowIcon,
-                      color: colors.blackColor,
-                      height: 20,
-                      width: 20,
-                    ),
-                  ),
-                ),
-                centerTitle: true,
-                title: AppText(
-                  "videos",
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-
-                actions: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      );
-                    },
-                    child: Container(
-                      height: 24,
-                      width: 24,
-                      child: Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: AppImage(
-                          src: "assets/svg_icon/search_icon.svg",
-                          height: 24,
-                          width: 24,
-                          color: colors.blackColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Builder(builder: (context) {
-                  //   return IconButton(
-                  //     icon: const Icon(Icons.add),
-                  //     onPressed: () {
-                  //       context.read<VideoBloc>().add(
-                  //         PickVideos(() async {}),
-                  //       );
-                  //     },
-                  //   );
-                  // }),
-                  SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isGridView = !_isGridView;
-                      });
-                    },
-                    child: AppImage(
-                      src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
-                      color: colors.blackColor,
-                    ),
-                  ),
-                  SizedBox(width: 15),
-                ],
+      return Scaffold(
+        appBar: AppBar(
+          leading: Padding(
+            padding: const EdgeInsets.all(16),
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: AppImage(
+                src: AppSvg.backArrowIcon,
+                color: colors.blackColor,
+                height: 20,
+                width: 20,
               ),
-              body: SafeArea(
-                child: Stack(
+            ),
+          ),
+          centerTitle: true,
+          title: AppText(
+            "videos",
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                );
+              },
+              child: Container(
+                height: 24,
+                width: 24,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: AppImage(
+                    src: "assets/svg_icon/search_icon.svg",
+                    height: 24,
+                    width: 24,
+                    color: colors.blackColor,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 12),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isGridView = !_isGridView;
+                });
+              },
+              child: AppImage(
+                src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                color: colors.blackColor,
+              ),
+            ),
+            SizedBox(width: 15),
+          ],
+        ),
+        body: SafeArea(
+          child: widget.showMiniPlayer
+              ? Stack(
                   children: [
                     Column(
                       children: [
@@ -172,46 +159,48 @@ class _VideoScreenState extends State<VideoScreen> {
                       ],
                     ),
                     SmartMiniPlayer(forceMiniMode: true),
-                    // Aa widget potani rite handle karshe
+                  ],
+                )
+              : Column(
+                  children: [
+                    AdHelper.adaptiveBannerWidget(context),
+                    Expanded(child: _buildVideoPage()),
                   ],
                 ),
-              ),
-            );
-          },
         ),
       );
     } else {
-      return Stack(
+      final content = Column(
         children: [
-          Column(
-            children: [
-              CommonAppBar(
-                title: "videMusicPlayer",
-                subTitle: "mediaPlayer",
-                actionWidget: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: colors.textFieldFill,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _isGridView = !_isGridView),
-                      child: AppImage(
-                        src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
-                        color: colors.blackColor,
-                      ),
-                    ),
+          CommonAppBar(
+            title: "videMusicPlayer",
+            subTitle: "mediaPlayer",
+            actionWidget: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: colors.textFieldFill,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: GestureDetector(
+                  onTap: () => setState(() => _isGridView = !_isGridView),
+                  child: AppImage(
+                    src: _isGridView ? AppSvg.listIcon : AppSvg.gridIcon,
+                    color: colors.blackColor,
                   ),
                 ),
               ),
-              Divider(color: colors.dividerColor),
-
-              AdHelper.adaptiveBannerWidget(context),
-
-              Expanded(child: _buildVideoPage()),
-            ],
+            ),
           ),
+          Divider(color: colors.dividerColor),
+          AdHelper.adaptiveBannerWidget(context),
+          Expanded(child: _buildVideoPage()),
+        ],
+      );
+      if (!widget.showMiniPlayer) return content;
+      return Stack(
+        children: [
+          content,
           SmartMiniPlayer(forceMiniMode: true),
         ],
       );
@@ -284,16 +273,44 @@ class _VideoScreenState extends State<VideoScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return BlocBuilder<VideoBloc, VideoState>(
       buildWhen: (previous, current) =>
-      current is VideoLoaded ||
+          current is VideoLoaded ||
           current is VideoLoading ||
-          current is VideoError,
+          current is VideoError ||
+          current is VideoInitial,
       builder: (context, state) {
-        if (state is VideoLoading) {
+        if (state is VideoInitial || state is VideoLoading) {
           return const MediaShimmerLoading();
         }
 
         if (state is VideoError) {
-          return Center(child: Text(state.message));
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () {
+                      context.read<VideoBloc>().add(
+                            LoadVideosFromGallery(
+                              showLoading: true,
+                              isRefresh: true,
+                            ),
+                          );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: AppText('retry', fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         if (state is VideoLoaded) {
@@ -394,7 +411,7 @@ class _VideoScreenState extends State<VideoScreen> {
             ],
           );
         }
-        return const SizedBox();
+        return const MediaShimmerLoading();
       },
     );
   }
