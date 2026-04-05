@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:media_player/blocs/video/video_event.dart';
 import 'package:media_player/blocs/video/video_state.dart';
+import 'package:media_player/services/custom_video_thumbnail_store.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 
@@ -142,6 +143,8 @@ class VideoBloc extends Bloc<VideoEvent, VideoState> {
       final nb = (b.title ?? b.id).toLowerCase();
       return na.compareTo(nb);
     });
+
+    await CustomVideoThumbnailStore.resolvePendingForList(latestEntities);
 
     await box.clear();
     await box.addAll(latestEntities.map((e) => e.id).toList());

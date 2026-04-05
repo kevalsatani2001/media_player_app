@@ -1,8 +1,19 @@
 //////////////////////////////////// part 1 new video trim scareen//////////////////////////////////////
 
 import 'dart:math' as Math;
+import 'dart:typed_data';
+
 import '../services/ads_service.dart';
+import '../services/custom_video_thumbnail_store.dart';
 import '../utils/app_imports.dart';
+
+class _CoverStripSlot {
+  _CoverStripSlot({required this.timeMs});
+  final double timeMs;
+  /// In-memory JPEG bytes — [VideoThumbnail.thumbnailFile] reuses one path per
+  /// video and overwrites; [thumbnailData] gives a distinct frame per slot.
+  Uint8List? thumbBytes;
+}
 
 class VideoTrimScreen extends StatefulWidget {
   final File file;
@@ -23,9 +34,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   bool _isSaving = false;
 
   File? _selectedCoverFile;
+  /// JPEG bytes for the chosen cover; success screen uses this so preview works
+  /// even if temp files are missing or [Image.file] fails on some devices.
+  Uint8List? _selectedCoverPreviewBytes;
   double _selectedCoverTime = 0.0;
-  bool _isCoverSelecting = false;
-  double _coverPos = 0.0;
+  final List<_CoverStripSlot> _coverStrip = [];
+  bool _coverStripLoading = false;
+  int _selectedCoverStripIndex = 0;
 
   bool _isSuccess = false;
   String _savedVideoPath = "";
@@ -49,9 +64,15 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   String? _loadError;
   bool _didAttachVideoListener = false;
 
+  late final TextEditingController _exportFileNameController;
+  /// Sanitized base name for the next export (set from save dialog).
+  String? _pendingExportBaseName;
+
   @override
   void initState() {
     super.initState();
+    _exportFileNameController =
+        TextEditingController(text: _defaultExportBaseName());
     playerService.pauseVideo();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,23 +101,265 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     return "${(bytes / Math.pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}";
   }
 
-  void _setVideoCover() async {
-    final String? path = await VideoThumbnail.thumbnailFile(
-      video: widget.file.path,
-      thumbnailPath: (await getTemporaryDirectory()).path,
-      imageFormat: ImageFormat.JPEG,
-      timeMs: _startValue.toInt(),
-      quality: 90,
-    );
+  String _defaultExportBaseName() {
+    final p = widget.file.path.replaceAll(r'\', '/');
+    final slash = p.lastIndexOf('/');
+    final name = slash >= 0 ? p.substring(slash + 1) : p;
+    final dot = name.lastIndexOf('.');
+    final base = dot > 0 ? name.substring(0, dot) : name;
+    final safe = _sanitizeExportBaseName(base);
+    return '${safe}_trim';
+  }
 
-    if (mounted && path != null) {
+  String _sanitizeExportBaseName(String raw) {
+    var s = raw.trim();
+    final lower = s.toLowerCase();
+    if (lower.endsWith('.mp4') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.m4v')) {
+      s = s.substring(0, s.length - 4);
+    }
+    if (s.isEmpty) return 'trimmed_${DateTime.now().millisecondsSinceEpoch}';
+    s = s.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_');
+    s = s.replaceAll(RegExp(r'\s+'), '_');
+    if (s.startsWith('.')) s = s.substring(1);
+    if (s.isEmpty) return 'trimmed_${DateTime.now().millisecondsSinceEpoch}';
+    if (s.length > 80) s = s.substring(0, 80);
+    return s;
+  }
+
+  /// How many strip thumbnails to generate: spread across whole video (~1 per 0.8s),
+  /// bounded so UX stays scrollable and devices don’t choke.
+  int _coverStripThumbnailCount(double totalMs) {
+    if (totalMs < 80) return 8;
+    const minN = 16;
+    const maxN = 100;
+    int n = (totalMs / 800).ceil();
+    if (n < minN) n = minN;
+    if (n > maxN) n = maxN;
+    return n;
+  }
+
+  Future<File> _writeCoverBytesToTempFile(int index, Uint8List bytes) async {
+    final dir = await getTemporaryDirectory();
+    final f = File(
+      '${dir.path}/trim_cover_${index}_${_coverStrip[index].timeMs.toInt()}.jpg',
+    );
+    await f.writeAsBytes(bytes, flush: true);
+    return f;
+  }
+
+  Future<void> _syncSelectedCoverFileFromStrip() async {
+    final i = _selectedCoverStripIndex;
+    if (i < 0 || i >= _coverStrip.length) return;
+    final bytes = _coverStrip[i].thumbBytes;
+    if (bytes == null) return;
+    final f = await _writeCoverBytesToTempFile(i, bytes);
+    if (mounted) {
       setState(() {
-        _selectedCoverFile = File(path);
+        _selectedCoverFile = f;
+        _selectedCoverPreviewBytes = Uint8List.fromList(bytes);
+        _selectedCoverTime = _coverStrip[i].timeMs;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cover frame captured! ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¸")),
+    }
+  }
+
+  Future<void> _generateCoverStrip() async {
+    if (!mounted || _totalDurationMs < 50) return;
+    final int count = _coverStripThumbnailCount(_totalDurationMs);
+
+    setState(() {
+      _coverStripLoading = true;
+      _coverStrip.clear();
+      for (var i = 0; i < count; i++) {
+        final t = count <= 1
+            ? 0.0
+            : (_totalDurationMs * i / (count - 1)).clamp(0.0, _totalDurationMs - 1);
+        _coverStrip.add(_CoverStripSlot(timeMs: t));
+      }
+      _selectedCoverStripIndex = count ~/ 2;
+    });
+
+    const int parallel = 3;
+    for (var batch = 0; batch < _coverStrip.length; batch += parallel) {
+      if (!mounted) return;
+      final end = Math.min(batch + parallel, _coverStrip.length);
+      final results = await Future.wait(
+        List.generate(end - batch, (j) async {
+          final i = batch + j;
+          try {
+            final data = await VideoThumbnail.thumbnailData(
+              video: widget.file.path,
+              imageFormat: ImageFormat.JPEG,
+              timeMs: _coverStrip[i].timeMs.toInt(),
+              quality: 60,
+            );
+            return MapEntry(i, data);
+          } catch (e) {
+            debugPrint('Cover strip thumb $i: $e');
+            return MapEntry(i, null);
+          }
+        }),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        for (final e in results) {
+          final i = e.key;
+          _coverStrip[i].thumbBytes = e.value;
+        }
+      });
+    }
+
+    if (mounted) {
+      await _syncSelectedCoverFileFromStrip();
+      setState(() => _coverStripLoading = false);
+    }
+  }
+
+  Future<void> _onSelectCoverStripIndex(int i) async {
+    if (i < 0 || i >= _coverStrip.length) return;
+    final bytes = _coverStrip[i].thumbBytes;
+    if (bytes == null) return;
+
+    final f = await _writeCoverBytesToTempFile(i, bytes);
+    if (!mounted) return;
+
+    setState(() {
+      _selectedCoverStripIndex = i;
+      _selectedCoverFile = f;
+      _selectedCoverPreviewBytes = Uint8List.fromList(bytes);
+      _selectedCoverTime = _coverStrip[i].timeMs;
+    });
+
+    final c = _trimmer.videoPlayerController;
+    if (c != null && c.value.isInitialized) {
+      await c.pause();
+      await c.seekTo(Duration(milliseconds: _coverStrip[i].timeMs.toInt()));
+      if (mounted) setState(() => _isPlaying = false);
+    }
+
+    if (mounted) {
+      AppToast.show(
+        context,
+        context.tr('coverFrameUpdated'),
+        type: ToastType.success,
       );
     }
+  }
+
+  Widget _buildCoverThumbnailStrip() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    if (_isLoadingVideo || _loadError != null) return const SizedBox.shrink();
+    if (_coverStrip.isEmpty && !_coverStripLoading) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.collections_outlined, color: colors.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AppText(
+                    'coverThumbnail',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 62,
+            child: _coverStripLoading &&
+                    _coverStrip.every((e) => e.thumbBytes == null)
+                ? Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.primary,
+                      ),
+                    ),
+                  )
+                : ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: _coverStrip.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final item = _coverStrip[i];
+                      final sel = i == _selectedCoverStripIndex;
+                      return GestureDetector(
+                        onTap: () => _onSelectCoverStripIndex(i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: sel ? colors.primary : Colors.white24,
+                              width: sel ? 2.5 : 1,
+                            ),
+                            boxShadow: sel
+                                ? [
+                                    BoxShadow(
+                                      color: colors.primary.withOpacity(0.35),
+                                      blurRadius: 8,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: item.thumbBytes == null
+                                ? ColoredBox(
+                                    color: colors.textFieldFill,
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: colors.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Image.memory(
+                                    item.thumbBytes!,
+                                    fit: BoxFit.cover,
+                                    width: 56,
+                                    height: 56,
+                                  ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            child: AppText(
+              'selectCoverHint',
+              fontSize: 11,
+              color: colors.dialogueSubTitle,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _loadVideo() async {
@@ -169,6 +432,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
             _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
             _isLoadingVideo = false;
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _generateCoverStrip();
           });
         }
       } else if (mounted) {
@@ -343,7 +609,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 16),
+                  _buildCoverThumbnailStrip(),
+                  const SizedBox(height: 12),
                   GestureDetector(
                     onTap: () async {
                       print("in side ontap ==> ");
@@ -395,6 +662,53 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     return "$hours:$minutes:$seconds";
   }
 
+  /// Uses the cover the user picked; falls back to first frame of saved file.
+  Widget _buildSuccessCoverPreview() {
+    final mem = _selectedCoverPreviewBytes;
+    if (mem != null && mem.isNotEmpty) {
+      return Image.memory(
+        mem,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        gaplessPlayback: true,
+        errorBuilder: (_, __, ___) => _buildSuccessCoverFromExportedVideo(),
+      );
+    }
+    final f = _selectedCoverFile;
+    if (f != null && f.existsSync()) {
+      return Image.file(
+        f,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _buildSuccessCoverFromExportedVideo(),
+      );
+    }
+    return _buildSuccessCoverFromExportedVideo();
+  }
+
+  Widget _buildSuccessCoverFromExportedVideo() {
+    return FutureBuilder<Uint8List?>(
+      future: VideoThumbnail.thumbnailData(
+        video: _savedVideoPath,
+        imageFormat: ImageFormat.JPEG,
+        quality: 85,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Image.memory(snapshot.data!, fit: BoxFit.cover);
+        }
+        return Container(
+          color: Colors.white10,
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSuccessUI() {
     return Container(
       color: Colors.black,
@@ -410,7 +724,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(context, true),
                   ),
                   const Expanded(
                     child: Text("Export Success",
@@ -455,19 +769,23 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
                           child: AspectRatio(
                             aspectRatio: 16 / 9,
-                            child: FutureBuilder<Uint8List?>(
-                              future: VideoThumbnail.thumbnailData(
-                                video: _savedVideoPath,
-                                imageFormat: ImageFormat.JPEG,
-                                quality: 85,
-                              ),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) return Image.memory(snapshot.data!, fit: BoxFit.cover);
-                                return Container(color: Colors.white10, child: const Center(child: CircularProgressIndicator(strokeWidth: 2)));
-                              },
-                            ),
+                            child: _buildSuccessCoverPreview(),
                           ),
                         ),
+                        if (_selectedCoverFile != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '${context.tr('coverPreviewAt')} ${_formatDuration(_selectedCoverTime)}',
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ),
                         Padding(
                           padding: const EdgeInsets.all(15),
                           child: Row(
@@ -669,27 +987,25 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
           const Spacer(),
           TextButton(
-            // onPressed: (!_isTrimmed || _isSaving) ? null : _showAdDialog,
-            onPressed: (!_isTrimmed || _isSaving) ? null :()async{
-
-
-              final controller = _trimmer.videoPlayerController;
-              if (controller != null && controller.value.isInitialized) {
-                if (controller.value.isPlaying) {
-                  await controller.pause();
-                } else {
-                  await controller.play();
-                }
-                // setState àª•àª°àªµàª¾àª¨à«€ àªœàª°à«‚àª° àª¨àª¥à«€ àª•àª¾àª°àª£ àª•à«‡ àª†àªªàª£à«‡ controller.addListener àª‰àª®à«‡àª°à«àª¯à«àª‚ àª›à«‡
-              }
-              _showAdDialog();},
+            onPressed: (!_isTrimmed || _isSaving)
+                ? null
+                : () async {
+                    final controller = _trimmer.videoPlayerController;
+                    if (controller != null &&
+                        controller.value.isInitialized &&
+                        controller.value.isPlaying) {
+                      await controller.pause();
+                      if (mounted) setState(() => _isPlaying = false);
+                    }
+                    _showAdDialog();
+                  },
 
             child: Text(
               "SAVE",
               style: TextStyle(
                 color: (!_isTrimmed || _isSaving)
                     ? Colors.grey
-                    : Colors.blueAccent,
+                    : colors.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -730,7 +1046,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
+        final themeColors =
+            Theme.of(dialogContext).extension<AppThemeColors>()!;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             _progressTimer?.cancel();
@@ -769,8 +1087,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                     // Percentage Text
                     Text(
                       "${_currentPercentage.toInt()}%",
-                      style: const TextStyle(
-                        color: Colors.blueAccent,
+                      style: TextStyle(
+                        color: themeColors.primary,
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                       ),
@@ -783,7 +1101,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       child: LinearProgressIndicator(
                         value: _currentPercentage / 100,
                         backgroundColor: Colors.white10,
-                        color: Colors.blueAccent,
+                        color: themeColors.primary,
                         minHeight: 10,
                       ),
                     ),
@@ -808,102 +1126,196 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   //////////////////////////////////// part 2 new video trim scareen/////////////////////////////////////////////////////////////////////////////////////////////
 
   _saveVideo() async {
+    final exportBase = _pendingExportBaseName ??
+        'trimmed_${DateTime.now().millisecondsSinceEpoch}';
+
     _currentPercentage = 0.0;
+    if (!mounted) return;
+    setState(() => _isSaving = true);
+    await _trimmer.videoPlayerController?.pause();
+    if (mounted) setState(() => _isPlaying = false);
     _showProcessingDialog();
 
     try {
       await _trimmer.saveTrimmedVideo(
         startValue: _startValue,
         endValue: _endValue,
-        videoFileName: "trimmed_${DateTime.now().millisecondsSinceEpoch}",
+        videoFileName: exportBase,
         storageDir: StorageDir.temporaryDirectory,
         onSave: (outputPath) async {
           _progressTimer?.cancel();
-          if (Navigator.canPop(context)) Navigator.pop(context); // àª²à«‹àª¡àª¿àª‚àª— àª¡àª¾àª¯àª²à«‹àª— àª¬àª‚àª§ àª•àª°à«‹
+          if (Navigator.canPop(context)) Navigator.pop(context);
 
+          if (!mounted) return;
           if (outputPath != null && outputPath.isNotEmpty) {
-            await Gal.putVideo(outputPath);
-            setState(() {
-              _isSuccess = true;
-              _savedVideoPath = outputPath;
-            });
+            try {
+              await Gal.putVideo(outputPath);
+              final mem = _selectedCoverPreviewBytes;
+              if (mem != null && mem.isNotEmpty) {
+                await CustomVideoThumbnailStore.registerPendingOverride(
+                  baseName: exportBase,
+                  jpegBytes: mem,
+                );
+              }
+              if (mounted) {
+                setState(() {
+                  _isSuccess = true;
+                  _savedVideoPath = outputPath;
+                  _isSaving = false;
+                });
+              }
+            } catch (e) {
+              debugPrint('Gal.putVideo: $e');
+              if (mounted) {
+                setState(() => _isSaving = false);
+                AppToast.show(
+                  context,
+                  'Failed to save video to gallery. Please try again.',
+                  type: ToastType.error,
+                );
+              }
+            }
+          } else {
+            if (mounted) setState(() => _isSaving = false);
           }
         },
       );
     } catch (e) {
+      debugPrint('saveTrimmedVideo: $e');
       _progressTimer?.cancel();
       if (Navigator.canPop(context)) Navigator.pop(context);
+      if (mounted) {
+        setState(() => _isSaving = false);
+        AppToast.show(
+          context,
+          'Could not export video. Please try again.',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      _pendingExportBaseName = null;
     }
   }
 
   void _showAdDialog() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    if (_exportFileNameController.text.trim().isEmpty) {
+      _exportFileNameController.text = _defaultExportBaseName();
+    }
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.grey[900],
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 10),
-            // 1. Save Icon
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blueAccent,
-              child: Icon(Icons.save_alt, color: Colors.white, size: 30),
-            ),
-            const SizedBox(height: 20),
-
-            // 2. Title & Message
-            const Text(
-              "Save Video",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: colors.primary,
+                child:
+                    const Icon(Icons.save_alt, color: Colors.white, size: 30),
               ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Watch Ad to Save 1 video(s)",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-            const SizedBox(height: 25),
-
-            // 3. Watch Ad Button
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() => _isPlaying = false);
-                Navigator.pop(context);
-                _playRewardedAd();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.play_circle_fill, color: Colors.white),
-              label: const Text(
-                "Watch Ad to proceed",
+              const SizedBox(height: 20),
+              const Text(
+                "Save Video",
                 style: TextStyle(
                   color: Colors.white,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-
-            // 4. Cancel Button (Optional)
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Maybe Later",
-                style: TextStyle(color: Colors.grey),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.tr('trimExportFileName'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              TextField(
+                controller: _exportFileNameController,
+                style: const TextStyle(color: Colors.white),
+                cursorColor: colors.primary,
+                decoration: InputDecoration(
+                  hintText: context.tr('trimExportFileNameHint'),
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.08),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.dividerColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.dividerColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: colors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "Watch Ad to Save 1 video(s)",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  final sanitized =
+                      _sanitizeExportBaseName(_exportFileNameController.text);
+                  if (sanitized.isEmpty ||
+                      sanitized.replaceAll('_', '').isEmpty) {
+                    AppToast.show(
+                      context,
+                      context.tr('trimExportInvalidName'),
+                      type: ToastType.error,
+                    );
+                    return;
+                  }
+                  _pendingExportBaseName = sanitized;
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  await _trimmer.videoPlayerController?.pause();
+                  if (mounted) setState(() => _isPlaying = false);
+                  Navigator.pop(dialogContext);
+                  _playRewardedAd();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.whiteColor,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.play_circle_fill, color: Colors.white),
+                label: Text(
+                  context.tr('trimExportContinue'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text(
+                  "Maybe Later",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -927,108 +1339,92 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
 
   void _showDiscardDialog() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 25,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: colors.grey1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.1),
+                color: colors.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.warning_amber_rounded,
-                color: Colors.redAccent,
+                color: colors.primary,
                 size: 40,
               ),
             ),
             const SizedBox(height: 20),
-
-            // Ã Â«Â¨. Title & Message
-            const Text(
-              "Discard changes?",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            AppText(
+              'discardTrimTitle',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: colors.appBarTitleColor,
+              align: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
-              "Your trimming progress will be lost. Are you sure you want to exit?",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                height: 1.4,
-              ),
+            AppText(
+              'discardTrimMessage',
+              fontSize: 15,
+              fontWeight: FontWeight.w400,
+              color: colors.dialogueSubTitle,
+              align: TextAlign.center,
+              height: 1.35,
             ),
-            const SizedBox(height: 30),
-
-            // Ã Â«Â©. Buttons Row
+            const SizedBox(height: 28),
             Row(
               children: [
-                // Keep Editing Button (Cancel)
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white24),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      foregroundColor: colors.dialogueSubTitle,
+                      side: BorderSide(color: colors.dividerColor),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "Keep Editing",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: AppText(
+                      'keepEditing',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: colors.dialogueSubTitle,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-
-                // Discard Button (Confirm)
-                // Discard Button (Confirm)
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Ã Â«Â§. Ã ÂªÂªÃ ÂªÂ¹Ã Â«â€¡Ã ÂªÂ²Ã ÂªÂ¾ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡Ã ÂªÂ¯Ã ÂªÂ°Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ°Ã ÂªÂ¿Ã ÂªÂÃ Â«ÂÃ ÂªÂ¯Ã Â«ÂÃ ÂªÂ® Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã Â«â€¡Ã ÂªË†Ã ÂªÂ¨ Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨ Ã ÂªÂªÃ ÂªÂ° Ã ÂªÂ²Ã Â«â€¹Ã ÂªÂ¡Ã ÂªÂ° Ã ÂªÂ¨ Ã ÂªÂ«Ã ÂªÂ°Ã Â«â€¡
-                      playerService.controller
-                          ?.play(); // Ã Âªâ€œÃ ÂªÂ°Ã ÂªÂ¿Ã ÂªÅ“Ã ÂªÂ¿Ã ÂªÂ¨Ã ÂªÂ² Ã ÂªÂ«Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ² Ã ÂªÂ«Ã ÂªÂ°Ã Â«â‚¬ Ã ÂªÂªÃ Â«ÂÃ ÂªÂ²Ã Â«â€¡ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-
-                      // Ã Â«Â¨. Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ¯Ã ÂªÂ²Ã Â«â€¹Ã Âªâ€” Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
-                      Navigator.pop(context);
-
-                      // Ã Â«Â©. Ã ÂªÂµÃ ÂªÂ¿Ã ÂªÂ¡Ã ÂªÂ¿Ã ÂªÂ¯Ã Â«â€¹ Ã ÂªÅ¸Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ® Ã ÂªÂ¸Ã Â«ÂÃ Âªâ€¢Ã Â«ÂÃ ÂªÂ°Ã Â«â‚¬Ã ÂªÂ¨ Ã ÂªÂ¬Ã Âªâ€šÃ ÂªÂ§ Ã Âªâ€¢Ã ÂªÂ°Ã Â«â€¹
+                      playerService.controller?.play();
+                      Navigator.pop(dialogContext);
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.whiteColor,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
-                      "Discard",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: AppText(
+                      'discardConfirm',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: colors.whiteColor,
                     ),
                   ),
                 ),
@@ -1042,6 +1438,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
   @override
   void dispose() {
+    _exportFileNameController.dispose();
     // à«§. àª¸à«Œàª¥à«€ àªªàª¹à«‡àª²àª¾ àªŸàª¾àªˆàª®àª° àª¬àª‚àª§ àª•àª°à«‹
     _progressTimer?.cancel();
 

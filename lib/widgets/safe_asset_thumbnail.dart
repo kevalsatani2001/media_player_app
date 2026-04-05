@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:media_player/services/custom_video_thumbnail_store.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 ThumbnailOption _thumbOptionForPlatform(
@@ -92,12 +93,25 @@ class _SafeAssetThumbnailState extends State<SafeAssetThumbnail> {
     }
   }
 
-  Future<Uint8List?> _load() => loadAssetThumbnailBytesSafe(
-        widget.entity,
-        thumbnailSize: widget.thumbnailSize,
-        format: widget.format,
-        frame: widget.frame,
-      );
+  Future<Uint8List?> _load() async {
+    final customPath = CustomVideoThumbnailStore.pathFor(widget.entity.id);
+    if (customPath != null) {
+      try {
+        final f = File(customPath);
+        if (await f.exists()) {
+          return f.readAsBytes();
+        }
+      } catch (e) {
+        debugPrint('Custom thumb read failed: $e');
+      }
+    }
+    return loadAssetThumbnailBytesSafe(
+      widget.entity,
+      thumbnailSize: widget.thumbnailSize,
+      format: widget.format,
+      frame: widget.frame,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

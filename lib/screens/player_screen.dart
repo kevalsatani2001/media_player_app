@@ -1837,14 +1837,24 @@ class _PlayerScreenState extends State<PlayerScreen>
                                     .playlist[playerService.currentIndex]
                                     .file;
 
-                                final trimmedPath = await Navigator.push(
+                                final trimResult = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         VideoTrimScreen(file: file!),
                                   ),
                                 );
-                                print("trimmedPath is ==> $trimmedPath");
+                                if (!mounted) return;
+                                if (trimResult == true ||
+                                    (trimResult is String &&
+                                        trimResult.isNotEmpty)) {
+                                  context.read<VideoBloc>().add(
+                                        LoadVideosFromGallery(
+                                          showLoading: false,
+                                          isRefresh: true,
+                                        ),
+                                      );
+                                }
 
                                 int lastPosition =
                                     playerService
@@ -3215,13 +3225,22 @@ class _PlayerScreenState extends State<PlayerScreen>
                       .playlist[playerService.currentIndex]
                       .file;
 
-                  final trimmedPath = await Navigator.push(
+                  final trimResult = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => VideoTrimScreen(file: file!),
                     ),
                   );
-                  print("trimmedPath is ==> $trimmedPath");
+                  if (!mounted) return;
+                  if (trimResult == true ||
+                      (trimResult is String && trimResult.isNotEmpty)) {
+                    context.read<VideoBloc>().add(
+                          LoadVideosFromGallery(
+                            showLoading: false,
+                            isRefresh: true,
+                          ),
+                        );
+                  }
 
                   int lastPosition =
                       playerService.controller?.value.position.inMilliseconds ??
