@@ -1,4 +1,4 @@
-import 'dart:math' show min;
+import 'dart:math' show max, min;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../utils/app_imports.dart';
@@ -542,6 +542,11 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
         },
       ),
       request: const AdRequest(),
+      nativeAdOptions: NativeAdOptions(
+        adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+        mediaAspectRatio: MediaAspectRatio.any,
+        videoOptions: VideoOptions(startMuted: true),
+      ),
       nativeTemplateStyle: NativeTemplateStyle(
         templateType: TemplateType.medium,
         mainBackgroundColor: const Color(0xFFF8F8F8),
@@ -590,135 +595,188 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
         type: MaterialType.transparency,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final maxW = min(constraints.maxWidth * 0.92, 400.0);
-            final adH = min(constraints.maxHeight * 0.55, 380.0);
+            final pad = MediaQuery.paddingOf(context);
+            final isLandscape =
+                constraints.maxWidth > constraints.maxHeight;
+            // Slightly narrower card in landscape reads better on wide screens.
+            final maxW = min(
+              constraints.maxWidth * 0.92,
+              isLandscape ? 360.0 : 400.0,
+            );
 
+            // Portrait: keep previous behaviour. Landscape: short side is tight;
+            // medium native template needs ~280–380 logical px height — old 55%
+            // of height clipped the ad. Prefer a taller slot; scroll if needed.
+            final double adH;
+            if (isLandscape) {
+              final safeH = constraints.maxHeight - pad.vertical;
+              adH = min(
+                380.0,
+                max(280.0, safeH * 0.82 - 40.0),
+              );
+            } else {
+              adH = min(constraints.maxHeight * 0.55, 380.0);
+            }
+
+            final cardColumn = Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: maxW,
+                      constraints: BoxConstraints(maxHeight: adH + 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.35),
+                            blurRadius: 22,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: _failed
+                            ? SizedBox(
+                                width: maxW,
+                                height: 120,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Text(
+                                      'Ad unavailable',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : (!_loaded || _nativeAd == null)
+                                ? SizedBox(
+                                    width: maxW,
+                                    height: adH.clamp(200.0, 380.0),
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: Color(0xFF3D57F9),
+                                      ),
+                                    ),
+                                  )
+                                : SizedBox(
+                                    width: maxW,
+                                    height: adH,
+                                    child: AdWidget(ad: _nativeAd!),
+                                  ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade700,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'Ad',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Material(
+                        color: Colors.black54,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: widget.onDismiss,
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: widget.onDismiss,
+                  child: Text(
+                    'Close',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            );
+
+            // Dimming only — taps pass through to the player GestureDetector except
+            // on the ad card (so empty screen toggles controls; ad stays tappable).
             return Stack(
               alignment: Alignment.center,
+              clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {},
+                  child: IgnorePointer(
+                    ignoring: true,
                     child: ColoredBox(
                       color: Colors.black.withOpacity(0.48),
                     ),
                   ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: maxW,
-                          constraints: BoxConstraints(maxHeight: adH + 24),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.35),
-                                blurRadius: 22,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: _failed
-                                ? SizedBox(
-                                    width: maxW,
-                                    height: 120,
-                                    child: Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Text(
-                                          'Ad unavailable',
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : (!_loaded || _nativeAd == null)
-                                    ? SizedBox(
-                                        width: maxW,
-                                        height: 260,
-                                        child: const Center(
-                                          child: CircularProgressIndicator(
-                                            color: Color(0xFF3D57F9),
-                                          ),
-                                        ),
-                                      )
-                                    : SizedBox(
-                                        width: maxW,
-                                        height: adH,
-                                        child: AdWidget(ad: _nativeAd!),
-                                      ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 8,
-                          right: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade700,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'Ad',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: -6,
-                          right: -6,
-                          child: Material(
-                            color: Colors.black54,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: widget.onDismiss,
-                              child: const Padding(
-                                padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                Align(
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      8,
+                      max(8.0, pad.top + 4),
+                      8,
+                      max(8.0, pad.bottom + 4),
                     ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: widget.onDismiss,
-                      child: Text(
-                        'Close',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxW + 48,
+                        maxHeight: max(
+                          120.0,
+                          constraints.maxHeight - pad.vertical - 16,
                         ),
                       ),
+                      child: ListView(
+                        shrinkWrap: true,
+                        physics: const ClampingScrollPhysics(),
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: cardColumn,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             );

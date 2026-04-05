@@ -43,6 +43,9 @@
     <key>GADApplicationIdentifier</key>
     <string>ca-app-pub-3940256099942544~1458002511</string>
 
+    <!-- Disables Native Ad Validator popup on test ads (see AdMob iOS native validator docs). -->
+    <key>GADNativeAdValidatorEnabled</key>
+    <false/>
 
     <key>LSApplicationQueriesSchemes</key>
     <array>

@@ -1,4 +1,4 @@
-import 'dart:math' show Random;
+import 'dart:math' show Random, min;
 import 'dart:ui' as ui;
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/ads_service.dart';
@@ -653,6 +653,19 @@ class _PlayerScreenState extends State<PlayerScreen>
         (local.dx <= inset && local.dy >= size.height - inset);
   }
 
+  /// Bottom-center zone where the main play/pause control sits (_buildBottomSection).
+  Rect _playPauseTapRectWhenPauseAdVisible(Size size) {
+    final centerX = size.width / 2;
+    final rowCenterY = size.height * 0.82;
+    final rw = min(size.shortestSide * 0.5, 180.0);
+    const rh = 88.0;
+    return Rect.fromCenter(
+      center: Offset(centerX, rowCenterY),
+      width: rw,
+      height: rh,
+    );
+  }
+
   void _handleVideoTap() {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final size = MediaQuery.of(context).size;
@@ -664,6 +677,25 @@ class _PlayerScreenState extends State<PlayerScreen>
         _showKidsLockInstructionIfNeeded();
       } else if (settings.showInterfaceWhenLockedTouched) {
         setState(() => _showControls = !_showControls);
+      }
+      return;
+    }
+
+    // Pause native ad: play/pause only in bottom-center zone; elsewhere toggle UI.
+    if (_shouldShowPauseNativeAdOverlay) {
+      final local = _lastTapLocal ?? Offset(size.width / 2, size.height / 2);
+      if (_playPauseTapRectWhenPauseAdVisible(size).contains(local)) {
+        playerService.togglePlay();
+        setState(() {});
+        _startControlsTimer();
+        return;
+      }
+      final nextVisible = !_showControls;
+      setState(() => _showControls = nextVisible);
+      if (settings.controlsInterfaceAutoHideEnabled && nextVisible) {
+        _startControlsTimer();
+      } else {
+        _controlsTimer?.cancel();
       }
       return;
     }
