@@ -2133,7 +2133,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         !_iColorPickerVisible &&
         !_isPlayListVisible)
         ? MediaQuery.of(context).size.width * 0.7
-        : MediaQuery.of(context).size.width * 0.35
+        : MediaQuery.of(context).size.width * 0.52
         : !(!_isRatioVisible &&
         !_isQueueVisible &&
         !_isMoreMenuVisible &&
@@ -2146,9 +2146,39 @@ class _PlayerScreenState extends State<PlayerScreen>
     return SizedBox(
       width: drawerWidth,
       child: Drawer(
-        backgroundColor: Colors.black.withOpacity(0.01),
-        child: SafeArea(
-          child: Column(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.horizontal(left: Radius.circular(20)),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              BackdropFilter(
+                filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: const ColoredBox(color: Colors.transparent),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xF01A1A26),
+                      const Color(0xF5080810),
+                    ],
+                  ),
+                  border: Border(
+                    left: BorderSide(
+                      color: Colors.white.withOpacity(0.12),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Column(
             children: [
               // Header Section (Dynamic based on _isMoreMenuVisible)
               Padding(
@@ -2204,7 +2234,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ],
                 ),
               ),
-              const Divider(color: Colors.white24, height: 1),
+              Divider(
+                color: Colors.white.withOpacity(0.14),
+                height: 1,
+                thickness: 1,
+              ),
 
               // Content Section
               Expanded(
@@ -2236,6 +2270,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                     : (_isMoreMenuVisible
                     ? _buildMoreCategoryMenu()
                     : _buildMainMenuGrid())),
+              ),
+            ],
+                ),
               ),
             ],
           ),
@@ -2638,25 +2675,47 @@ class _PlayerScreenState extends State<PlayerScreen>
             children: [
               ..._ratioValues.keys.map((String key) {
                 bool isSelected = _selectedAspectRatio == _ratioValues[key];
-                return ListTile(
-                  leading: Icon(
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Material(
+                    color: Colors.white.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    child: ListTile(
+                      dense: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: isSelected
+                              ? const Color(0XFF3D57F9).withOpacity(0.45)
+                              : Colors.white.withOpacity(0.08),
+                        ),
+                      ),
+                      leading: Icon(
 //////////////////////////////////////////////////////////////////////// part 4 new player scareen//////////////////////////////////////////////////////////
-                    isSelected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: isSelected ? Color(0XFF3D57F9) : Colors.white54,
-                    size: 20,
+                        isSelected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: isSelected
+                            ? const Color(0XFF3D57F9)
+                            : Colors.white.withOpacity(0.55),
+                        size: 20,
+                      ),
+                      title: AppText(
+                        key,
+                        color: isSelected
+                            ? const Color(0XFF3D57F9)
+                            : Colors.white.withOpacity(0.95),
+                        fontSize: 15,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedAspectRatio = _ratioValues[key] ?? 0.0;
+                        });
+                      },
+                    ),
                   ),
-                  title: AppText(
-                    key,
-                    color: isSelected ? Color(0XFF3D57F9) : Colors.white,
-                    fontSize: 15,
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _selectedAspectRatio = _ratioValues[key] ?? 0.0;
-                    });
-                  },
                 );
               }).toList(),
             ],
@@ -2667,9 +2726,13 @@ class _PlayerScreenState extends State<PlayerScreen>
 
 // Apply to all videos Checkbox
         CheckboxListTile(
+          tileColor: Colors.white.withOpacity(0.05),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: const AppText(
             "applyToAllVideos",
-            color: Colors.white70,
+            color: Colors.white,
             fontSize: 14,
           ),
           value: _applyRatioToAll,
@@ -3005,53 +3068,118 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (mounted) setState(() {});
   }
 
-  Widget _sidebarFavouriteGridItem() {
+  Widget _sidebarFavouriteGridItem({bool compact = false}) {
     final idx = playerService.currentIndex;
     if (idx < 0 || idx >= playerService.playlist.length) {
       return _menuGridItem(
         Icons.favorite_border,
         'favourite',
+        compact: compact,
         onTapCustom: () {},
       );
     }
     final entity = playerService.playlist[idx];
-    return InkWell(
-      onTap: () => _togglePlayerSidebarFavourite(entity),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            entity.isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: Colors.white,
-            size: 28,
+    final double iconSz = compact ? 22 : 26;
+    final double labelSz = compact ? 10 : 11;
+    final double gap = compact ? 4 : 6;
+    final EdgeInsets pad = EdgeInsets.symmetric(
+      vertical: compact ? 8 : 12,
+      horizontal: compact ? 3 : 4,
+    );
+    final double radius = compact ? 12 : 14;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _togglePlayerSidebarFavourite(entity),
+        borderRadius: BorderRadius.circular(radius),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.10),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.10)),
           ),
-          const SizedBox(height: 8),
-          AppText(
-            'favourite',
-            align: TextAlign.center,
-            color: Colors.white70,
-            fontSize: 11,
+          child: Padding(
+            padding: pad,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  entity.isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: entity.isFavorite
+                      ? const Color(0XFF3D57F9)
+                      : Colors.white,
+                  size: iconSz,
+                ),
+                SizedBox(height: gap),
+                AppText(
+                  'favourite',
+                  align: TextAlign.center,
+                  color: Colors.white.withOpacity(0.92),
+                  fontSize: labelSz,
+                  maxLines: 2,
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
 
+  /// Quick menu grid: adapts column count and cell aspect for narrow drawers
+  /// (landscape) to avoid vertical overflow inside tiles.
   Widget _buildMainMenuGrid() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
-            mainAxisSpacing: 5,
-            crossAxisSpacing: 5,
-            padding: const EdgeInsets.all(15),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double w = constraints.maxWidth;
+        final bool land =
+            MediaQuery.of(context).orientation == Orientation.landscape;
+        final int crossAxisCount;
+        final double childAspectRatio;
+        final double gridPad;
+        final double spacing;
+        if (w < 228) {
+          crossAxisCount = 2;
+          childAspectRatio = 0.68;
+          gridPad = 10;
+          spacing = 6;
+        } else if (w < 300 || (land && w < 340)) {
+          crossAxisCount = 3;
+          childAspectRatio = 0.76;
+          gridPad = 12;
+          spacing = 6;
+        } else {
+          crossAxisCount = 4;
+          childAspectRatio = 0.88;
+          gridPad = 15;
+          spacing = land ? 6 : 8;
+        }
+        final bool compact = w < 300 || (land && w < 360);
+
+        return SingleChildScrollView(
+          child: Column(
             children: [
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: childAspectRatio,
+                mainAxisSpacing: spacing,
+                crossAxisSpacing: spacing,
+                padding: EdgeInsets.all(gridPad),
+                children: [
               _menuGridItem(
                 Icons.queue_play_next,
                 "queue",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isQueueVisible = true);
                 },
@@ -3059,6 +3187,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.aspect_ratio,
                 "ratio",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isRatioVisible = true);
                 },
@@ -3066,6 +3195,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.settings_display,
                 "display",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isDisplayVisible = true);
                 },
@@ -3078,6 +3208,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.content_cut,
                 "cut",
+                compact: compact,
                 onTapCustom: () async {
                   await playerService.pauseVideo();
                   File? file = await playerService
@@ -3101,10 +3232,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                   }, seekToMs: lastPosition);
                 },
               ),
-              _sidebarFavouriteGridItem(),
+              _sidebarFavouriteGridItem(compact: compact),
               _menuGridItem(
                 Icons.playlist_add,
                 "playlist",
+                compact: compact,
                 onTapCustom: () async {
                   AssetEntity currentAsset =
                   playerService.playlist[playerService.currentIndex];
@@ -3155,6 +3287,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.info_outline,
                 "info",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isInfoVisible = true);
                   // showInfoDialog(
@@ -3166,6 +3299,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.share,
                 "share",
+                compact: compact,
                 onTapCustom: () {
                   shareItem(
                     context,
@@ -3176,6 +3310,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.language,
                 "stream",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isNetWorkStreamVisible = true);
                   // _showNetworkStreamDialog();
@@ -3196,6 +3331,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.delete,
                 "delete",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isDeleteVisible = true);
                 },
@@ -3205,21 +3341,33 @@ class _PlayerScreenState extends State<PlayerScreen>
               _menuGridItem(
                 Icons.edit,
                 "rename",
+                compact: compact,
                 onTapCustom: () {
                   setState(() => _isRenameVisible = true);
                 },
               ),
-            ],
-          ),
+                ],
+              ),
 
-          const Divider(color: Colors.white24),
+          Divider(
+            color: Colors.white.withOpacity(0.14),
+            height: 24,
+            thickness: 1,
+          ),
 
           // --- Shortcuts Switch ---
           SwitchListTile(
-            title: const AppText(
+            dense: compact,
+            visualDensity:
+                compact ? VisualDensity.compact : VisualDensity.standard,
+            tileColor: Colors.white.withOpacity(0.05),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: AppText(
               "shortcuts",
               color: Colors.white,
-              fontSize: 16,
+              fontSize: compact ? 14 : 16,
             ),
             value: _showShortcutsInMenu,
             activeColor: Color(0XFF3D57F9),
@@ -3234,10 +3382,17 @@ class _PlayerScreenState extends State<PlayerScreen>
                 String key,
                 ) {
               return CheckboxListTile(
+                dense: compact,
+                visualDensity:
+                    compact ? VisualDensity.compact : VisualDensity.standard,
+                tileColor: Colors.white.withOpacity(0.04),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 title: AppText(
                   getTranslationKey(key),
-                  color: Colors.white70,
-                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: compact ? 12 : 14,
                 ),
                 value: Provider.of<SettingsProvider>(
                   context,
@@ -3257,8 +3412,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                 },
               );
             }).toList(),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -3965,15 +4122,29 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _textButtonItem(String title, VoidCallback onTap) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(vertical: 15),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SizedBox(
+        width: double.infinity,
+        child: TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            alignment: Alignment.centerLeft,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+            backgroundColor: Colors.white.withOpacity(0.07),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.white.withOpacity(0.10)),
+            ),
+          ),
+          child: AppText(
+            title,
+            color: Colors.white.withOpacity(0.95),
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        child: AppText(title, color: Colors.white, fontSize: 16),
       ),
     );
   }
@@ -3982,21 +4153,56 @@ class _PlayerScreenState extends State<PlayerScreen>
       IconData icon,
       String title, {
         VoidCallback? onTapCustom,
+        bool compact = false,
       }) {
-    return InkWell(
-      onTap: onTapCustom ?? () {},
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(height: 8),
-          AppText(
-            title,
-            align: TextAlign.center,
-            color: Colors.white70,
-            fontSize: 11,
+    final double iconSz = compact ? 22 : 26;
+    final double fontSz = compact ? 10 : 11;
+    final double gap = compact ? 4 : 6;
+    final EdgeInsets pad = EdgeInsets.symmetric(
+      vertical: compact ? 8 : 12,
+      horizontal: compact ? 3 : 4,
+    );
+    final double radius = compact ? 12 : 14;
+    final double lineHeight = compact ? 1.05 : 1.15;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTapCustom ?? () {},
+        borderRadius: BorderRadius.circular(radius),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.11),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
+            border: Border.all(color: Colors.white.withOpacity(0.10)),
           ),
-        ],
+          child: Padding(
+            padding: pad,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: Colors.white, size: iconSz),
+                SizedBox(height: gap),
+                AppText(
+                  title,
+                  align: TextAlign.center,
+                  color: Colors.white.withOpacity(0.92),
+                  fontSize: fontSz,
+                  maxLines: 2,
+                  height: lineHeight,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -5134,13 +5340,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final gestureItems = s.gestures.keys.toList();
     final shortcutItems = s.quickShortcuts.keys.toList();
 
-    return RawScrollbar(
-      // thumbColor: const Color(0XFF3D57F9).withOpacity(0.3),
-      thickness: 4,
-      radius: const Radius.circular(10),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-        physics: const BouncingScrollPhysics(),
+    return _DisplaySettingsScrollBody(
         children: [
           // --- 1. Interaction (Dropdowns) ---
           _buildAttractiveHeader(Icons.touch_app_rounded, "Interaction"),
@@ -5265,7 +5465,6 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           ),
         ],
-      ),
     );
   }
 
@@ -5323,17 +5522,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _navigationTab(SettingsProvider s) {
-    final ScrollController _navScrollController = ScrollController();
-
-    return RawScrollbar(
-      controller: _navScrollController,
-      // thumbColor: const Color(0XFF3D57F9).withOpacity(0.3),
-      thickness: 4,
-      radius: const Radius.circular(10),
-      child: ListView(
-        controller: _navScrollController,
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-        physics: const BouncingScrollPhysics(),
+    return _DisplaySettingsScrollBody(
         children: [
           // --- 1. Seeking & Speed Settings ---
           _buildAttractiveHeader(Icons.fast_forward_rounded, "seekBehavior"),
@@ -5408,19 +5597,13 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           ),
         ],
-      ),
     );
   }
 
   Widget _textTab(SettingsProvider s) {
     return Material(
         color: Colors.transparent,
-        child: RawScrollbar(
-        thickness: 4,
-        radius: const Radius.circular(10),
-    child: ListView(
-    padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-    physics: const BouncingScrollPhysics(),
+        child: _DisplaySettingsScrollBody(
     children: [
     // --- 1. Typography (Font & Size) ---
     _buildAttractiveHeader(Icons.text_fields_rounded, "typography"),
@@ -5594,7 +5777,6 @@ class _PlayerScreenState extends State<PlayerScreen>
         ),
       ),
     ],
-    ),
         ),
     );
   }
@@ -5602,9 +5784,8 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget _layoutTab(SettingsProvider s) {
     return Material(
       color: Colors.transparent,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-        physics: const BouncingScrollPhysics(),
+      child: _DisplaySettingsScrollBody(
+        showScrollbar: false,
         children: [
 // --- 1. Positioning & Alignment ---
           _buildAttractiveHeader(Icons.layers_outlined, "positioning"),
@@ -5713,22 +5894,15 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _styleTab(SettingsProvider s) {
-    final ScrollController _styleScrollController = ScrollController();
-
     return Material(
       color: Colors.transparent,
-      child: RawScrollbar(
-        controller: _styleScrollController,
+      child: _DisplaySettingsScrollBody(
         thumbColor: const Color(0XFF3D57F9).withOpacity(0.6),
 // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂ¥Ã Â«â‚¬Ã ÂªÂ® Ã Âªâ€¢Ã ÂªÂ²Ã ÂªÂ°
         thickness: 4,
         radius: const Radius.circular(10),
         fadeDuration: const Duration(milliseconds: 500),
         timeToFade: const Duration(milliseconds: 1000),
-        child: ListView(
-          controller: _styleScrollController,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-          physics: const BouncingScrollPhysics(),
           children: [
 //////////////////////////////////////////////////////////////////////// part 7 new player scareen//////////////////////////////////////////////////////////
 
@@ -5820,7 +5994,6 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -5868,15 +6041,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   Widget _screenTabBloc(ScreenSettingsState s, ScreenSettingsBloc cubit) {
     return Material(
       color: Colors.transparent,
-      child: RawScrollbar(
+      child: _DisplaySettingsScrollBody(
         thickness: 4.5,
-        radius: const Radius.circular(10),
         interactive: true,
-        child: ListView(
-          primary: true,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-          physics: const BouncingScrollPhysics(),
-          children: [
+        children: [
 // --- Ã Â«Â§. Display & Orientation ---
             _buildAttractiveHeader(
               Icons.screen_rotation_rounded,
@@ -6062,7 +6230,6 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -7526,6 +7693,85 @@ class SettingsProvider extends ChangeNotifier {
     );
   }
  */
+
+/// One [ScrollController] per display-settings tab so [TabBarView] never shares
+/// [PrimaryScrollController] across multiple [ListView]s (fixes RawScrollbar assert).
+class _DisplaySettingsScrollBody extends StatefulWidget {
+  const _DisplaySettingsScrollBody({
+    required this.children,
+    this.padding = const EdgeInsets.fromLTRB(16, 20, 16, 40),
+    this.showScrollbar = true,
+    this.thumbColor,
+    this.thickness = 4,
+    this.radius = const Radius.circular(10),
+    this.fadeDuration,
+    this.timeToFade,
+    this.interactive,
+  });
+
+  final List<Widget> children;
+  final EdgeInsetsGeometry padding;
+  final bool showScrollbar;
+  final Color? thumbColor;
+  final double thickness;
+  final Radius radius;
+  final Duration? fadeDuration;
+  final Duration? timeToFade;
+  final bool? interactive;
+
+  @override
+  State<_DisplaySettingsScrollBody> createState() =>
+      _DisplaySettingsScrollBodyState();
+}
+
+class _DisplaySettingsScrollBodyState extends State<_DisplaySettingsScrollBody> {
+  late final ScrollController _controller = ScrollController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final listView = ListView(
+      controller: _controller,
+      primary: false,
+      padding: widget.padding,
+      physics: const BouncingScrollPhysics(),
+      children: widget.children,
+    );
+
+    if (!widget.showScrollbar) {
+      return listView;
+    }
+
+    if (widget.thumbColor != null ||
+        widget.fadeDuration != null ||
+        widget.timeToFade != null) {
+      return RawScrollbar(
+        controller: _controller,
+        thumbColor: widget.thumbColor,
+        thickness: widget.thickness,
+        radius: widget.radius,
+        fadeDuration:
+            widget.fadeDuration ?? const Duration(milliseconds: 300),
+        timeToFade: widget.timeToFade ?? const Duration(milliseconds: 600),
+        interactive: widget.interactive ?? true,
+        child: listView,
+      );
+    }
+
+    return RawScrollbar(
+      controller: _controller,
+      thickness: widget.thickness,
+      radius: widget.radius,
+      interactive: widget.interactive ?? true,
+      child: listView,
+    );
+  }
+}
 
 class PlaylistSelectorView extends StatefulWidget {
   final MediaItem currentItem;
