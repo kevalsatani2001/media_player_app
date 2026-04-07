@@ -16,7 +16,7 @@ void main() async {
   await MobileAds.instance.initialize();
   AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelId: 'com.kkmedia.media_player.channel.playback',
     androidNotificationChannelName: 'Audio playback',
     androidNotificationOngoing: true,
     androidShowNotificationBadge: true,

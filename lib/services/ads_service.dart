@@ -498,6 +498,8 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
   NativeAd? _nativeAd;
   bool _loaded = false;
   bool _failed = false;
+  int _retryCount = 0;
+  static const int _maxRetryCount = 2;
 
   @override
   void initState() {
@@ -515,6 +517,11 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
 
     final results = await Connectivity().checkConnectivity();
     if (results.contains(ConnectivityResult.none)) {
+      if (_retryCount < _maxRetryCount) {
+        _retryCount++;
+        Future.delayed(const Duration(milliseconds: 700), _loadAd);
+        return;
+      }
       if (mounted) setState(() => _failed = true);
       return;
     }
@@ -527,11 +534,22 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
       adUnitId: id,
       listener: NativeAdListener(
         onAdLoaded: (ad) {
-          if (mounted) setState(() => _loaded = true);
+          if (mounted) {
+            setState(() {
+              _loaded = true;
+              _failed = false;
+              _retryCount = 0;
+            });
+          }
         },
         onAdFailedToLoad: (ad, error) {
           debugPrint('Pause native ad failed: $error');
           ad.dispose();
+          if (_retryCount < _maxRetryCount) {
+            _retryCount++;
+            Future.delayed(const Duration(milliseconds: 700), _loadAd);
+            return;
+          }
           if (mounted) {
             setState(() {
               _failed = true;

@@ -52,6 +52,38 @@ class AppNotificationService {
     );
   }
 
+  static Future<void> showVideoBackgroundNotification({
+    required String title,
+    required String body,
+  }) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'video_bg_playback_channel',
+      'Video Background Playback',
+      channelDescription: 'Shows notification while video plays in background',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      onlyAlertOnce: true,
+      showWhen: false,
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(presentAlert: false, presentSound: false),
+    );
+
+    await _notificationsPlugin.show(
+      id: 9011,
+      title: title,
+      body: body,
+      notificationDetails: platformDetails,
+    );
+  }
+
+  static Future<void> cancelVideoBackgroundNotification() async {
+    await _notificationsPlugin.cancel(id: 9011);
+  }
+
   // notification_service.dart Ã ÂªÂ¨Ã Â«â‚¬ Ã Âªâ€¦Ã Âªâ€šÃ ÂªÂ¦Ã ÂªÂ° Ã Âªâ€°Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ°Ã Â«â€¹
   static Future<void> requestPermissions() async {
     // Android 13+ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡

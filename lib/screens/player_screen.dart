@@ -106,6 +106,8 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// User dismissed the pause native ad; reset when playback resumes.
   bool _pauseNativeAdDismissedThisSession = false;
+  bool _pauseNativeAdEligibleFromUserPause = false;
+  int _lastUserPlayPauseToggleMs = 0;
 
   Offset _videoPanOffset = Offset.zero;
   double _subtitleScrollPx = 0;
@@ -136,6 +138,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   Timer? _clockTimer;
   final Battery _battery = Battery();
   bool _pausedDueToObstruction = false;
+  bool _wasPlayingBeforeBackground = false;
 
   final Map<String, double?> _ratioValues = {
     "_Default": 0.0,
@@ -404,14 +407,21 @@ class _PlayerScreenState extends State<PlayerScreen>
     final settings = Provider.of<SettingsProvider>(context, listen: false);
 
     if (state == AppLifecycleState.paused) {
+      _wasPlayingBeforeBackground = playerService.isVideoPlaying;
       if (settings.isBgPlayEnabled) {
-        // ઓડિયો સેશનને એક્ટિવ જ રાખો પણ વિડિયો રેન્ડરિંગ બંધ થવા દો
+        // Keep playback alive in background only if user was already playing.
+        if (_wasPlayingBeforeBackground) {
+          playerService.playVideo();
+        }
+        playerService.ensureBackgroundNotificationActive();
         WakelockPlus.enable();
       } else {
         playerService.pauseVideo();
         WakelockPlus.disable();
       }
     } else if (state == AppLifecycleState.resumed) {
+      _wasPlayingBeforeBackground = false;
+      playerService.stopBackgroundNotificationAudio();
       // જ્યારે એપ પાછી આવે ત્યારે જો ઓડિયો ચાલુ હોય તો માત્ર UI અપડેટ કરો
       setState(() {});
     }
@@ -562,10 +572,34 @@ class _PlayerScreenState extends State<PlayerScreen>
   bool get _shouldShowPauseNativeAdOverlay {
     final c = playerService.controller;
     if (c == null || !c.value.isInitialized) return false;
+    if (!_pauseNativeAdEligibleFromUserPause) return false;
     if (c.value.isPlaying) return false;
+    if (c.value.isBuffering) return false;
     if (_pauseNativeAdDismissedThisSession) return false;
     if (AdHelper.isFullScreenAdShowing) return false;
     return true;
+  }
+
+  void _onUserPlayPauseToggle() {
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (nowMs - _lastUserPlayPauseToggleMs < 300) return;
+    _lastUserPlayPauseToggleMs = nowMs;
+
+    final wasPlaying = playerService.isVideoPlaying;
+    playerService.togglePlay();
+    if (wasPlaying) {
+      // Show pause ad only when user explicitly pauses.
+      _pauseNativeAdEligibleFromUserPause = true;
+      _pauseNativeAdDismissedThisSession = false;
+    } else {
+      // Resume clears current pause-ad session.
+      _pauseNativeAdEligibleFromUserPause = false;
+      _pauseNativeAdDismissedThisSession = false;
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _checkVideoEnd() {
@@ -728,10 +762,14 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     // Pause native ad: play/pause only in bottom-center zone; elsewhere toggle UI.
     if (_shouldShowPauseNativeAdOverlay) {
+      // When controls are visible, explicit control buttons should own the tap.
+      // This avoids accidental double play/pause toggles from overlapping handlers.
+      if (_showControls) {
+        return;
+      }
       final local = _lastTapLocal ?? Offset(size.width / 2, size.height / 2);
       if (_playPauseTapRectWhenPauseAdVisible(size).contains(local)) {
-        playerService.togglePlay();
-        setState(() {});
+        _onUserPlayPauseToggle();
         _startControlsTimer();
         return;
       }
@@ -764,7 +802,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         _controlsTimer?.cancel();
         return;
       }
-      playerService.togglePlay();
+      _onUserPlayPauseToggle();
       return;
     }
 
@@ -786,13 +824,13 @@ class _PlayerScreenState extends State<PlayerScreen>
           _startControlsTimer();
         }
       } else {
-        playerService.togglePlay();
+        _onUserPlayPauseToggle();
       }
       return;
     }
 
     if (touchAction == "showInterfaceAndPauseResume") {
-      playerService.togglePlay();
+      _onUserPlayPauseToggle();
       final playingAfter = playerService.isVideoPlaying;
 
       setState(() {
@@ -807,7 +845,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    playerService.togglePlay();
+    _onUserPlayPauseToggle();
   }
 
   Widget _buildLockedProgressRow(SettingsProvider settings) {
@@ -857,6 +895,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       key: const ValueKey("player_visibility"),
       onVisibilityChanged: (info) {
         if (!settings.pausePlaybackIfObstructed) return;
+        if (settings.isBgPlayEnabled) return;
         final controller = playerService.controller;
         if (controller == null) return;
 
@@ -1297,7 +1336,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       if (left || right) {
         _seekRelative(tapPosition);
       } else if (mid) {
-        playerService.togglePlay();
+        _onUserPlayPauseToggle();
         setState(() => _showControls = true);
         _startControlsTimer();
       }
@@ -1310,7 +1349,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
 
     if (playPauseDt) {
-      playerService.togglePlay();
+      _onUserPlayPauseToggle();
       setState(() => _showControls = true);
       _startControlsTimer();
     }
@@ -2007,8 +2046,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                             _controlItemWithLabel(
                               src: AppSvg.icABRepeat,
                               label: "abRepeat",
+                              isActive: _pointA != null,
                               color: _pointA != null
-                                  ? Color(0XFF3D57F9)
+                                  ? settings.controlsColor
                                   : Colors.white,
                               onTap: _handleABRepeat,
                             ),
@@ -2017,8 +2057,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                             _controlItemWithLabel(
                               src: AppSvg.icSwapVert,
                               label: "flip",
+                              isActive: _isFlipped,
                               color: _isFlipped
-                                  ? Color(0XFF3D57F9)
+                                  ? settings.controlsColor
                                   : Colors.white,
                               onTap: () =>
                                   setState(() => _isFlipped = !_isFlipped),
@@ -2028,14 +2069,16 @@ class _PlayerScreenState extends State<PlayerScreen>
                             _controlItemWithLabel(
                               src: AppSvg.icSwapHor,
                               label: "mirror",
+                              isActive: _isMirrored,
                               color: _isMirrored
-                                  ? Color(0XFF3D57F9)
+                                  ? settings.controlsColor
                                   : Colors.white,
                               onTap: () =>
                                   setState(() => _isMirrored = !_isMirrored),
                             ),
 
-                          if (_isShortcutEnabled(settings, "Trim"))
+                          if (_isShortcutEnabled(settings, "Trim") &&
+                              !playerService.isNetworkPlayback)
                             _controlItemWithLabel(
                               src: AppSvg.icTrim,
                               label: "trim",
@@ -2091,6 +2134,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icShuffleActive
                                 : AppSvg.icShuffle,
                             label: "shuffle",
+                            isActive: playerService.isShuffle,
+                            color: playerService.isShuffle
+                                ? settings.controlsColor
+                                : Colors.white,
                             onTap: () =>
                                 setState(
                                       () =>
@@ -2105,6 +2152,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icLoopActive
                                 : AppSvg.icLoop,
                             label: "repeat",
+                            isActive: playerService.isLooping,
+                            color: playerService.isLooping
+                                ? settings.controlsColor
+                                : Colors.white,
                             onTap: () =>
                                 setState(() {
                                   playerService.isLooping =
@@ -2117,8 +2168,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _controlItemWithLabel(
                             src: AppSvg.icEqualizer,
                             label: "equalizer",
+                            isActive: settings.equalizerEnabled,
                             color: settings.equalizerEnabled
-                                ? Color(0XFF3D57F9)
+                                ? settings.controlsColor
                                 : Colors.white,
                             onTap: () => _showEqualizerBottomSheet(settings),
                           ),
@@ -2126,10 +2178,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _controlItemWithLabel(
                             src: AppSvg.icSleep,
                             label: "sleep",
+                            isActive:
+                                (_sleepSecondsLeft != null &&
+                                    _sleepSecondsLeft! > 0),
                             color:
                             (_sleepSecondsLeft != null &&
                                 _sleepSecondsLeft! > 0)
-                                ? Color(0XFF3D57F9)
+                                ? settings.controlsColor
                                 : Colors.white,
                             onTap: _showSleepTimerSheet,
                           ),
@@ -2137,8 +2192,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _controlItemWithLabel(
                             src: AppSvg.icDarkMode,
                             label: "night",
+                            isActive: _nightModeDim,
                             color: _nightModeDim
-                                ? Color(0XFF3D57F9)
+                                ? settings.controlsColor
                                 : Colors.white,
                             onTap: () =>
                                 setState(() => _nightModeDim = !_nightModeDim),
@@ -2147,8 +2203,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _controlItemWithLabel(
                             src: AppSvg.icBgPlay,
                             label: "bgPlay",
-                            // જો સેટિંગ ચાલુ હોય તો બટન બ્લુ કલરનું થશે
-                            color: settings.isBgPlayEnabled ? const Color(0XFF3D57F9) : Colors.white,
+                            isActive: settings.isBgPlayEnabled,
+                            color: settings.isBgPlayEnabled
+                                ? settings.controlsColor
+                                : Colors.white,
                             onTap: _onBackgroundPlayHint,
                           ),
 
@@ -2158,6 +2216,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icVolumeOff
                                 : AppSvg.icVolumeOn,
                             label: "mute",
+                            isActive: playerService.isMuted,
+                            color: playerService.isMuted
+                                ? settings.controlsColor
+                                : Colors.white,
                             onTap: () =>
                                 setState(() {
                                   playerService.isMuted =
@@ -2174,6 +2236,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                             // ૧. અહીં આપોઆપ સ્ટેટ પ્રમાણે સાચો SVG પાથ સેટ થઈ જશે
                             src: _getFitIconPath(_videoFit),
                             label: "screen", // જો તમે Localization વાપરતા હોવ તો context.tr("screen") પણ લખી શકો
+                            isActive: _videoFit != BoxFit.contain,
+                            color: _videoFit != BoxFit.contain
+                                ? settings.controlsColor
+                                : Colors.white,
                             onTap: () {
                               setState(() {
                                 // ૨. વારાફરતી ચારેય મોડ બદલવા માટેનું લૂપ લોજિક
@@ -2203,6 +2269,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                               ? AppSvg.icOff
                               : AppSvg.icOn,
                           label: _isExtraControlsExpanded ? "less" : "more",
+                          isActive: _isExtraControlsExpanded,
+                          color: _isExtraControlsExpanded
+                              ? settings.controlsColor
+                              : Colors.white,
                           onTap: () =>
                               setState(
                                     () =>
@@ -2243,8 +2313,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     required String label,
     required VoidCallback onTap,
     Color color = Colors.white,
+    bool isActive = false,
   }) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final Color iconColor = isActive ? color : settings.controlsColor;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: GestureDetector(
@@ -2261,18 +2333,26 @@ class _PlayerScreenState extends State<PlayerScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: settings.controlsBgColor,
+                  border: isActive
+                      ? Border.all(color: color, width: 2)
+                      : null,
                 ),
                 padding: const EdgeInsets.all(0),
                 child: AppImage(
                   src: src,
                   height: 35,
                   width: 35,
-                  color: settings.controlsColor,
+                  color: iconColor,
                 ),
               ),
               if (_isExtraControlsExpanded) ...[
                 const SizedBox(height: 6),
-                AppText(label, maxLines: 1, color: Colors.white, fontSize: 10),
+                AppText(
+                  label,
+                  maxLines: 1,
+                  color: isActive ? color : Colors.white,
+                  fontSize: 10,
+                ),
               ],
             ],
           ),
@@ -3287,16 +3367,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 backgroundColor: Color(0XFF3D57F9),
               ),
               onPressed: () {
-                String url = urlController.text.trim();
-                if (url.isNotEmpty && Uri
-                    .parse(url)
-                    .isAbsolute) {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                  playerService.playNetworkStream(url, () {
-                    if (mounted) setState(() {});
-                  });
-                } else {}
+                _startNetworkStream(urlController.text, closeCount: 1);
               },
               child: const AppText("playStream", color: Colors.white),
             ),
@@ -4156,6 +4227,49 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   TextEditingController urlController = TextEditingController();
 
+  String? _normalizeNetworkUrl(String raw) {
+    String url = raw.trim();
+    if (url.isEmpty) return null;
+
+    // Common user input: paste domain/youtube link without scheme.
+    if (!url.startsWith(RegExp(r'https?://', caseSensitive: false))) {
+      if (url.startsWith('www.') ||
+          url.contains('youtube.com') ||
+          url.contains('youtu.be')) {
+        url = 'https://$url';
+      }
+    }
+
+    try {
+      final uri = Uri.parse(url);
+      if (uri.isAbsolute &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          (uri.host.isNotEmpty || url.contains('youtu.be'))) {
+        return url;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  void _startNetworkStream(String rawInput, {int closeCount = 1}) {
+    final normalized = _normalizeNetworkUrl(rawInput);
+    if (normalized == null) {
+      AppToast.show(
+        context,
+        context.tr("pleaseEnterValidUrl"),
+        type: ToastType.info,
+      );
+      return;
+    }
+
+    for (int i = 0; i < closeCount; i++) {
+      Navigator.pop(context);
+    }
+    playerService.playNetworkStream(normalized, () {
+      if (mounted) setState(() {});
+    });
+  }
+
   Widget _buildNetworkStreamView() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final mediaQuery = MediaQuery.of(context);
@@ -4263,26 +4377,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         textColor: Colors.white,
                         backgroundColor: colors.primary, // #3D57F9
                         onTap: () {
-                          String url = urlController.text.trim();
-                          if (url.isNotEmpty && Uri
-                              .parse(url)
-                              .isAbsolute) {
-                            Navigator.pop(context); // ડાયલોગ બંધ કરો
-                            Navigator.pop(
-                              context,
-                            ); // જો બોટમશીટ હોય તો તેને પણ બંધ કરો
-
-                            playerService.playNetworkStream(url, () {
-                              if (mounted) setState(() {});
-                            });
-                          } else {
-                            // જો URL ખોટું હોય તો Toast બતાવી શકો છો
-                            AppToast.show(
-                              context,
-                              context.tr("pleaseEnterValidUrl"),
-                              type: ToastType.info,
-                            );
-                          }
+                          _startNetworkStream(urlController.text, closeCount: 1);
                         },
                       ),
                     ),
@@ -4866,7 +4961,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         const SizedBox(width: 40),
         GestureDetector(
           onTap: () {
-            playerService.togglePlay();
+            _onUserPlayPauseToggle();
             _startControlsTimer();
             setState(() {});
           },
@@ -5025,7 +5120,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                         GestureDetector(
                           onTap: () {
-                            playerService.togglePlay();
+                            _onUserPlayPauseToggle();
                             _startControlsTimer();
                             setState(() {});
                           },

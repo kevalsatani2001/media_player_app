@@ -65,6 +65,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   String? _loadError;
   bool _didAttachVideoListener = false;
   bool _wasVideoInitialized = false;
+  int _autoLoadRetryCount = 0;
+  static const int _maxAutoLoadRetries = 2;
 
   late final TextEditingController _exportFileNameController;
 
@@ -374,8 +376,26 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     );
   }
 
-  void _loadVideo() async {
+  Future<void> _retryLoadWithFallback(String localizedError) async {
     if (!mounted) return;
+    if (_autoLoadRetryCount < _maxAutoLoadRetries) {
+      _autoLoadRetryCount++;
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+      await _loadVideo(resetRetry: false);
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _isLoadingVideo = false;
+        _loadError = localizedError;
+      });
+    }
+  }
+
+  Future<void> _loadVideo({bool resetRetry = true}) async {
+    if (!mounted) return;
+    if (resetRetry) _autoLoadRetryCount = 0;
     setState(() {
       _isLoadingVideo = true;
       _loadError = null;
@@ -388,17 +408,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
     try {
       if (!await widget.file.exists()) {
-        if (mounted) {
-          setState(() {
-            _isLoadingVideo = false;
-            // ✅ Localization Key
-            _loadError = context.tr("videoFileNotFound");
-          });
-        }
+        await _retryLoadWithFallback(context.tr("videoFileNotFound"));
         return;
       }
 
       // Trimmer load can occasionally stall on some codecs/filesystems.
+      await _trimmer.videoPlayerController?.pause();
       await _trimmer
           .loadVideo(videoFile: widget.file)
           .timeout(const Duration(seconds: 20));
@@ -410,13 +425,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       }
 
       if (_trimmer.videoPlayerController == null) {
-        if (mounted) {
-          setState(() {
-            _isLoadingVideo = false;
-            // ✅ Localization Key
-            _loadError = context.tr("unableToInitializePreview");
-          });
-        }
+        await _retryLoadWithFallback(context.tr("unableToInitializePreview"));
         return;
       }
 
@@ -466,29 +475,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
           });
         }
       } else if (mounted) {
-        setState(() {
-          _isLoadingVideo = false;
-          // ✅ Localization Key
-          _loadError = context.tr("videoPreviewNotReady");
-        });
+        await _retryLoadWithFallback(context.tr("videoPreviewNotReady"));
       }
     } on TimeoutException {
-      if (mounted) {
-        setState(() {
-          _isLoadingVideo = false;
-          // ✅ Localization Key
-          _loadError = context.tr("videoLoadTimedOut");
-        });
-      }
+      await _retryLoadWithFallback(context.tr("videoLoadTimedOut"));
     } catch (e) {
       debugPrint("Error loading video: $e");
-      if (mounted) {
-        setState(() {
-          _isLoadingVideo = false;
-          // ✅ Localization Key
-          _loadError = context.tr("failedToLoadVideo");
-        });
-      }
+      await _retryLoadWithFallback(context.tr("failedToLoadVideo"));
     }
   }
 

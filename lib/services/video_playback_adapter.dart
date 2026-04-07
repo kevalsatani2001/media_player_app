@@ -79,7 +79,10 @@ class VideoPlayerAdapter implements VideoPlaybackAdapter {
     await dispose();
     _controller = VideoPlayerController.networkUrl(
       Uri.parse(url),
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: true,
+        allowBackgroundPlayback: true,
+      ),
     );
   }
 

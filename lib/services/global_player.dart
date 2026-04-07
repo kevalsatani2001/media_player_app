@@ -57,6 +57,8 @@ class GlobalPlayerService {
   bool isMuted = false;
   double playbackSpeed = 1.0;
   bool wasPlayingBeforeDisconnect = false;
+  bool _isToggleInProgress = false;
+  int _lastToggleAtMs = 0;
 
   /// True when [playNetworkStream] is active; false for local [loadVideo] / file playback.
   bool isNetworkPlayback = false;
@@ -94,80 +96,16 @@ class GlobalPlayerService {
     await _videoAdapter.seekTo(target);
   }
 
-  final _dummyAudioPlayer = AudioPlayer();
-
-  // વિડિયો લોડ થાય ત્યારે નોટિફિકેશન અપડેટ કરવા માટે
+  // Video background notification now uses local notifications so it doesn't
+  // conflict with the app's main just_audio player instance.
   Future<void> _updateMediaNotification() async {
     if (playlist.isEmpty || !isInitialized) return;
-
     final entity = playlist[currentIndex];
     final title = entity.title ?? "Video";
-
-    Color? extractedColor;
-    Uri? artUri;
-    final defaultColorValue = const Color(0xFF3D57F9).value;
-
-    try {
-      // ૧. વિડિયોમાંથી થંબનેલ ડેટા મેળવો (size: 500 જેમ તમે ઓડિયોમાં કર્યું છે)
-      final Uint8List? thumbData = await entity.thumbnailDataWithSize(
-        const ThumbnailSize(500, 500),
-      );
-
-      if (thumbData != null && thumbData.isNotEmpty) {
-        // ૨. પેલેટ જનરેટરથી કલર મેળવો
-        final palette = await PaletteGenerator.fromImageProvider(
-          MemoryImage(thumbData),
-        );
-        extractedColor =
-            palette.lightMutedColor?.color ?? palette.dominantColor?.color;
-
-        // ૩. ટેમ્પરરી ફાઈલમાં સેવ કરો (artUri માટે)
-        final tempDir = await getTemporaryDirectory();
-        final File thumbFile = File('${tempDir.path}/v_thumb_${entity.id}.jpg');
-        await thumbFile.writeAsBytes(thumbData);
-        artUri = Uri.file(thumbFile.path);
-      }
-    } catch (e) {
-      print("Error extracting video thumbnail: $e");
-    }
-
-    final currentColorValue = (extractedColor?.value ?? defaultColorValue);
-
-    // ✅ Just Audio Background નો ઉપયોગ કરીને નોટિફિકેશન ટ્રિગર કરો
-    try {
-      await _dummyAudioPlayer.setAudioSource(
-        AudioSource.uri(
-          Uri.parse("asset:///assets/silence.mp3"),
-          // એક નાની સાઈલેન્ટ ફાઈલ અથવા વિડિયોની પાથ
-          tag: bg.MediaItem(
-            id: entity.id,
-            album: "Video Player",
-            title: title,
-            artist: "Local Video",
-            duration: totalDuration,
-            artUri: artUri,
-            // જે તમે એક્સટ્રેક્ટ કર્યું છે
-            extras: <String, dynamic>{'android.color': currentColorValue},
-          ),
-        ),
-      );
-      // Background notification often only appears when audio is actually playing.
-      // Silence audio ends quickly on some devices, so loop it for an ongoing notification.
-      try {
-        await _dummyAudioPlayer.setLoopMode(LoopMode.one);
-      } catch (_) {}
-      try {
-        await _dummyAudioPlayer.setVolume(isMuted ? 0 : 0.0);
-      } catch (_) {}
-      await _dummyAudioPlayer.play();
-    } catch (e) {
-      print("Notification Error: $e");
-    }
-
-    // ૫. audio_service ને જાણ કરો (ખાતરી કરો કે backgroundAudioHandler ઇનિશિયલાઈઝ છે)
-    // AudioService.backgroundAudioHandler.add(mediaItem);
-
-    // જો તમે just_audio_background વાપરતા હોવ, તો તે આપમેળે આ ટેગ રીડ કરશે.
+    await AppNotificationService.showVideoBackgroundNotification(
+      title: title,
+      body: "Playing in background",
+    );
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
@@ -179,9 +117,25 @@ class GlobalPlayerService {
 
   Future<bool> enterPipMode() => _videoAdapter.enterPip();
 
-  Future<void> pauseVideo() => _videoAdapter.pause();
+  Future<void> pauseVideo() async {
+    await _videoAdapter.pause();
+    await AppNotificationService.cancelVideoBackgroundNotification();
+  }
 
-  Future<void> playVideo() => _videoAdapter.play();
+  Future<void> playVideo() async {
+    await _videoAdapter.play();
+  }
+
+  Future<void> ensureBackgroundNotificationActive() async {
+    if (!isInitialized) return;
+    if (isVideoPlaying) {
+      await _updateMediaNotification();
+    }
+  }
+
+  Future<void> stopBackgroundNotificationAudio() async {
+    await AppNotificationService.cancelVideoBackgroundNotification();
+  }
 
   /// True when the controller is at the real end (not the "zero duration" init state).
   bool shouldAdvanceToNextVideo(
@@ -285,9 +239,6 @@ class GlobalPlayerService {
 
       isInitialized = true;
 
-      // આ લાઈન ઉમેરો
-      await _updateMediaNotification();
-
       await _videoAdapter.setVolume(isMuted ? 0 : volume);
       await _videoAdapter.setLooping(isLooping);
 
@@ -377,13 +328,18 @@ class GlobalPlayerService {
 
   void togglePlay() {
     if (controller == null) return;
-    if (_videoAdapter.isPlaying) {
-      _videoAdapter.pause();
-      _dummyAudioPlayer.pause(); // નોટિફિકેશનમાં પોઝ દેખાશે
-    } else {
-      _videoAdapter.play();
-      _dummyAudioPlayer.play(); // નોટિફિકેશનમાં પ્લે દેખાશે
-    }
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (_isToggleInProgress || (now - _lastToggleAtMs) < 140) return;
+    _isToggleInProgress = true;
+    _lastToggleAtMs = now;
+    final shouldPause = _videoAdapter.isPlaying;
+    final Future<void> op = shouldPause ? pauseVideo() : playVideo();
+    op.timeout(const Duration(seconds: 3), onTimeout: () {
+      // Do not keep toggle lock forever on rare plugin hangs.
+      return;
+    }).whenComplete(() {
+      _isToggleInProgress = false;
+    });
   }
 
   Future<void> playNetworkStream(String url, VoidCallback onUpdate) async {
@@ -393,29 +349,42 @@ class GlobalPlayerService {
       isInitialized = false;
       onUpdate();
 
-      String finalUrl = url;
-
-      if (url.contains("youtube.com") || url.contains("youtu.be")) {
-        var videoId = VideoId.parseVideoId(url);
-        if (videoId == null) throw "Invalid YouTube URL";
-
-        var manifest = await yt.videos.streamsClient.getManifest(videoId);
-
-        // à«©. Muxed àª¸à«àªŸà«àª°à«€àª® àªªàª¸àª‚àª¦ àª•àª°à«‹ (àªœà«‡àª®àª¾àª‚ Audio + Video àª¬àª‚àª¨à«‡ àª¹à«‹àª¯)
-        // .withHighestBitrate() àª¨à«‡ àª¬àª¦àª²à«‡ .first àªµàª¾àªªàª°àªµàª¾àª¥à«€ àªªàª£ àª¸à«àªªà«€àª¡ àªµàª§àª¶à«‡
-        var streamInfo = manifest.muxed.withHighestBitrate();
-        finalUrl = streamInfo.url.toString();
-      }
-
-
+      // Always close current playback first. If stream parsing fails, old video
+      // must not continue behind the loader.
       if (controller != null) {
         clearListener();
         await _videoAdapter.dispose();
       }
 
+      String finalUrl = url;
+      final uri = Uri.tryParse(url);
+      final host = (uri?.host ?? '').toLowerCase();
+      final isYoutube =
+          host.contains('youtube.com') || host.contains('youtu.be');
+
+      if (isYoutube) {
+        String? videoId = VideoId.parseVideoId(url);
+        if (videoId == null && uri != null) {
+          final segments = uri.pathSegments;
+          final shortsIdx = segments.indexOf('shorts');
+          if (shortsIdx >= 0 && shortsIdx + 1 < segments.length) {
+            videoId = segments[shortsIdx + 1];
+          }
+        }
+        if (videoId == null || videoId.isEmpty) {
+          throw "Invalid YouTube URL";
+        }
+
+        final manifest = await yt.videos.streamsClient
+            .getManifest(videoId)
+            .timeout(const Duration(seconds: 12));
+        final streamInfo = manifest.muxed.withHighestBitrate();
+        finalUrl = streamInfo.url.toString();
+      }
+
       await _videoAdapter.openNetwork(finalUrl);
 
-      await _videoAdapter.initialize();
+      await _videoAdapter.initialize().timeout(const Duration(seconds: 12));
 
       _currentListener = () {
         if (isInitialized && controller != null) {
@@ -467,7 +436,6 @@ class GlobalPlayerService {
       _videoAdapter.addListener(_currentListener!);
 
       isInitialized = true;
-      await _updateMediaNotification();
       await _videoAdapter.play();
       onUpdate();
     } catch (_) {
