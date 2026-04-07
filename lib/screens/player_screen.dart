@@ -2565,10 +2565,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                           : _isNetWorkStreamVisible
                           ? _buildNetworkStreamView()
                           : _isInfoVisible
-                          ? _buildInfoView(
-                        playerService.playlist[playerService
-                            .currentIndex],
-                      )
+                          ? (playerService.isNetworkPlayback
+                              ? _buildNetworkStreamInfoView()
+                              : _buildInfoView(
+                                  playerService.playlist[
+                                      playerService.currentIndex],
+                                ))
                           : (_isRatioVisible
                           ? _buildRatioMenu()
                           : (_isMoreMenuVisible
@@ -3389,13 +3391,17 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (mounted) setState(() {});
   }
 
-  Widget _sidebarFavouriteGridItem({bool compact = false}) {
+  Widget _sidebarFavouriteGridItem({
+    bool compact = false,
+    bool enabled = true,
+  }) {
     final idx = playerService.currentIndex;
     if (idx < 0 || idx >= playerService.playlist.length) {
       return _menuGridItem(
         Icons.favorite_border,
         'favourite',
         compact: compact,
+        enabled: enabled,
         onTapCustom: () {},
       );
     }
@@ -3408,46 +3414,63 @@ class _PlayerScreenState extends State<PlayerScreen>
       horizontal: compact ? 3 : 4,
     );
     final double radius = compact ? 12 : 14;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _togglePlayerSidebarFavourite(entity),
-        borderRadius: BorderRadius.circular(radius),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.10),
-                Colors.white.withOpacity(0.05),
-              ],
+    final Color heartColor = !enabled
+        ? Colors.white38
+        : (entity.isFavorite
+            ? const Color(0XFF3D57F9)
+            : Colors.white);
+    final Color labelColor =
+        enabled ? Colors.white.withOpacity(0.92) : Colors.white38;
+
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.55,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled
+              ? () => _togglePlayerSidebarFavourite(entity)
+              : () {
+                  AppToast.show(
+                    context,
+                    context.tr('notAvailableForNetworkPlayback'),
+                    type: ToastType.info,
+                  );
+                },
+          borderRadius: BorderRadius.circular(radius),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.10),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withOpacity(0.10)),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
-          ),
-          child: Padding(
-            padding: pad,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  entity.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: entity.isFavorite
-                      ? const Color(0XFF3D57F9)
-                      : Colors.white,
-                  size: iconSz,
-                ),
-                SizedBox(height: gap),
-                AppText(
-                  'favourite',
-                  align: TextAlign.center,
-                  color: Colors.white.withOpacity(0.92),
-                  fontSize: labelSz,
-                  maxLines: 2,
-                ),
-              ],
+            child: Padding(
+              padding: pad,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    entity.isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: heartColor,
+                    size: iconSz,
+                  ),
+                  SizedBox(height: gap),
+                  AppText(
+                    'favourite',
+                    align: TextAlign.center,
+                    color: labelColor,
+                    fontSize: labelSz,
+                    maxLines: 2,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -3486,6 +3509,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           spacing = land ? 6 : 8;
         }
         final bool compact = w < 300 || (land && w < 360);
+        final bool net = playerService.isNetworkPlayback;
 
         return SingleChildScrollView(
           child: Column(
@@ -3532,6 +3556,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Icons.content_cut,
                     "cut",
                     compact: compact,
+                    enabled: !net,
                     onTapCustom: () async {
                       await playerService.pauseVideo();
                       File? file = await playerService
@@ -3568,11 +3593,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                       }, seekToMs: lastPosition);
                     },
                   ),
-                  _sidebarFavouriteGridItem(compact: compact),
+                  _sidebarFavouriteGridItem(compact: compact, enabled: !net),
                   _menuGridItem(
                     Icons.playlist_add,
                     "playlist",
                     compact: compact,
+                    enabled: !net,
                     onTapCustom: () async {
                       AssetEntity currentAsset =
                       playerService.playlist[playerService.currentIndex];
@@ -3636,11 +3662,27 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Icons.share,
                     "share",
                     compact: compact,
-                    onTapCustom: () {
-                      shareItem(
-                        context,
-                        playerService.playlist[playerService.currentIndex],
-                      );
+                    onTapCustom: () async {
+                      if (playerService.isNetworkPlayback) {
+                        final u = playerService.networkStreamUrl ?? '';
+                        if (u.isEmpty) {
+                          AppToast.show(
+                            context,
+                            context.tr('notAvailableForNetworkPlayback'),
+                            type: ToastType.info,
+                          );
+                          return;
+                        }
+                        await Share.share(
+                          u,
+                          subject: context.tr('networkStream'),
+                        );
+                      } else {
+                        shareItem(
+                          context,
+                          playerService.playlist[playerService.currentIndex],
+                        );
+                      }
                     },
                   ),
                   _menuGridItem(
@@ -3667,6 +3709,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Icons.delete,
                     "delete",
                     compact: compact,
+                    enabled: !net,
                     onTapCustom: () {
                       setState(() => _isDeleteVisible = true);
                     },
@@ -3677,6 +3720,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Icons.edit,
                     "rename",
                     compact: compact,
+                    enabled: !net,
                     onTapCustom: () {
                       setState(() => _isRenameVisible = true);
                     },
@@ -4252,6 +4296,87 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
+  /// Info drawer when [GlobalPlayerService.isNetworkPlayback] is true (URL + duration).
+  Widget _buildNetworkStreamInfoView() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final mediaQuery = MediaQuery.of(context);
+    final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final url = playerService.networkStreamUrl ?? '';
+    final dur = playerService.totalDuration;
+    final durLabel = dur.inMilliseconds <= 0
+        ? '—'
+        : _formatDuration(dur, context);
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: isLandscape
+            ? mediaQuery.size.height * 0.7
+            : mediaQuery.size.height * 0.8,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 20, 15, 10),
+            child: AppText(
+              "networkStreamDetails",
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colors.dialogueSubTitle,
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(context.tr('streamUrl'), url, colors),
+                  _buildInfoRow(
+                    context.tr('format'),
+                    context.tr('networkStream'),
+                    colors,
+                  ),
+                  _buildInfoRow(context.tr('duration'), durLabel, colors),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: AppButton(
+                      title: "share",
+                      textColor: Colors.white,
+                      backgroundColor: colors.primary,
+                      onTap: () async {
+                        if (url.isEmpty) return;
+                        await Share.share(
+                          url,
+                          subject: context.tr('networkStream'),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: SizedBox(
+              height: 48,
+              width: double.infinity,
+              child: AppButton(
+                title: "close",
+                backgroundColor: colors.primary,
+                onTap: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoView(AssetEntity entity) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final mediaQuery = MediaQuery.of(context);
@@ -4578,6 +4703,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       String title, {
         VoidCallback? onTapCustom,
         bool compact = false,
+        bool enabled = true,
       }) {
     final double iconSz = compact ? 22 : 26;
     final double fontSz = compact ? 10 : 11;
@@ -4588,42 +4714,56 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
     final double radius = compact ? 12 : 14;
     final double lineHeight = compact ? 1.05 : 1.15;
+    final Color iconColor = enabled ? Colors.white : Colors.white38;
+    final Color labelColor =
+        enabled ? Colors.white.withOpacity(0.92) : Colors.white38;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTapCustom ?? () {},
-        borderRadius: BorderRadius.circular(radius),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(radius),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.11),
-                Colors.white.withOpacity(0.05),
-              ],
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.55,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled
+              ? (onTapCustom ?? () {})
+              : () {
+                  AppToast.show(
+                    context,
+                    context.tr('notAvailableForNetworkPlayback'),
+                    type: ToastType.info,
+                  );
+                },
+          borderRadius: BorderRadius.circular(radius),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.11),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withOpacity(0.10)),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.10)),
-          ),
-          child: Padding(
-            padding: pad,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: Colors.white, size: iconSz),
-                SizedBox(height: gap),
-                AppText(
-                  title,
-                  align: TextAlign.center,
-                  color: Colors.white.withOpacity(0.92),
-                  fontSize: fontSz,
-                  maxLines: 2,
-                  height: lineHeight,
-                ),
-              ],
+            child: Padding(
+              padding: pad,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, color: iconColor, size: iconSz),
+                  SizedBox(height: gap),
+                  AppText(
+                    title,
+                    align: TextAlign.center,
+                    color: labelColor,
+                    fontSize: fontSz,
+                    maxLines: 2,
+                    height: lineHeight,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
