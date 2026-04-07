@@ -58,6 +58,12 @@ class GlobalPlayerService {
   double playbackSpeed = 1.0;
   bool wasPlayingBeforeDisconnect = false;
 
+  /// True when [playNetworkStream] is active; false for local [loadVideo] / file playback.
+  bool isNetworkPlayback = false;
+
+  /// Original URL entered for stream (YouTube page or direct link); for share / info UI.
+  String? networkStreamUrl;
+
   bool get hasController => _videoAdapter.controller != null;
 
   bool get isVideoReady => _videoAdapter.isInitialized;
@@ -222,6 +228,9 @@ class GlobalPlayerService {
 
   Future<void> loadVideo(Function onUpdate, {int? seekToMs}) async {
     if (playlist.isEmpty) return;
+
+    isNetworkPlayback = false;
+    networkStreamUrl = null;
 
     final entity = playlist[currentIndex];
     final file = await entity.file;
@@ -408,11 +417,15 @@ class GlobalPlayerService {
       _videoAdapter.addListener(_currentListener!);
 
       isInitialized = true;
+      isNetworkPlayback = true;
+      networkStreamUrl = url;
       await _videoAdapter.play();
       onUpdate();
     } catch (e) {
       print("âŒ Stream Error: $e");
       isInitialized = false;
+      isNetworkPlayback = false;
+      networkStreamUrl = null;
       onUpdate();
     } finally {
       yt.close();
@@ -429,6 +442,8 @@ class GlobalPlayerService {
 
     try {
       clearListener();
+      isNetworkPlayback = false;
+      networkStreamUrl = null;
       await _videoAdapter.openFile(file);
       await _videoAdapter.initialize();
 

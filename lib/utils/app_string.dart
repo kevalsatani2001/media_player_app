@@ -311,6 +311,10 @@ class AppStrings {
       "_1.5": "1.5",
       "sleepTimerEnded": "Sleep timer ended",
       "networkStream": "Network Stream",
+      "notAvailableForNetworkPlayback":
+          "Not available while playing a network stream",
+      "networkStreamDetails": "Stream details",
+      "streamUrl": "Stream URL",
       "enterVideoStream":
           "Enter a video URL to stream (HTTP, HTTPS, or direct link)",
       "playStream": "Play Stream",
@@ -3161,6 +3165,10 @@ class AppStrings {
       "_1.5": "1.5",
       "sleepTimerEnded": "સ્લીપ ટાઈમર પૂરું થયું",
       "networkStream": "નેટવર્ક સ્ટ્રીમ",
+      "notAvailableForNetworkPlayback":
+          "નેટવર્ક સ્ટ્રીમ ચાલતી હોય ત્યારે ઉપલબ્ધ નથી",
+      "networkStreamDetails": "સ્ટ્રીમ વિગતો",
+      "streamUrl": "સ્ટ્રીમ URL",
       "enterVideoStream":
           "સ્ટ્રીમ કરવા માટે વિડિયો URL દાખલ કરો (HTTP, HTTPS, અથવા ડાયરેક્ટ લિંક)",
       "playStream": "સ્ટ્રીમ પ્લે કરો",
