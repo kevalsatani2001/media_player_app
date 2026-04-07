@@ -71,6 +71,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   Duration? _pointB; // A-B Repeat Point B
   final GlobalKey _globalKey = GlobalKey();
   bool _isExtraControlsExpanded = false;
+  bool isBgPlayEnabled = false;
 
   String? _overlayText;
   String? sign;
@@ -92,6 +93,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   MediaItem? mediaItem;
 
   bool _showShortcutsInMenu = false;
+  bool _showVideoDisplay = true;
   static const MethodChannel _equalizerChannel = MethodChannel(
     "media_player/equalizer",
   );
@@ -136,7 +138,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   bool _pausedDueToObstruction = false;
 
   final Map<String, double?> _ratioValues = {
-    "_Default": null,
+    "_Default": 0.0,
     "_Custom": 1.2,
     "_1:1": 1.0,
     "_4:3": 4 / 3,
@@ -219,7 +221,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                 left: 20,
                 right: 20,
                 top: 16,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+                bottom: MediaQuery
+                    .of(ctx)
+                    .viewInsets
+                    .bottom + 24,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -265,7 +270,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           setState(() => _sleepSecondsLeft = total);
                           _sleepTimer = Timer.periodic(
                             const Duration(seconds: 1),
-                            (t) {
+                                (t) {
                               if (!mounted) return;
                               setState(() {
                                 _sleepSecondsLeft =
@@ -298,10 +303,19 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   void _onBackgroundPlayHint() {
-    AppToast.show(
-      context,
-      "Keep the app open or use PiP. Audio-focused background playback uses the media notification when available.",
-    );
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    setState(() {
+      // ઓન હોય તો ઓફ અને ઓફ હોય તો ઓન થશે
+      settings.isBgPlayEnabled = !settings.isBgPlayEnabled;
+    });
+
+    // યુઝરને સાચી માહિતી આપવા માટેના મેસેજીસ
+    final String message = settings.isBgPlayEnabled
+        ? "Background Play Enabled: Audio will continue when you minimize the app."
+        : "Background Play Disabled: Video will pause on exit.";
+
+    AppToast.show(context, message);
   }
 
   void _checkABRepeat() {
@@ -316,6 +330,17 @@ class _PlayerScreenState extends State<PlayerScreen>
   @override
   void initState() {
     super.initState();
+    // ૧. પહેલા ઓડિયો સેશન એક્ટિવ કરો
+    _enableBackgroundAudio().then((_) {
+      // ૨. ત્યારબાદ પ્લેયર સર્વિસ ઈનિશિયલાઈઝ કરો
+      if (widget.entityList.isNotEmpty) {
+        playerService.init(widget.entityList, widget.index, () {
+          if (!mounted) return;
+          _checkVideoEnd();
+          setState(() {});
+        });
+      }
+    });
     WidgetsBinding.instance.addObserver(this);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -331,21 +356,21 @@ class _PlayerScreenState extends State<PlayerScreen>
       seekTo = lastPos;
     }
 
-    if (widget.entityList.isNotEmpty) {
-      playerService.init(widget.entityList, widget.index, () {
-        if (!mounted) return;
-        _checkVideoEnd();
-        setState(() {
-          final ctl = playerService.controller;
-          if (ctl != null &&
-              ctl.value.isInitialized &&
-              ctl.value.isPlaying &&
-              _pauseNativeAdDismissedThisSession) {
-            _pauseNativeAdDismissedThisSession = false;
-          }
-        });
-      }, seekToMs: seekTo);
-    }
+    // if (widget.entityList.isNotEmpty) {
+    //   playerService.init(widget.entityList, widget.index, () {
+    //     if (!mounted) return;
+    //     _checkVideoEnd();
+    //     setState(() {
+    //       final ctl = playerService.controller;
+    //       if (ctl != null &&
+    //           ctl.value.isInitialized &&
+    //           ctl.value.isPlaying &&
+    //           _pauseNativeAdDismissedThisSession) {
+    //         _pauseNativeAdDismissedThisSession = false;
+    //       }
+    //     });
+    //   }, seekToMs: seekTo);
+    // }
 
     _isFullScreen = true;
     _setOrientation(true);
@@ -376,18 +401,34 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      playerService.saveLastPlayed();
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+
+    if (state == AppLifecycleState.paused) {
+      if (settings.isBgPlayEnabled) {
+        // ઓડિયો સેશનને એક્ટિવ જ રાખો પણ વિડિયો રેન્ડરિંગ બંધ થવા દો
+        WakelockPlus.enable();
+      } else {
+        playerService.pauseVideo();
+        WakelockPlus.disable();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      // જ્યારે એપ પાછી આવે ત્યારે જો ઓડિયો ચાલુ હોય તો માત્ર UI અપડેટ કરો
+      setState(() {});
     }
-    if (state == AppLifecycleState.inactive &&
-        mounted &&
-        Provider.of<SettingsProvider>(
-          context,
-          listen: false,
-        ).pausePlaybackIfObstructed) {
-      playerService.pauseVideo();
-    }
+  }
+
+  Future<void> _enableBackgroundAudio() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.movie,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+    ));
+    await session.setActive(true);
   }
 
   @override
@@ -551,7 +592,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _toggleRotation() {
     setState(() {
-      if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      if (MediaQuery
+          .of(context)
+          .orientation == Orientation.portrait) {
         print("==> if");
         SystemChrome.setPreferredOrientations([
           DeviceOrientation.landscapeLeft,
@@ -668,7 +711,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _handleVideoTap() {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery
+        .of(context)
+        .size;
     final touchAction = settings.touchAction;
 
     // à«§. àªœà«‹ àª¸à«àª•à«àª°à«€àª¨ àª²à«‹àª• àª¹à«‹àª¯ àª¤à«‹
@@ -719,12 +764,10 @@ class _PlayerScreenState extends State<PlayerScreen>
         _controlsTimer?.cancel();
         return;
       }
-      // àªàªœ àªà«‹àª¨ àª¸àª¿àªµàª¾àª¯ àª—àª®à«‡ àª¤à«àª¯àª¾àª‚ àªŸàªš àª¥àª¾àª¯ àª¤à«‹ àª®àª¾àª¤à«àª° àªªà«àª²à«‡/àªªà«‹àª àª¥àª¶à«‡
       playerService.togglePlay();
       return;
     }
 
-    // à«©. àªœà«‹ àª“àªªà«àª¶àª¨ "showHideInterface" àª¹à«‹àª¯
     if (touchAction == "showHideInterface") {
       final nextVisible = !_showControls;
       setState(() => _showControls = nextVisible);
@@ -736,24 +779,19 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    // à«ª. àªœà«‹ àª“àªªà«àª¶àª¨ "showInterfacePauseResume" (àª‡àª¨à«àªŸàª°àª«à«‡àª¸ àª¬àª¤àª¾àªµà«‹ -> àªªà«‹àª/àª°àª¿àªà«àª¯à«àª®) àª¹à«‹àª¯
     if (touchAction == "showInterfacePauseResume") {
       if (!_showControls) {
-        // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª² àª¨àª¥à«€ àª¦à«‡àª–àª¾àª¤àª¾, àª¤à«‹ àª®àª¾àª¤à«àª° àª•àª‚àªŸà«àª°à«‹àª² àª¬àª¤àª¾àªµà«‹, àªµà«€àª¡àª¿àª¯à«‹ àª…àªŸàª•àª¶à«‡ àª¨àª¹àª¿
         setState(() => _showControls = true);
         if (settings.controlsInterfaceAutoHideEnabled) {
           _startControlsTimer();
         }
       } else {
-        // àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª² àªªàª¹à«‡àª²à«‡àª¥à«€ àªœ àª¦à«‡àª–àª¾àª¯ àª›à«‡, àª¤à«‹ àªµà«€àª¡àª¿àª¯à«‹ àªªà«àª²à«‡/àªªà«‹àª àª¥àª¶à«‡
         playerService.togglePlay();
       }
       return;
     }
 
-    // à««. àªœà«‹ àª“àªªà«àª¶àª¨ "showInterfaceAndPauseResume" (àª‡àª¨à«àªŸàª°àª«à«‡àª¸ àª¬àª¤àª¾àªµà«‹ + àªªà«‹àª/àª°àª¿àªà«àª¯à«àª®) àª¹à«‹àª¯
     if (touchAction == "showInterfaceAndPauseResume") {
-      // àª¬àª‚àª¨à«‡ àª•àª¾àª® àªàª•àª¸àª¾àª¥à«‡ àª¥àª¶à«‡
       playerService.togglePlay();
       final playingAfter = playerService.isVideoPlaying;
 
@@ -769,7 +807,6 @@ class _PlayerScreenState extends State<PlayerScreen>
       return;
     }
 
-    // Default Case (àªœà«‹ àª•à«‹àªˆ àª“àªªà«àª¶àª¨ àª®à«‡àªš àª¨ àª¥àª¾àª¯ àª¤à«‹ àª¨à«‹àª°à«àª®àª² àªªà«àª²à«‡/àªªà«‹àª)
     playerService.togglePlay();
   }
 
@@ -802,7 +839,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
         AppText(
           settings.showRemainingTime
-              ? "-${_formatDuration(playerService.totalDuration - playerService.currentPosition, context)}"
+              ? "-${_formatDuration(
+              playerService.totalDuration - playerService.currentPosition,
+              context)}"
               : _formatDuration(playerService.totalDuration, context),
           color: settings.controlsColor,
           fontSize: 12,
@@ -908,7 +947,9 @@ class _PlayerScreenState extends State<PlayerScreen>
           _activeGestureType = 'none';
         },
         onLongPressStart: (details) {
-          final sz = MediaQuery.of(context).size;
+          final sz = MediaQuery
+              .of(context)
+              .size;
           final local = details.localPosition;
           final corner = _isNearScreenCorner(local, sz);
           if (corner && (settings.gestures["Speed FF(Long press)"] ?? false)) {
@@ -947,20 +988,22 @@ class _PlayerScreenState extends State<PlayerScreen>
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
-                        FittedBox(
+                        _showVideoDisplay ? FittedBox(
                           fit: BoxFit.cover,
                           child: SizedBox(
                             width: playerService.currentVideoSize.width,
                             height: playerService.currentVideoSize.height,
-                            child: VideoPlayer(_playerController),
+                            child: VideoPlayer(_playerController,),
                           ),
-                        ),
+                        ) : Container(color: Colors.black.withOpacity(
+                          0.3,
+                        ),),
                         BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
                           child: Container(
                             color: Colors.black.withOpacity(
                               0.3,
-                            ), // Ã ÂªÂ¥Ã Â«â€¹Ã ÂªÂ¡Ã Â«â€¹ Ã ÂªÂ¡Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€¢Ã ÂªÂ¨Ã Â«â€¡Ã ÂªÂ¸ Ã Âªâ€ Ã ÂªÂªÃ ÂªÂµÃ ÂªÂ¾ Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
+                            ),
                           ),
                         ),
                       ],
@@ -969,32 +1012,36 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
               ),
             // Video Surface
+            // Video Surface વિભાગમાં આ કોડ અપડેટ કરો:
             RepaintBoundary(
               key: _globalKey,
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.identity()
-                  ..rotateY(
-                    _isMirrored ? 3.14159 : 0,
-                  ) // Mirror (Y-axis rotation)
+                  ..rotateY(_isMirrored ? 3.14159 : 0)
                   ..rotateX(_isFlipped ? 3.14159 : 0),
-                // Vertical Flip (X-axis rotation)
                 child: Transform.translate(
                   offset: _videoPanOffset,
                   child: Transform.scale(
                     scale: _videoScale,
                     child: Center(
                       child: AspectRatio(
+                        // ૧. જો યુઝરે મેન્યુઅલ રેશિયો સિલેક્ટ કર્યો હોય તો એ, નહીં તો વિડીયોનો ઓરિજિનલ રેશિયો
                         aspectRatio: _selectedAspectRatio != 0.0
                             ? _selectedAspectRatio
                             : playerService.currentAspectRatio,
-                        child: FittedBox(
-                          fit: _videoFit,
-                          clipBehavior: Clip.hardEdge,
-                          child: SizedBox(
-                            width: playerService.currentVideoSize.width,
-                            height: playerService.currentVideoSize.height,
-                            child: VideoPlayer(_playerController),
+                        child: SizedBox.expand( // ૨. આ ખૂબ મહત્વનું છે, તે AspectRatio ની પૂરી સાઈઝ કવર કરશે
+                          child: FittedBox(
+                            fit: _videoFit, // ૩. હવે તમારો CROP, STRETCH, 100% આની અંદર પર્ફેક્ટ કામ કરશે
+                            clipBehavior: Clip.hardEdge,
+                            child: SizedBox(
+                              // ૪. અહીં વિડિયોની ઓરિજિનલ સાઈઝ આપવાની
+                              width: playerService.currentVideoSize.width,
+                              height: playerService.currentVideoSize.height,
+                              child: _showVideoDisplay
+                                  ? VideoPlayer(_playerController)
+                                  : _buildAudioOnlyPlaceholder(),
+                            ),
                           ),
                         ),
                       ),
@@ -1012,7 +1059,8 @@ class _PlayerScreenState extends State<PlayerScreen>
             if (_shouldShowPauseNativeAdOverlay)
               PauseVideoNativeAdLayer(
                 key: ValueKey(
-                  'pause_native_${playerService.currentIndex}_${widget.entity.id}',
+                  'pause_native_${playerService.currentIndex}_${widget.entity
+                      .id}',
                 ),
                 onDismiss: () {
                   if (mounted) {
@@ -1069,6 +1117,28 @@ class _PlayerScreenState extends State<PlayerScreen>
             if (_touchEffectPoint != null) _buildTouchEffect(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAudioOnlyPlaceholder() {
+    return Container(
+      color: Colors.black,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.music_note_rounded,
+            size: 100,
+            color: Color(0XFF3D57F9), // તમારો બ્રાન્ડ કલર
+          ),
+          const SizedBox(height: 10),
+          AppText(
+            "audioModeActive",
+            color: Colors.white70,
+            fontSize: 16,
+          ),
+        ],
       ),
     );
   }
@@ -1151,7 +1221,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _handleKidsLockTap(Offset point) {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery
+        .of(context)
+        .size;
     const threshold = 80.0;
     int? corner;
     if (point.dx <= threshold && point.dy <= threshold) {
@@ -1171,7 +1243,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           _touchEffectPoint = point;
           _touchEffectShape = Random().nextInt(6);
           _touchEffectColor =
-              Colors.primaries[Random().nextInt(Colors.primaries.length)];
+          Colors.primaries[Random().nextInt(Colors.primaries.length)];
         });
         _touchEffectTimer?.cancel();
         _touchEffectTimer = Timer(const Duration(milliseconds: 450), () {
@@ -1202,7 +1274,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (_isLocked) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     final g = settings.gestures;
-    final w = MediaQuery.of(context).size.width;
+    final w = MediaQuery
+        .of(context)
+        .size
+        .width;
     final left = tapPosition.dx < w * 0.33;
     final right = tapPosition.dx > w * 0.67;
     final mid = !left && !right;
@@ -1254,10 +1329,8 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   /// Typography from Display → Text tab for the bottom on-screen time line
   /// (same layer as subtitle scroll / pinch gestures).
-  TextStyle _subtitleOverlayTextStyle(
-    SettingsProvider settings,
-    BuildContext context,
-  ) {
+  TextStyle _subtitleOverlayTextStyle(SettingsProvider settings,
+      BuildContext context,) {
     final scale = settings.textScale / 100.0;
     double size = settings.fontSize * scale;
     final mq = MediaQuery.of(context);
@@ -1383,8 +1456,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       final bgColor = settings.subtitleBackgroundEnabled
           ? settings.subtitleBackgroundColor
           : (settings.screenTextBackgroundEnabled
-                ? settings.screenTextBackgroundColor
-                : Colors.black54);
+          ? settings.screenTextBackgroundColor
+          : Colors.black54);
       final borderWidth = settings.hasBorder
           ? (settings.borderSize / 100.0).clamp(0.5, 8.0)
           : 1.0;
@@ -1400,8 +1473,10 @@ class _PlayerScreenState extends State<PlayerScreen>
 
       if (settings.fitSubtitlesIntoVideoSize) {
         final maxW =
-            (MediaQuery.sizeOf(context).width - 24 - pad.left - pad.right) *
-            0.92;
+            (MediaQuery
+                .sizeOf(context)
+                .width - 24 - pad.left - pad.right) *
+                0.92;
         textChild = Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxW),
@@ -1491,8 +1566,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                 .toString()
                 .split('')
                 .map((digit) {
-                  return context.tr('_$digit');
-                })
+              return context.tr('_$digit');
+            })
                 .join('');
 
             extra = "$sep$batStr%";
@@ -1515,11 +1590,13 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     String h = hour < 10
         ? "${context.tr('_0')}${context.tr('_$hour')}"
-        : "${context.tr('_' + (hour ~/ 10).toString())}${context.tr('_' + (hour % 10).toString())}";
+        : "${context.tr('_' + (hour ~/ 10).toString())}${context.tr(
+        '_' + (hour % 10).toString())}";
 
     String m = minute < 10
         ? "${context.tr('_0')}${context.tr('_$minute')}"
-        : "${context.tr('_' + (minute ~/ 10).toString())}${context.tr('_' + (minute % 10).toString())}";
+        : "${context.tr('_' + (minute ~/ 10).toString())}${context.tr(
+        '_' + (minute % 10).toString())}";
 
     return "$h:$m";
   }
@@ -1555,11 +1632,11 @@ class _PlayerScreenState extends State<PlayerScreen>
               Icon(
                 _isBrightnessGesture
                     ? (_gestureValue! > 0.5
-                          ? Icons.brightness_7
-                          : Icons.brightness_4)
+                    ? Icons.brightness_7
+                    : Icons.brightness_4)
                     : (_gestureValue! == 0
-                          ? Icons.volume_off
-                          : Icons.volume_up),
+                    ? Icons.volume_off
+                    : Icons.volume_up),
                 color: Colors.white,
                 size: 30,
               ),
@@ -1588,10 +1665,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                           boxShadow: [
                             BoxShadow(
                               color:
-                                  (_isBrightnessGesture
-                                          ? Colors.orangeAccent
-                                          : Color(0XFF3D57F9))
-                                      .withOpacity(0.5),
+                              (_isBrightnessGesture
+                                  ? Colors.orangeAccent
+                                  : Color(0XFF3D57F9))
+                                  .withOpacity(0.5),
                               blurRadius: 10,
                             ),
                           ],
@@ -1604,7 +1681,8 @@ class _PlayerScreenState extends State<PlayerScreen>
 
               const SizedBox(height: 15),
               AppText(
-                "${_localizedIntDigits((_gestureValue! * 100).round().clamp(0, 100), context)}%",
+                "${_localizedIntDigits(
+                    (_gestureValue! * 100).round().clamp(0, 100), context)}%",
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -1618,8 +1696,14 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _handleSwipe(ScaleUpdateDetails details) async {
     if (_isScaling) return;
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final height = MediaQuery
+        .of(context)
+        .size
+        .height;
     double deltaY = details.focalPointDelta.dy;
     double deltaX = details.focalPointDelta.dx;
 
@@ -1719,7 +1803,10 @@ class _PlayerScreenState extends State<PlayerScreen>
     if (_isLocked) return;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     if (!(settings.gestures["FF/RW(Double tap)"] ?? true)) return;
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery
+        .of(context)
+        .size
+        .width;
     final currentPos = playerService.currentPosition;
 
     _seekIconTimer?.cancel();
@@ -1760,7 +1847,10 @@ class _PlayerScreenState extends State<PlayerScreen>
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: MediaQuery.of(context).size.width / 3,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width / 3,
               height: double.infinity,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -1791,7 +1881,10 @@ class _PlayerScreenState extends State<PlayerScreen>
           Align(
             alignment: Alignment.centerRight,
             child: Container(
-              width: MediaQuery.of(context).size.width / 3,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width / 3,
               height: double.infinity,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -1843,11 +1936,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                 color: Colors.white,
                 size: 28,
               ),
-              onPressed: () => setState(() {
-                _isLocked = false;
-                _kidsLockSequence.clear();
-                _startControlsTimer();
-              }),
+              onPressed: () =>
+                  setState(() {
+                    _isLocked = false;
+                    _kidsLockSequence.clear();
+                    _startControlsTimer();
+                  }),
             ),
           ),
         ],
@@ -1976,7 +2070,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                         ?.value
                                         .position
                                         .inMilliseconds ??
-                                    0;
+                                        0;
 
                                 playerService.loadVideo(() {
                                   if (mounted) setState(() {});
@@ -1997,10 +2091,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icShuffleActive
                                 : AppSvg.icShuffle,
                             label: "shuffle",
-                            onTap: () => setState(
-                              () => playerService.isShuffle =
+                            onTap: () =>
+                                setState(
+                                      () =>
+                                  playerService.isShuffle =
                                   !playerService.isShuffle,
-                            ),
+                                ),
                           ),
 
                         if (_isShortcutEnabled(settings, "Repeat"))
@@ -2009,11 +2105,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icLoopActive
                                 : AppSvg.icLoop,
                             label: "repeat",
-                            onTap: () => setState(() {
-                              playerService.isLooping =
+                            onTap: () =>
+                                setState(() {
+                                  playerService.isLooping =
                                   !playerService.isLooping;
-                              playerService.setLooping(playerService.isLooping);
-                            }),
+                                  playerService.setLooping(
+                                      playerService.isLooping);
+                                }),
                           ),
                         if (_isShortcutEnabled(settings, "Equalizer"))
                           _controlItemWithLabel(
@@ -2029,8 +2127,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                             src: AppSvg.icSleep,
                             label: "sleep",
                             color:
-                                (_sleepSecondsLeft != null &&
-                                    _sleepSecondsLeft! > 0)
+                            (_sleepSecondsLeft != null &&
+                                _sleepSecondsLeft! > 0)
                                 ? Color(0XFF3D57F9)
                                 : Colors.white,
                             onTap: _showSleepTimerSheet,
@@ -2049,6 +2147,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                           _controlItemWithLabel(
                             src: AppSvg.icBgPlay,
                             label: "bgPlay",
+                            // જો સેટિંગ ચાલુ હોય તો બટન બ્લુ કલરનું થશે
+                            color: settings.isBgPlayEnabled ? const Color(0XFF3D57F9) : Colors.white,
                             onTap: _onBackgroundPlayHint,
                           ),
 
@@ -2058,35 +2158,57 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ? AppSvg.icVolumeOff
                                 : AppSvg.icVolumeOn,
                             label: "mute",
-                            onTap: () => setState(() {
-                              playerService.isMuted = !playerService.isMuted;
-                              playerService.setVideoVolume(
-                                playerService.isMuted
-                                    ? 0
-                                    : playerService.volume,
-                              );
-                            }),
+                            onTap: () =>
+                                setState(() {
+                                  playerService.isMuted =
+                                  !playerService.isMuted;
+                                  playerService.setVideoVolume(
+                                    playerService.isMuted
+                                        ? 0
+                                        : playerService.volume,
+                                  );
+                                }),
                           ),
                         if (_isShortcutEnabled(settings, "Screen"))
                           _controlItemWithLabel(
-                            src: _isFullScreen
-                                ? AppSvg.icZoomOut
-                                : AppSvg.icZoomIn,
-                            label: "screen",
-                            onTap: () => setState(() {
-                              _isFullScreen = !_isFullScreen;
-                              _setOrientation(_isFullScreen);
-                            }),
+                            // ૧. અહીં આપોઆપ સ્ટેટ પ્રમાણે સાચો SVG પાથ સેટ થઈ જશે
+                            src: _getFitIconPath(_videoFit),
+                            label: "screen", // જો તમે Localization વાપરતા હોવ તો context.tr("screen") પણ લખી શકો
+                            onTap: () {
+                              setState(() {
+                                // ૨. વારાફરતી ચારેય મોડ બદલવા માટેનું લૂપ લોજિક
+                                if (_videoFit == BoxFit.contain) {
+                                  _videoFit = BoxFit.cover; // CROP
+                                } else if (_videoFit == BoxFit.cover) {
+                                  _videoFit = BoxFit.fill;  // STRETCH
+                                } else if (_videoFit == BoxFit.fill) {
+                                  _videoFit = BoxFit.none;  // 100% (Original)
+                                } else {
+                                  _videoFit = BoxFit.contain; // FIT TO SCREEN
+                                }
+
+                                // ૩. સ્ક્રીન પર ટેક્સ્ટ બતાવવા માટે
+                                _overlayText = _getFitText(_videoFit,context);
+                              });
+
+                              // ૪. ૨ સેકન્ડ પછી સ્ક્રીન પરથી ટેક્સ્ટ હટાવવા માટેનું ટાઈમર
+                              _overlayTextTimer?.cancel();
+                              _overlayTextTimer = Timer(const Duration(seconds: 2), () {
+                                if (mounted) setState(() => _overlayText = null);
+                              });
+                            },
                           ),
                         _controlItemWithLabel(
                           src: _isExtraControlsExpanded
                               ? AppSvg.icOff
                               : AppSvg.icOn,
                           label: _isExtraControlsExpanded ? "less" : "more",
-                          onTap: () => setState(
-                            () => _isExtraControlsExpanded =
+                          onTap: () =>
+                              setState(
+                                    () =>
+                                _isExtraControlsExpanded =
                                 !_isExtraControlsExpanded,
-                          ),
+                              ),
                         ),
                       ],
                     ),
@@ -2098,6 +2220,22 @@ class _PlayerScreenState extends State<PlayerScreen>
         ],
       ),
     );
+  }
+
+  // BoxFit મુજબ સાચો SVG પાથ મેળવવા માટેનું ફંક્શન
+  String _getFitIconPath(BoxFit fit) {
+    switch (fit) {
+      case BoxFit.contain:
+        return AppSvg.icFitToScreen; // 'assets/svg/ic_fit_to_screen.svg'
+      case BoxFit.cover:
+        return AppSvg.icVideoCrop;   // 'assets/svg/ic_video_crop.svg'
+      case BoxFit.fill:
+        return AppSvg.icStretch;     // 'assets/svg/ic_stretch.svg'
+      case BoxFit.none:
+        return AppSvg.icOriginal;    // 'assets/svg/ic_original.svg'
+      default:
+        return AppSvg.icFitToScreen;
+    }
   }
 
   Widget _controlItemWithLabel({
@@ -2145,7 +2283,9 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _buildTopBar() {
     bool isLandscape =
-        MediaQuery.of(context).orientation == Orientation.landscape;
+        MediaQuery
+            .of(context)
+            .orientation == Orientation.landscape;
     final settings = Provider.of<SettingsProvider>(context);
     final pad = MediaQuery.paddingOf(context);
     return Container(
@@ -2208,8 +2348,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                         .toString()
                         .split('')
                         .map((digit) {
-                          return context.tr('_$digit');
-                        })
+                      return context.tr('_$digit');
+                    })
                         .join('');
 
                     extra = "  $batStr%";
@@ -2243,23 +2383,37 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   Widget _buildSideMenu() {
     double drawerWidth =
-        MediaQuery.of(context).orientation == Orientation.landscape
+    MediaQuery
+        .of(context)
+        .orientation == Orientation.landscape
         ? !(!_isRatioVisible &&
-                  !_isQueueVisible &&
-                  !_isMoreMenuVisible &&
-                  !_isDisplayVisible &&
-                  !_iColorPickerVisible &&
-                  !_isPlayListVisible)
-              ? MediaQuery.of(context).size.width * 0.7
-              : MediaQuery.of(context).size.width * 0.52
+        !_isQueueVisible &&
+        !_isMoreMenuVisible &&
+        !_isDisplayVisible &&
+        !_iColorPickerVisible &&
+        !_isPlayListVisible)
+        ? MediaQuery
+        .of(context)
+        .size
+        .width * 0.7
+        : MediaQuery
+        .of(context)
+        .size
+        .width * 0.52
         : !(!_isRatioVisible &&
-              !_isQueueVisible &&
-              !_isMoreMenuVisible &&
-              !_isDisplayVisible &&
-              _iColorPickerVisible &&
-              !_isPlayListVisible)
-        ? MediaQuery.of(context).size.width * 0.9
-        : MediaQuery.of(context).size.width * 0.75;
+        !_isQueueVisible &&
+        !_isMoreMenuVisible &&
+        !_isDisplayVisible &&
+        _iColorPickerVisible &&
+        !_isPlayListVisible)
+        ? MediaQuery
+        .of(context)
+        .size
+        .width * 0.9
+        : MediaQuery
+        .of(context)
+        .size
+        .width * 0.75;
 
     return SizedBox(
       width: drawerWidth,
@@ -2320,23 +2474,25 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 Icons.arrow_back,
                                 color: Colors.white,
                               ),
-                              onPressed: () => setState(() {
-                                _isMoreMenuVisible = false;
-                                _isQueueVisible = false;
-                                _isDisplayVisible = false;
-                                _iColorPickerVisible = false;
-                                _isDisplayVisible = false;
-                                _isPlayListVisible = false;
-                                _isDeleteVisible = false;
-                                _isRenameVisible = false;
-                                _isNetWorkStreamVisible = false;
-                                _isInfoVisible = false;
-                              }),
+                              onPressed: () =>
+                                  setState(() {
+                                    _isMoreMenuVisible = false;
+                                    _isQueueVisible = false;
+                                    _isDisplayVisible = false;
+                                    _iColorPickerVisible = false;
+                                    _isDisplayVisible = false;
+                                    _isPlayListVisible = false;
+                                    _isDeleteVisible = false;
+                                    _isRenameVisible = false;
+                                    _isNetWorkStreamVisible = false;
+                                    _isInfoVisible = false;
+                                    _isRatioVisible = false;
+                                  }),
                             ),
 
                           AppText(
                             // _iColorPickerVisible?_currentPickerTitle:
-                            _isInfoVisible
+                            _isRatioVisible ? "ratio" : _isInfoVisible
                                 ? "info"
                                 : _isNetWorkStreamVisible
                                 ? "networkStream"
@@ -2347,29 +2503,27 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 : _isPlayListVisible
                                 ? "playlist"
                                 : _isDisplayVisible
-                                ? "display"
-                                : _isQueueVisible
-                                ? "playingQueue"
-                                : (_isMoreMenuVisible ? "more" : "quickMenu"),
+                                ? "display":_isPlayListVisible ?
+                                 "playingQueue":(_isMoreMenuVisible ? "more" : "quickMenu"),
                             color: Colors.white,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                           const Spacer(),
-                          if (!_isMoreMenuVisible &&
-                              !_isDisplayVisible &&
-                              !_isPlayListVisible &&
-                              !_isDeleteVisible &&
-                              !_isRenameVisible &&
-                              !_isNetWorkStreamVisible &&
-                              !_isInfoVisible)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: Colors.white70,
-                              ),
-                              onPressed: () => Navigator.pop(context),
+                          // if (!_isMoreMenuVisible &&
+                          //     !_isDisplayVisible &&
+                          //     !_isPlayListVisible &&
+                          //     !_isDeleteVisible &&
+                          //     !_isRenameVisible &&
+                          //     !_isNetWorkStreamVisible &&
+                          //     !_isInfoVisible)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white70,
                             ),
+                            onPressed: () => Navigator.pop(context),
+                          ),
                         ],
                       ),
                     ),
@@ -2382,23 +2536,23 @@ class _PlayerScreenState extends State<PlayerScreen>
                     // Content Section
                     Expanded(
                       child:
-                          // _iColorPickerVisible
-                          //     ?MyColorPickerWidget(
-                          //   title: _currentPickerTitle,
-                          //   initialColor: _currentSelectedColor,
-                          //   onPick: _currentColorOnPick!,
-                          //   onApply: () {
-                          //     // àª…àªªà«àª²àª¾àª¯ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àªªà«‡àªœàª¨àª¾ àª®à«‡àª¨à« àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
-                          //     setState(() {
-                          //       _iColorPickerVisible = false;
-                          //       _isRatioVisible = false;
-                          //       _isQueueVisible = false;
-                          //       _isMoreMenuVisible = false;
-                          //       _isDisplayVisible = true;
-                          //     });
-                          //   },
-                          // ):
-                          _isPlayListVisible
+                      // _iColorPickerVisible
+                      //     ?MyColorPickerWidget(
+                      //   title: _currentPickerTitle,
+                      //   initialColor: _currentSelectedColor,
+                      //   onPick: _currentColorOnPick!,
+                      //   onApply: () {
+                      //     // àª…àªªà«àª²àª¾àª¯ àª¥àª¾àª¯ àª¤à«àª¯àª¾àª°à«‡ àª®à«‡àªˆàª¨ àªªà«‡àªœàª¨àª¾ àª®à«‡àª¨à« àª…àªªàª¡à«‡àªŸ àª¥àª¶à«‡
+                      //     setState(() {
+                      //       _iColorPickerVisible = false;
+                      //       _isRatioVisible = false;
+                      //       _isQueueVisible = false;
+                      //       _isMoreMenuVisible = false;
+                      //       _isDisplayVisible = true;
+                      //     });
+                      //   },
+                      // ):
+                      _isPlayListVisible
                           ? PlaylistSelectorView(currentItem: mediaItem!)
                           : _isDisplayVisible
                           ? _buildDisplaySetting()
@@ -2412,14 +2566,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ? _buildNetworkStreamView()
                           : _isInfoVisible
                           ? _buildInfoView(
-                              playerService.playlist[playerService
-                                  .currentIndex],
-                            )
+                        playerService.playlist[playerService
+                            .currentIndex],
+                      )
                           : (_isRatioVisible
-                                ? _buildRatioMenu()
-                                : (_isMoreMenuVisible
-                                      ? _buildMoreCategoryMenu()
-                                      : _buildMainMenuGrid())),
+                          ? _buildRatioMenu()
+                          : (_isMoreMenuVisible
+                          ? _buildMoreCategoryMenu()
+                          : _buildMainMenuGrid())),
                     ),
                   ],
                 ),
@@ -2516,7 +2670,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
                 onChanged: (v) {
                   // àªœà«‹ àªŸàª¾àª‡àªª àª•àª°àªµàª¾àª¨à«àª‚ àªšàª¾àª²à« àª¥àª¾àª¯, àª¤à«‹ àª¡à«àª°à«‹àªªàª¡àª¾àª‰àª¨ àª°à«€àª¸à«‡àªŸ àª•àª°à«€ àª¦à«‹
-                  if (v.trim().isNotEmpty && selectedPlaylistIndex != null) {
+                  if (v
+                      .trim()
+                      .isNotEmpty && selectedPlaylistIndex != null) {
                     setState(() {
                       selectedPlaylistIndex = null;
                     });
@@ -2549,11 +2705,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                         // àª«àª‚àª•à«àª¶àª¨àª¾àª²àª¿àªŸà«€ à«§: àªàª•à«àªàª¿àª¸à«àªŸàª¿àª‚àª— àª²àª¿àª¸à«àªŸàª®àª¾àª‚ àªšà«‡àª• àª•àª°à«€àª¨à«‡ àªàª¡ àª•àª°àªµà«àª‚
                         if (selectedPlaylistIndex != null) {
                           final playlist =
-                              filteredPlaylists[selectedPlaylistIndex]
-                                  as PlaylistModel;
+                          filteredPlaylists[selectedPlaylistIndex]
+                          as PlaylistModel;
 
                           bool isAlreadyExist = playlist.items.any(
-                            (e) => e.path == currentItem.path,
+                                (e) => e.path == currentItem.path,
                           );
 
                           if (!isAlreadyExist) {
@@ -2573,7 +2729,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                           } else {
                             AppToast.show(
                               context,
-                              "${context.tr("alreadyExistIn")} ${playlist.name}",
+                              "${context.tr("alreadyExistIn")} ${playlist
+                                  .name}",
                               type: ToastType.info,
                             );
                           }
@@ -2727,16 +2884,21 @@ class _PlayerScreenState extends State<PlayerScreen>
                     ),
 
                     BlocProvider(
-                      create: (ctx) => ScreenSettingsBloc(
-                        Provider.of<SettingsProvider>(context, listen: false),
-                      ),
-                      child: BlocConsumer<ScreenSettingsBloc, ScreenSettingsState>(
+                      create: (ctx) =>
+                          ScreenSettingsBloc(
+                            Provider.of<SettingsProvider>(
+                                context, listen: false),
+                          ),
+                      child: BlocConsumer<
+                          ScreenSettingsBloc,
+                          ScreenSettingsState>(
                         //////////////////////////////////////////////////////////////////////// part 6 new player scareen//////////////////////////////////////////////////////////
                         listener: (_, state) => _applyScreenState(state),
-                        builder: (blocContext, state) => _screenTabBloc(
-                          state,
-                          blocContext.read<ScreenSettingsBloc>(),
-                        ),
+                        builder: (blocContext, state) =>
+                            _screenTabBloc(
+                              state,
+                              blocContext.read<ScreenSettingsBloc>(),
+                            ),
                       ),
                     ),
 
@@ -2935,7 +3097,10 @@ class _PlayerScreenState extends State<PlayerScreen>
 
             return Padding(
               padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                bottom: MediaQuery
+                    .of(context)
+                    .viewInsets
+                    .bottom + 20,
                 left: 20,
                 right: 20,
                 top: 20,
@@ -2957,7 +3122,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     children: [
                       _speedCircleButton(
                         Icons.remove,
-                        () => updateSpeed(currentSpeed - 0.05),
+                            () => updateSpeed(currentSpeed - 0.05),
                       ),
 
                       Container(
@@ -2991,7 +3156,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                       _speedCircleButton(
                         Icons.add,
-                        () => updateSpeed(currentSpeed + 0.05),
+                            () => updateSpeed(currentSpeed + 0.05),
                       ),
                     ],
                   ),
@@ -3121,7 +3286,9 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
               onPressed: () {
                 String url = urlController.text.trim();
-                if (url.isNotEmpty && Uri.parse(url).isAbsolute) {
+                if (url.isNotEmpty && Uri
+                    .parse(url)
+                    .isAbsolute) {
                   Navigator.pop(context);
                   Navigator.pop(context);
                   playerService.playNetworkStream(url, () {
@@ -3198,10 +3365,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     } catch (_) {}
 
     try {
-      final audioState = context.read<AudioBloc>().state;
+      final audioState = context
+          .read<AudioBloc>()
+          .state;
       if (audioState is AudioLoaded) {
         final listIndex = audioState.entities.indexWhere(
-          (e) => e.id == entity.id,
+              (e) => e.id == entity.id,
         );
         if (listIndex != -1) {
           context.read<AudioBloc>().add(UpdateAudioItem(newEntity, listIndex));
@@ -3293,7 +3462,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       builder: (context, constraints) {
         final double w = constraints.maxWidth;
         final bool land =
-            MediaQuery.of(context).orientation == Orientation.landscape;
+            MediaQuery
+                .of(context)
+                .orientation == Orientation.landscape;
         final int crossAxisCount;
         final double childAspectRatio;
         final double gridPad;
@@ -3390,7 +3561,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                               ?.value
                               .position
                               .inMilliseconds ??
-                          0;
+                              0;
 
                       playerService.loadVideo(() {
                         if (mounted) setState(() {});
@@ -3404,7 +3575,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     compact: compact,
                     onTapCustom: () async {
                       AssetEntity currentAsset =
-                          playerService.playlist[playerService.currentIndex];
+                      playerService.playlist[playerService.currentIndex];
 
                       // Ã ÂªÂªÃ ÂªÂ¾Ã ÂªÂ¥ Ã ÂªÂ®Ã Â«â€¡Ã ÂªÂ³Ã ÂªÂµÃ Â«â€¹
                       String? filePath = await getFile(currentAsset);
@@ -3519,6 +3690,29 @@ class _PlayerScreenState extends State<PlayerScreen>
                 thickness: 1,
               ),
 
+              // --- video display ---
+              SwitchListTile(
+                dense: compact,
+                visualDensity: compact
+                    ? VisualDensity.compact
+                    : VisualDensity.standard,
+                tileColor: Colors.white.withOpacity(0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: AppText(
+                  "videoDisplay",
+                  color: Colors.white,
+                  fontSize: compact ? 14 : 16,
+                ),
+                value: _showVideoDisplay,
+                activeColor: Color(0XFF3D57F9),
+                onChanged: (bool value) {
+                  setState(() => _showVideoDisplay = value);
+                },
+              ),
+
+
               // --- Shortcuts Switch ---
               SwitchListTile(
                 dense: compact,
@@ -3543,9 +3737,13 @@ class _PlayerScreenState extends State<PlayerScreen>
 
               // --- Checkbox List
               if (_showShortcutsInMenu)
-                ...Provider.of<SettingsProvider>(
+                ...Provider
+                    .of<SettingsProvider>(
                   context,
-                ).quickShortcuts.keys.map((String key) {
+                )
+                    .quickShortcuts
+                    .keys
+                    .map((String key) {
                   return CheckboxListTile(
                     dense: compact,
                     visualDensity: compact
@@ -3560,9 +3758,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                       color: Colors.white.withOpacity(0.9),
                       fontSize: compact ? 12 : 14,
                     ),
-                    value: Provider.of<SettingsProvider>(
+                    value: Provider
+                        .of<SettingsProvider>(
                       context,
-                    ).quickShortcuts[key],
+                    )
+                        .quickShortcuts[key],
                     activeColor: Color(0XFF3D57F9),
                     checkColor: Colors.white,
                     onChanged: (bool? value) {
@@ -3570,10 +3770,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                         context,
                         listen: false,
                       ).updateSetting(() {
-                        Provider.of<SettingsProvider>(
+                        Provider
+                            .of<SettingsProvider>(
                           context,
                           listen: false,
-                        ).quickShortcuts[key] = value ?? false;
+                        )
+                            .quickShortcuts[key] = value ?? false;
                       });
                     },
                   );
@@ -3637,10 +3839,10 @@ class _PlayerScreenState extends State<PlayerScreen>
               // ૨. મેસેજ સેક્શન
               // ==========================================
               AppText(
-                'areYouSureWantDeleteThisFile',
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: colors.appBarTitleColor, // મેઈન ટેક્સ્ટ કલર
+                  'areYouSureWantDeleteThisFile',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: colors.secondaryText
               ),
 
               SizedBox(height: isLandscape ? 20 : 30),
@@ -3744,7 +3946,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     // 1. Current video/asset અને તેનું નામ મેળવો
     AssetEntity currentAsset =
-        playerService.playlist[playerService.currentIndex];
+    playerService.playlist[playerService.currentIndex];
     String oldName = currentAsset.title ?? "video";
 
     // એક્સટેન્શન અલગ કરો
@@ -3852,19 +4054,19 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                                 final bool isSuccess = await editChannel
                                     .invokeMethod('renameVideo', {
-                                      'path': originalFile.path,
-                                      'newName': newTitle,
-                                      'isFavourite': currentAsset.isFavorite,
-                                    });
+                                  'path': originalFile.path,
+                                  'newName': newTitle,
+                                  'isFavourite': currentAsset.isFavorite,
+                                });
 
                                 if (isSuccess) {
                                   AssetEntity? updatedAsset =
-                                      await AssetEntity.fromId(currentAsset.id);
+                                  await AssetEntity.fromId(currentAsset.id);
 
                                   if (updatedAsset != null && context.mounted) {
                                     setState(() {
                                       playerService.playlist[playerService
-                                              .currentIndex] =
+                                          .currentIndex] =
                                           updatedAsset;
                                     });
                                   }
@@ -3908,12 +4110,13 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
+  TextEditingController urlController = TextEditingController();
+
   Widget _buildNetworkStreamView() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final mediaQuery = MediaQuery.of(context);
     final bool isLandscape = mediaQuery.orientation == Orientation.landscape;
 
-    TextEditingController urlController = TextEditingController();
 
     return Container(
       // Landscape મોડમાં ઓવરફ્લો અટકાવવા માટે constraints
@@ -3946,7 +4149,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               // ==========================================
               AppText(
                 "enterVideoStream",
-                color: colors.appBarTitleColor,
+                color: colors.secondaryText,
                 fontSize: 15,
               ),
               const SizedBox(height: 8),
@@ -3954,7 +4157,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               TextField(
                 controller: urlController,
                 autofocus: true,
-                style: TextStyle(color: colors.appBarTitleColor, fontSize: 15),
+                style: TextStyle(color: colors.whiteColor, fontSize: 15),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.14),
@@ -4017,7 +4220,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                         backgroundColor: colors.primary, // #3D57F9
                         onTap: () {
                           String url = urlController.text.trim();
-                          if (url.isNotEmpty && Uri.parse(url).isAbsolute) {
+                          if (url.isNotEmpty && Uri
+                              .parse(url)
+                              .isAbsolute) {
                             Navigator.pop(context); // ડાયલોગ બંધ કરો
                             Navigator.pop(
                               context,
@@ -4088,17 +4293,24 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                   _buildInfoRow(
                     'Size',
-                    "${(entity.size.width).toInt()} x ${(entity.size.height).toInt()}",
+                    "${(entity.size.width).toInt()} x ${(entity.size.height)
+                        .toInt()}",
                     colors,
                   ),
                   _buildInfoRow(
                     'Created',
-                    entity.createDateTime.toString().split('.').first,
+                    entity.createDateTime
+                        .toString()
+                        .split('.')
+                        .first,
                     colors,
                   ),
                   _buildInfoRow(
                     'Modified',
-                    entity.modifiedDateTime.toString().split('.').first,
+                    entity.modifiedDateTime
+                        .toString()
+                        .split('.')
+                        .first,
                     colors,
                   ),
                   _buildInfoRow('Path', entity.relativePath ?? 'N/A', colors),
@@ -4147,7 +4359,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               value,
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: colors.appBarTitleColor,
+              color: colors.whiteColor,
             ),
           ),
         ],
@@ -4204,12 +4416,14 @@ class _PlayerScreenState extends State<PlayerScreen>
           if (Platform.isAndroid) ...[
             _textButtonItem("rename", () async {
               AssetEntity currentAsset =
-                  playerService.playlist[playerService.currentIndex];
+              playerService.playlist[playerService.currentIndex];
 
               if (Platform.isAndroid) {
                 String oldName = currentAsset.title ?? "video";
                 String extension = oldName.contains('.')
-                    ? oldName.split('.').last
+                    ? oldName
+                    .split('.')
+                    .last
                     : "mp4";
                 String fileNameWithoutExtension = oldName.contains('.')
                     ? oldName.substring(0, oldName.lastIndexOf('.'))
@@ -4221,74 +4435,75 @@ class _PlayerScreenState extends State<PlayerScreen>
 
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: const AppText("renameVideo"),
-                    content: TextField(
-                      controller: _renameController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: context.tr("enterNewName"),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const AppText("cancel"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          String newTitle = _renameController.text.trim();
-                          if (newTitle.isEmpty) return;
+                  builder: (context) =>
+                      AlertDialog(
+                        title: const AppText("renameVideo"),
+                        content: TextField(
+                          controller: _renameController,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: context.tr("enterNewName"),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const AppText("cancel"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () async {
+                              String newTitle = _renameController.text.trim();
+                              if (newTitle.isEmpty) return;
 
-                          Navigator.pop(context);
+                              Navigator.pop(context);
 
-                          File? originalFile = await currentAsset.file;
-                          if (originalFile != null) {
-                            try {
-                              const editChannel = MethodChannel(
-                                'media_player/editor',
-                              );
+                              File? originalFile = await currentAsset.file;
+                              if (originalFile != null) {
+                                try {
+                                  const editChannel = MethodChannel(
+                                    'media_player/editor',
+                                  );
 
-                              // Native Android Method Call
-                              final bool isSuccess = await editChannel
-                                  .invokeMethod('renameVideo', {
+                                  // Native Android Method Call
+                                  final bool isSuccess = await editChannel
+                                      .invokeMethod('renameVideo', {
                                     'path': originalFile.path,
                                     'newName': newTitle,
                                     'isFavourite': currentAsset.isFavorite,
                                   });
 
-                              if (isSuccess) {
-                                AssetEntity? updatedAsset =
+                                  if (isSuccess) {
+                                    AssetEntity? updatedAsset =
                                     await AssetEntity.fromId(currentAsset.id);
 
-                                if (updatedAsset != null) {
-                                  setState(() {
-                                    playerService.playlist[playerService
+                                    if (updatedAsset != null) {
+                                      setState(() {
+                                        playerService.playlist[playerService
                                             .currentIndex] =
-                                        updatedAsset;
-                                  });
-                                }
+                                            updatedAsset;
+                                      });
+                                    }
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: AppText(
-                                      "videoRenamedSuccessfully",
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                print("Rename Failed or Cancelled by User");
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: AppText(
+                                          "videoRenamedSuccessfully",
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    print("Rename Failed or Cancelled by User");
+                                  }
+                                } catch (e) {
+                                  print("Native Error: $e");
+                                }
                               }
-                            } catch (e) {
-                              print("Native Error: $e");
-                            }
-                          }
-                        },
-                        child: const AppText("rename"),
+                            },
+                            child: const AppText("rename"),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                 );
               } else if (Platform.isIOS) {
                 await PhotoManager.editor.darwin.favoriteAsset(
@@ -4359,12 +4574,11 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _menuGridItem(
-    IconData icon,
-    String title, {
-    VoidCallback? onTapCustom,
-    bool compact = false,
-  }) {
+  Widget _menuGridItem(IconData icon,
+      String title, {
+        VoidCallback? onTapCustom,
+        bool compact = false,
+      }) {
     final double iconSz = compact ? 22 : 26;
     final double fontSz = compact ? 10 : 11;
     final double gap = compact ? 4 : 6;
@@ -4574,6 +4788,14 @@ class _PlayerScreenState extends State<PlayerScreen>
         : settings.progressBarColor;
 
     Widget buildProgressBar() {
+      final settings = Provider.of<SettingsProvider>(context);
+      final playedColor = settings.progressBarCategory == "Flat"
+          ? settings.progressBarColor.withOpacity(0.8)
+          : settings.progressBarColor;
+
+      // બાકી રહેલો સમય ગણવા માટે
+      final remainingDuration = playerService.totalDuration - playerService.currentPosition;
+
       return Row(
         children: [
           Text(
@@ -4595,12 +4817,12 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
             ),
           ),
-          AppText(
+          // અહીં પ્રોપર કન્ડિશન મૂકેલી છે
+          Text(
             settings.showRemainingTime
-                ? "-${_formatDuration(playerService.totalDuration - playerService.currentPosition, context)}"
+                ? "-${_formatDuration(remainingDuration, context)}"
                 : _formatDuration(playerService.totalDuration, context),
-            color: settings.controlsColor,
-            fontSize: 12,
+            style: TextStyle(color: settings.controlsColor, fontSize: 12),
           ),
         ],
       );
@@ -4705,36 +4927,36 @@ class _PlayerScreenState extends State<PlayerScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: Icon(
-                        _getFitIcon(_videoFit),
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          if (_videoFit == BoxFit.contain)
-                            _videoFit = BoxFit.cover;
-                          else if (_videoFit == BoxFit.cover)
-                            _videoFit = BoxFit.fill;
-                          else if (_videoFit == BoxFit.fill)
-                            _videoFit = BoxFit.none;
-                          else
-                            _videoFit = BoxFit.contain;
-                          _overlayText = _getFitText(_videoFit);
-                        });
-                        _overlayTextTimer?.cancel();
-                        _overlayTextTimer = Timer(
-                          const Duration(seconds: 2),
-                          () {
-                            if (mounted) setState(() => _overlayText = null);
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 5),
+                    // IconButton(
+                    //   padding: EdgeInsets.zero,
+                    //   constraints: const BoxConstraints(),
+                    //   icon: Icon(
+                    //     _getFitIcon(_videoFit),
+                    //     color: Colors.white,
+                    //     size: 20,
+                    //   ),
+                    //   onPressed: () {
+                    //     setState(() {
+                    //       if (_videoFit == BoxFit.contain)
+                    //         _videoFit = BoxFit.cover;
+                    //       else if (_videoFit == BoxFit.cover)
+                    //         _videoFit = BoxFit.fill;
+                    //       else if (_videoFit == BoxFit.fill)
+                    //         _videoFit = BoxFit.none;
+                    //       else
+                    //         _videoFit = BoxFit.contain;
+                    //       _overlayText = _getFitText(_videoFit,context);
+                    //     });
+                    //     _overlayTextTimer?.cancel();
+                    //     _overlayTextTimer = Timer(
+                    //       const Duration(seconds: 2),
+                    //       () {
+                    //         if (mounted) setState(() => _overlayText = null);
+                    //       },
+                    //     );
+                    //   },
+                    // ),
+                    // const SizedBox(width: 5),
                     IconButton(
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -4759,18 +4981,18 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  String _getFitText(BoxFit fit) {
+  String _getFitText(BoxFit fit, BuildContext context) {
     switch (fit) {
       case BoxFit.contain:
-        return context.tr("fit");
+        return context.tr("fitToScreen");
       case BoxFit.cover:
         return context.tr("crop");
       case BoxFit.fill:
         return context.tr("stretch");
       case BoxFit.none:
-        return "_${context.tr("100")}%";
+        return context.tr("original100");
       default:
-        return "fit";
+        return context.tr("fitToScreen");
     }
   }
 
@@ -5110,22 +5332,42 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   String _formatDuration(Duration? duration, BuildContext context) {
-    if (duration == null) {
-      return "${context.tr('_0')}${context.tr('_0')}:${context.tr('_0')}${context.tr('_0')}";
-    }
+    if (duration == null) return "00:00";
 
-    int minutes = duration.inMinutes;
+    int hours = duration.inHours;
+    int minutes = duration.inMinutes % 60;
     int seconds = duration.inSeconds % 60;
 
-    String minStr = minutes < 10
-        ? "${context.tr('_0')}${context.tr('_$minutes')}"
-        : "${context.tr('_' + (minutes ~/ 10).toString())}${context.tr('_' + (minutes % 10).toString())}";
+    String hoursStr = hours.toString().padLeft(2, '0');
+    String minutesStr = minutes.toString().padLeft(2, '0');
+    String secondsStr = seconds.toString().padLeft(2, '0');
 
-    String secStr = seconds < 10
-        ? "${context.tr('_0')}${context.tr('_$seconds')}"
-        : "${context.tr('_' + (seconds ~/ 10).toString())}${context.tr('_' + (seconds % 10).toString())}";
+    String rawTime;
+    if (hours > 0) {
+      // જો ૧ કલાકથી મોટો વિડિયો હોય તો: 01:05:20
+      rawTime = "$hoursStr:$minutesStr:$secondsStr";
+    } else {
+      // જો નાનો વિડિયો હોય તો: 05:20
+      rawTime = "$minutesStr:$secondsStr";
+    }
 
-    return "$minStr:$secStr";
+    // નંબર્સનું લોકલાઈઝેશન કરવા માટે (જેમ કે 0->૦, 1->૧ વગેરે)
+    return _localizeNumbers(rawTime, context);
+  }
+
+// આ એક સપોર્ટિવ ફંક્શન છે જે આખા ટાઈમ સ્ટ્રિંગના નંબર્સને કન્વર્ટ કરશે
+  String _localizeNumbers(String input, BuildContext context) {
+    String output = "";
+    for (int i = 0; i < input.length; i++) {
+      String char = input[i];
+      if (char == ':') {
+        output += ':';
+      } else {
+        // '_0', '_1' વગેરે કીઝ ડાયરેક્ટ ટ્રાન્સલેટ થશે
+        output += context.tr('_$char');
+      }
+    }
+    return output;
   }
 
   void _showOverlayMessage(String message, String icon) {
@@ -7683,6 +7925,7 @@ class SettingsProvider extends ChangeNotifier {
   // --- Style ---
   String present = "default";
   bool isFrameEnabled = true;
+  bool isBgPlayEnabled = false;
   Color controlsColor = Colors.white;
   Color controlsBgColor = Colors.white.withOpacity(0.40);
   Color progressBarColor = Color(0XFF3D57F9);
@@ -8251,7 +8494,7 @@ class _PlaylistSelectorViewState extends State<PlaylistSelectorView> {
               const SizedBox(height: 8),
               TextField(
                 controller: _nameController,
-                style: TextStyle(color: colors.appBarTitleColor, fontSize: 15),
+                style: TextStyle(color: colors.whiteColor, fontSize: 15),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white.withOpacity(0.14),

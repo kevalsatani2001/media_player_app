@@ -19,6 +19,8 @@ import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.plugins.videoplayer.VideoPlayerPlugin
 import java.io.File
 
 class MainActivity : AudioServiceActivity() {

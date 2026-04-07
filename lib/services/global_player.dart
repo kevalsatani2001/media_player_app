@@ -27,6 +27,7 @@ class GlobalPlayerService {
   DateTime _uiThrottleLastNotify = DateTime.fromMillisecondsSinceEpoch(0);
 
   factory GlobalPlayerService() => _instance;
+
   GlobalPlayerService._internal();
 
   void _resetUiThrottle() {
@@ -37,11 +38,14 @@ class GlobalPlayerService {
   }
 
   final VideoPlaybackAdapter _videoAdapter = createDefaultVideoAdapter();
+
   VideoPlayerController? get controller => _videoAdapter.controller;
+
   set controller(VideoPlayerController? value) {
     if (value == null) return;
     _videoAdapter.attachController(value);
   }
+
   List<AssetEntity> playlist = [];
   int currentIndex = 0;
 
@@ -52,44 +56,125 @@ class GlobalPlayerService {
   double volume = 0.5;
   bool isMuted = false;
   double playbackSpeed = 1.0;
+  bool wasPlayingBeforeDisconnect = false;
 
   bool get hasController => _videoAdapter.controller != null;
+
   bool get isVideoReady => _videoAdapter.isInitialized;
+
   bool get isVideoPlaying => _videoAdapter.isPlaying;
+
   Duration get currentPosition => _videoAdapter.position;
+
   Duration get totalDuration => _videoAdapter.duration;
+
   double get currentAspectRatio => _videoAdapter.aspectRatio;
+
   Size get currentVideoSize => _videoAdapter.size;
 
   Future<void> seekTo(Duration position) => _videoAdapter.seekTo(position);
+
   Future<void> seekBy(Duration delta) async {
     final target = (_videoAdapter.position + delta);
     if (target < Duration.zero) {
       await _videoAdapter.seekTo(Duration.zero);
       return;
     }
-    if (_videoAdapter.duration != Duration.zero && target > _videoAdapter.duration) {
+    if (_videoAdapter.duration != Duration.zero &&
+        target > _videoAdapter.duration) {
       await _videoAdapter.seekTo(_videoAdapter.duration);
       return;
     }
     await _videoAdapter.seekTo(target);
   }
 
+  final _dummyAudioPlayer = AudioPlayer();
+
+  // વિડિયો લોડ થાય ત્યારે નોટિફિકેશન અપડેટ કરવા માટે
+  Future<void> _updateMediaNotification() async {
+    if (playlist.isEmpty || !isInitialized) return;
+
+    final entity = playlist[currentIndex];
+    final title = entity.title ?? "Video";
+
+    Color? extractedColor;
+    Uri? artUri;
+    final defaultColorValue = const Color(0xFF3D57F9).value;
+
+    try {
+      // ૧. વિડિયોમાંથી થંબનેલ ડેટા મેળવો (size: 500 જેમ તમે ઓડિયોમાં કર્યું છે)
+      final Uint8List? thumbData = await entity.thumbnailDataWithSize(
+        const ThumbnailSize(500, 500),
+      );
+
+      if (thumbData != null && thumbData.isNotEmpty) {
+        // ૨. પેલેટ જનરેટરથી કલર મેળવો
+        final palette = await PaletteGenerator.fromImageProvider(
+          MemoryImage(thumbData),
+        );
+        extractedColor =
+            palette.lightMutedColor?.color ?? palette.dominantColor?.color;
+
+        // ૩. ટેમ્પરરી ફાઈલમાં સેવ કરો (artUri માટે)
+        final tempDir = await getTemporaryDirectory();
+        final File thumbFile = File('${tempDir.path}/v_thumb_${entity.id}.jpg');
+        await thumbFile.writeAsBytes(thumbData);
+        artUri = Uri.file(thumbFile.path);
+      }
+    } catch (e) {
+      print("Error extracting video thumbnail: $e");
+    }
+
+    final currentColorValue = (extractedColor?.value ?? defaultColorValue);
+
+    // ✅ Just Audio Background નો ઉપયોગ કરીને નોટિફિકેશન ટ્રિગર કરો
+    try {
+      await _dummyAudioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.parse("asset:///assets/silence.mp3"),
+          // એક નાની સાઈલેન્ટ ફાઈલ અથવા વિડિયોની પાથ
+          tag: bg.MediaItem(
+            id: entity.id,
+            album: "Video Player",
+            title: title,
+            artist: "Local Video",
+            duration: totalDuration,
+            artUri: artUri,
+            // જે તમે એક્સટ્રેક્ટ કર્યું છે
+            extras: <String, dynamic>{'android.color': currentColorValue},
+          ),
+        ),
+      );
+      // પ્લેયરને પ્લે કરવાની જરૂર નથી, ખાલી સોર્સ સેટ કરવાથી નોટિફિકેશન આવી જશે
+    } catch (e) {
+      print("Notification Error: $e");
+    }
+
+    // ૫. audio_service ને જાણ કરો (ખાતરી કરો કે backgroundAudioHandler ઇનિશિયલાઈઝ છે)
+    // AudioService.backgroundAudioHandler.add(mediaItem);
+
+    // જો તમે just_audio_background વાપરતા હોવ, તો તે આપમેળે આ ટેગ રીડ કરશે.
+  }
+
   Future<void> setPlaybackSpeed(double speed) async {
     playbackSpeed = speed;
     await _videoAdapter.setPlaybackSpeed(speed);
   }
+
   Future<bool> isPipSupported() => _videoAdapter.isPipSupported();
+
   Future<bool> enterPipMode() => _videoAdapter.enterPip();
+
   Future<void> pauseVideo() => _videoAdapter.pause();
+
   Future<void> playVideo() => _videoAdapter.play();
 
   /// True when the controller is at the real end (not the "zero duration" init state).
   bool shouldAdvanceToNextVideo(
-    Duration position,
-    Duration duration,
-    bool controllerIsPlaying,
-  ) {
+      Duration position,
+      Duration duration,
+      bool controllerIsPlaying,
+      ) {
     if (isLooping || controllerIsPlaying) return false;
     final endMs = duration.inMilliseconds;
     if (endMs <= 0) return false;
@@ -97,9 +182,14 @@ class GlobalPlayerService {
     final startOfEndWindow = max(1, endMs - 500);
     return posMs >= startOfEndWindow;
   }
+
   Future<void> setLooping(bool looping) => _videoAdapter.setLooping(looping);
+
   Future<void> setVideoVolume(double value) => _videoAdapter.setVolume(value);
-  void addVideoListener(VoidCallback listener) => _videoAdapter.addListener(listener);
+
+  void addVideoListener(VoidCallback listener) =>
+      _videoAdapter.addListener(listener);
+
   void removeVideoListener(VoidCallback listener) =>
       _videoAdapter.removeListener(listener);
 
@@ -115,8 +205,12 @@ class GlobalPlayerService {
     await box.put('last_index', currentIndex);
   }
 
-  Future<void> init(List<AssetEntity> list, int index, Function onUpdate,
-      {int? seekToMs}) async {
+  Future<void> init(
+      List<AssetEntity> list,
+      int index,
+      Function onUpdate, {
+        int? seekToMs,
+      }) async {
     if (list.isEmpty) {
       print("Error: Playlist is empty");
       return;
@@ -154,9 +248,7 @@ class GlobalPlayerService {
       int retry = 0;
       while (retry < 2) {
         try {
-          await _videoAdapter
-              .initialize()
-              .timeout(const Duration(seconds: 10));
+          await _videoAdapter.initialize().timeout(const Duration(seconds: 10));
           break;
         } catch (e) {
           retry++;
@@ -176,6 +268,9 @@ class GlobalPlayerService {
 
       isInitialized = true;
 
+      // આ લાઈન ઉમેરો
+      await _updateMediaNotification();
+
       await _videoAdapter.setVolume(isMuted ? 0 : volume);
       await _videoAdapter.setLooping(isLooping);
 
@@ -191,10 +286,10 @@ class GlobalPlayerService {
       _currentListener = () {
         if (isInitialized && controller != null) {
           if (shouldAdvanceToNextVideo(
-                _videoAdapter.position,
-                _videoAdapter.duration,
-                _videoAdapter.isPlaying,
-              ) &&
+            _videoAdapter.position,
+            _videoAdapter.duration,
+            _videoAdapter.isPlaying,
+          ) &&
               _videoAdapter.isInitialized) {
             playNext(onUpdate);
             return;
@@ -265,13 +360,16 @@ class GlobalPlayerService {
 
   void togglePlay() {
     if (controller == null) return;
-    _videoAdapter.isPlaying ? _videoAdapter.pause() : _videoAdapter.play();
+    if (_videoAdapter.isPlaying) {
+      _videoAdapter.pause();
+      _dummyAudioPlayer.pause(); // નોટિફિકેશનમાં પોઝ દેખાશે
+    } else {
+      _videoAdapter.play();
+      _dummyAudioPlayer.play(); // નોટિફિકેશનમાં પ્લે દેખાશે
+    }
   }
 
-
-
   Future<void> playNetworkStream(String url, VoidCallback onUpdate) async {
-    // YouTube Explode àª¨à«‹ àª“àª¬à«àªœà«‡àª•à«àªŸ àª²àª¿àª®àª¿àªŸà«‡àª¡ àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àª®àª¾àªŸà«‡
     final yt = YoutubeExplode();
 
     try {
@@ -281,11 +379,9 @@ class GlobalPlayerService {
       String finalUrl = url;
 
       if (url.contains("youtube.com") || url.contains("youtu.be")) {
-        // à«§. àª®àª¾àª¤à«àª° Video ID àªàª•à«àª¸àªŸà«àª°à«‡àª•à«àªŸ àª•àª°à«‹ (àª•à«‹àªˆ àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àªµàª—àª°)
         var videoId = VideoId.parseVideoId(url);
         if (videoId == null) throw "Invalid YouTube URL";
 
-        // à«¨. àª®àª¾àª¤à«àª° àª¸à«àªŸà«àª°à«€àª® àª®à«‡àª¨àª¿àª«à«‡àª¸à«àªŸ àª«à«‡àªš àª•àª°à«‹ (àª† àª¸à«Œàª¥à«€ 'Lite' àª°àª¿àª•à«àªµà«‡àª¸à«àªŸ àª›à«‡)
         var manifest = await yt.videos.streamsClient.getManifest(videoId);
 
         // à«©. Muxed àª¸à«àªŸà«àª°à«€àª® àªªàª¸àª‚àª¦ àª•àª°à«‹ (àªœà«‡àª®àª¾àª‚ Audio + Video àª¬àª‚àª¨à«‡ àª¹à«‹àª¯)
@@ -294,18 +390,16 @@ class GlobalPlayerService {
         finalUrl = streamInfo.url.toString();
       }
 
-      // àªœà«‚àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª¨à«‡ àª¸àª¾àª« àª•àª°à«‹
+
       if (controller != null) {
         clearListener();
         await _videoAdapter.dispose();
       }
 
-      // àª¤àª®àª¾àª°àª¾ àªœ àªªà«àª²à«‡àª¯àª°àª¨àª¾ àª•àª‚àªŸà«àª°à«‹àª²àª°àª®àª¾àª‚ àª¨à«‡àªŸàªµàª°à«àª• URL àª¸à«‡àªŸ àª•àª°à«‹
       await _videoAdapter.openNetwork(finalUrl);
 
       await _videoAdapter.initialize();
 
-      // àª²àª¿àª¸à«àªŸàª¨àª° àª¸à«‡àªŸ àª•àª°à«‹ àªœà«‡àª¥à«€ àªªà«àª°à«‹àª—à«àª°à«‡àª¸ àª¬àª¾àª° àªšàª¾àª²à«‡
       _currentListener = () {
         if (isInitialized && controller != null) {
           onUpdate();
@@ -316,21 +410,20 @@ class GlobalPlayerService {
       isInitialized = true;
       await _videoAdapter.play();
       onUpdate();
-
     } catch (e) {
       print("âŒ Stream Error: $e");
       isInitialized = false;
       onUpdate();
     } finally {
-      yt.close(); // àª•àª¨à«‡àª•à«àª¶àª¨ àª•à«àª²à«‹àª àª•àª°àªµà«àª‚ àª«àª°àªœàª¿àª¯àª¾àª¤ àª›à«‡
+      yt.close();
     }
   }
 
   Future<void> loadExternalFilePath(
-    String path,
-    VoidCallback onUpdate, {
-    int? seekToMs,
-  }) async {
+      String path,
+      VoidCallback onUpdate, {
+        int? seekToMs,
+      }) async {
     final file = File(path);
     if (!await file.exists()) return;
 
@@ -358,8 +451,6 @@ class GlobalPlayerService {
       onUpdate();
     }
   }
-
-
 }
 
 extension SaveState on GlobalPlayerService {
@@ -377,9 +468,6 @@ extension SaveState on GlobalPlayerService {
   }
 }
 
-
-
-
 class GlobalPlayer extends ChangeNotifier {
   static final GlobalPlayer _instance = GlobalPlayer._internal();
 
@@ -393,7 +481,8 @@ class GlobalPlayer extends ChangeNotifier {
     _listenToNetworkChanges();
   }
 
-  Future<List<AssetEntity>> get currentEntities async => await _getCurrentEntities();
+  Future<List<AssetEntity>> get currentEntities async =>
+      await _getCurrentEntities();
   List<AssetEntity> currentEntitiesList = [];
 
   void _listenToNetworkChanges() {
@@ -423,6 +512,7 @@ class GlobalPlayer extends ChangeNotifier {
   final AudioPlayer audioPlayer = AudioPlayer();
   final OnAudioQuery _audioQuery = OnAudioQuery();
   VideoPlayerController? videoController;
+
   // ChewieController? chewieController;
 
   List<my.MediaItem> queue = [];
@@ -606,7 +696,9 @@ class GlobalPlayer extends ChangeNotifier {
       if (currentIndex >= 0 && currentIndex < queue.length) {
         final currentItem = queue[currentIndex];
         final Uint8List? artwork = await _audioQuery.queryArtwork(
-          Platform.isIOS ? currentItem.id.hashCode : int.tryParse(currentItem.id) ?? 0,
+          Platform.isIOS
+              ? currentItem.id.hashCode
+              : int.tryParse(currentItem.id) ?? 0,
           ArtworkType.AUDIO,
           size: 500,
         );
@@ -619,7 +711,9 @@ class GlobalPlayer extends ChangeNotifier {
               palette.lightMutedColor?.color ?? palette.dominantColor?.color;
 
           final tempDir = await getTemporaryDirectory();
-          final File artworkFile = File('${tempDir.path}/thumb_${currentItem.id}.jpg');
+          final File artworkFile = File(
+            '${tempDir.path}/thumb_${currentItem.id}.jpg',
+          );
           await artworkFile.writeAsBytes(artwork);
           artUri = Uri.file(artworkFile.path);
         }
@@ -631,7 +725,9 @@ class GlobalPlayer extends ChangeNotifier {
     final defaultColorValue = const Color(0xFF3D57F9).value;
     final currentColorValue = (extractedColor?.value ?? defaultColorValue);
 
-    final audioSources = queue.asMap().map((i, item) {
+    final audioSources = queue
+        .asMap()
+        .map((i, item) {
       final title = item.path.split('/').last;
 
       // Only set color/artUri for the currently playing track to avoid heavy work.
@@ -647,12 +743,16 @@ class GlobalPlayer extends ChangeNotifier {
             artist: "Local Media",
             artUri: isCurrent ? artUri : null,
             extras: <String, dynamic>{
-              'android.color': isCurrent ? currentColorValue : defaultColorValue,
+              'android.color': isCurrent
+                  ? currentColorValue
+                  : defaultColorValue,
             },
           ),
         ),
       );
-    }).values.toList();
+    })
+        .values
+        .toList();
 
     await audioPlayer.setAudioSource(
       ConcatenatingAudioSource(children: audioSources),
@@ -916,8 +1016,6 @@ class GlobalPlayer extends ChangeNotifier {
     // chewieController?.dispose();
     super.dispose();
   }
-
-
 
   bool _isAppInBackground() {
     final state = WidgetsBinding.instance.lifecycleState;

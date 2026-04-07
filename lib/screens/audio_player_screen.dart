@@ -310,10 +310,10 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                       padding: const EdgeInsets.only(right: 8),
                       child: IconButton(
                         icon: AppImage(
-                          src: AppSvg.dropDownMenuDot,
+                          src: AppSvg.shareAppIcon,
                           color: colors.blackColor,
                         ),
-                        onPressed: () => _showAudioMoreBottomSheet(context),
+                        onPressed: () =>   shareItem(context, player.currentEntity ?? widget.entity),
                       ),
                     ),
                 ],
@@ -732,6 +732,35 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                       },
                     ),
                   ),
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.whiteColor,
+                          boxShadow: [
+                            BoxShadow(
+                              offset: const Offset(0, 0),
+                              blurRadius: 15,
+                              color: colors.blackColor.withOpacity(0.20),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: FavouriteButton(
+                            key: ValueKey(
+                              player.currentEntity?.id ?? widget.entity.id,
+                            ),
+                            entity: player.currentEntity ?? widget.entity,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -852,15 +881,15 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                             color: colors.blackColor.withOpacity(0.7),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: FavouriteButton(
-                            key: ValueKey(
-                              player.currentEntity?.id ?? widget.entity.id,
-                            ),
-                            entity: player.currentEntity ?? widget.entity,
-                          ),
-                        ),
+                        // Padding(
+                        //   padding: const EdgeInsets.only(bottom: 4),
+                        //   child: FavouriteButton(
+                        //     key: ValueKey(
+                        //       player.currentEntity?.id ?? widget.entity.id,
+                        //     ),
+                        //     entity: player.currentEntity ?? widget.entity,
+                        //   ),
+                        // ),
                         IconButton(
                           icon: AppImage(
                             src: AppSvg.dropDownMenuDot,

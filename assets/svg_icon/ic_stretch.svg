@@ -1,0 +1,17 @@
+<svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clip-path="url(#clip_stretch)">
+        <rect x="14.5" y="14.5" width="16" height="16" rx="2" stroke="white" stroke-width="2" />
+
+        <path d="M11.4771 22.5L16.4771 18.5V21.5H18.4771V23.5H16.4771V26.5L11.4771 22.5Z"
+            fill="white" />
+
+        <path d="M33.5229 22.5L28.5229 26.5V23.5H26.5229V21.5H28.5229V18.5L33.5229 22.5Z"
+            fill="white" />
+    </g>
+    <defs>
+        <clipPath id="clip_stretch">
+            <rect width="22.349" height="22.349" fill="white"
+                transform="translate(11.4771 11.1745)" />
+        </clipPath>
+    </defs>
+</svg>

@@ -57,8 +57,21 @@ class VideoPlayerAdapter implements VideoPlaybackAdapter {
 
   @override
   Future<void> openFile(File file) async {
-    await dispose();
-    _controller = VideoPlayerController.file(file);
+    // ૧. પહેલા જૂના કંટ્રોલરને સંપૂર્ણ બંધ કરો
+    if (_controller != null) {
+      await _controller!.pause();
+      await _controller!.dispose();
+      _controller = null;
+    }
+
+    // ૨. નવું કંટ્રોલર બનાવો
+    _controller = VideoPlayerController.file(
+      file,
+      videoPlayerOptions: VideoPlayerOptions(
+        mixWithOthers: false, // અહીં false કરો જેથી ડુપ્લીકેટ અવાજ મિક્સ ન થાય
+        allowBackgroundPlayback: true,
+      ),
+    );
   }
 
   @override
@@ -78,6 +91,10 @@ class VideoPlayerAdapter implements VideoPlaybackAdapter {
 
   @override
   Future<void> initialize() async {
+    // ઓડિયો સેશન એક્ટિવ કરો જેથી સિસ્ટમ અવાજ બંધ ન કરે
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration.music());
+    await session.setActive(true);
     await _controller?.initialize();
   }
 
@@ -157,3 +174,12 @@ VideoPlaybackAdapter createDefaultVideoAdapter() {
   }
   return VideoPlayerAdapter();
 }
+
+
+/*
+
+
+/*
+
+ */
+ */

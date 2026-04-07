@@ -79,6 +79,10 @@ class AppSvg {
   static const String pauseVid = '$_svgPath/ic_vid_pause.svg';
   static const String skipNext = '$_svgPath/ic_skip_next.svg';
   static const String skipPrev = '$_svgPath/ic_skip_prev.svg';
+  static const String icVideoCrop = '$_svgPath/ic_video_crop.svg';
+  static const String icOriginal = '$_svgPath/ic_original.svg';
+  static const String icStretch = '$_svgPath/ic_stretch.svg';
+  static const String icFitToScreen = '$_svgPath/ic_fit_to_screen.svg';
 
   static const String playerPause =
       '$_svgPath/player_pause.svg'; // Alternate pause

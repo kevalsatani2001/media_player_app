@@ -1,5 +1,3 @@
-//////////////////////////////////// part 1 new video trim scareen//////////////////////////////////////
-
 import 'dart:math' as Math;
 import 'dart:typed_data';
 
@@ -9,7 +7,9 @@ import '../utils/app_imports.dart';
 
 class _CoverStripSlot {
   _CoverStripSlot({required this.timeMs});
+
   final double timeMs;
+
   /// In-memory JPEG bytes — [VideoThumbnail.thumbnailFile] reuses one path per
   /// video and overwrites; [thumbnailData] gives a distinct frame per slot.
   Uint8List? thumbBytes;
@@ -34,6 +34,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   bool _isSaving = false;
 
   File? _selectedCoverFile;
+
   /// JPEG bytes for the chosen cover; success screen uses this so preview works
   /// even if temp files are missing or [Image.file] fails on some devices.
   Uint8List? _selectedCoverPreviewBytes;
@@ -65,14 +66,16 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   bool _didAttachVideoListener = false;
 
   late final TextEditingController _exportFileNameController;
+
   /// Sanitized base name for the next export (set from save dialog).
   String? _pendingExportBaseName;
 
   @override
   void initState() {
     super.initState();
-    _exportFileNameController =
-        TextEditingController(text: _defaultExportBaseName());
+    _exportFileNameController = TextEditingController(
+      text: _defaultExportBaseName(),
+    );
     playerService.pauseVideo();
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -174,7 +177,10 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       for (var i = 0; i < count; i++) {
         final t = count <= 1
             ? 0.0
-            : (_totalDurationMs * i / (count - 1)).clamp(0.0, _totalDurationMs - 1);
+            : (_totalDurationMs * i / (count - 1)).clamp(
+          0.0,
+          _totalDurationMs - 1,
+        );
         _coverStrip.add(_CoverStripSlot(timeMs: t));
       }
       _selectedCoverStripIndex = count ~/ 2;
@@ -264,14 +270,18 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(Icons.collections_outlined, color: colors.primary, size: 20),
+                Icon(
+                  Icons.collections_outlined,
+                  color: colors.primary,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: AppText(
                     'coverThumbnail',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -280,74 +290,75 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
           const SizedBox(height: 8),
           SizedBox(
             height: 62,
-            child: _coverStripLoading &&
-                    _coverStrip.every((e) => e.thumbBytes == null)
+            child:
+            _coverStripLoading &&
+                _coverStrip.every((e) => e.thumbBytes == null)
                 ? Center(
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: colors.primary,
-                      ),
-                    ),
-                  )
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colors.primary,
+                ),
+              ),
+            )
                 : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: _coverStrip.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) {
-                      final item = _coverStrip[i];
-                      final sel = i == _selectedCoverStripIndex;
-                      return GestureDetector(
-                        onTap: () => _onSelectCoverStripIndex(i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: sel ? colors.primary : Colors.white24,
-                              width: sel ? 2.5 : 1,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _coverStrip.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final item = _coverStrip[i];
+                final sel = i == _selectedCoverStripIndex;
+                return GestureDetector(
+                  onTap: () => _onSelectCoverStripIndex(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: sel ? colors.primary : Colors.white24,
+                        width: sel ? 2.5 : 1,
+                      ),
+                      boxShadow: sel
+                          ? [
+                        BoxShadow(
+                          color: colors.primary.withOpacity(0.35),
+                          blurRadius: 8,
+                        ),
+                      ]
+                          : null,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: item.thumbBytes == null
+                          ? ColoredBox(
+                        color: colors.textFieldFill,
+                        child: Center(
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colors.primary,
                             ),
-                            boxShadow: sel
-                                ? [
-                                    BoxShadow(
-                                      color: colors.primary.withOpacity(0.35),
-                                      blurRadius: 8,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: item.thumbBytes == null
-                                ? ColoredBox(
-                                    color: colors.textFieldFill,
-                                    child: Center(
-                                      child: SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: colors.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : Image.memory(
-                                    item.thumbBytes!,
-                                    fit: BoxFit.cover,
-                                    width: 56,
-                                    height: 56,
-                                  ),
                           ),
                         ),
-                      );
-                    },
+                      )
+                          : Image.memory(
+                        item.thumbBytes!,
+                        fit: BoxFit.cover,
+                        width: 56,
+                        height: 56,
+                      ),
+                    ),
                   ),
+                );
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
@@ -378,7 +389,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         if (mounted) {
           setState(() {
             _isLoadingVideo = false;
-            _loadError = "Video file not found.";
+            // ✅ Localization Key
+            _loadError = context.tr("videoFileNotFound");
           });
         }
         return;
@@ -399,7 +411,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         if (mounted) {
           setState(() {
             _isLoadingVideo = false;
-            _loadError = "Unable to initialize video preview.";
+            // ✅ Localization Key
+            _loadError = context.tr("unableToInitializePreview");
           });
         }
         return;
@@ -413,12 +426,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
       if (controller.value.isInitialized) {
         final num bytes = await widget.file.length();
-        final double durationInSeconds =
-            controller.value.duration.inSeconds.toDouble();
+        final double durationInSeconds = controller.value.duration.inSeconds
+            .toDouble();
         if (mounted) {
           setState(() {
             _originalFileSizeBytes = bytes.toDouble();
-            _totalDurationMs = controller.value.duration.inMilliseconds.toDouble();
+            _totalDurationMs = controller.value.duration.inMilliseconds
+                .toDouble();
             _endValue = _totalDurationMs;
 
             if (durationInSeconds > 0) {
@@ -429,8 +443,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             } else {
               _bitRate = "0 Mbps";
             }
-            _resolution = "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
-            _fileSize = "${(_originalFileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+            _resolution =
+            "${controller.value.size.width.toInt()} * ${controller.value.size.height.toInt()}";
+
+            // ✅ ડાયનેમિક સાઈઝ ફોર્મેટર ફંક્શન કોલ
+            _fileSize = _getFormattedFileSize(_originalFileSizeBytes);
+
             _isLoadingVideo = false;
           });
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -440,14 +458,16 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       } else if (mounted) {
         setState(() {
           _isLoadingVideo = false;
-          _loadError = "Video preview is not ready.";
+          // ✅ Localization Key
+          _loadError = context.tr("videoPreviewNotReady");
         });
       }
     } on TimeoutException {
       if (mounted) {
         setState(() {
           _isLoadingVideo = false;
-          _loadError = "Video loading timed out. Please try again.";
+          // ✅ Localization Key
+          _loadError = context.tr("videoLoadTimedOut");
         });
       }
     } catch (e) {
@@ -455,20 +475,30 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       if (mounted) {
         setState(() {
           _isLoadingVideo = false;
-          _loadError = "Failed to load video.";
+          // ✅ Localization Key
+          _loadError = context.tr("failedToLoadVideo");
         });
       }
     }
   }
 
-// àª† àª«àª‚àª•à«àª¶àª¨àª¨à«‡ àª•à«àª²àª¾àª¸àª®àª¾àª‚ àª…àª²àª—àª¥à«€ àª²àª–à«‹
+  String _getFormattedFileSize(double bytes) {
+    if (bytes < 1024) {
+      return "${bytes.toStringAsFixed(2)} B";
+    } else if (bytes < 1024 * 1024) {
+      return "${(bytes / 1024).toStringAsFixed(2)} KB";
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return "${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB";
+    } else {
+      return "${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB";
+    }
+  }
+
   void _videoListener() {
-    // àªœà«‹ àªµàª¿àªœà«‡àªŸ àª¹àªœà« àª¸à«àª•à«àª°à«€àª¨ àªªàª° àª¹à«‹àª¯ àª…àª¨à«‡ àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«‹ àªœ àª†àª—àª³ àªµàª§à«‹
     if (!mounted || _trimmer.videoPlayerController == null) return;
 
     try {
       final controller = _trimmer.videoPlayerController!;
-      // àª…àª¹à«€àª‚ àªšà«‡àª• àª•àª°à«‹ àª•à«‡ àª•àª‚àªŸà«àª°à«‹àª²àª° àª‡àª¨àª¿àª¶àª¿àª¯àª²àª¾àª‡àªà«àª¡ àª›à«‡ àª•à«‡ àª¨àª¹à«€àª‚
       if (controller.value.isInitialized) {
         if (_isPlaying != controller.value.isPlaying) {
           setState(() {
@@ -500,7 +530,8 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   void _updateEstimate() {
     if (_totalDurationMs <= 0) return;
     double trimDurationMs = _endValue - _startValue;
-    double estimatedBytes = (_originalFileSizeBytes / _totalDurationMs) * trimDurationMs;
+    double estimatedBytes =
+        (_originalFileSizeBytes / _totalDurationMs) * trimDurationMs;
     double estimatedMB = estimatedBytes / (1024 * 1024);
     _estimateSizeNotifier.value = "${estimatedMB.toStringAsFixed(2)} MB";
   }
@@ -520,31 +551,39 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.black,
-        body:  _isSuccess ? _buildSuccessUI(): Column(
+        body: _isSuccess
+            ? _buildSuccessUI()
+            : Column(
           children: [
             _buildTopBar(),
             Expanded(
               child: Center(
-                child: (_trimmer.videoPlayerController != null &&
-                    _trimmer.videoPlayerController!.value.isInitialized &&
+                child:
+                (_trimmer.videoPlayerController != null &&
+                    _trimmer
+                        .videoPlayerController!
+                        .value
+                        .isInitialized &&
                     !_isLoadingVideo)
                     ? VideoViewer(trimmer: _trimmer)
                     : Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (_loadError == null)
-                      const CircularProgressIndicator(color: Colors.blueAccent),
+                      const CircularProgressIndicator(
+                        color: Colors.blueAccent,
+                      ),
                     const SizedBox(height: 10),
-                    Text(
-                      _loadError ?? "Loading Video...",
-                      style: const TextStyle(color: Colors.white),
-                      textAlign: TextAlign.center,
+                    AppText(
+                      _loadError ?? "loadingVideo",
+                      color: Colors.white,
+                      align: TextAlign.center,
                     ),
                     if (_loadError != null) ...[
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: _loadVideo,
-                        child: const Text("Retry"),
+                        child: const AppText("retry"),
                       ),
                     ],
                   ],
@@ -571,9 +610,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       _startValue = value;
                       _updateEstimate();
 
-                      // àªµàª¿àª¡àª¿àª¯à«‹ àªªà«‹àª àª•àª°àªµàª¾àª¨à«àª‚ àª²à«‹àªœàª¿àª•
                       final controller = _trimmer.videoPlayerController;
-                      if (controller != null && controller.value.isPlaying) {
+                      if (controller != null &&
+                          controller.value.isPlaying) {
                         await controller.pause();
                         // Safe setState using addPostFrameCallback
                         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -582,9 +621,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       }
 
                       if (!_isTrimmed) {
-                        _isTrimmed = true; // àªªà«‡àª²àª¾ àªµà«‡àª°à«€àªàª¬àª² àª¬àª¦àª²à«‹
+                        _isTrimmed = true;
                         WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) setState(() {}); // àªªàª›à«€ àªàª• àªœ àªµàª¾àª° àª°àª¿àª¬àª¿àª²à«àª¡ àª•àª°à«‹
+                          if (mounted) setState(() {});
                         });
                       }
                     },
@@ -615,29 +654,33 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                     onTap: () async {
                       print("in side ontap ==> ");
                       final controller = _trimmer.videoPlayerController;
-                      if (controller != null && controller.value.isInitialized) {
+                      if (controller != null &&
+                          controller.value.isInitialized) {
                         print("in side if 1 st==> ");
                         if (controller.value.isPlaying) {
                           print("in side if ==> ");
                           await controller.pause();
                         } else {
                           print("in side else ==> ");
-                          // àªœà«‹ àªµàª¿àª¡àª¿àª¯à«‹ àª›à«‡àª²à«àª²à«€ àª°à«‡àª¨à«àªœ (endValue) àªªàª° àªªàª¹à«‹àª‚àªšà«€ àª—àª¯à«‹ àª¹à«‹àª¯, àª¤à«‹ àª«àª°à«€àª¥à«€ startValue àª¥à«€ àª¶àª°à«‚ àª•àª°à«‹
-                          if (controller.value.position >= Duration(milliseconds: _endValue.toInt())) {
-                            await controller.seekTo(Duration(milliseconds: _startValue.toInt()));
+                          if (controller.value.position >=
+                              Duration(milliseconds: _endValue.toInt())) {
+                            await controller.seekTo(
+                              Duration(milliseconds: _startValue.toInt()),
+                            );
                           }
                           await controller.play();
                         }
                         setState(() {
                           _isPlaying = controller.value.isPlaying;
                         });
-                      }
-                      else {
+                      } else {
                         _loadVideo();
                       }
                     },
                     child: Icon(
-                      _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                      _isPlaying
+                          ? Icons.pause_circle_filled
+                          : Icons.play_circle_filled,
                       color: Colors.white,
                       size: 50,
                     ),
@@ -651,8 +694,6 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       ),
     );
   }
-
-  // Duration àª«à«‹àª°à«àª®à«‡àªŸ àª®àª¾àªŸà«‡ àª«àª‚àª•à«àª¶àª¨
   String _formatDuration(double milliseconds) {
     Duration duration = Duration(milliseconds: milliseconds.toInt());
     String twoDigits(int n) => n.toString().padLeft(2, "0");
@@ -701,9 +742,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         }
         return Container(
           color: Colors.white10,
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         );
       },
     );
@@ -723,13 +762,21 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                     onPressed: () => Navigator.pop(context, true),
                   ),
                   const Expanded(
-                    child: Text("Export Success",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: AppText(
+                      "exportSuccess",
+                      align: TextAlign.center,
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(width: 48),
                 ],
@@ -743,14 +790,21 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.check_circle, color: Colors.greenAccent, size: 25),
-                      SizedBox(width: 15,),
-                      const Text("Saved Successfully!",
-                          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.greenAccent,
+                        size: 25,
+                      ),
+                      SizedBox(width: 15),
+                      const AppText(
+                        "savedSuccessfully",
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 25),
@@ -766,7 +820,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                     child: Column(
                       children: [
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(18),
+                          ),
                           child: AspectRatio(
                             aspectRatio: 16 / 9,
                             child: _buildSuccessCoverPreview(),
@@ -791,10 +847,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // HH:MM:SS àª«à«‹àª°à«àª®à«‡àªŸ àª…àª¹à«€àª‚ àªµàªªàª°àª¾àª¶à«‡
-                              _buildDetailItem("DURATION", _formatDuration(_endValue - _startValue)),
-                              _buildDetailItem("SIZE", _getEstimateSize()),
-                              _buildDetailItem("FORMAT", "MP4"),
+                              _buildDetailItem(
+                                "durationUpper",
+                                _formatDuration(_endValue - _startValue),
+                              ),
+                              _buildDetailItem("sizeUpper", _getEstimateSize()),
+                              _buildDetailItem("format", "mp4"),
                             ],
                           ),
                         ),
@@ -802,7 +860,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 15),
                           child: Align(
                             alignment: Alignment.topLeft,
-                            child: AppText("File Location",color: Colors.white38,
+                            child: AppText(
+                              "fileLocation",
+                              color: Colors.white38,
                               fontSize: 10,
                               align: TextAlign.start,
                               fontWeight: FontWeight.bold,
@@ -810,36 +870,31 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15,vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 5,
+                          ),
                           child: Align(
                             alignment: Alignment.topLeft,
-                            child: AppText(_savedVideoPath,color: Colors.white,
+                            child: AppText(
+                              _savedVideoPath,
+                              color: Colors.white,
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                        SizedBox(height: 10,),
+                        SizedBox(height: 10),
                       ],
                     ),
                   ),
                   Spacer(),
                   // --- 5 Social Direct Buttons ---
-                  AppButton(title: "share", onTap: () => Share.shareXFiles([XFile(_savedVideoPath)]),),
+                  AppButton(
+                    title: "share",
+                    onTap: () => Share.shareXFiles([XFile(_savedVideoPath)]),
+                  ),
                   Spacer(),
-
-                  // ElevatedButton.icon(
-                  //   onPressed: () => Share.shareXFiles([XFile(_savedVideoPath)]),
-                  //   icon: const Icon(Icons.share, size: 18),
-                  //   label: const Text("Share"),
-                  //   style: ElevatedButton.styleFrom(
-                  //     backgroundColor: Colors.blueAccent,
-                  //     foregroundColor: Colors.white,
-                  //     padding: const EdgeInsets.symmetric(vertical: 14),
-                  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  //     elevation: 0,
-                  //   ),
-                  // ),
-
                 ],
               ),
             ),
@@ -862,32 +917,24 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     );
   }
 
-
-
   Widget _buildDetailItem(String label, String value) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // àª²àª–àª¾àª£ àª¡àª¾àª¬à«€ àª¬àª¾àªœà« àª°àª¾àª–àªµàª¾
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // àª‰àªªàª°àª¨à«àª‚ àª²à«‡àª¬àª² (àª¨àª¾àª¨àª¾ àª…àª•à«àª·àª°à«‹àª®àª¾àª‚)
-        Text(
+        AppText(
           label,
-          style: const TextStyle(
-            color: Colors.white38, // àª†àª›à«‹ àª¸àª«à«‡àª¦ àª•àª²àª°
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.1,
-          ),
+          color: Colors.white38,
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.1,
         ),
         const SizedBox(height: 4),
-        // àª¨à«€àªšà«‡àª¨à«€ àª•àª¿àª‚àª®àª¤ (àª˜àª¾àªŸàª¾ àª¸àª«à«‡àª¦ àª…àª•à«àª·àª°à«‹àª®àª¾àª‚)
-        Text(
+        AppText(
           value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
         ),
       ],
     );
@@ -929,17 +976,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
           const Spacer(),
 
           // --- Export Settings Dropdown ---
-          // --- Export Settings Dropdown ---
           Theme(
-            data: Theme.of(context).copyWith(
-              cardColor: Colors.grey[900],
-            ),
+            data: Theme.of(context).copyWith(cardColor: Colors.grey[900]),
             child: PopupMenuButton<String>(
               offset: const Offset(0, 50),
               constraints: BoxConstraints(
-                minWidth: MediaQuery.of(
-                  context,
-                ).size.width,
+                minWidth: MediaQuery.of(context).size.width,
                 maxWidth: MediaQuery.of(context).size.width,
               ),
               menuPadding: EdgeInsets.zero,
@@ -957,13 +999,11 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    "Export Settings",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  AppText(
+                    "exportSettings",
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                   SizedBox(width: 5),
                   Icon(
@@ -975,12 +1015,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               ),
 
               itemBuilder: (context) => [
-                _buildPopupItem("Resolution", _resolution),
-                _buildPopupItem("Frame Rate", "30 FPS"),
-                _buildPopupItem("Format", "MP4"),
-                _buildPopupItem("Bit Rate", _bitRate),
+                _buildPopupItem("resolution", _resolution),
+                _buildPopupItem("frameRate", "fps30"),
+                _buildPopupItem("format", "mp4"),
+                _buildPopupItem("bitRate", _bitRate),
                 // const PopupMenuDivider(height: 20),
-                _buildPopupItem("Estimate Size", _estimateSize, isBold: true),
+                _buildPopupItem("estimateSize", _estimateSize, isBold: true),
               ],
             ),
           ),
@@ -990,31 +1030,29 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
             onPressed: (!_isTrimmed || _isSaving)
                 ? null
                 : () async {
-                    final controller = _trimmer.videoPlayerController;
-                    if (controller != null &&
-                        controller.value.isInitialized &&
-                        controller.value.isPlaying) {
-                      await controller.pause();
-                      if (mounted) setState(() => _isPlaying = false);
-                    }
-                    _showAdDialog();
-                  },
+              final controller = _trimmer.videoPlayerController;
+              if (controller != null &&
+                  controller.value.isInitialized &&
+                  controller.value.isPlaying) {
+                await controller.pause();
+                if (mounted) setState(() => _isPlaying = false);
+              }
+              _showAdDialog();
+            },
 
-            child: Text(
-              "SAVE",
-              style: TextStyle(
-                color: (!_isTrimmed || _isSaving)
-                    ? Colors.grey
-                    : colors.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+            child: AppText(
+              "saveUpper",
+
+              color: (!_isTrimmed || _isSaving) ? Colors.grey : colors.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
         ],
       ),
     );
   }
+
   PopupMenuItem<String> _buildPopupItem(
       String title,
       String value, {
@@ -1027,14 +1065,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: TextStyle(color: Colors.white70, fontSize: 12)),
-            Text(
+            AppText(context.tr(title), color: Colors.white70, fontSize: 12),
+            AppText(
               value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.w400,
-              ),
+
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w400,
             ),
           ],
         ),
@@ -1047,8 +1084,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        final themeColors =
-            Theme.of(dialogContext).extension<AppThemeColors>()!;
+        final themeColors = Theme.of(
+          dialogContext,
+        ).extension<AppThemeColors>()!;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             _progressTimer?.cancel();
@@ -1074,24 +1112,21 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      "Exporting Video...",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const AppText(
+                      "exportingVideo",
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                     const SizedBox(height: 25),
 
                     // Percentage Text
-                    Text(
+                    AppText(
                       "${_currentPercentage.toInt()}%",
-                      style: TextStyle(
-                        color: themeColors.primary,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
+
+                      color: themeColors.primary,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
                     ),
                     const SizedBox(height: 15),
 
@@ -1106,13 +1141,11 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(
-                      "Processing... Please do not close the app",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 12,
-                      ),
+                    AppText(
+                      "processingPleaseDoNotClose",
+                      align: TextAlign.center,
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 12,
                     ),
                   ],
                 ),
@@ -1123,11 +1156,13 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       },
     );
   }
+
   //////////////////////////////////// part 2 new video trim scareen/////////////////////////////////////////////////////////////////////////////////////////////
 
   _saveVideo() async {
-    final exportBase = _pendingExportBaseName ??
-        'trimmed_${DateTime.now().millisecondsSinceEpoch}';
+    final exportBase =
+        _pendingExportBaseName ??
+            'trimmed_${DateTime.now().millisecondsSinceEpoch}';
 
     _currentPercentage = 0.0;
     if (!mounted) return;
@@ -1170,7 +1205,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 setState(() => _isSaving = false);
                 AppToast.show(
                   context,
-                  'Failed to save video to gallery. Please try again.',
+                  context.tr("failedToSaveVideoGallery"),
                   type: ToastType.error,
                 );
               }
@@ -1188,7 +1223,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
         setState(() => _isSaving = false);
         AppToast.show(
           context,
-          'Could not export video. Please try again.',
+          context.tr("couldNotExportVideo"),
           type: ToastType.error,
         );
       }
@@ -1215,24 +1250,26 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: colors.primary,
-                child:
-                    const Icon(Icons.save_alt, color: Colors.white, size: 30),
+                child: const Icon(
+                  Icons.save_alt,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                "Save Video",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              const AppText(
+                "saveVideo",
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  context.tr('trimExportFileName'),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                child: AppText(
+                  'trimExportFileName',
+                  color: Colors.white70,
+                  fontSize: 13,
                 ),
               ),
               const SizedBox(height: 6),
@@ -1242,7 +1279,9 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 cursorColor: colors.primary,
                 decoration: InputDecoration(
                   hintText: context.tr('trimExportFileNameHint'),
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.08),
                   border: OutlineInputBorder(
@@ -1264,16 +1303,18 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                "Watch Ad to Save 1 video(s)",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              const AppText(
+                "watchAddToSaveVideos",
+                align: TextAlign.center,
+                color: Colors.white70,
+                fontSize: 14,
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: () async {
-                  final sanitized =
-                      _sanitizeExportBaseName(_exportFileNameController.text);
+                  final sanitized = _sanitizeExportBaseName(
+                    _exportFileNameController.text,
+                  );
                   if (sanitized.isEmpty ||
                       sanitized.replaceAll('_', '').isEmpty) {
                     AppToast.show(
@@ -1299,20 +1340,16 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.play_circle_fill, color: Colors.white),
-                label: Text(
+                label: AppText(
                   context.tr('trimExportContinue'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text(
-                  "Maybe Later",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                child: const AppText("mayBeLater", color: Colors.grey),
               ),
             ],
           ),
@@ -1337,25 +1374,25 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
     _saveVideo();
   }
 
-
   void _showDiscardDialog() {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: colors.grey1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+        backgroundColor: Colors.grey[900],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 25,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.12),
+                color: colors.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -1365,45 +1402,50 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            AppText(
-              'discardTrimTitle',
+
+            // Ã Â«Â¨. Title & Message
+            const AppText(
+              "discardChanges",
+              color: Colors.white,
               fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: colors.appBarTitleColor,
-              align: TextAlign.center,
+              fontWeight: FontWeight.bold,
             ),
             const SizedBox(height: 12),
             AppText(
-              'discardTrimMessage',
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              color: colors.dialogueSubTitle,
+              "yourTimingProgressWillBeLost",
               align: TextAlign.center,
-              height: 1.35,
+
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.4,
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 30),
+
+            // Ã Â«Â©. Buttons Row
             Row(
               children: [
+                // Keep Editing Button (Cancel)
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
+                    onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.dialogueSubTitle,
-                      side: BorderSide(color: colors.dividerColor),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: AppText(
-                      'keepEditing',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: colors.dialogueSubTitle,
+                      "keepEditing",
+                      color: colors.whiteColor,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
+
+                // Discard Button (Confirm)
+                // Discard Button (Confirm)
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -1413,18 +1455,16 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.primary,
-                      foregroundColor: colors.whiteColor,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
                       elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: AppText(
-                      'discardConfirm',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      "discard",
                       color: colors.whiteColor,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -1439,34 +1479,28 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   @override
   void dispose() {
     _exportFileNameController.dispose();
-    // à«§. àª¸à«Œàª¥à«€ àªªàª¹à«‡àª²àª¾ àªŸàª¾àªˆàª®àª° àª¬àª‚àª§ àª•àª°à«‹
     _progressTimer?.cancel();
 
-    // à«¨. àª²àª¿àª¸àª¨àª° àª¹àªŸàª¾àªµà«‹ àªœà«‡àª¥à«€ àª•à«‹àªˆ àª¸à«àªŸà«‡àªŸ àª…àªªàª¡à«‡àªŸ àªŸà«àª°àª¿àª—àª° àª¨ àª¥àª¾àª¯
     _trimmer.videoPlayerController?.removeListener(_videoListener);
     _didAttachVideoListener = false;
 
-    // à«©. àªµà«€àª¡àª¿àª¯à«‹ àª…àªŸàª•àª¾àªµà«‹ (àªœà«‹ àª•àª‚àªŸà«àª°à«‹àª²àª° àª…àª¸à«àª¤àª¿àª¤à«àªµàª®àª¾àª‚ àª¹à«‹àª¯ àª¤à«‹)
     if (_trimmer.videoPlayerController != null) {
       _trimmer.videoPlayerController!.pause();
     }
 
-    // à«ª. àª¨à«‹àªŸàª¿àª«àª¾àª¯àª° àª•à«àª²à«€àª¨ àª•àª°à«‹
     _estimateSizeNotifier.dispose();
     _exportProgress.dispose();
 
-    // à««. àª“àª°àª¿àªàª¨à«àªŸà«‡àª¶àª¨
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-
-    // à«¬. Trimmer àª¨à«‡ àª•à«àª²à«€àª¨ àª•àª°à«‹ (àª¨à«‹àª‚àª§: video_trimmer àª²àª¾àª‡àª¬à«àª°à«‡àª°à«€àª¨à«àª‚ àªªà«‹àª¤àª¾àª¨à«àª‚ àª‡àª¨à«àªŸàª°àª¨àª² àª®à«‡àª¨à«‡àªœàª®à«‡àª¨à«àªŸ àª¹à«‹àª¯ àª›à«‡)
-    // àªœà«‹ àª¤àª®à«‡ àª®à«‡àª¨à«àª¯à«àª…àª²à«€ dispose àª•àª°à«‹ àª›à«‹ àª¤à«‹ àª¤à«‡àª¨à«‡ àª›à«‡àª²à«àª²à«‡ àª°àª¾àª–à«‹.
     super.dispose();
   }
 }
+
+
 
 /*
 import '../utils/app_imports.dart';
