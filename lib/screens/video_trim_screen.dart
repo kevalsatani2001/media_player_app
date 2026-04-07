@@ -64,6 +64,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
   bool _isLoadingVideo = true;
   String? _loadError;
   bool _didAttachVideoListener = false;
+  bool _wasVideoInitialized = false;
 
   late final TextEditingController _exportFileNameController;
 
@@ -382,6 +383,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       _startValue = 0.0;
       _currentPercentage = 0.0;
       _isPlaying = false;
+      _wasVideoInitialized = false;
     });
 
     try {
@@ -422,6 +424,14 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
       if (!_didAttachVideoListener) {
         controller.addListener(_videoListener);
         _didAttachVideoListener = true;
+      }
+
+      // Some devices/codecs initialize `VideoPlayerController` a bit later
+      // even after `Trimmer.loadVideo` returns. Wait briefly for init.
+      int initRetry = 0;
+      while (!controller.value.isInitialized && initRetry < 60) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        initRetry++;
       }
 
       if (controller.value.isInitialized) {
@@ -499,7 +509,12 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
     try {
       final controller = _trimmer.videoPlayerController!;
-      if (controller.value.isInitialized) {
+      final init = controller.value.isInitialized;
+      if (init != _wasVideoInitialized) {
+        _wasVideoInitialized = init;
+        // Rebuild so UI can switch from loader -> VideoViewer when initialized.
+        setState(() {});
+      } else if (init) {
         if (_isPlaying != controller.value.isPlaying) {
           setState(() {
             _isPlaying = controller.value.isPlaying;

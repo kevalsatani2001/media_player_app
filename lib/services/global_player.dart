@@ -151,7 +151,15 @@ class GlobalPlayerService {
           ),
         ),
       );
-      // પ્લેયરને પ્લે કરવાની જરૂર નથી, ખાલી સોર્સ સેટ કરવાથી નોટિફિકેશન આવી જશે
+      // Background notification often only appears when audio is actually playing.
+      // Silence audio ends quickly on some devices, so loop it for an ongoing notification.
+      try {
+        await _dummyAudioPlayer.setLoopMode(LoopMode.one);
+      } catch (_) {}
+      try {
+        await _dummyAudioPlayer.setVolume(isMuted ? 0 : 0.0);
+      } catch (_) {}
+      await _dummyAudioPlayer.play();
     } catch (e) {
       print("Notification Error: $e");
     }
@@ -459,6 +467,7 @@ class GlobalPlayerService {
       _videoAdapter.addListener(_currentListener!);
 
       isInitialized = true;
+      await _updateMediaNotification();
       await _videoAdapter.play();
       onUpdate();
     } catch (_) {
