@@ -143,11 +143,16 @@ class GlobalPlayerService {
     if (playlist.isEmpty || !isInitialized) return;
     final entity = playlist[currentIndex];
     final title = entity.title ?? "Video";
+    final file = await entity.file;
+    final bgVolume = isMuted ? 0.0 : volume.clamp(0.0, 1.0);
     final gp = GlobalPlayer();
     final ok = await gp.tryAttachVideoBackgroundMediaSession(
       mediaId: entity.id,
       title: title,
       duration: totalDuration,
+      sourceFilePath: file?.path,
+      position: currentPosition,
+      playbackVolume: bgVolume,
     );
     if (!ok) {
       await AppNotificationService.showVideoBackgroundNotification(
@@ -1080,6 +1085,9 @@ class GlobalPlayer extends ChangeNotifier {
     required String mediaId,
     required String title,
     required Duration duration,
+    String? sourceFilePath,
+    Duration? position,
+    required double playbackVolume,
   }) async {
     if (_videoBackgroundMediaAttached) return true;
     if (_musicOwnsSharedAudioSession) {
@@ -1087,30 +1095,39 @@ class GlobalPlayer extends ChangeNotifier {
     }
     try {
       _audioVolumeBeforeVideoBg = audioPlayer.volume;
-      final dir = await getTemporaryDirectory();
-      final f = File('${dir.path}/video_bg_silence.wav');
-      if (!await f.exists()) {
-        await f.writeAsBytes(_silentWavPcm16Mono(durationMs: 1000));
-      }
-      _videoBgSilenceFile = f;
-
       final mediaTag = bg.MediaItem(
         id: 'video_bg_$mediaId',
         album: 'Video Player',
         title: title,
         artist: 'Video',
-        // Keep duration unset to avoid tiny looping progress in notification UI.
+        duration: duration,
       );
 
-      // Single tagged URI source — satisfies just_audio_background's assertion.
-      await audioPlayer.setAudioSource(
-        AudioSource.uri(
-          Uri.file(f.path),
-          tag: mediaTag,
-        ),
-      );
-      await audioPlayer.setLoopMode(LoopMode.one);
-      await audioPlayer.setVolume(0);
+      // Prefer real file so lockscreen duration/progress matches video (no 1s loop UI).
+      if (sourceFilePath != null && sourceFilePath.isNotEmpty) {
+        await audioPlayer.setAudioSource(
+          AudioSource.uri(
+            Uri.file(sourceFilePath),
+            tag: mediaTag,
+          ),
+          initialPosition: position ?? Duration.zero,
+        );
+      } else {
+        final dir = await getTemporaryDirectory();
+        final f = File('${dir.path}/video_bg_silence.wav');
+        if (!await f.exists()) {
+          await f.writeAsBytes(_silentWavPcm16Mono(durationMs: 1000));
+        }
+        _videoBgSilenceFile = f;
+        await audioPlayer.setAudioSource(
+          AudioSource.uri(
+            Uri.file(f.path),
+            tag: mediaTag,
+          ),
+        );
+        await audioPlayer.setLoopMode(LoopMode.one);
+      }
+      await audioPlayer.setVolume(playbackVolume.clamp(0.0, 1.0));
       await audioPlayer.play();
       _videoBackgroundMediaAttached = true;
       return true;

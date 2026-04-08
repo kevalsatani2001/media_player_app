@@ -562,7 +562,8 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
       request: const AdRequest(),
       nativeAdOptions: NativeAdOptions(
         adChoicesPlacement: AdChoicesPlacement.topRightCorner,
-        mediaAspectRatio: MediaAspectRatio.any,
+        // Prefer video creatives (or wide media) in pause overlay slot.
+        mediaAspectRatio: MediaAspectRatio.landscape,
         videoOptions: VideoOptions(startMuted: true),
       ),
       nativeTemplateStyle: NativeTemplateStyle(
@@ -629,11 +630,11 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
             if (isLandscape) {
               final safeH = constraints.maxHeight - pad.vertical;
               adH = min(
-                380.0,
-                max(280.0, safeH * 0.82 - 40.0),
+                420.0,
+                max(300.0, safeH * 0.86 - 32.0),
               );
             } else {
-              adH = min(constraints.maxHeight * 0.55, 380.0);
+              adH = min(constraints.maxHeight * 0.60, 420.0);
             }
 
             final cardColumn = Column(

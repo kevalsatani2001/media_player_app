@@ -440,8 +440,15 @@ class _PlayerScreenState extends State<PlayerScreen>
         WakelockPlus.disable();
       }
     } else if (state == AppLifecycleState.resumed) {
+      final shouldResumeVideoOnReturn =
+          _wasPlayingBeforeBackground &&
+              settings.isBgPlayEnabled;
       _wasPlayingBeforeBackground = false;
       playerService.stopBackgroundNotificationAudio();
+      if (shouldResumeVideoOnReturn) {
+        // Returning from media header should restore video renderer state too.
+        playerService.playVideo();
+      }
       // જ્યારે એપ પાછી આવે ત્યારે જો ઓડિયો ચાલુ હોય તો માત્ર UI અપડેટ કરો
       setState(() {});
     }
