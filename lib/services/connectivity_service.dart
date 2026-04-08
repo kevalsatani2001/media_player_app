@@ -11,10 +11,21 @@ import 'ads_service.dart';
 import 'global_player.dart';
 
 class NetworkInfo {
+  /// True if any interface can carry data (not only [ConnectivityResult.none]).
+  /// Do not use `contains(ConnectivityResult.none)` — during WiFi/mobile handoff the
+  /// list can include both, and the user is still online.
+  static bool hasUsableConnection(List<ConnectivityResult> result) {
+    if (result.isEmpty) return false;
+    return result.any((r) => r != ConnectivityResult.none);
+  }
+
+  /// Double-check after a short delay to avoid false offline during radio handoff.
   static Future<bool> isConnected() async {
-    final List<ConnectivityResult> result = await Connectivity()
-        .checkConnectivity();
-    return !result.contains(ConnectivityResult.none);
+    final first = await Connectivity().checkConnectivity();
+    if (hasUsableConnection(first)) return true;
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    final second = await Connectivity().checkConnectivity();
+    return hasUsableConnection(second);
   }
 }
 
@@ -36,17 +47,17 @@ class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
   void initState() {
     super.initState();
     _subscription = Connectivity().onConnectivityChanged.listen((results) {
-      bool currentStatus = results.contains(ConnectivityResult.none);
+      final isOffline = !NetworkInfo.hasUsableConnection(results);
 
-      if (currentStatus) {
+      if (isOffline) {
         _pauseMedia();
       }
 
-      if (!currentStatus && _isOffline) {
+      if (!isOffline && _isOffline) {
         _startConnectingAnimation();
         _resumeMedia();
       } else {
-        setState(() => _isOffline = currentStatus);
+        setState(() => _isOffline = isOffline);
       }
     });
   }

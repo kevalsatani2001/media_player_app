@@ -13,6 +13,46 @@ import 'notification_service.dart';
 import 'video_playback_adapter.dart';
 //youtube_explode_dart:
 
+/// Minimal valid PCM WAV (mono 16-bit) for [just_audio_background], which requires
+/// a [MediaItem] tag on every [AudioSource]. [SilenceAudioSource] does not satisfy
+/// that assertion on all plugin versions.
+Uint8List _silentWavPcm16Mono({int sampleRate = 44100, int durationMs = 800}) {
+  final n = sampleRate * durationMs ~/ 1000;
+  final dataSize = n * 2;
+  final chunkSize = 36 + dataSize;
+  final bb = BytesBuilder(copy: false);
+  void w32(int v) {
+    bb.add([
+      v & 0xff,
+      (v >> 8) & 0xff,
+      (v >> 16) & 0xff,
+      (v >> 24) & 0xff,
+    ]);
+  }
+
+  void w16(int v) {
+    bb.add([v & 0xff, (v >> 8) & 0xff]);
+  }
+
+  bb.add([82, 73, 70, 70]); // RIFF
+  w32(chunkSize);
+  bb.add([87, 65, 86, 69]); // WAVE
+  bb.add([102, 109, 116, 32]); // fmt
+  w32(16);
+  w16(1); // PCM
+  w16(1); // mono
+  w32(sampleRate);
+  w32(sampleRate * 2); // byte rate
+  w16(2); // block align
+  w16(16); // bits
+  bb.add([100, 97, 116, 97]); // data
+  w32(dataSize);
+  for (var i = 0; i < n; i++) {
+    w16(0);
+  }
+  return Uint8List.fromList(bb.toBytes());
+}
+
 class GlobalPlayerService {
   static final GlobalPlayerService _instance = GlobalPlayerService._internal();
   VoidCallback? _currentListener;
@@ -96,16 +136,25 @@ class GlobalPlayerService {
     await _videoAdapter.seekTo(target);
   }
 
-  // Video background notification now uses local notifications so it doesn't
-  // conflict with the app's main just_audio player instance.
+  /// Same system media notification as music: uses the single shared
+  /// [GlobalPlayer.audioPlayer] with [just_audio_background]. If the music
+  /// queue owns that player, falls back to local notification.
   Future<void> _updateMediaNotification() async {
     if (playlist.isEmpty || !isInitialized) return;
     final entity = playlist[currentIndex];
     final title = entity.title ?? "Video";
-    await AppNotificationService.showVideoBackgroundNotification(
+    final gp = GlobalPlayer();
+    final ok = await gp.tryAttachVideoBackgroundMediaSession(
+      mediaId: entity.id,
       title: title,
-      body: "Playing in background",
+      duration: totalDuration,
     );
+    if (!ok) {
+      await AppNotificationService.showVideoBackgroundNotification(
+        title: title,
+        body: "Playing in background",
+      );
+    }
   }
 
   Future<void> setPlaybackSpeed(double speed) async {
@@ -119,6 +168,7 @@ class GlobalPlayerService {
 
   Future<void> pauseVideo() async {
     await _videoAdapter.pause();
+    await GlobalPlayer().detachVideoBackgroundMediaSession();
     await AppNotificationService.cancelVideoBackgroundNotification();
   }
 
@@ -128,12 +178,11 @@ class GlobalPlayerService {
 
   Future<void> ensureBackgroundNotificationActive() async {
     if (!isInitialized) return;
-    if (isVideoPlaying) {
-      await _updateMediaNotification();
-    }
+    await _updateMediaNotification();
   }
 
   Future<void> stopBackgroundNotificationAudio() async {
+    await GlobalPlayer().detachVideoBackgroundMediaSession();
     await AppNotificationService.cancelVideoBackgroundNotification();
   }
 
@@ -481,7 +530,7 @@ class GlobalPlayer extends ChangeNotifier {
     _networkSubscription = Connectivity().onConnectivityChanged.listen((
         results,
         ) {
-      bool isOffline = results.contains(ConnectivityResult.none);
+      final isOffline = !NetworkInfo.hasUsableConnection(results);
 
       if (isOffline) {
         debugPrint("GlobalPlayer: Internet Lost!");
@@ -537,19 +586,25 @@ class GlobalPlayer extends ChangeNotifier {
     });
 
     audioPlayer.playingStream.listen((isPlaying) async {
-      if (isPlaying) {
-        bool isOnline = await NetworkInfo.isConnected();
-        if (!isOnline) {
-          final currentContext = NavigatorKey.root.currentContext;
-          await audioPlayer.pause();
+      if (!isPlaying) return;
+      // Video background uses the same [audioPlayer] for silent MediaSession — never
+      // treat that as "music playing" for network checks.
+      if (_videoBackgroundMediaAttached) return;
+      if (currentIndex < 0 || currentIndex >= queue.length) return;
+      // Local files do not need internet; connectivity APIs often glitch anyway.
+      if (!queue[currentIndex].isNetwork) return;
 
-          await audioPlayer.seek(audioPlayer.position);
+      final isOnline = await NetworkInfo.isConnected();
+      if (!isOnline) {
+        final currentContext = NavigatorKey.root.currentContext;
+        await audioPlayer.pause();
 
-          await AppNotificationService.showNoInternetNotification(
-            title: "${currentContext?.tr("noInternetTitle")}",
-            bodyTitle: "${currentContext?.tr("noInternetBody")}",
-          );
-        }
+        await audioPlayer.seek(audioPlayer.position);
+
+        await AppNotificationService.showNoInternetNotification(
+          title: "${currentContext?.tr("noInternetTitle")}",
+          bodyTitle: "${currentContext?.tr("noInternetBody")}",
+        );
       }
     });
 
@@ -678,6 +733,7 @@ class GlobalPlayer extends ChangeNotifier {
   }
 
   Future<void> _setupAudioQueue() async {
+    await detachVideoBackgroundMediaSession();
     // just_audio_background notification often uses `extras['android.color']`
     // (and optionally `artUri`) for the current track. To keep startup fast,
     // we extract palette only for `currentIndex` (not for the whole queue).
@@ -945,37 +1001,46 @@ class GlobalPlayer extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _currentPlaybackRequiresInternet() {
+    if (currentType == 'audio' &&
+        currentIndex >= 0 &&
+        currentIndex < queue.length) {
+      return queue[currentIndex].isNetwork;
+    }
+    // Mini-player / legacy video file path is local; no internet required to resume.
+    if (currentType == 'video') return false;
+    return false;
+  }
+
   void resume() async {
-    bool isOnline = await NetworkInfo.isConnected();
+    if (_currentPlaybackRequiresInternet()) {
+      final isOnline = await NetworkInfo.isConnected();
+      if (!isOnline) {
+        final currentContext = NavigatorKey.root.currentContext;
+        debugPrint("Resume blocked: No Internet");
 
-    if (!isOnline) {
-      // 1. Get the context from your Global Navigator Key
-      final currentContext = NavigatorKey.root.currentContext;
-      debugPrint("Resume blocked: No Internet");
+        await AppNotificationService.showNoInternetNotification(
+          title: "${currentContext?.tr("noInternetTitle")}",
+          bodyTitle: "${currentContext?.tr("noInternetBody")}",
+        );
 
-      await AppNotificationService.showNoInternetNotification(
-        title: "${currentContext?.tr("noInternetTitle")}",
-        bodyTitle: "${currentContext?.tr("noInternetBody")}",
-      );
+        if (currentContext != null && currentContext.mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              AppToast.show(
+                currentContext,
+                "Internet connection lost. Video cannot be played.",
+                type: ToastType.error,
+              );
+            } catch (e) {
+              debugPrint("Failed to show toast: $e");
+            }
+          });
+        }
 
-      // 2. Check if context is null OR if the widget is unmounted
-      if (currentContext != null && currentContext.mounted) {
-        // 3. Use addPostFrameCallback to ensure the frame is ready for an Overlay
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          try {
-            AppToast.show(
-              currentContext,
-              "Internet connection lost. Video cannot be played.",
-              type: ToastType.error,
-            );
-          } catch (e) {
-            debugPrint("Failed to show toast: $e");
-          }
-        });
+        notifyListeners();
+        return;
       }
-
-      notifyListeners();
-      return;
     }
 
     currentType == 'audio' ? audioPlayer.play() : videoController?.play();
@@ -999,6 +1064,74 @@ class GlobalPlayer extends ChangeNotifier {
       (currentIndex >= 0 && currentIndex < queue.length)
           ? queue[currentIndex]
           : null;
+
+  /// Music UI owns the shared [audioPlayer] when there is an audio queue.
+  bool get _musicOwnsSharedAudioSession =>
+      currentType == 'audio' && queue.isNotEmpty;
+
+  bool _videoBackgroundMediaAttached = false;
+  File? _videoBgSilenceFile;
+
+  /// Uses the same [just_audio_background] session as audio (lock screen / shade).
+  /// Returns false if the music player must keep [audioPlayer] — use local notif then.
+  Future<bool> tryAttachVideoBackgroundMediaSession({
+    required String mediaId,
+    required String title,
+    required Duration duration,
+  }) async {
+    if (_videoBackgroundMediaAttached) return true;
+    if (_musicOwnsSharedAudioSession) {
+      return false;
+    }
+    try {
+      final dir = await getTemporaryDirectory();
+      final f = File('${dir.path}/video_bg_silence.wav');
+      if (!await f.exists()) {
+        await f.writeAsBytes(_silentWavPcm16Mono(durationMs: 1000));
+      }
+      _videoBgSilenceFile = f;
+
+      final mediaTag = bg.MediaItem(
+        id: 'video_bg_$mediaId',
+        album: 'Video Player',
+        title: title,
+        artist: 'Video',
+        duration: duration,
+      );
+
+      // Single tagged URI source — satisfies just_audio_background's assertion.
+      await audioPlayer.setAudioSource(
+        AudioSource.uri(
+          Uri.file(f.path),
+          tag: mediaTag,
+        ),
+      );
+      await audioPlayer.setLoopMode(LoopMode.one);
+      await audioPlayer.setVolume(0);
+      await audioPlayer.play();
+      _videoBackgroundMediaAttached = true;
+      return true;
+    } catch (e) {
+      debugPrint('tryAttachVideoBackgroundMediaSession: $e');
+      return false;
+    }
+  }
+
+  Future<void> detachVideoBackgroundMediaSession() async {
+    if (!_videoBackgroundMediaAttached) return;
+    try {
+      await audioPlayer.pause();
+      await audioPlayer.stop();
+    } catch (_) {}
+    _videoBackgroundMediaAttached = false;
+    try {
+      final f = _videoBgSilenceFile;
+      if (f != null && await f.exists()) {
+        await f.delete();
+      }
+    } catch (_) {}
+    _videoBgSilenceFile = null;
+  }
 
   @override
   void dispose() {

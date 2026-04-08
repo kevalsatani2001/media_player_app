@@ -408,13 +408,33 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     if (state == AppLifecycleState.paused) {
       _wasPlayingBeforeBackground = playerService.isVideoPlaying;
-      if (settings.isBgPlayEnabled) {
-        // Keep playback alive in background only if user was already playing.
+      final bgOn = settings.isBgPlayEnabled;
+      if (bgOn) {
+        // Resume playback if user left while playing (some devices pause surface first).
         if (_wasPlayingBeforeBackground) {
           playerService.playVideo();
         }
-        playerService.ensureBackgroundNotificationActive();
         WakelockPlus.enable();
+        // Show notification after a short delay so play state + channel are ready.
+        Future<void>(() async {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+          if (!mounted) return;
+          final s = Provider.of<SettingsProvider>(context, listen: false);
+          if (!s.isBgPlayEnabled) return;
+          final ctl = playerService.controller;
+          final playing = playerService.isVideoPlaying ||
+              (ctl?.value.isInitialized == true && ctl!.value.isPlaying);
+          if (!playing && _wasPlayingBeforeBackground) {
+            await playerService.playVideo();
+          }
+          if (!playerService.isInitialized || playerService.playlist.isEmpty) {
+            return;
+          }
+          if (playerService.isVideoPlaying ||
+              (ctl?.value.isPlaying ?? false)) {
+            await playerService.ensureBackgroundNotificationActive();
+          }
+        });
       } else {
         playerService.pauseVideo();
         WakelockPlus.disable();

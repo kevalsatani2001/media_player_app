@@ -4,6 +4,10 @@ class AppNotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
+  /// Android 8+: channel must exist with sufficient importance or the notification
+  /// is hidden / minimized. Use a stable id so OS remembers user settings.
+  static const String _videoBgChannelId = 'video_bg_playback_v2';
+
   static Future<void> init() async {
     // Android Ã ÂªÂ¸Ã Â«â€¡Ã ÂªÅ¸Ã Âªâ€¦Ã ÂªÂª: 'app_icon' Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â‚¬ res/drawable Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã Â«â€¹Ã ÂªÂµÃ Â«â€¹ Ã ÂªÅ“Ã Â«â€¹Ã ÂªË†Ã ÂªÂ
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -24,6 +28,23 @@ class AppNotificationService {
     );
 
     await _notificationsPlugin.initialize(settings: initializationSettings);
+
+    final androidImpl = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImpl != null) {
+      await androidImpl.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _videoBgChannelId,
+          'Video background playback',
+          description: 'Shown while video continues playing with Background Play on',
+          importance: Importance.high,
+          playSound: false,
+          enableVibration: false,
+          showBadge: true,
+        ),
+      );
+    }
   }
 
   static Future<void> showNoInternetNotification({
@@ -56,20 +77,32 @@ class AppNotificationService {
     required String title,
     required String body,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'video_bg_playback_channel',
-      'Video Background Playback',
-      channelDescription: 'Shows notification while video plays in background',
-      importance: Importance.low,
-      priority: Priority.low,
+    final androidDetails = AndroidNotificationDetails(
+      _videoBgChannelId,
+      'Video background playback',
+      channelDescription:
+          'Shown while video continues playing with Background Play on',
+      importance: Importance.high,
+      priority: Priority.high,
       ongoing: true,
+      autoCancel: false,
       onlyAlertOnce: true,
       showWhen: false,
+      category: AndroidNotificationCategory.transport,
+      visibility: NotificationVisibility.public,
+      playSound: false,
+      enableVibration: false,
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(presentAlert: false, presentSound: false),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentSound: false,
+        presentBadge: false,
+        presentBanner: true,
+        presentList: true,
+      ),
     );
 
     await _notificationsPlugin.show(
