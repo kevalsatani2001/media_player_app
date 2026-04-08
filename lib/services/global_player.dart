@@ -807,6 +807,7 @@ class GlobalPlayer extends ChangeNotifier {
       initialIndex: currentIndex,
       initialPosition: Duration.zero,
     );
+    await audioPlayer.setVolume(_audioVolumeBeforeVideoBg.clamp(0.0, 1.0));
 
     // Apply speed for audio immediately after loading the new queue.
     await audioPlayer.setSpeed(playbackSpeed);
@@ -1071,6 +1072,7 @@ class GlobalPlayer extends ChangeNotifier {
 
   bool _videoBackgroundMediaAttached = false;
   File? _videoBgSilenceFile;
+  double _audioVolumeBeforeVideoBg = 1.0;
 
   /// Uses the same [just_audio_background] session as audio (lock screen / shade).
   /// Returns false if the music player must keep [audioPlayer] — use local notif then.
@@ -1084,6 +1086,7 @@ class GlobalPlayer extends ChangeNotifier {
       return false;
     }
     try {
+      _audioVolumeBeforeVideoBg = audioPlayer.volume;
       final dir = await getTemporaryDirectory();
       final f = File('${dir.path}/video_bg_silence.wav');
       if (!await f.exists()) {
@@ -1096,7 +1099,7 @@ class GlobalPlayer extends ChangeNotifier {
         album: 'Video Player',
         title: title,
         artist: 'Video',
-        duration: duration,
+        // Keep duration unset to avoid tiny looping progress in notification UI.
       );
 
       // Single tagged URI source — satisfies just_audio_background's assertion.
@@ -1122,6 +1125,7 @@ class GlobalPlayer extends ChangeNotifier {
     try {
       await audioPlayer.pause();
       await audioPlayer.stop();
+      await audioPlayer.setVolume(_audioVolumeBeforeVideoBg.clamp(0.0, 1.0));
     } catch (_) {}
     _videoBackgroundMediaAttached = false;
     try {

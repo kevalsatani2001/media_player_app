@@ -916,6 +916,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       onVisibilityChanged: (info) {
         if (!settings.pausePlaybackIfObstructed) return;
         if (settings.isBgPlayEnabled) return;
+        final lifecycle = WidgetsBinding.instance.lifecycleState;
+        if (lifecycle != AppLifecycleState.resumed) return;
         final controller = playerService.controller;
         if (controller == null) return;
 
