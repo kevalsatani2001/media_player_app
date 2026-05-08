@@ -18,7 +18,6 @@ class PlaylistItemsScreen extends StatefulWidget {
 
 class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   late List<MediaItem> currentItems;
-  int _playClickCount = 0;
 
   // Subscription to keep an eye on the Hive box
   StreamSubscription? _favBoxSubscription;
@@ -403,7 +402,6 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
   }
 
   void _handlePlay(BuildContext context, MediaItem item) {
-    _playClickCount++;
 
     void startNavigation() async {
       int index = currentItems.indexOf(item);
@@ -452,11 +450,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       }
     }
 
-    if (_playClickCount % 3 == 0) {
-      AdHelper.showInterstitialAd(() => startNavigation());
-    } else {
-      startNavigation();
-    }
+    AdHelper.showInterstitialAd(() => startNavigation());
   }
 
   Future<void> routeToDetailPage(

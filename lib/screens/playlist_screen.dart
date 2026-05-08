@@ -4,7 +4,6 @@ import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class PlaylistScreen extends StatelessWidget {
-  int _clickCounter = 0;
 
   PlaylistScreen({super.key});
 
@@ -120,8 +119,6 @@ class PlaylistScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 7.5),
       child: GestureDetector(
         onTap: () {
-          _clickCounter++;
-
           void goToPlaylist() {
             Navigator.push(
               context,
@@ -134,13 +131,9 @@ class PlaylistScreen extends StatelessWidget {
             );
           }
 
-          if (_clickCounter % 3 == 0) {
-            AdHelper.showInterstitialAd(() {
-              goToPlaylist();
-            });
-          } else {
+          AdHelper.showInterstitialAd(() {
             goToPlaylist();
-          }
+          });
         },
         child: Container(
           decoration: BoxDecoration(

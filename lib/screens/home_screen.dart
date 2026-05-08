@@ -562,8 +562,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
-  int _videoClickCount = 0;
-
   void _navigateToPlayer(
       BuildContext context,
       List<AssetEntity> allEntities,
@@ -599,17 +597,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
       });
     }
 
-    _videoClickCount++;
-
-    if (_videoClickCount % 3 == 0) {
-      debugPrint("Showing Interstitial Ad before navigation...");
-
-      AdHelper.showInterstitialAd(() {
-        openPlayer();
-      });
-    } else {
+    AdHelper.showInterstitialAd(() {
       openPlayer();
-    }
+    });
   }
 
   Widget _buildSliverFolderGrid() {

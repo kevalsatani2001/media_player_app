@@ -33,7 +33,7 @@
     </queries>
 
     <application
-        android:label="media_player"
+        android:label="Nova Player"
         android:allowBackup="false"
         android:requestLegacyExternalStorage="true"
         android:hardwareAccelerated="true"
@@ -43,7 +43,8 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-5851220383544299~1679237737" />
+<!--            android:value="ca-app-pub-3940256099942544~3347511713" />-->
 
         <!-- Disables "AdMob native ad validator" overlay on test ads (optional dev UX). -->
         <meta-data

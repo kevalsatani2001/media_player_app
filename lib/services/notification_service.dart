@@ -149,7 +149,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kkmedia.media_player"
+    namespace = "com.nova.media.vision"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -170,7 +170,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.kkmedia.media_player"
+        applicationId = "com.nova.media.vision"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

@@ -18,7 +18,6 @@ class VideoScreen extends StatefulWidget {
   State<VideoScreen> createState() => _VideoScreenState();
 }
 
-int _videoClickCount = 0;
 
 class _VideoScreenState extends State<VideoScreen> {
   String _searchQuery = '';
@@ -810,11 +809,6 @@ class _VideoScreenState extends State<VideoScreen> {
       }
     }
 
-    _videoClickCount++;
-    if (_videoClickCount % 3 == 0) {
-      AdHelper.showInterstitialAd(() => moveNext());
-    } else {
-      moveNext();
-    }
+    AdHelper.showInterstitialAd(() => moveNext());
   }
 }

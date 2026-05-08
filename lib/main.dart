@@ -14,9 +14,10 @@ void main() async {
   await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
   await MobileAds.instance.initialize();
+  AdHelper.initAdFlow();
   AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.kkmedia.media_player.channel.playback',
+    androidNotificationChannelId: 'com.nova.media.vision.channel.playback',
     androidNotificationChannelName: 'Audio playback',
     androidNotificationOngoing: true,
     androidShowNotificationBadge: true,

@@ -1,4 +1,4 @@
-package com.kkmedia.media_player
+package com.nova.media.vision
 
 import android.app.Activity
 import android.app.PictureInPictureParams
