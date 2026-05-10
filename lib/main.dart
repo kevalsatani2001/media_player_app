@@ -14,7 +14,7 @@ void main() async {
   await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
   await MobileAds.instance.initialize();
-  AdHelper.initAdFlow();
+  // AdHelper.initAdFlow();
   AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
     androidNotificationChannelId: 'com.nova.media.vision.channel.playback',

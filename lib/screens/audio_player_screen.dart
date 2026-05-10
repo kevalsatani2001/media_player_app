@@ -1009,80 +1009,200 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     await showModalBottomSheet<double>(
       context: context,
-      backgroundColor: colors.dropdownBg,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      barrierColor: colors.blackColor.withOpacity(0.45),
       builder: (ctx) {
-        double tempSpeed = player.playbackSpeed;
+        const quickSpeeds = <double>[0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+        double tempSpeed = player.playbackSpeed.clamp(0.5, 2.0);
         return StatefulBuilder(
           builder: (ctx, setStateModal) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppText(
-                    "Playback speed",
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  const SizedBox(height: 10),
-                  AppText(
-                    "${tempSpeed.toStringAsFixed(2)}x",
-                    fontSize: 16,
-                    color: colors.dialogueSubTitle,
-                  ),
-                  Slider(
-                    value: tempSpeed.clamp(0.5, 2.0),
-                    min: 0.5,
-                    max: 2.0,
-                    divisions: 30,
-                    onChanged: (v) {
-                      setStateModal(() => tempSpeed = v);
-                    },
-                    onChangeEnd: (v) async {
-                      await player.setPlaybackSpeed(v);
-                      if (mounted) setState(() {});
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          title: "0.75x",
-                          onTap: () async {
-                            await player.setPlaybackSpeed(0.75);
-                            Navigator.pop(ctx, 0.75);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: AppButton(
-                          title: "1.0x",
-                          onTap: () async {
-                            await player.setPlaybackSpeed(1.0);
-                            Navigator.pop(ctx, 1.0);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: AppButton(
-                          title: "1.5x",
-                          onTap: () async {
-                            await player.setPlaybackSpeed(1.5);
-                            Navigator.pop(ctx, 1.5);
-                          },
-                        ),
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colors.dropdownBg,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.blackColor.withOpacity(0.22),
+                        blurRadius: 26,
+                        offset: const Offset(0, -8),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                ],
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 44,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 14),
+                            decoration: BoxDecoration(
+                              color: colors.textFieldBorder.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: colors.primary.withOpacity(0.14),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.speed_rounded,
+                                color: colors.primary,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    "Playback speed",
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: colors.appBarTitleColor,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  AppText(
+                                    "Tune your listening experience",
+                                    fontSize: 12,
+                                    color: colors.dialogueSubTitle,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.primary.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(99),
+                                border: Border.all(
+                                  color: colors.primary.withOpacity(0.26),
+                                ),
+                              ),
+                              child: AppText(
+                                "${tempSpeed.toStringAsFixed(2)}x",
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: colors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        SliderTheme(
+                          data: SliderTheme.of(ctx).copyWith(
+                            trackHeight: 5,
+                            activeTrackColor: colors.primary,
+                            inactiveTrackColor: colors.textFieldBorder.withOpacity(
+                              0.35,
+                            ),
+                            thumbColor: colors.primary,
+                            overlayColor: colors.primary.withOpacity(0.18),
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 8,
+                            ),
+                          ),
+                          child: Slider(
+                            value: tempSpeed,
+                            min: 0.5,
+                            max: 2.0,
+                            divisions: 30,
+                            onChanged: (v) {
+                              setStateModal(() => tempSpeed = v);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: quickSpeeds.map((speed) {
+                            final isSelected = (tempSpeed - speed).abs() < 0.01;
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(999),
+                              onTap: () {
+                                setStateModal(() => tempSpeed = speed);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(999),
+                                  color: isSelected
+                                      ? colors.primary
+                                      : colors.cardBackground,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? colors.primary
+                                        : colors.textFieldBorder.withOpacity(0.45),
+                                  ),
+                                ),
+                                child: AppText(
+                                  "${speed.toStringAsFixed(speed == 1 ? 1 : 2)}x",
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? colors.whiteColor
+                                      : colors.appBarTitleColor,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppButton(
+                                title: "Reset",
+                                backgroundColor: colors.cardBackground,
+                                textColor: colors.appBarTitleColor,
+                                onTap: () {
+                                  setStateModal(() => tempSpeed = 1.0);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: AppButton(
+                                title: "Apply",
+                                onTap: () async {
+                                  await player.setPlaybackSpeed(tempSpeed);
+                                  if (mounted) setState(() {});
+                                  if (ctx.mounted) Navigator.pop(ctx, tempSpeed);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             );
           },
