@@ -17,6 +17,8 @@ class AppButton extends StatelessWidget {
   // Colors
   final Color? backgroundColor;
   final Color? textColor;
+  final Color? borderColor;
+  final double elevation;
 
   // 👇 Text styling (forwarded to AppText)
   final double? fontSize;
@@ -25,7 +27,7 @@ class AppButton extends StatelessWidget {
   final AppFontFamily fontFamily;
   final double? letterSpacing;
   final double? textHeight;
-  Widget? child;
+  final Widget? child;
 
    AppButton({
     super.key,
@@ -37,6 +39,8 @@ class AppButton extends StatelessWidget {
     this.borderRadius = 14,
     this.backgroundColor,
     this.textColor,
+    this.borderColor,
+    this.elevation = 0,
 
     // Text defaults
     this.fontSize,
@@ -58,10 +62,11 @@ class AppButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: loading ? null : onTap,
         style: ElevatedButton.styleFrom(
-          elevation: 0,
+          elevation: elevation,
           backgroundColor: backgroundColor ?? colors.primary,
           disabledBackgroundColor:
           (backgroundColor ?? colors.primary).withOpacity(0.6),
+          side: borderColor == null ? null : BorderSide(color: borderColor!),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
           ),

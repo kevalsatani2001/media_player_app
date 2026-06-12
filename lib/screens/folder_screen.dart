@@ -36,15 +36,62 @@ class _FolderScreenState extends State<FolderScreen> {
 
     setState(() {
       folderList = galleryList;
-      _isLoading = false; // ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â²ÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¿ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚ÂªÃƒÆ’ Ãƒâ€šÃ‚Â«ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â°ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¥ÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒâ€šÃ‚Â¯ÃƒÆ’ Ãƒâ€šÃ‚Â«Ãƒâ€šÃ‚ÂÃƒÆ’ Ãƒâ€šÃ‚ÂªÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡
+      _isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    const int adInterval = 6;
-    int totalCount = folderList.length + (folderList.length ~/ adInterval);
+
+    final List<Widget> slivers = [];
+    const int chunkSize = 16;
+    for (int i = 0; i < folderList.length; i += chunkSize) {
+      final int currentChunkSize = chunkSize < folderList.length - i
+          ? chunkSize
+          : folderList.length - i;
+      final int startOffset = i;
+
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.all(15),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final int actualIndex = startOffset + index;
+                if (actualIndex >= folderList.length) return const SizedBox.shrink();
+
+                final item = folderList[actualIndex];
+                return AppTransition(
+                  index: actualIndex,
+                  child: GalleryItemWidget(path: item, setState: setState),
+                );
+              },
+              childCount: currentChunkSize,
+            ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 15,
+              childAspectRatio: 1.0,
+            ),
+          ),
+        ),
+      );
+
+      if (i + chunkSize < folderList.length) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
+            ),
+          ),
+        );
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -66,47 +113,11 @@ class _FolderScreenState extends State<FolderScreen> {
         child: Column(
           children: [
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(15),
-                itemCount: totalCount,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 1.0,
-                ),
-                itemBuilder: (context, index) {
-                  if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
-                    return  Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white, // Ã ÂªÂÃ ÂªÂ¡ Ã ÂªÂªÃ ÂªÂ¾Ã Âªâ€ºÃ ÂªÂ³ Ã ÂªÂµÃ Â«ÂÃ ÂªÂ¹Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÅ¸ Ã ÂªÂ¬Ã Â«â€¡Ã Âªâ€¢Ã Âªâ€”Ã Â«ÂÃ ÂªÂ°Ã ÂªÂ¾Ã Âªâ€°Ã ÂªÂ¨Ã Â«ÂÃ ÂªÂ¡ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªÂ°Ã Â«ÂÃ Âªâ€š Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã ÂªÂ¶Ã Â«â€¡
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.withOpacity(0.2)), // Ã Âªâ€ Ã Âªâ€°Ã ÂªÅ¸Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¨
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Center(
-                          child: FittedBox(
-                            fit: BoxFit.contain, // Ã Âªâ€  Ã ÂªÂÃ ÂªÂ¡Ã ÂªÂ¨Ã Â«â€¡ Ã ÂªÂ¬Ã Â«â€¹Ã Âªâ€¢Ã Â«ÂÃ ÂªÂ¸Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ«Ã ÂªÂ¿Ã ÂªÅ¸ Ã Âªâ€¢Ã ÂªÂ°Ã ÂªÂ¶Ã Â«â€¡
-                            child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-
-                  final int actualIndex = index - (index ~/ (adInterval + 1));
-                  if (actualIndex >= folderList.length) return const SizedBox.shrink();
-
-                  final item = folderList[actualIndex];
-                  return AppTransition(
-                    index: index,
-                    child: GalleryItemWidget(path: item, setState: setState),
-                  );
-                },
+              child: CustomScrollView(
+                slivers: slivers,
               ),
             ),
-            // Ã¢Å“Â¨ Ã ÂªÂ¹Ã Âªâ€šÃ ÂªÂ®Ã Â«â€¡Ã ÂªÂ¶Ã ÂªÂ¾ Ã ÂªÂ¨Ã Â«â‚¬Ã ÂªÅ¡Ã Â«â€¡ Ã ÂªÂ¦Ã Â«â€¡Ã Âªâ€“Ã ÂªÂ¾Ã ÂªÂ¤Ã Â«â‚¬ Ã ÂªÂÃ ÂªÂ¡
+            // ✨ હંમેશા નીચે દેખાતી એડ
             AdHelper.bannerAdWidget(size: AdSize.banner),
           ],
         ),

@@ -1015,62 +1015,10 @@ class AdHelper {
     BuildContext context,
     VoidCallback onFinish,
   ) {
-    int timeLeft = 30;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          // Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¶Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
-          Timer.periodic(const Duration(seconds: 1), (timer) {
-            if (timeLeft > 0) {
-              if (context.mounted) setDialogState(() => timeLeft--);
-            } else {
-              timer.cancel();
-              if (context.mounted) {
-                Navigator.pop(
-                  context,
-                );
-                onFinish();
-              }
-            }
-          });
-
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            title: const Text(
-              "Internet Required ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¶",
-              style: TextStyle(color: Colors.red),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "To skip waiting and support this app, please turn on internet.",
-                ),
-                const SizedBox(height: 20),
-                const Text("Otherwise, video starts in:"),
-                Text(
-                  "$timeLeft",
-                  style: const TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Cancel"),
-              ),
-            ],
-          );
-        },
-      ),
+      builder: (context) => _OfflineTimerDialog(onFinish: onFinish),
     );
   }
 
@@ -1745,6 +1693,83 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _OfflineTimerDialog extends StatefulWidget {
+  final VoidCallback onFinish;
+
+  const _OfflineTimerDialog({required this.onFinish});
+
+  @override
+  State<_OfflineTimerDialog> createState() => _OfflineTimerDialogState();
+}
+
+class _OfflineTimerDialogState extends State<_OfflineTimerDialog> {
+  int _timeLeft = 30;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_timeLeft > 0) {
+        if (mounted) {
+          setState(() {
+            _timeLeft--;
+          });
+        }
+      } else {
+        timer.cancel();
+        if (mounted) {
+          Navigator.pop(context);
+          widget.onFinish();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      title: const Text(
+        "Internet Required 📶",
+        style: TextStyle(color: Colors.red),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "To skip waiting and support this app, please turn on internet.",
+          ),
+          const SizedBox(height: 20),
+          const Text("Otherwise, video starts in:"),
+          Text(
+            "$_timeLeft",
+            style: const TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+      ],
     );
   }
 }

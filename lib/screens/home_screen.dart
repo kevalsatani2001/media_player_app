@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
+import 'package:media_player/screens/search_screen.dart';
 import 'package:media_player/utils/app_imports.dart';
 
 import '../services/ads_service.dart';

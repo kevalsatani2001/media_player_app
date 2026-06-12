@@ -1,6 +1,7 @@
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:media_player/blocs/audio/audio_playback_cubit.dart';
 import 'package:media_player/models/player_data.dart';
+import 'package:media_player/screens/video_screen.dart';
 import 'package:media_player/services/ads_service.dart';
 import 'package:media_player/services/connectivity_service.dart';
 import 'package:media_player/services/custom_video_thumbnail_store.dart';

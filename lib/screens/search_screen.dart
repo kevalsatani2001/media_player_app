@@ -1,4 +1,5 @@
 import 'package:media_player/screens/playlist_item_screen.dart';
+import 'package:media_player/screens/audio_player_screen.dart';
 
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
@@ -15,6 +16,20 @@ class _SearchScreenState extends State<SearchScreen> {
   String _query = '';
   List<MediaItem> _results = [];
   Timer? _debounce;
+  final Map<String, Future<AssetEntity?>> _entityFutureCache = {};
+
+  Future<AssetEntity?> _resolveEntity(String id) {
+    return _entityFutureCache.putIfAbsent(id, () => AssetEntity.fromId(id));
+  }
+
+  Future<List<AssetEntity>> _resolveAudioQueueFromResults() async {
+    final ids = _results
+        .where((it) => it.type == 'audio')
+        .map((it) => it.id)
+        .toList();
+    final resolved = await Future.wait(ids.map(_resolveEntity));
+    return resolved.whereType<AssetEntity>().toList();
+  }
 
   void _performSearch(String query) async {
     if (query.isEmpty) {
@@ -84,15 +99,14 @@ class _SearchScreenState extends State<SearchScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    const int adInterval = 5;
-    int adCount = 0;
-    if (_results.isNotEmpty) {
-      adCount = (_results.length ~/ adInterval);
-      if (_results.length < adInterval) {
-        adCount = 1;
+    const int adInterval = 15;
+    final List<dynamic> displayItems = [];
+    for (int i = 0; i < _results.length; i++) {
+      if (i > 0 && i % adInterval == 0) {
+        displayItems.add(const AdPlaceholder());
       }
+      displayItems.add(_results[i]);
     }
-    final int totalItemCount = _results.length + adCount;
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -200,14 +214,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 )
                     : ListView.builder(
-                  itemCount: totalItemCount,
+                  itemCount: displayItems.length,
                   itemBuilder: (_, i) {
-                    bool showAdHere =
-                        (i != 0 && (i + 1) % (adInterval + 1) == 0) ||
-                            (_results.length < adInterval &&
-                                i == _results.length);
+                    final itemObj = displayItems[i];
 
-                    if (showAdHere) {
+                    if (itemObj is AdPlaceholder) {
                       return Container(
                         margin: const EdgeInsets.symmetric(
                           vertical: 10,
@@ -220,11 +231,10 @@ class _SearchScreenState extends State<SearchScreen> {
                       );
                     }
                     // bool isAudio = false;
-                    final int actualIndex = i - (i ~/ (adInterval + 1));
-                    if (actualIndex >= _results.length)
+                    final item = itemObj as MediaItem;
+                    final int actualIndex = _results.indexOf(item);
+                    if (actualIndex >= _results.length || actualIndex == -1)
                       return const SizedBox.shrink();
-
-                    final item = _results[actualIndex];
                     bool isPlaylist = item.type.startsWith(
                       'playlist',
                     ); // àª¨àªµà«€ àª°à«€àª¤
@@ -278,52 +288,107 @@ class _SearchScreenState extends State<SearchScreen> {
                                   ),
                                 );
                               } else {
-                                final file = File(item.path);
-                                if (!await file.exists()) {
-                                  AppToast.show(
-                                    context,
-                                    context.tr("fileNotFoundOrDeleted"),
-                                    type: ToastType.error,
-                                  );
-                                  return;
-                                }
+                                if (item.type == 'audio') {
+                                  final audio = await _resolveEntity(item.id);
+                                  if (audio == null) {
+                                    AppToast.show(
+                                      context,
+                                      context.tr("fileNotFoundOrDeleted"),
+                                      type: ToastType.error,
+                                    );
+                                    return;
+                                  }
+                                  final file = await audio.file;
+                                  if (file == null || !await file.exists()) {
+                                    AppToast.show(
+                                      context,
+                                      context.tr("fileNotFoundOrDeleted"),
+                                      type: ToastType.error,
+                                    );
+                                    return;
+                                  }
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                    //     PlayerScreen(
-                                    //   item: item,
-                                    //   entity: AssetEntity(
-                                    //     id: item.id,
-                                    //     typeInt: item.type == "audio" ? 3 : 2,
-                                    //     width: 200,
-                                    //     height: 200,
-                                    //     isFavorite: item.isFavourite,
-                                    //     title: item.path.split("/").last,
-                                    //     relativePath: item.path,
-                                    //   ),
-                                    // ),
-                                    PlayerScreen(
-                                      entity: AssetEntity(
-                                        id: item.id,
-                                        typeInt: item.type == "audio"
-                                            ? 3
-                                            : 2,
-                                        width: 200,
-                                        height: 200,
-                                        isFavorite: item.isFavourite,
-                                        title: item.path
-                                            .split("/")
-                                            .last,
-                                        relativePath: item.path,
+                                  final queue = await _resolveAudioQueueFromResults();
+                                  final selectedIndex = queue.indexWhere(
+                                    (e) => e.id == audio.id,
+                                  );
+
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) =>
+                                          AudioPlayerScreen(
+                                        entityList: queue,
+                                        entity: audio,
+                                        index: selectedIndex >= 0 ? selectedIndex : 0,
+                                        item: MediaItem(
+                                          isFavourite: audio.isFavorite,
+                                          id: audio.id,
+                                          path: file.path,
+                                          isNetwork: false,
+                                          type: 'audio',
+                                        ),
                                       ),
-                                      index: actualIndex,
-                                      entityList: [],
-                                      // item: item, entityList: [],
+                                      transitionsBuilder: (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                        child,
+                                      ) {
+                                        const begin = Offset(0.0, 1.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.easeInOut;
+
+                                        final tween = Tween(
+                                          begin: begin,
+                                          end: end,
+                                        ).chain(CurveTween(curve: curve));
+                                        final offsetAnimation =
+                                            animation.drive(tween);
+
+                                        return SlideTransition(
+                                          position: offsetAnimation,
+                                          child: child,
+                                        );
+                                      },
+                                      transitionDuration: const Duration(
+                                        milliseconds: 400,
+                                      ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                } else {
+                                  final file = File(item.path);
+                                  if (!await file.exists()) {
+                                    AppToast.show(
+                                      context,
+                                      context.tr("fileNotFoundOrDeleted"),
+                                      type: ToastType.error,
+                                    );
+                                    return;
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PlayerScreen(
+                                        entity: AssetEntity(
+                                          id: item.id,
+                                          typeInt: 2,
+                                          width: 200,
+                                          height: 200,
+                                          isFavorite: item.isFavourite,
+                                          title: item.path.split("/").last,
+                                          relativePath: item.path,
+                                        ),
+                                        index: actualIndex,
+                                        entityList: const [],
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                             });
                           },
@@ -376,7 +441,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                       AssetEntity(
                                         relativePath:
                                         item.path,
-                                        id: item.id!,
+                                        id: item.id,
                                         typeInt: 2,
                                         width: 80,
                                         height: 80,
@@ -414,7 +479,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   AssetEntity(
                                                     relativePath:
                                                     item.path,
-                                                    id: item.id!,
+                                                    id: item.id,
                                                     typeInt:
                                                     item.type ==
                                                         'audio'
@@ -435,7 +500,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                               FutureBuilder<File?>(
                                                 future: AssetEntity(
                                                   relativePath: item.path,
-                                                  id: item.id!,
+                                                  id: item.id,
                                                   typeInt:
                                                   item.type == 'audio'
                                                       ? 3
@@ -513,4 +578,8 @@ class _SearchScreenState extends State<SearchScreen> {
     _controller.dispose();
     super.dispose();
   }
+}
+
+class AdPlaceholder {
+  const AdPlaceholder();
 }

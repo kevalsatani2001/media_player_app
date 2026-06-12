@@ -1,3 +1,4 @@
+import '../screens/search_screen.dart';
 import '../utils/app_imports.dart';
 
 class SearchButton extends StatelessWidget {

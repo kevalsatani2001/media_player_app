@@ -28,6 +28,31 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
   final Map<String, int> _letterIndices = {};
   final double _itemHeight = 80.0;
 
+  final Map<String, Future<File?>> _fileFutureCache = {};
+  final Map<String, Future<Uint8List?>> _artworkFutureCache = {};
+
+  Future<File?> _fileFutureFor(AssetEntity audio) {
+    return _fileFutureCache.putIfAbsent(audio.id, () => audio.file);
+  }
+
+  Future<Uint8List?> _artworkFutureFor(AssetEntity audio) {
+    return _artworkFutureCache.putIfAbsent(
+      audio.id,
+      () => _audioQuery.queryArtwork(
+        Platform.isIOS ? audio.id.hashCode : int.tryParse(audio.id) ?? 0,
+        ArtworkType.AUDIO,
+        format: ArtworkFormat.JPEG,
+        size: 200,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   List<String> _getAlphabetList(List<AssetEntity> entities) {
     Set<String> letters = {};
     for (var entity in entities) {
@@ -137,7 +162,7 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
           ),
         );
 
-        const int adInterval = 5;
+        const int adInterval = 15;
         final alphabetList = _getAlphabetList(entities);
         _calculateLetterIndices(entities, adInterval);
 
@@ -230,7 +255,7 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
                 child: AppTransition(
                   index: index,
                   child: FutureBuilder<File?>(
-                    future: audio.file,
+                    future: _fileFutureFor(audio),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return const SizedBox(height: 80);
                       final file = snapshot.data!;
@@ -330,14 +355,7 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
           alignment: Alignment.center,
           children: [
             FutureBuilder<Uint8List?>(
-              future: _audioQuery.queryArtwork(
-                Platform.isIOS
-                    ? audio.id.hashCode
-                    : int.tryParse(audio.id) ?? 0,
-                ArtworkType.AUDIO,
-                format: ArtworkFormat.JPEG,
-                size: 200,
-              ),
+              future: _artworkFutureFor(audio),
               builder: (context, snapshot) {
                 if (snapshot.hasData &&
                     snapshot.data != null &&

@@ -86,47 +86,27 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
         child: Consumer<AssetPathProvider>(
           builder: (BuildContext c, AssetPathProvider p, _) {
-            const int adInterval = 5;
             int listLength = p.showItemCount;
 
-             int adCount = listLength ~/ adInterval;
-            if (listLength > 0 && listLength < adInterval) {
-              adCount = 1;
-            }
+            final List<Widget> slivers = [];
+            const int chunkSize = 16;
 
-            return CustomScrollView(
-              slivers: <Widget>[
+            for (int i = 0; i < listLength; i += chunkSize) {
+              final int currentChunkSize = chunkSize < listLength - i
+                  ? chunkSize
+                  : listLength - i;
+              final int startOffset = i;
+
+              slivers.add(
                 SliverGrid(
                   delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                      bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
-                      bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
-
-                      if (isAdPosition || isLastAdForSmallList) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.withOpacity(0.2)),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Center(
-                              child: FittedBox(
-                                fit: BoxFit.contain,
-                                child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      final int actualIndex = index - (index ~/ (adInterval + 1));
+                    (context, index) {
+                      final int actualIndex = startOffset + index;
                       if (actualIndex >= listLength) return const SizedBox.shrink();
 
                       return _buildItem(context, actualIndex);
                     },
-                    childCount: listLength + adCount,
+                    childCount: currentChunkSize,
                   ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -135,7 +115,23 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
                     childAspectRatio: 1.05,
                   ),
                 ),
-              ],
+              );
+
+              if (i + chunkSize < listLength) {
+                slivers.add(
+                  SliverToBoxAdapter(
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
+                    ),
+                  ),
+                );
+              }
+            }
+
+            return CustomScrollView(
+              slivers: slivers,
             );
           },
         ),

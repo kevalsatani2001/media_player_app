@@ -1,10 +1,8 @@
 import 'dart:io';
-import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:photo_manager/photo_manager.dart';
 import '../core/constants.dart';
-import '../screens/home_screen.dart';
 import '../utils/app_colors.dart';
 import 'common_methods.dart';
 import 'image_widget.dart';
@@ -41,6 +39,17 @@ class ImageItemWidget extends StatefulWidget {
 }
 
 class _ImageItemWidgetState extends State<ImageItemWidget> {
+  final Map<String, Future<String?>> _sizeTextFutureCache = {};
+
+  Future<String?> _getFileSizeLabel(AssetEntity entity, BuildContext context) {
+    return _sizeTextFutureCache.putIfAbsent(entity.id, () async {
+      final file = await entity.file;
+      if (file == null) return null;
+      final stat = await file.stat();
+      if (stat.type == FileSystemEntityType.notFound) return 'unavailable';
+      return formatSize(stat.size, context);
+    });
+  }
 
   Widget buildContent(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -58,8 +67,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: widget.entity is AssetEntity
-                    ? Stack(
+                child: Stack(
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(
@@ -103,8 +111,7 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                         ),
                       ),
                   ],
-                )
-                    : Container(color: Colors.black12),
+                ),
               ),
 
               Padding(
@@ -135,28 +142,21 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
 
                               SizedBox(width: 0),
 
-                              FutureBuilder<File?>(
-                                future: widget.entity.file,
+                              FutureBuilder<String?>(
+                                future: _getFileSizeLabel(widget.entity, context),
                                 builder: (context, snapshot) {
-                                  if (!snapshot.hasData ||
-                                      snapshot.data == null) {
+                                  if (!snapshot.hasData || snapshot.data == null) {
                                     return const SizedBox(height: 14);
                                   }
-
-                                  final file = snapshot.data!;
-
-                                  if (!file.existsSync()) {
+                                  if (snapshot.data == 'unavailable') {
                                     return AppText(
                                       'unavailable',
                                       fontSize: 11,
-                                      color:Colors.redAccent,
+                                      color: Colors.redAccent,
                                     );
                                   }
-
-                                  final bytes = file.lengthSync();
-
                                   return AppText(
-                                    formatSize(bytes,context),
+                                    snapshot.data!,
                                     maxLines: 2,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
@@ -187,7 +187,6 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
 
   Widget _buildListItem(dynamic entity) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    print("entity is ========= ${entity.title}");
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7.5),
       child: Container(
@@ -251,27 +250,21 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
                           color: colors.appBarTitleColor,
                         ),
                         SizedBox(width: 10),
-                        FutureBuilder<File?>(
-                          future: entity.file,
+                        FutureBuilder<String?>(
+                          future: _getFileSizeLabel(entity, context),
                           builder: (context, snapshot) {
                             if (!snapshot.hasData || snapshot.data == null) {
                               return const SizedBox(height: 14);
                             }
-
-                            final file = snapshot.data!;
-
-                            if (!file.existsSync()) {
-                              return  AppText(
+                            if (snapshot.data == 'unavailable') {
+                              return AppText(
                                 'unavailable',
                                 fontSize: 11,
-                                color:Colors.redAccent,
+                                color: Colors.redAccent,
                               );
                             }
-
-                            final bytes = file.lengthSync();
-
                             return AppText(
-                              formatSize(bytes,context),
+                              snapshot.data!,
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                               color: colors.appBarTitleColor,
@@ -384,28 +377,21 @@ class _ImageItemWidgetState extends State<ImageItemWidget> {
 
                               SizedBox(width: 10),
 
-                              FutureBuilder<File?>(
-                                future: entity.file,
+                              FutureBuilder<String?>(
+                                future: _getFileSizeLabel(entity, context),
                                 builder: (context, snapshot) {
-                                  if (!snapshot.hasData ||
-                                      snapshot.data == null) {
+                                  if (!snapshot.hasData || snapshot.data == null) {
                                     return const SizedBox(height: 14);
                                   }
-
-                                  final file = snapshot.data!;
-
-                                  if (!file.existsSync()) {
-                                    return  AppText(
+                                  if (snapshot.data == 'unavailable') {
+                                    return AppText(
                                       'unavailable',
                                       fontSize: 11,
-                                      color:Colors.redAccent,
+                                      color: Colors.redAccent,
                                     );
                                   }
-
-                                  final bytes = file.lengthSync();
-
                                   return AppText(
-                                    formatSize(bytes,context),
+                                    snapshot.data!,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                     color: colors.textFieldBorder,

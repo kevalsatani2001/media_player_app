@@ -139,6 +139,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   final Battery _battery = Battery();
   bool _pausedDueToObstruction = false;
   bool _wasPlayingBeforeBackground = false;
+  int _lastUiRefreshMs = 0;
 
   final Map<String, double?> _ratioValues = {
     "_Default": 0.0,
@@ -330,6 +331,16 @@ class _PlayerScreenState extends State<PlayerScreen>
     }
   }
 
+  void _refreshUiThrottled({bool force = false}) {
+    if (!mounted) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (!force && (now - _lastUiRefreshMs) < 120) {
+      return;
+    }
+    _lastUiRefreshMs = now;
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -340,7 +351,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         playerService.init(widget.entityList, widget.index, () {
           if (!mounted) return;
           _checkVideoEnd();
-          setState(() {});
+          _refreshUiThrottled();
         });
       }
     });
@@ -450,7 +461,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         playerService.playVideo();
       }
       // જ્યારે એપ પાછી આવે ત્યારે જો ઓડિયો ચાલુ હોય તો માત્ર UI અપડેટ કરો
-      setState(() {});
+      _refreshUiThrottled(force: true);
     }
   }
 
@@ -1067,7 +1078,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           0.3,
                         ),),
                         BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                           child: Container(
                             color: Colors.black.withOpacity(
                               0.3,
@@ -2539,7 +2550,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             fit: StackFit.expand,
             children: [
               BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: const ColoredBox(color: Colors.transparent),
               ),
               DecoratedBox(
@@ -5652,9 +5663,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   void _videoListener() {
-    if (mounted) {
-      setState(() {});
-    }
+    _refreshUiThrottled();
   }
 
   void _playTrimmedVideo(String path) async {
@@ -5854,10 +5863,103 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
+  Future<bool> _showPipConfirmationDialog(BuildContext context) async {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: colors.dropdownBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 25,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppText(
+                "pipPermissionTitle",
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.appBarTitleColor,
+                align: TextAlign.center,
+              ),
+              const SizedBox(height: 15),
+              AppText(
+                "pipPermissionMessage",
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: colors.textFieldBorder,
+                align: TextAlign.center,
+              ),
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colors.dividerColor),
+                        ),
+                        child: Center(
+                          child: AppText(
+                            "cancel",
+                            fontSize: 16,
+                            color: colors.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: AppText(
+                            "yes",
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   /// Enters system Picture-in-Picture. No extra permission dialog: Android PiP
   /// does not use "display over other apps"; that text was misleading and forced
   /// Allow/Cancel on every tap.
   Future<void> _enterPictureInPicture() async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    if (settings.isPipFirstTime) {
+      final allowed = await _showPipConfirmationDialog(context);
+      if (!allowed) return;
+      settings.updateSetting(() => settings.isPipFirstTime = false);
+    }
+
     if (Platform.isAndroid) {
       try {
         final supported = await playerService.isPipSupported();
@@ -8216,6 +8318,7 @@ class SettingsProvider extends ChangeNotifier {
   bool keepScreenOn = true;
   bool pausePlaybackIfObstructed = false;
   bool showInterfaceAtStartup = true;
+  bool isPipFirstTime = true;
 
   // --- Text (Subtitles) ---
   String font = "default";
@@ -8429,6 +8532,7 @@ class SettingsProvider extends ChangeNotifier {
       );
       fitSubtitlesIntoVideoSize =
           data['fitSubtitlesIntoVideoSize'] ?? fitSubtitlesIntoVideoSize;
+      isPipFirstTime = data['isPipFirstTime'] ?? isPipFirstTime;
 
       notifyListeners();
     } catch (_) {}
@@ -8503,6 +8607,7 @@ class SettingsProvider extends ChangeNotifier {
         'layoutBackgroundEnabled': layoutBackgroundEnabled,
         'layoutBackgroundColor': layoutBackgroundColor.toARGB32(),
         'fitSubtitlesIntoVideoSize': fitSubtitlesIntoVideoSize,
+        'isPipFirstTime': isPipFirstTime,
       });
     } catch (_) {}
   }

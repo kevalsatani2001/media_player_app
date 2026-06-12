@@ -1,3 +1,4 @@
+import 'package:media_player/screens/search_screen.dart';
 import 'package:on_audio_query_forked/on_audio_query.dart';
 
 import '../services/ads_service.dart';
@@ -443,13 +444,15 @@ class _AudioBodyState extends State<_AudioBody>
     }
   }
 
-  void _calculateLetterIndices(List<AssetEntity> entities, int adInterval) {
+  void _calculateLetterIndices(List<AssetEntity> entities, List<dynamic> displayItems) {
     _letterIndices.clear();
     String currentProcessedLetter = '';
 
-    for (int i = 0; i < entities.length; i++) {
-      final audio = entities[i];
-      String name = audio.title ?? "";
+    for (int i = 0; i < displayItems.length; i++) {
+      final item = displayItems[i];
+      if (item is! AssetEntity) continue;
+
+      String name = item.title ?? "";
       String firstChar = name.isNotEmpty ? name[0].toUpperCase() : '#';
       String letter = RegExp(r'^\p{L}', unicode: true).hasMatch(firstChar)
           ? firstChar
@@ -457,11 +460,7 @@ class _AudioBodyState extends State<_AudioBody>
 
       if (letter != currentProcessedLetter) {
         currentProcessedLetter = letter;
-
-        int adOffset = i ~/ adInterval;
-        int actualUiIndex = i + adOffset;
-
-        _letterIndices[letter] = actualUiIndex;
+        _letterIndices[letter] = i;
       }
     }
   }
@@ -529,10 +528,18 @@ class _AudioBodyState extends State<_AudioBody>
           );
         }
 
-        const int adInterval = 5;
+        const int adInterval = 15;
+        final List<dynamic> displayItems = [];
+        for (int i = 0; i < entities.length; i++) {
+          if (i > 0 && i % adInterval == 0) {
+            displayItems.add(const AdPlaceholder());
+          }
+          displayItems.add(entities[i]);
+        }
+
         final alphabetList = _getAlphabetList(entities);
 
-        _calculateLetterIndices(entities, adInterval);
+        _calculateLetterIndices(entities, displayItems);
 
         final currentPlayingId = context.select<GlobalPlayer, String?>(
           (p) => p.currentEntity?.id,
@@ -540,7 +547,7 @@ class _AudioBodyState extends State<_AudioBody>
 
         return Stack(
           children: [
-            _buildAudioList(entities, adInterval, currentPlayingId),
+            _buildAudioList(entities, displayItems, currentPlayingId),
 
             // Alphabet Sidebar
             Positioned(
@@ -602,14 +609,10 @@ class _AudioBodyState extends State<_AudioBody>
 
   Widget _buildAudioList(
     List<AssetEntity> entities,
-    int adInterval,
+    List<dynamic> displayItems,
     String? currentPlayingId,
   ) {
-    int adCount = entities.length ~/ adInterval;
-    if (entities.isNotEmpty && entities.length < adInterval) {
-      adCount = 1;
-    }
-    int totalCount = entities.length + adCount + 1;
+    final int totalCount = displayItems.length + 1;
 
     return AnimationLimiter(
       child: ListView.builder(
@@ -622,80 +625,76 @@ class _AudioBodyState extends State<_AudioBody>
             return const SizedBox(height: 100);
           }
 
-          bool isAdPosition =
-          (index != 0 && (index + 1) % (adInterval + 1) == 0);
-          bool isLastAdForSmallList =
-          (entities.length < adInterval && index == entities.length);
+          final item = displayItems[index];
 
-          if (isAdPosition || isLastAdForSmallList) {
+          if (item is AdPlaceholder) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: AdHelper.bannerAdWidget(size: AdSize.banner),
             );
           }
 
-          final int actualIndex = index - (index ~/ (adInterval + 1));
-          if (actualIndex >= entities.length) return const SizedBox.shrink();
-
-          final audio = entities[actualIndex];
+          final audio = item as AssetEntity;
+          final int actualIndex = entities.indexOf(audio);
+          if (actualIndex == -1) return const SizedBox.shrink();
 
           final bool isCurrentPlaying = currentPlayingId == audio.id;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: AppTransition(
-                  index: index,
-                  child: FutureBuilder<File?>(
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: AppTransition(
+              index: index,
+              child: FutureBuilder<File?>(
                 future: _fileFutureFor(audio),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return ListTile(
-                          leading: Icon(
-                            Icons.music_note,
-                            color: colors.blackColor,
-                          ),
-                          title: AppText("loading"),
-                        );
-                      }
-                      final file = snapshot.data!;
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return ListTile(
+                      leading: Icon(
+                        Icons.music_note,
+                        color: colors.blackColor,
+                      ),
+                      title: AppText("loading"),
+                    );
+                  }
+                  final file = snapshot.data!;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 7.5),
-                        child: GestureDetector(
-                          onTap: () => _handleOnTap(entities, audio, file),
-                          child: Container(
-                            padding: const EdgeInsets.only(
-                              top: 10,
-                              left: 10,
-                              bottom: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.cardBackground,
-                              borderRadius: BorderRadius.circular(10),
-                              border: isCurrentPlaying
-                                  ? Border.all(
-                                color: colors.primary,
-                                width: 0.5,
-                              )
-                                  : null,
-                            ),
-                            child: Row(
-                              children: [
-                                _buildLeadingIcon(
-                                  audio,
-                                  colors,
-                                  isCurrentPlaying,
-                                ),
-                                const SizedBox(width: 12),
-                                _buildTitleAndDuration(audio, file, colors),
-                                _buildPopupMenu(audio, index),
-                              ],
-                            ),
-                          ),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 7.5),
+                    child: GestureDetector(
+                      onTap: () => _handleOnTap(entities, audio, file),
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                          top: 10,
+                          left: 10,
+                          bottom: 10,
                         ),
-                      );
-                    },
-                  ),
-                ),
+                        decoration: BoxDecoration(
+                          color: colors.cardBackground,
+                          borderRadius: BorderRadius.circular(10),
+                          border: isCurrentPlaying
+                              ? Border.all(
+                            color: colors.primary,
+                            width: 0.5,
+                          )
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            _buildLeadingIcon(
+                              audio,
+                              colors,
+                              isCurrentPlaying,
+                            ),
+                            const SizedBox(width: 12),
+                            _buildTitleAndDuration(audio, file, colors),
+                            _buildPopupMenu(audio, actualIndex),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           );
         },
       ),
@@ -1021,6 +1020,10 @@ class _AudioBodyState extends State<_AudioBody>
 
     // context.read<AudioBloc>().add(LoadAudios(showLoading: false));
   }
+}
+
+class AdPlaceholder {
+  const AdPlaceholder();
 }
 
 

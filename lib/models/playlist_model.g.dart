@@ -19,17 +19,20 @@ class PlaylistModelAdapter extends TypeAdapter<PlaylistModel> {
     return PlaylistModel(
       name: fields[0] as String,
       items: (fields[1] as List).cast<MediaItem>(),
+      type: fields[2] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, PlaylistModel obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.items);
+      ..write(obj.items)
+      ..writeByte(2)
+      ..write(obj.type);
   }
 
   @override

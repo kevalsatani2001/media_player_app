@@ -43,6 +43,8 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
   String? _lastProcessedId;
   bool _isUpdatingFromPlayer = false;
   StreamSubscription? _indexSubscription;
+  final Map<String, ({Color c1, Color c2})> _artPaletteCache = {};
+  final Set<String> _paletteLoadingIds = {};
 
   // A-B repeat (audio only)
   Duration? _pointA;
@@ -133,11 +135,24 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
 
     if (currentIndex < 0 || currentIndex >= list.length) return;
     final currentEntity = list[currentIndex];
+    final cachedPalette = _artPaletteCache[currentEntity.id];
+    if (cachedPalette != null) {
+      if (mounted) {
+        setState(() {
+          bgColor1 = cachedPalette.c1;
+          bgColor2 = cachedPalette.c2;
+        });
+      }
+      _lastProcessedId = currentEntity.id;
+      return;
+    }
 
     if (_lastProcessedId == currentEntity.id &&
         bgColor1 != Colors.grey.shade300) {
       return;
     }
+    if (_paletteLoadingIds.contains(currentEntity.id)) return;
+    _paletteLoadingIds.add(currentEntity.id);
     _lastProcessedId = currentEntity.id;
 
     try {
@@ -154,13 +169,16 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
           MemoryImage(artwork),
         );
         if (mounted) {
+          final c1 =
+              palette.dominantColor?.color.withOpacity(0.5) ??
+                  colors.primary.withOpacity(0.3);
+          final c2 =
+              palette.darkMutedColor?.color.withOpacity(0.8) ??
+                  colors.cardBackground;
+          _artPaletteCache[currentEntity.id] = (c1: c1, c2: c2);
           setState(() {
-            bgColor1 =
-                palette.dominantColor?.color.withOpacity(0.5) ??
-                    colors.primary.withOpacity(0.3);
-            bgColor2 =
-                palette.darkMutedColor?.color.withOpacity(0.8) ??
-                    colors.cardBackground;
+            bgColor1 = c1;
+            bgColor2 = c2;
           });
         }
       } else {
@@ -173,6 +191,8 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
       }
     } catch (e) {
       _lastProcessedId = null;
+    } finally {
+      _paletteLoadingIds.remove(currentEntity.id);
     }
   }
 
@@ -689,7 +709,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                                     : int.parse(entity.id),
                                 ArtworkType.AUDIO,
                                 format: ArtworkFormat.JPEG,
-                                size: 1000,
+                                size: 640,
                               ),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData &&
@@ -698,7 +718,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                                   return Image.memory(
                                     snapshot.data!,
                                     fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.high,
+                                    filterQuality: FilterQuality.medium,
                                     gaplessPlayback: true,
                                   );
                                 }
@@ -1017,15 +1037,19 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
         double tempSpeed = player.playbackSpeed.clamp(0.5, 2.0);
         return StatefulBuilder(
           builder: (ctx, setStateModal) {
+            final bottomInset = MediaQuery.of(ctx).padding.bottom;
             return SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                padding: EdgeInsets.only(bottom: bottomInset > 0 ? bottomInset : 8),
                 child: Container(
                   decoration: BoxDecoration(
                     color: colors.dropdownBg,
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(28),
+                      top: Radius.circular(30),
+                    ),
+                    border: Border.all(
+                      color: colors.textFieldBorder.withOpacity(0.28),
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -1036,7 +1060,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 20),
+                    padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1172,14 +1196,15 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                             );
                           }).toList(),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 14),
                         Row(
                           children: [
                             Expanded(
                               child: AppButton(
                                 title: "Reset",
-                                backgroundColor: colors.cardBackground,
+                                backgroundColor: colors.whiteColor.withOpacity(0.08),
                                 textColor: colors.appBarTitleColor,
+                                borderColor: colors.textFieldBorder.withOpacity(0.65),
                                 onTap: () {
                                   setStateModal(() => tempSpeed = 1.0);
                                 },

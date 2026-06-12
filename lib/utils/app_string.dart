@@ -500,6 +500,8 @@ class AppStrings {
       "fileInformation": "File information",
       "created": "Created",
       "albums": "Albums",
+      "pipPermissionTitle": "Picture-in-Picture Permission",
+      "pipPermissionMessage": "To use Picture-in-Picture mode, we need your confirmation. This will allow the video to keep playing in a floating window over other apps.",
     },
     'ar': {
       "fitToScreen": "ملء الشاشة",
@@ -3341,9 +3343,9 @@ class AppStrings {
       "fileInformation": "ફાઇલ માહિતી",
 
       "created": "બનાવ્યાની તારીખ",
-
       "albums": "આલ્બમ્સ",
-
+      "pipPermissionTitle": "પિક્ચર-ઇન-પિક્ચર પરવાનગી",
+      "pipPermissionMessage": "પિક્ચર-ઇન-પિક્ચર મોડનો ઉપયોગ કરવા માટે, અમારે તમારી મંજૂરીની જરૂર છે. આ વિડિયોને અન્ય એપ્સ પર નાની વિન્ડોમાં ચાલુ રાખવા દેશે.",
     },
     'hi': {
       "fitToScreen": "स्क्रीन पर फिट करें",
@@ -3811,9 +3813,9 @@ class AppStrings {
       "fileInformation": "फ़ाइल जानकारी",
 
       "created": "बनाया गया",
-
       "albums": "एल्बम",
-
+      "pipPermissionTitle": "पिक्चर-इन-पिक्चर अनुमति",
+      "pipPermissionMessage": "पिक्चर-इन-पिक्चर मोड का उपयोग करने के लिए, हमें आपकी सहमति की आवश्यकता है। यह वीडियो को अन्य ऐप्स के ऊपर एक छोटी विंडो में चालू रहने देगा।",
     },
     'id': {
       "fitToScreen": "PAS KAN KE LAYAR",

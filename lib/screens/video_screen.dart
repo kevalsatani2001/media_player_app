@@ -1,4 +1,6 @@
 import 'dart:ui' as ui;
+import 'package:media_player/screens/search_screen.dart';
+
 import '../models/media_item.dart' as my;
 import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
@@ -416,186 +418,195 @@ class _VideoScreenState extends State<VideoScreen> {
   }
 
   _buildGridView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    const int adIndexInterval = 4;
-    int adCount = entitiesToShow.length ~/ adIndexInterval;
-    int totalItems = entitiesToShow.length + adCount;
+    final List<Widget> slivers = [];
+    const int chunkSize = 16;
 
-    int finalItemCount = hasMore ? totalItems + 1 : totalItems;
+    for (int i = 0; i < entitiesToShow.length; i += chunkSize) {
+      final int currentChunkSize = chunkSize < entitiesToShow.length - i
+          ? chunkSize
+          : entitiesToShow.length - i;
+      final int startOffset = i;
 
-    return GridView.builder(
-      key: key,
-      controller: _scrollController,
-      padding: const EdgeInsets.all(15),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.05,
-      ),
-
-      itemCount: totalItems,
-      itemBuilder: (context, index) {
-        if (hasMore && index == finalItemCount - 1) {
-          return const Center(
-            child: Padding(padding: EdgeInsets.all(8.0), child: CustomLoader()),
-          );
-        }
-
-        if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                ),
-              ),
-            ),
-          );
-        }
-
-        final int actualIndex = index - (index ~/ (adIndexInterval + 1));
-
-        if (actualIndex >= entitiesToShow.length) {
-          return const SizedBox.shrink();
-        }
-
-        final entity = entitiesToShow[actualIndex];
-
-        return AppTransition(
-          index: index % 10,
-          columnCount: 2,
-          child: GestureDetector(
-            onTap: () async {
-              if (entity is AssetEntity) {
-                List<AssetEntity> videoList = entitiesToShow
-                    .whereType<AssetEntity>()
-                    .toList();
-
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final int actualIndex = startOffset + index;
                 final entity = entitiesToShow[actualIndex];
-                _navigateToPlayer(context, videoList, actualIndex, entity);
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: entity is AssetEntity
-                        ? ImageItemWidget(
-                      onMenuSelected: (action) async {
-                        switch (action) {
-                          case MediaMenuAction.detail:
-                            routeToDetailPage(context, entity);
-                            break;
 
-                          case MediaMenuAction.info:
-                            showInfoDialog(context, entity);
-                            break;
+                return AppTransition(
+                  index: actualIndex % 10,
+                  columnCount: 2,
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (entity is AssetEntity) {
+                        List<AssetEntity> videoList = entitiesToShow
+                            .whereType<AssetEntity>()
+                            .toList();
+                        _navigateToPlayer(context, videoList, actualIndex, entity);
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: entity is AssetEntity
+                                ? ImageItemWidget(
+                              onMenuSelected: (action) async {
+                                switch (action) {
+                                  case MediaMenuAction.detail:
+                                    routeToDetailPage(context, entity);
+                                    break;
 
-                          case MediaMenuAction.thumb:
-                            showThumb(entity, 500);
-                            break;
+                                  case MediaMenuAction.info:
+                                    showInfoDialog(context, entity);
+                                    break;
 
-                          case MediaMenuAction.share:
-                            shareItem(context, entity);
-                            break;
+                                  case MediaMenuAction.thumb:
+                                    showThumb(entity, 500);
+                                    break;
 
-                          case MediaMenuAction.delete:
-                            deleteCurrentItem(context, entity);
-                            break;
+                                  case MediaMenuAction.share:
+                                    shareItem(context, entity);
+                                    break;
 
-                          case MediaMenuAction.addToFavourite:
-                            await _toggleFavourite(
-                              context,
-                              entity,
-                              index,
-                            );
-                            break;
-                          case MediaMenuAction.addToPlaylist:
-                            final file = await entity.file;
-                            addToPlaylist(
-                              MediaItem(
-                                path: file!.path,
-                                isNetwork: false,
-                                type: entity.type == AssetType.audio
-                                    ? "audio"
-                                    : "video",
-                                id: entity.id,
-                                isFavourite: entity.isFavorite,
+                                  case MediaMenuAction.delete:
+                                    deleteCurrentItem(context, entity);
+                                    break;
+
+                                  case MediaMenuAction.addToFavourite:
+                                    await _toggleFavourite(
+                                      context,
+                                      entity,
+                                      actualIndex,
+                                    );
+                                    break;
+                                  case MediaMenuAction.addToPlaylist:
+                                    final file = await entity.file;
+                                    addToPlaylist(
+                                      MediaItem(
+                                        path: file!.path,
+                                        isNetwork: false,
+                                        type: entity.type == AssetType.audio
+                                            ? "audio"
+                                            : "video",
+                                        id: entity.id,
+                                        isFavourite: entity.isFavorite,
+                                      ),
+                                      context,
+                                    );
+                                    break;
+                                }
+                              },
+                              onTap: null,
+                              entity: entity,
+                              option: const ThumbnailOption(
+                                size: ThumbnailSize.square(150),
                               ),
-                              context,
-                            );
-                            break;
-                        }
-                      },
-                      onTap: null,
-                      entity: entity,
-                      option: const ThumbnailOption(
-                        size: ThumbnailSize.square(150),
-                      ),
-                    )
-                        : Container(
-                      color: Colors.black12,
-                      child: Center(
-                        child: Text(
-                          (entity as MediaItem).path.split('/').last,
-                          textAlign: TextAlign.center,
-                        ),
+                            )
+                                : Container(
+                              color: Colors.black12,
+                              child: Center(
+                                child: Text(
+                                  (entity as MediaItem).path.split('/').last,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                );
+              },
+              childCount: currentChunkSize,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 15,
+              childAspectRatio: 1.05,
+            ),
+          ),
+        ),
+      );
+
+      if (i + chunkSize < entitiesToShow.length) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
             ),
           ),
         );
-      },
+      }
+    }
+
+    if (hasMore) {
+      slivers.add(
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Center(child: CustomLoader()),
+          ),
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      key: key,
+      controller: _scrollController,
+      slivers: slivers,
     );
   }
 
   _buildListView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
-    const int adIndexInterval = 5;
+    final List<dynamic> displayItems = [];
+    const int adInterval = 15;
+    for (int i = 0; i < entitiesToShow.length; i++) {
+      if (i > 0 && i % adInterval == 0) {
+        displayItems.add(const AdPlaceholder());
+      }
+      displayItems.add(entitiesToShow[i]);
+    }
 
-    int adCount = entitiesToShow.length ~/ adIndexInterval;
-    int totalItems = entitiesToShow.length + adCount;
-    int finalItemCount = hasMore ? totalItems + 1 : totalItems;
+    final int totalCount = displayItems.length + (hasMore ? 1 : 0);
 
     return ListView.builder(
       key: key,
       controller: _scrollController,
       padding: const EdgeInsets.all(4),
-      itemCount:
-      (hasMore ? entitiesToShow.length + 1 : entitiesToShow.length) +
-          (entitiesToShow.length ~/ adIndexInterval),
+      itemCount: totalCount,
       itemBuilder: (context, index) {
-        if (hasMore && index == finalItemCount - 1) {
+        if (hasMore && index == totalCount - 1) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: Center(child: CustomLoader()),
           );
         }
 
-        if (index != 0 && (index + 1) % (adIndexInterval + 1) == 0) {
+        final item = displayItems[index];
+
+        if (item is AdPlaceholder) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: AdHelper.bannerAdWidget(size: AdSize.banner),
           );
         }
 
-        final int actualIndex = index - (index ~/ (adIndexInterval + 1));
-        if (actualIndex >= entitiesToShow.length) {
+        final entity = item;
+        final int actualIndex = entitiesToShow.indexOf(entity);
+
+        if (actualIndex >= entitiesToShow.length || actualIndex == -1) {
           return const SizedBox.shrink();
         }
-
-        final entity = entitiesToShow[actualIndex];
 
         return AppTransition(
           index: actualIndex % 10,
@@ -623,7 +634,7 @@ class _VideoScreenState extends State<VideoScreen> {
                   break;
 
                 case MediaMenuAction.addToFavourite:
-                  await _toggleFavourite(context, entity, index);
+                  await _toggleFavourite(context, entity, actualIndex);
                   break;
                 case MediaMenuAction.addToPlaylist:
                   final file = await entity.file;
@@ -645,7 +656,7 @@ class _VideoScreenState extends State<VideoScreen> {
               _navigateToPlayer(
                 context,
                 entitiesToShow.cast<AssetEntity>(),
-                index,
+                actualIndex,
                 entity,
               );
             },
@@ -811,4 +822,8 @@ class _VideoScreenState extends State<VideoScreen> {
 
     AdHelper.showInterstitialAd(() => moveNext());
   }
+}
+
+class AdPlaceholder {
+  const AdPlaceholder();
 }

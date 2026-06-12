@@ -73,88 +73,81 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
 
 class _FavouriteGrid extends StatelessWidget {
   final FavouriteLoaded state;
-  final int adInterval = 5; // àª¦àª° 5 àª†àªˆàªŸàª® àªªàª›à«€ àªàª¡ àª¬àª¤àª¾àªµàªµà«€
 
   const _FavouriteGrid({required this.state});
 
   @override
   Widget build(BuildContext context) {
     final entities = state.entities;
+    final List<Widget> slivers = [];
+    const int chunkSize = 16;
 
-    // àªœà«‹ àª¡à«‡àªŸàª¾ 5 àª¥à«€ àª“àª›à«‹ àª¹à«‹àª¯ àª¤à«‹ àªªàª£ 1 àªàª¡ àª¬àª¤àª¾àªµàªµàª¾ àª®àª¾àªŸà«‡:
-    int adCount = (entities.length ~/ adInterval);
-    if (entities.length > 0 && entities.length < adInterval) {
-      adCount = 1; // 5 àª¥à«€ àª“àª›à«€ àª†àªˆàªŸàª® àª¹à«‹àª¯ àª¤à«‹ àªªàª£ 1 àªàª¡ àª‰àª®à«‡àª°àªµà«€
-    }
+    for (int i = 0; i < entities.length; i += chunkSize) {
+      final int currentChunkSize = chunkSize < entities.length - i
+          ? chunkSize
+          : entities.length - i;
+      final int startOffset = i;
 
-    final int totalItemCount = entities.length + adCount;
-    return GridView.builder(
-      padding: const EdgeInsets.all(15),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 15,
-        childAspectRatio: 1.05,
-      ),
-      itemCount: totalItemCount,
-      itemBuilder: (context, index) {
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.all(15),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final int actualDataIndex = startOffset + index;
+                if (actualDataIndex >= entities.length) return const SizedBox.shrink();
 
-        // àªœà«‹ àª† àª‡àª¨à«àª¡à«‡àª•à«àª¸ àªàª¡ àª®àª¾àªŸà«‡ àª¹à«‹àª¯
-        if ((entities.length < adInterval && index == entities.length)||(index + 1) % (adInterval + 1) == 0) {
-          // àª…àª¹àª¿àª¯àª¾àª‚ àª¤àª®àª¾àª°à«àª‚ Native Ad àªµàª¿àªœà«‡àªŸ àª…àª¥àªµàª¾ Banner Ad àª¬àª¤àª¾àªµà«‹
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white, // àªàª¡ àªªàª¾àª›àª³ àªµà«àª¹àª¾àª‡àªŸ àª¬à«‡àª•àª—à«àª°àª¾àª‰àª¨à«àª¡ àª¸àª¾àª°à«àª‚ àª²àª¾àª—àª¶à«‡
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)), // àª†àª‰àªŸàª²àª¾àª‡àª¨
+                final entity = entities[actualDataIndex];
+
+                if (actualDataIndex == entities.length - 8 && state.hasMore) {
+                  context.read<FavouriteBloc>().add(LoadMoreFavourites());
+                }
+
+                return GestureDetector(
+                  onTap: () async {
+                    final List<AssetEntity> validEntities = entities
+                        .whereType<AssetEntity>()
+                        .toList();
+
+                    final int actualIndex = validEntities.indexOf(entity as AssetEntity);
+                    if (actualIndex != -1) {
+                      _navigateToPlayer(context, validEntities, actualIndex);
+                    }
+                  },
+                  child: _FavouriteItem(
+                    entity: entity,
+                    index: actualDataIndex,
+                    entityList: entities,
+                  ),
+                );
+              },
+              childCount: currentChunkSize,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.contain, // àª† àªàª¡àª¨à«‡ àª¬à«‹àª•à«àª¸àª®àª¾àª‚ àª«àª¿àªŸ àª•àª°àª¶à«‡
-                  child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                ),
-              ),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 15,
+              childAspectRatio: 1.05,
             ),
-          );
-        }
+          ),
+        ),
+      );
 
-        // àª…àª¸àª²à«€ àª¡à«‡àªŸàª¾àª¨à«‹ àª‡àª¨à«àª¡à«‡àª•à«àª¸ àª¶à«‹àª§à«‹
-        final int actualDataIndex = index - (index ~/ (adInterval + 1));
-
-        if (actualDataIndex >= entities.length) return const SizedBox.shrink();
-
-        final entity = entities[actualDataIndex];
-        if (actualDataIndex == entities.length - 8 && state.hasMore) {
-          context.read<FavouriteBloc>().add(LoadMoreFavourites());
-        }
-
-
-        return GestureDetector(
-          onTap: () async{
-            final List<AssetEntity> validEntities = entities
-                .whereType<AssetEntity>()
-                .toList();
-
-            final int actualIndex = validEntities.indexOf(
-              entities[index] as AssetEntity,
-            );
-            print("index is ===> $actualIndex");
-            print("index is ===> ${validEntities.length}");
-
-            if (actualIndex != -1) {
-
-              _navigateToPlayer(context, validEntities, actualIndex);
-            }
-          },
-          child: _FavouriteItem(
-            entity:entity,
-            index: actualDataIndex,
-            entityList: entities,
+      if (i + chunkSize < entities.length) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
+            ),
           ),
         );
-      },
+      }
+    }
+
+    return CustomScrollView(
+      slivers: slivers,
     );
   }
 
@@ -164,7 +157,6 @@ class _FavouriteGrid extends StatelessWidget {
       int currentIndex,
       ) async {
 
-    // àª«àª‚àª•à«àª¶àª¨ àªœà«‡ àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨ àª¹à«‡àª¨à«àª¡àª² àª•àª°àª¶à«‡
     void moveNext() async {
       final entity = allEntities[currentIndex];
       final file = await entity.file;
@@ -176,13 +168,6 @@ class _FavouriteGrid extends StatelessWidget {
         MaterialPageRoute(
           builder: (_) => PlayerScreen(
             entity: entity,
-            // item: MediaItem(
-            //   isFavourite: entity.isFavorite,
-            //   id: entity.id,
-            //   path: file.path,
-            //   isNetwork: false,
-            //   type: entity.type == AssetType.audio ? "audio" : "video",
-            // ),
             index: currentIndex,
             entityList: allEntities,
           ),
@@ -192,7 +177,6 @@ class _FavouriteGrid extends StatelessWidget {
       });
     }
 
-    // àªªàª¹à«‡àª²àª¾ àªàª¡ àª¬àª¤àª¾àªµà«‹, àªàª¡ àª¬àª‚àª§ àª¥àª¾àª¯ àªªàª›à«€ àªœ 'moveNext' àª°àª¨ àª¥àª¶à«‡
     AdHelper.showInterstitialAd(() {
       moveNext();
     });
