@@ -237,19 +237,19 @@ class _VideoScreenState extends State<VideoScreen> {
     return sortedLetters;
   }
 
-  void _scrollToLetter(String letter, List<dynamic> entities) {
+  void _scrollToLetter(String letter, List<dynamic> entitiesToShow) {
     setState(() {
       _selectedLetter = letter;
     });
 
     int targetIndex = -1;
 
-    for (int i = 0; i < entities.length; i++) {
+    for (int i = 0; i < entitiesToShow.length; i++) {
       String name = "";
-      if (entities[i] is AssetEntity) {
-        name = entities[i].title ?? "";
+      if (entitiesToShow[i] is AssetEntity) {
+        name = entitiesToShow[i].title ?? "";
       } else {
-        name = entities[i].path.split('/').last;
+        name = entitiesToShow[i].path.split('/').last;
       }
 
       if (name.isNotEmpty && name[0].toUpperCase() == letter) {
@@ -259,11 +259,37 @@ class _VideoScreenState extends State<VideoScreen> {
     }
 
     if (targetIndex != -1) {
-      double itemHeight = _isGridView ? 180.0 : 80.0;
-      double offset = (targetIndex / (_isGridView ? 2 : 1)) * itemHeight;
+      double scrollOffset = 0.0;
+      if (_isGridView) {
+        final double screenWidth = MediaQuery.of(context).size.width;
+        final double gridWidth = screenWidth - 30;
+        final double itemWidth = (gridWidth - 16) / 2;
+        final double itemHeight = itemWidth / 1.05;
+        final double rowHeight = itemHeight + 15.0;
+
+        int chunkIndex = targetIndex ~/ 16;
+        int rowInChunk = (targetIndex % 16) ~/ 2;
+
+        scrollOffset = chunkIndex * (8 * rowHeight + 10.0) +
+            chunkIndex * 120.0 + // 100px ad + 20px padding
+            5.0 + // top padding of current chunk
+            rowInChunk * rowHeight;
+      } else {
+        // List View: resolved item height is 95.0, ads every 15 items
+        for (int i = 0; i < targetIndex; i++) {
+          if (i > 0 && i % 15 == 0) {
+            scrollOffset += 66.0; // ad height (50 + 16 padding)
+          }
+          scrollOffset += 95.0; // item height
+        }
+      }
+
+      if (scrollOffset > _scrollController.position.maxScrollExtent) {
+        scrollOffset = _scrollController.position.maxScrollExtent;
+      }
 
       _scrollController.animateTo(
-        offset,
+        scrollOffset,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
@@ -429,7 +455,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
       slivers.add(
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          padding: const EdgeInsets.only(left: 15, right: 36, top: 5, bottom: 5),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -608,61 +634,64 @@ class _VideoScreenState extends State<VideoScreen> {
           return const SizedBox.shrink();
         }
 
-        return AppTransition(
-          index: actualIndex % 10,
-          child: ImageItemWidget(
-            onMenuSelected: (action) async {
-              switch (action) {
-                case MediaMenuAction.detail:
-                  routeToDetailPage(context, entity);
-                  break;
+        return Padding(
+          padding: const EdgeInsets.only(left: 15, right: 36),
+          child: AppTransition(
+            index: actualIndex % 10,
+            child: ImageItemWidget(
+              onMenuSelected: (action) async {
+                switch (action) {
+                  case MediaMenuAction.detail:
+                    routeToDetailPage(context, entity);
+                    break;
 
-                case MediaMenuAction.info:
-                  showInfoDialog(context, entity);
-                  break;
+                  case MediaMenuAction.info:
+                    showInfoDialog(context, entity);
+                    break;
 
-                case MediaMenuAction.thumb:
-                  showThumb(entity, 500);
-                  break;
+                  case MediaMenuAction.thumb:
+                    showThumb(entity, 500);
+                    break;
 
-                case MediaMenuAction.share:
-                  shareItem(context, entity);
-                  break;
+                  case MediaMenuAction.share:
+                    shareItem(context, entity);
+                    break;
 
-                case MediaMenuAction.delete:
-                  deleteCurrentItem(context, entity);
-                  break;
+                  case MediaMenuAction.delete:
+                    deleteCurrentItem(context, entity);
+                    break;
 
-                case MediaMenuAction.addToFavourite:
-                  await _toggleFavourite(context, entity, actualIndex);
-                  break;
-                case MediaMenuAction.addToPlaylist:
-                  final file = await entity.file;
-                  addToPlaylist(
-                    MediaItem(
-                      path: file!.path,
-                      isNetwork: false,
-                      type: entity.type == AssetType.audio ? "audio" : "video",
-                      id: entity.id,
-                      isFavourite: entity.isFavorite,
-                    ),
-                    context,
-                  );
-                  break;
-              }
-            },
-            onTap: () async {
-              print("vudio====${entity.typeInt}");
-              _navigateToPlayer(
-                context,
-                entitiesToShow.cast<AssetEntity>(),
-                actualIndex,
-                entity,
-              );
-            },
-            isGrid: _isGridView,
-            entity: entity,
-            option: const ThumbnailOption(size: ThumbnailSize.square(150)),
+                  case MediaMenuAction.addToFavourite:
+                    await _toggleFavourite(context, entity, actualIndex);
+                    break;
+                  case MediaMenuAction.addToPlaylist:
+                    final file = await entity.file;
+                    addToPlaylist(
+                      MediaItem(
+                        path: file!.path,
+                        isNetwork: false,
+                        type: entity.type == AssetType.audio ? "audio" : "video",
+                        id: entity.id,
+                        isFavourite: entity.isFavorite,
+                      ),
+                      context,
+                    );
+                    break;
+                }
+              },
+              onTap: () async {
+                print("vudio====${entity.typeInt}");
+                _navigateToPlayer(
+                  context,
+                  entitiesToShow.cast<AssetEntity>(),
+                  actualIndex,
+                  entity,
+                );
+              },
+              isGrid: _isGridView,
+              entity: entity,
+              option: const ThumbnailOption(size: ThumbnailSize.square(150)),
+            ),
           ),
         );
       },

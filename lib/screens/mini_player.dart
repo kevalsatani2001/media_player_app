@@ -31,9 +31,16 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
     if (!_isPositionInitialized) {
       final size = MediaQuery.of(context).size;
       final bool isVideo = player.currentType == "video";
-      _positionNotifier.value = isVideo
-          ? const Offset(255.1, 655.1)
-          : const Offset(185.4, 703.4);
+      
+      final playerSize = isVideo 
+          ? const Size(150.0, 100.0) 
+          : const Size(210.0, 70.0);
+      const double margin = 16.0;
+
+      final double initialX = size.width - playerSize.width - margin;
+      final double initialY = size.height - playerSize.height - 150;
+
+      _positionNotifier.value = Offset(initialX, initialY);
       setState(() => _isPositionInitialized = true);
     }
   }

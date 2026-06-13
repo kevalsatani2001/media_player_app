@@ -226,8 +226,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
       systemLangCode,
     );
 
-    const int adInterval = 6;
-    int totalCount = langCodes.length + (langCodes.length ~/ adInterval);
+    int totalCount = langCodes.length;
 
     return Expanded(
       child: Column(
@@ -262,19 +261,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
               padding: const EdgeInsets.only(left: 15, right: 15, bottom: 10),
               itemCount: totalCount,
               itemBuilder: (context, index) {
-                // --- Ad Logic ---
-                if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: AdHelper.bannerAdWidget(size: AdSize.largeBanner),
-                  );
-                }
-
-                final int actualIndex = index - (index ~/ (adInterval + 1));
-                if (actualIndex >= langCodes.length)
-                  return const SizedBox.shrink();
-
-                final String langCode = langCodes[actualIndex];
+                final String langCode = langCodes[index];
                 final bool isSelected = _selectedLangCode == langCode;
 
                 // --- Check karo ke aa system language che? ---
@@ -290,7 +277,6 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 if (isSystemDefault) {
                   displayText += " ${context.tr("systemDefaults")}";
                 }
-                print("$langCode");
                 return TweenAnimationBuilder(
                   duration: Duration(milliseconds: 400 + (index * 80)),
                   tween: Tween<double>(begin: 0, end: 1),

@@ -423,10 +423,17 @@ class _AudioBodyState extends State<_AudioBody>
     return sortedLetters;
   }
 
-  void _scrollToLetter(String letter) {
+  void _scrollToLetter(String letter, List<dynamic> displayItems) {
     final targetIndex = _letterIndices[letter];
     if (targetIndex != null) {
-      double scrollOffset = targetIndex * _itemHeight;
+      double scrollOffset = 0.0;
+      for (int i = 0; i < targetIndex; i++) {
+        if (displayItems[i] is AdPlaceholder) {
+          scrollOffset += 70.0; // Ad height (50 + 20 padding)
+        } else {
+          scrollOffset += 85.0; // Resolved item height
+        }
+      }
 
       if (scrollOffset > _scrollController.position.maxScrollExtent) {
         scrollOffset = _scrollController.position.maxScrollExtent;
@@ -569,7 +576,7 @@ class _AudioBodyState extends State<_AudioBody>
                       children: alphabetList.map((letter) {
                         bool isActive = _selectedLetter == letter;
                         return GestureDetector(
-                          onTap: () => _scrollToLetter(letter),
+                          onTap: () => _scrollToLetter(letter, displayItems),
                           child: Container(
                             width: 18,
                             height: 18,
@@ -640,59 +647,48 @@ class _AudioBodyState extends State<_AudioBody>
 
           final bool isCurrentPlaying = currentPlayingId == audio.id;
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
+            padding: const EdgeInsets.only(left: 15, right: 36),
             child: AppTransition(
               index: index,
-              child: FutureBuilder<File?>(
-                future: _fileFutureFor(audio),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return ListTile(
-                      leading: Icon(
-                        Icons.music_note,
-                        color: colors.blackColor,
-                      ),
-                      title: AppText("loading"),
-                    );
-                  }
-                  final file = snapshot.data!;
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 7.5),
-                    child: GestureDetector(
-                      onTap: () => _handleOnTap(entities, audio, file),
-                      child: Container(
-                        padding: const EdgeInsets.only(
-                          top: 10,
-                          left: 10,
-                          bottom: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colors.cardBackground,
-                          borderRadius: BorderRadius.circular(10),
-                          border: isCurrentPlaying
-                              ? Border.all(
-                            color: colors.primary,
-                            width: 0.5,
-                          )
-                              : null,
-                        ),
-                        child: Row(
-                          children: [
-                            _buildLeadingIcon(
-                              audio,
-                              colors,
-                              isCurrentPlaying,
-                            ),
-                            const SizedBox(width: 12),
-                            _buildTitleAndDuration(audio, file, colors),
-                            _buildPopupMenu(audio, actualIndex),
-                          ],
-                        ),
-                      ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 7.5),
+                child: GestureDetector(
+                  onTap: () async {
+                    final file = await _fileFutureFor(audio);
+                    if (file != null) {
+                      _handleOnTap(entities, audio, file);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      top: 10,
+                      left: 10,
+                      bottom: 10,
                     ),
-                  );
-                },
+                    decoration: BoxDecoration(
+                      color: colors.cardBackground,
+                      borderRadius: BorderRadius.circular(10),
+                      border: isCurrentPlaying
+                          ? Border.all(
+                        color: colors.primary,
+                        width: 0.5,
+                      )
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        _buildLeadingIcon(
+                          audio,
+                          colors,
+                          isCurrentPlaying,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildTitleAndDuration(audio, colors),
+                        _buildPopupMenu(audio, actualIndex),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           );
@@ -702,6 +698,8 @@ class _AudioBodyState extends State<_AudioBody>
   }
 
   void _handleOnTap(List<AssetEntity> entities, AssetEntity audio, File file) {
+    final int tappedIndex = entities.indexOf(audio);
+
     void openAudioPlayer() {
       Navigator.push(
         context,
@@ -709,6 +707,7 @@ class _AudioBodyState extends State<_AudioBody>
           pageBuilder: (context, animation, secondaryAnimation) => AudioPlayerScreen(
             entityList: entities,
             entity: audio,
+            index: tappedIndex >= 0 ? tappedIndex : 0,
             item: MediaItem(
               isFavourite: audio.isFavorite,
               id: audio.id,
@@ -836,7 +835,6 @@ class _AudioBodyState extends State<_AudioBody>
 
   Widget _buildTitleAndDuration(
       AssetEntity audio,
-      File file,
       AppThemeColors colors,
       ) {
     return Expanded(
@@ -844,7 +842,7 @@ class _AudioBodyState extends State<_AudioBody>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppText(
-            file.path.split('/').last,
+            audio.title ?? "",
             maxLines: 1,
             fontSize: 15,
             fontWeight: FontWeight.w500,

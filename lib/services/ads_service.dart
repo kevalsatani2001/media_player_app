@@ -1295,24 +1295,26 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     }
   }
 
-  // Update your _loadAd method to this:
   void _loadAd() async {
+    // Reset loaded state synchronously to prevent build race conditions
+    _isLoaded = false;
+    _isError = false;
+    final oldAd = _bannerAd;
+    _bannerAd = null;
+
     final results = await Connectivity().checkConnectivity();
     if (results.contains(ConnectivityResult.none)) {
-      if (mounted) setState(() => _isError = true);
+      if (mounted) {
+        setState(() {
+          _isError = true;
+        });
+      }
+      oldAd?.dispose();
       return;
     }
 
-    // 1. Dispose previous ad before creating a new one
-    await _bannerAd?.dispose();
-
-    // 2. Reset states so we don't try to build the AdWidget prematurely
-    if (mounted) {
-      setState(() {
-        _isLoaded = false;
-        _isError = false;
-      });
-    }
+    // Dispose old ad asynchronously
+    oldAd?.dispose();
 
     _bannerAd = BannerAd(
       adUnitId: AdHelper.bannerId,
@@ -1321,7 +1323,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           debugPrint("Banner Ad Successfully Loaded!");
-          // 3. ONLY set _isLoaded to true here
           if (mounted) {
             setState(() {
               _isLoaded = true;
@@ -1341,7 +1342,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
       ),
     );
 
-    // 4. Start loading
     _bannerAd!.load();
   }
 
@@ -1400,9 +1400,17 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
 
   Future<void> _loadAd() async {
     if (!mounted) return;
+
+    // Reset loaded state synchronously to prevent build race conditions during await
+    _loaded = false;
+    _failed = false;
+    final oldAd = _nativeAd;
+    _nativeAd = null;
+
     final id = AdHelper.nativeVideoPauseOverlayId;
     if (id.isEmpty) {
-      setState(() => _failed = true);
+      if (mounted) setState(() => _failed = true);
+      oldAd?.dispose();
       return;
     }
 
@@ -1411,14 +1419,15 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
       if (_retryCount < _maxRetryCount) {
         _retryCount++;
         Future.delayed(const Duration(milliseconds: 700), _loadAd);
+        oldAd?.dispose();
         return;
       }
       if (mounted) setState(() => _failed = true);
+      oldAd?.dispose();
       return;
     }
 
-    await _nativeAd?.dispose();
-    _nativeAd = null;
+    oldAd?.dispose();
     if (!mounted) return;
 
     final ad = NativeAd(
@@ -1453,7 +1462,6 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
       request: const AdRequest(),
       nativeAdOptions: NativeAdOptions(
         adChoicesPlacement: AdChoicesPlacement.topRightCorner,
-        // Prefer video creatives (or wide media) in pause overlay slot.
         mediaAspectRatio: MediaAspectRatio.landscape,
         videoOptions: VideoOptions(startMuted: true),
       ),

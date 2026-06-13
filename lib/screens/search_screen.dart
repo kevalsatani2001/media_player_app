@@ -39,52 +39,71 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     final lowerQuery = query.toLowerCase();
-    final videoBox = Hive.box('videos');
-    final audioBox = Hive.box('audios');
-    final playlistBox = Hive.box('playlists');
+    
+    // 1. Get cached lists of AssetEntity from Blocs when loaded (extremely fast, memory lookup)
+    final audioState = context.read<AudioBloc>().state;
+    final videoState = context.read<VideoBloc>().state;
 
-    List<MediaItem> searchTemp = [];
-
-    final allIds = [
-      ...videoBox.values.where((v) => v is String && !v.startsWith('data')),
-      ...audioBox.values.where((v) => v is String && !v.startsWith('data')),
-    ];
-
-    for (var id in allIds) {
-      if (!mounted) return;
-
-      final entity = await AssetEntity.fromId(id as String);
-      if (entity != null) {
-        final file = await entity.file;
-        if (file != null) {
-          final fileName = file.path.split('/').last.toLowerCase();
-          if (fileName.contains(lowerQuery)) {
-            searchTemp.add(
-              MediaItem(
-                id: entity.id,
-                path: file.path,
-                type: entity.type == AssetType.audio ? 'audio' : 'video',
-                isNetwork: false,
-                isFavourite: entity.isFavorite,
-              ),
-            );
-          }
-        }
-      }
+    List<AssetEntity> audioEntities = [];
+    if (audioState is AudioLoaded) {
+      audioEntities = audioState.entities;
+    } else {
+      final audioBox = Hive.box('audios');
+      final audioIds = audioBox.values.whereType<String>().toList();
+      final fetched = await Future.wait(audioIds.map((id) => AssetEntity.fromId(id)));
+      audioEntities = fetched.whereType<AssetEntity>().toList();
     }
 
+    List<AssetEntity> videoEntities = [];
+    if (videoState is VideoLoaded) {
+      videoEntities = videoState.entities;
+    } else {
+      final videoBox = Hive.box('videos');
+      final videoIds = videoBox.values.whereType<String>().toList();
+      final fetched = await Future.wait(videoIds.map((id) => AssetEntity.fromId(id)));
+      videoEntities = fetched.whereType<AssetEntity>().toList();
+    }
+
+    // 2. Perform in-memory filter matching title names (filenames)
+    final List<AssetEntity> allEntities = [...audioEntities, ...videoEntities];
+    final List<AssetEntity> matchingEntities = allEntities.where((entity) {
+      final title = (entity.title ?? '').toLowerCase();
+      return title.contains(lowerQuery);
+    }).toList();
+
+    // 3. Resolve files in parallel only for the matches
+    final List<MediaItem> searchTemp = [];
+    final resolvedMatches = await Future.wait(
+      matchingEntities.map((entity) async {
+        final file = await entity.file;
+        if (file != null) {
+          return MediaItem(
+            id: entity.id,
+            path: file.path,
+            type: entity.type == AssetType.audio ? 'audio' : 'video',
+            isNetwork: false,
+            isFavourite: entity.isFavorite,
+          );
+        }
+        return null;
+      }),
+    );
+    searchTemp.addAll(resolvedMatches.whereType<MediaItem>());
+
+    // 4. Resolve playlists
+    final playlistBox = Hive.box('playlists');
     final filteredPlaylists = playlistBox.values
         .cast<PlaylistModel>()
         .where((pl) => pl.name.toLowerCase().contains(lowerQuery))
         .map(
           (pl) => MediaItem(
-        id: pl.name,
-        path: pl.name,
-        type: pl.type == 'audio' ? 'playlist_audio' : 'playlist_video',
-        isNetwork: false,
-        isFavourite: false,
-      ),
-    )
+            id: pl.name,
+            path: pl.name,
+            type: pl.type == 'audio' ? 'playlist_audio' : 'playlist_video',
+            isNetwork: false,
+            isFavourite: false,
+          ),
+        )
         .toList();
 
     if (!mounted) return;
@@ -98,15 +117,6 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-
-    const int adInterval = 15;
-    final List<dynamic> displayItems = [];
-    for (int i = 0; i < _results.length; i++) {
-      if (i > 0 && i % adInterval == 0) {
-        displayItems.add(const AdPlaceholder());
-      }
-      displayItems.add(_results[i]);
-    }
     return Scaffold(
       appBar: AppBar(
         leading: Padding(
@@ -201,40 +211,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 )
                     : _results.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const AppText("noDataFound", fontSize: 18),
-                      const SizedBox(height: 20),
-                      AdHelper.bannerAdWidget(
-                        size: AdSize.mediumRectangle,
-                      ),
-                    ],
-                  ),
+                    ? const Center(
+                  child: AppText("noDataFound", fontSize: 18),
                 )
                     : ListView.builder(
-                  itemCount: displayItems.length,
+                  itemCount: _results.length,
                   itemBuilder: (_, i) {
-                    final itemObj = displayItems[i];
-
-                    if (itemObj is AdPlaceholder) {
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 15,
-                        ),
-                        alignment: Alignment.center,
-                        child: AdHelper.bannerAdWidget(
-                          size: AdSize.largeBanner,
-                        ),
-                      );
-                    }
-                    // bool isAudio = false;
-                    final item = itemObj as MediaItem;
-                    final int actualIndex = _results.indexOf(item);
-                    if (actualIndex >= _results.length || actualIndex == -1)
-                      return const SizedBox.shrink();
+                    final item = _results[i];
+                    final int actualIndex = i;
                     bool isPlaylist = item.type.startsWith(
                       'playlist',
                     ); // àª¨àªµà«€ àª°à«€àª¤
@@ -264,133 +248,131 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         child: GestureDetector(
                           onTap: () async {
-                            AdHelper.showInterstitialAd(() async {
-                              if (isPlaylist) {
-                                final targetType =
-                                item.type == 'playlist_audio'
-                                    ? 'audio'
-                                    : 'video';
-                                playlist = Hive.box('playlists').values
-                                    .cast<PlaylistModel>()
-                                    .firstWhere(
-                                      (pl) =>
-                                  pl.name == item.path &&
-                                      pl.type == targetType,
+                            if (isPlaylist) {
+                              final targetType =
+                              item.type == 'playlist_audio'
+                                  ? 'audio'
+                                  : 'video';
+                              playlist = Hive.box('playlists').values
+                                  .cast<PlaylistModel>()
+                                  .firstWhere(
+                                    (pl) =>
+                                pl.name == item.path &&
+                                    pl.type == targetType,
+                              );
+
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PlaylistItemsScreen(
+                                    name: playlist!.name,
+                                    items: playlist!.items,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              if (item.type == 'audio') {
+                                final audio = await _resolveEntity(item.id);
+                                if (audio == null) {
+                                  AppToast.show(
+                                    context,
+                                    context.tr("fileNotFoundOrDeleted"),
+                                    type: ToastType.error,
+                                  );
+                                  return;
+                                }
+                                final file = await audio.file;
+                                if (file == null || !await file.exists()) {
+                                  AppToast.show(
+                                    context,
+                                    context.tr("fileNotFoundOrDeleted"),
+                                    type: ToastType.error,
+                                  );
+                                  return;
+                                }
+
+                                final queue = await _resolveAudioQueueFromResults();
+                                final selectedIndex = queue.indexWhere(
+                                  (e) => e.id == audio.id,
                                 );
 
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) => PlaylistItemsScreen(
-                                      name: playlist!.name,
-                                      items: playlist!.items,
+                                  PageRouteBuilder(
+                                    pageBuilder: (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                    ) =>
+                                        AudioPlayerScreen(
+                                      entityList: queue,
+                                      entity: audio,
+                                      index: selectedIndex >= 0 ? selectedIndex : 0,
+                                      item: MediaItem(
+                                        isFavourite: audio.isFavorite,
+                                        id: audio.id,
+                                        path: file.path,
+                                        isNetwork: false,
+                                        type: 'audio',
+                                      ),
+                                    ),
+                                    transitionsBuilder: (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      const begin = Offset(0.0, 1.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.easeInOut;
+
+                                      final tween = Tween(
+                                        begin: begin,
+                                        end: end,
+                                      ).chain(CurveTween(curve: curve));
+                                      final offsetAnimation =
+                                          animation.drive(tween);
+
+                                      return SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: const Duration(
+                                      milliseconds: 400,
                                     ),
                                   ),
                                 );
                               } else {
-                                if (item.type == 'audio') {
-                                  final audio = await _resolveEntity(item.id);
-                                  if (audio == null) {
-                                    AppToast.show(
-                                      context,
-                                      context.tr("fileNotFoundOrDeleted"),
-                                      type: ToastType.error,
-                                    );
-                                    return;
-                                  }
-                                  final file = await audio.file;
-                                  if (file == null || !await file.exists()) {
-                                    AppToast.show(
-                                      context,
-                                      context.tr("fileNotFoundOrDeleted"),
-                                      type: ToastType.error,
-                                    );
-                                    return;
-                                  }
-
-                                  final queue = await _resolveAudioQueueFromResults();
-                                  final selectedIndex = queue.indexWhere(
-                                    (e) => e.id == audio.id,
-                                  );
-
-                                  Navigator.push(
+                                final file = File(item.path);
+                                if (!await file.exists()) {
+                                  AppToast.show(
                                     context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                      ) =>
-                                          AudioPlayerScreen(
-                                        entityList: queue,
-                                        entity: audio,
-                                        index: selectedIndex >= 0 ? selectedIndex : 0,
-                                        item: MediaItem(
-                                          isFavourite: audio.isFavorite,
-                                          id: audio.id,
-                                          path: file.path,
-                                          isNetwork: false,
-                                          type: 'audio',
-                                        ),
-                                      ),
-                                      transitionsBuilder: (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                        child,
-                                      ) {
-                                        const begin = Offset(0.0, 1.0);
-                                        const end = Offset.zero;
-                                        const curve = Curves.easeInOut;
-
-                                        final tween = Tween(
-                                          begin: begin,
-                                          end: end,
-                                        ).chain(CurveTween(curve: curve));
-                                        final offsetAnimation =
-                                            animation.drive(tween);
-
-                                        return SlideTransition(
-                                          position: offsetAnimation,
-                                          child: child,
-                                        );
-                                      },
-                                      transitionDuration: const Duration(
-                                        milliseconds: 400,
-                                      ),
-                                    ),
+                                    context.tr("fileNotFoundOrDeleted"),
+                                    type: ToastType.error,
                                   );
-                                } else {
-                                  final file = File(item.path);
-                                  if (!await file.exists()) {
-                                    AppToast.show(
-                                      context,
-                                      context.tr("fileNotFoundOrDeleted"),
-                                      type: ToastType.error,
-                                    );
-                                    return;
-                                  }
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PlayerScreen(
-                                        entity: AssetEntity(
-                                          id: item.id,
-                                          typeInt: 2,
-                                          width: 200,
-                                          height: 200,
-                                          isFavorite: item.isFavourite,
-                                          title: item.path.split("/").last,
-                                          relativePath: item.path,
-                                        ),
-                                        index: actualIndex,
-                                        entityList: const [],
-                                      ),
-                                    ),
-                                  );
+                                  return;
                                 }
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PlayerScreen(
+                                      entity: AssetEntity(
+                                        id: item.id,
+                                        typeInt: 2,
+                                        width: 200,
+                                        height: 200,
+                                        isFavorite: item.isFavourite,
+                                        title: item.path.split("/").last,
+                                        relativePath: item.path,
+                                      ),
+                                      index: actualIndex,
+                                      entityList: const [],
+                                    ),
+                                  ),
+                                );
                               }
-                            });
+                            }
                           },
                           child: Container(
                             decoration: BoxDecoration(

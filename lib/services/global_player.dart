@@ -695,9 +695,20 @@ class GlobalPlayer extends ChangeNotifier {
       try {
         int newIndex = entities.indexWhere((item) => item.id == selectedId);
         newIndex = newIndex == -1 ? 0 : newIndex;
+        bool isSameQueue = false;
         if (currentType == 'audio' &&
             audioPlayer.audioSource != null &&
             entities.length == queue.length) {
+          isSameQueue = true;
+          for (int i = 0; i < entities.length; i++) {
+            if (entities[i].id != queue[i].id) {
+              isSameQueue = false;
+              break;
+            }
+          }
+        }
+
+        if (isSameQueue) {
           // print("ty is ===> ------>  audio");
           currentIndex = newIndex;
           currentEntity = await AssetEntity.fromId(entities[newIndex].id);

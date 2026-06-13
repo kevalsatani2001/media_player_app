@@ -130,8 +130,91 @@ class MainActivity : AudioServiceActivity() {
                             }
 
                             val uri = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, idArg.toLong().toString())
-                            RingtoneManager.setActualDefaultRingtoneUri(applicationContext, RingtoneManager.TYPE_RINGTONE, uri)
-                            result.success(true)
+
+                            // 1. Get original song metadata from MediaStore
+                            var title = "Custom Ringtone"
+                            var mimeType = "audio/mp3"
+                            var displayName = "ringtone_${idArg}.mp3"
+
+                            val projection = arrayOf(
+                                MediaStore.Audio.Media.TITLE,
+                                MediaStore.Audio.Media.DISPLAY_NAME,
+                                MediaStore.Audio.Media.MIME_TYPE
+                            )
+                            contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                                if (cursor.moveToFirst()) {
+                                    title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)) ?: "Custom Ringtone"
+                                    displayName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)) ?: "ringtone_${idArg}.mp3"
+                                    mimeType = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.MIME_TYPE)) ?: "audio/mp3"
+                                }
+                            }
+
+                            // Ensure displayName is valid and has proper suffix
+                            if (!displayName.contains(".") && mimeType.contains("/")) {
+                                val ext = mimeType.substringAfter("/")
+                                if (ext.isNotEmpty()) {
+                                    displayName = "$displayName.$ext"
+                                }
+                            }
+
+                            // 2. Check if a ringtone with the same display name and IS_RINGTONE = 1 already exists in MediaStore
+                            var existingUri: Uri? = null
+                            val ringtoneSelection = "${MediaStore.Audio.Media.IS_RINGTONE} = 1 AND ${MediaStore.Audio.Media.DISPLAY_NAME} = ?"
+                            val selectionArgs = arrayOf(displayName)
+                            contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, arrayOf(MediaStore.Audio.Media._ID), ringtoneSelection, selectionArgs, null)?.use { cursor ->
+                                if (cursor.moveToFirst()) {
+                                    val existingId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID))
+                                    existingUri = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, existingId.toString())
+                                }
+                            }
+
+                            if (existingUri != null) {
+                                RingtoneManager.setActualDefaultRingtoneUri(applicationContext, RingtoneManager.TYPE_RINGTONE, existingUri)
+                                result.success(true)
+                                return@setMethodCallHandler
+                            }
+
+                            // 3. If it doesn't exist, copy the file to the Ringtones folder via MediaStore
+                            val values = ContentValues().apply {
+                                put(MediaStore.Audio.Media.TITLE, title)
+                                put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+                                put(MediaStore.Audio.Media.MIME_TYPE, mimeType)
+                                put(MediaStore.Audio.Media.IS_RINGTONE, true)
+                                put(MediaStore.Audio.Media.IS_NOTIFICATION, false)
+                                put(MediaStore.Audio.Media.IS_ALARM, false)
+                                put(MediaStore.Audio.Media.IS_MUSIC, false)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    put(MediaStore.Audio.Media.RELATIVE_PATH, android.os.Environment.DIRECTORY_RINGTONES)
+                                } else {
+                                    val ringtonesDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_RINGTONES)
+                                    if (!ringtonesDir.exists()) {
+                                        ringtonesDir.mkdirs()
+                                    }
+                                    val ringtoneFile = File(ringtonesDir, displayName)
+                                    put(MediaStore.MediaColumns.DATA, ringtoneFile.absolutePath)
+                                }
+                            }
+
+                            val ringtonesUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                            val newRingtoneUri = contentResolver.insert(ringtonesUri, values)
+
+                            if (newRingtoneUri != null) {
+                                try {
+                                    contentResolver.openInputStream(uri)?.use { inputStream ->
+                                        contentResolver.openOutputStream(newRingtoneUri)?.use { outputStream ->
+                                            inputStream.copyTo(outputStream)
+                                        }
+                                    }
+                                    RingtoneManager.setActualDefaultRingtoneUri(applicationContext, RingtoneManager.TYPE_RINGTONE, newRingtoneUri)
+                                    result.success(true)
+                                } catch (e: Exception) {
+                                    // Clean up on failure
+                                    contentResolver.delete(newRingtoneUri, null, null)
+                                    result.error("COPY_FAILED", e.message, null)
+                                }
+                            } else {
+                                result.error("INSERT_FAILED", "Failed to insert ringtone into MediaStore", null)
+                            }
                         }
                         else -> result.notImplemented()
                     }

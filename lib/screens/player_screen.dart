@@ -715,40 +715,52 @@ class _PlayerScreenState extends State<PlayerScreen>
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     if (!playerService.isInitialized) {
-      return Scaffold(
-        backgroundColor: settings.layoutBackgroundEnabled
-            ? settings.layoutBackgroundColor
-            : colors.background,
-        body: SafeArea(child: Center(child: CustomLoader())),
+      return WillPopScope(
+        onWillPop: () async {
+          _setOrientation(false);
+          return true;
+        },
+        child: Scaffold(
+          backgroundColor: settings.layoutBackgroundEnabled
+              ? settings.layoutBackgroundColor
+              : colors.background,
+          body: SafeArea(child: Center(child: CustomLoader())),
+        ),
       );
     }
 
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      key: _scaffoldKey,
-
-      endDrawer: _buildSideMenu(),
-      onEndDrawerChanged: (isOpened) {
-        if (isOpened) {
-          setState(() {
-            _showControls = false;
-            _controlsTimer?.cancel();
-          });
-        } else {
-          _resetDrawerState();
-          setState(() {
-            _showControls = true;
-            _startControlsTimer();
-          });
-        }
+    return WillPopScope(
+      onWillPop: () async {
+        _setOrientation(false);
+        return true;
       },
-      // backgroundColor: Colors.black,
-      backgroundColor: settings.layoutBackgroundEnabled
-          ? settings.layoutBackgroundColor
-          : colors.background,
-      body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.light,
-        child: _buildVideoPlayerWithGestures(),
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        key: _scaffoldKey,
+
+        endDrawer: _buildSideMenu(),
+        onEndDrawerChanged: (isOpened) {
+          if (isOpened) {
+            setState(() {
+              _showControls = false;
+              _controlsTimer?.cancel();
+            });
+          } else {
+            _resetDrawerState();
+            setState(() {
+              _showControls = true;
+              _startControlsTimer();
+            });
+          }
+        },
+        // backgroundColor: Colors.black,
+        backgroundColor: settings.layoutBackgroundEnabled
+            ? settings.layoutBackgroundColor
+            : colors.background,
+        body: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle.light,
+          child: _buildVideoPlayerWithGestures(),
+        ),
       ),
     );
   }
@@ -2430,7 +2442,10 @@ class _PlayerScreenState extends State<PlayerScreen>
               color: Colors.white,
               size: 20,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              _setOrientation(false);
+              Navigator.pop(context);
+            },
           ),
           if (settings.showElapsedTime)
             Padding(

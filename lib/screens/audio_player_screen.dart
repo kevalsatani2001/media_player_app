@@ -43,6 +43,8 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
   String? _lastProcessedId;
   bool _isUpdatingFromPlayer = false;
   StreamSubscription? _indexSubscription;
+  bool _isWaitingForRingtonePermission = false;
+  AssetEntity? _pendingRingtoneEntity;
   final Map<String, ({Color c1, Color c2})> _artPaletteCache = {};
   final Set<String> _paletteLoadingIds = {};
 
@@ -233,10 +235,31 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused) {
       if (player.currentType == "video") {
         player.pause();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      if (_isWaitingForRingtonePermission && _pendingRingtoneEntity != null) {
+        _isWaitingForRingtonePermission = false;
+        final entity = _pendingRingtoneEntity!;
+        _pendingRingtoneEntity = null;
+
+        final bool hasPermission = await _ringtoneChannel.invokeMethod('checkPermission');
+        if (hasPermission) {
+          if (mounted) {
+            _executeSetRingtone(context, entity);
+          }
+        } else {
+          if (mounted) {
+            AppToast.show(
+              context,
+              "Permission not granted. Cannot set ringtone.",
+              type: ToastType.error,
+            );
+          }
+        }
       }
     }
   }
@@ -1444,10 +1467,116 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
     }
   }
 
+  Future<void> _executeSetRingtone(BuildContext context, AssetEntity entity) async {
+    try {
+      final ok = await _ringtoneChannel.invokeMethod<bool>("setRingtone", {
+        "id": int.tryParse(entity.id),
+      });
+
+      if (mounted) {
+        AppToast.show(
+          context,
+          ok == true ? "Ringtone set successfully" : "Failed to set ringtone",
+          type: ok == true ? ToastType.success : ToastType.error,
+        );
+      }
+    } catch (e) {
+      print("Error setting ringtone: $e");
+      if (mounted) {
+        AppToast.show(context, "Failed to set ringtone", type: ToastType.error);
+      }
+    }
+  }
+
+  Future<bool?> _showRingtonePermissionDialog(BuildContext context) async {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: colors.dropdownBg,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 25,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppText(
+                "ringtonePermissionTitle",
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: colors.appBarTitleColor,
+                align: TextAlign.center,
+              ),
+              const SizedBox(height: 15),
+              AppText(
+                "ringtonePermissionMessage",
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: colors.textFieldBorder,
+                align: TextAlign.center,
+              ),
+              const SizedBox(height: 25),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colors.dividerColor),
+                        ),
+                        child: Center(
+                          child: AppText(
+                            "cancel",
+                            fontSize: 16,
+                            color: colors.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context, true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
+                          child: AppText(
+                            "yes",
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleSetAsRingtone(
-      BuildContext context,
-      AssetEntity entity,
-      ) async {
+    BuildContext context,
+    AssetEntity entity,
+  ) async {
     if (!Platform.isAndroid) {
       AppToast.show(
         context,
@@ -1463,29 +1592,23 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
       );
 
       if (!hasPermission) {
-        // 2. If not, tell the user and open settings
-        AppToast.show(
-          context,
-          "Please allow 'Modify system settings' to set ringtone",
-          type: ToastType.error,
-        );
-        await _ringtoneChannel.invokeMethod('openPermissionSettings');
-        return; // Stop here, user needs to enable it and try again
+        if (!mounted) return;
+        final bool? proceed = await _showRingtonePermissionDialog(context);
+        if (proceed == true) {
+          _isWaitingForRingtonePermission = true;
+          _pendingRingtoneEntity = entity;
+          await _ringtoneChannel.invokeMethod('openPermissionSettings');
+        }
+        return;
       }
 
-      // 3. If we have permission, set the ringtone
-      final ok = await _ringtoneChannel.invokeMethod<bool>("setRingtone", {
-        "id": int.tryParse(entity.id),
-      });
-
-      AppToast.show(
-        context,
-        ok == true ? "Ringtone set successfully" : "Failed to set ringtone",
-        type: ok == true ? ToastType.success : ToastType.error,
-      );
+      // 2. If we have permission, set the ringtone
+      await _executeSetRingtone(context, entity);
     } catch (e) {
-      print("Error: $e");
-      AppToast.show(context, "Failed to set ringtone", type: ToastType.error);
+      print("Error in _handleSetAsRingtone: $e");
+      if (mounted) {
+        AppToast.show(context, "Failed to set ringtone", type: ToastType.error);
+      }
     }
   }
 
