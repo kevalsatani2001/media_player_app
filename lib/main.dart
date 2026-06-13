@@ -36,9 +36,6 @@ void main() async {
   await Hive.openBox(CustomVideoThumbnailStore.boxName);
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
   ]);
   await PhotoManager.requestPermissionExtend(
     requestOption: PermissionRequestOption(
