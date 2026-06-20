@@ -77,6 +77,8 @@ dependencies:
   on_audio_query_forked:
   palette_generator:
   marquee:
+  firebase_core: ^4.10.0
+  firebase_remote_config: ^6.5.2
 #  ffmpeg_kit_flutter_new: ^4.1.0
 #  google_fonts:
 

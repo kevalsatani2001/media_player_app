@@ -123,11 +123,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           const SizedBox(height: 20),
 
                           /// ðŸŸ¢ Ad Widget - Wrap with SizedBox to prevent jumping
-                          SizedBox(
-                            height: 250, // AdSize.mediumRectangle height
-                            width: 300,
-                            child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                          ),
+                          if (AdHelper.showAdsEnabled)
+                            SizedBox(
+                              height: 250, // AdSize.mediumRectangle height
+                              width: 300,
+                              child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                            ),
 
                           const SizedBox(height: 120), // Extra space for bottom buttons
                         ],

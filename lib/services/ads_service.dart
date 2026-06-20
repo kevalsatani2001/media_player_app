@@ -950,6 +950,7 @@
 import 'dart:math' show max, min;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
 
@@ -986,6 +987,86 @@ class AdHelper {
     return '';
   }
 
+  static FirebaseRemoteConfig? _remoteConfig;
+
+  static InterstitialAd? _cachedInterstitialAd;
+  static bool _isInterstitialLoading = false;
+  static DateTime? _lastInterstitialShowTime;
+  static int _interstitialClickCount = 0;
+  static int _playerPlayCount = 0;
+
+  static Future<void> initRemoteConfig() async {
+    try {
+      _remoteConfig = FirebaseRemoteConfig.instance;
+      await _remoteConfig!.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(seconds: 10),
+          minimumFetchInterval: const Duration(hours: 1),
+        ),
+      );
+      await _remoteConfig!.setDefaults(const {
+        'show_ads_enabled': true,
+        'show_interstitial_on_home': true,
+        'show_interstitial_on_player': true,
+        'show_interstitial_on_language': true,
+        'show_interstitial_on_playlist': true,
+        'show_interstitial_on_favourite': true,
+        'show_interstitial_on_folder': true,
+        'show_interstitial_on_audio': true,
+        'show_interstitial_on_video': true,
+        'show_interstitial_on_settings': true,
+        'interstitial_interval': 1,
+        'show_rewarded_on_player_count': 0,
+      });
+      await _remoteConfig!.fetchAndActivate();
+      preloadInterstitial();
+    } catch (e) {
+      debugPrint('Remote Config init failed: $e');
+    }
+  }
+
+  static void initAdFlow() {
+    preloadInterstitial();
+  }
+
+  static bool get showAdsEnabled =>
+      _remoteConfig?.getBool('show_ads_enabled') ?? true;
+
+  static bool get showInterstitialOnHome =>
+      _remoteConfig?.getBool('show_interstitial_on_home') ?? true;
+
+  static bool get showInterstitialOnPlayer =>
+      _remoteConfig?.getBool('show_interstitial_on_player') ?? true;
+
+  static bool get showInterstitialOnLanguage =>
+      _remoteConfig?.getBool('show_interstitial_on_language') ?? true;
+
+  static bool get showInterstitialOnPlaylist =>
+      _remoteConfig?.getBool('show_interstitial_on_playlist') ?? true;
+
+  static bool get showInterstitialOnFavourite =>
+      _remoteConfig?.getBool('show_interstitial_on_favourite') ?? true;
+
+  static bool get showInterstitialOnFolder =>
+      _remoteConfig?.getBool('show_interstitial_on_folder') ?? true;
+
+  static bool get showInterstitialOnAudio =>
+      _remoteConfig?.getBool('show_interstitial_on_audio') ?? true;
+
+  static bool get showInterstitialOnVideo =>
+      _remoteConfig?.getBool('show_interstitial_on_video') ?? true;
+
+  static bool get showInterstitialOnSettings =>
+      _remoteConfig?.getBool('show_interstitial_on_settings') ?? true;
+
+  static int get interstitialInterval =>
+      _remoteConfig?.getInt('interstitial_interval') ?? 1;
+
+  static int get showRewardedOnPlayerCount =>
+      _remoteConfig?.getInt('show_rewarded_on_player_count') ?? 0;
+
+  static String str(Object? value) => value?.toString() ?? '';
+
   static AppOpenAd? _appOpenAd;
   static bool _isShowingAd = false;
   static DateTime? _appOpenLoadTime;
@@ -1001,7 +1082,7 @@ class AdHelper {
 
     if (isOnline) {
       if (_playCount % 3 == 0) {
-        showInterstitialAd(startVideo);
+        showInterstitialAd(context, startVideo, pageName: 'video');
       } else {
         startVideo();
       }
@@ -1173,37 +1254,140 @@ class AdHelper {
   }
 
   // --- 6. Interstitial Ad ---
-  static void showInterstitialAd(VoidCallback onAdDismissed) {
+  static void preloadInterstitial() {
+    if (!showAdsEnabled) return;
+    if (_cachedInterstitialAd != null || _isInterstitialLoading) return;
+    final unitId = interstitialId;
+    if (unitId.isEmpty) return;
+
+    _isInterstitialLoading = true;
     InterstitialAd.load(
-      adUnitId: interstitialId,
+      adUnitId: unitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdShowedFullScreenContent: (ad) {
-              isFullScreenAdShowing =
-                  true; // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡: Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡
-            },
-            onAdDismissedFullScreenContent: (ad) {
-              isFullScreenAdShowing =
-                  false; // Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ¢â‚¬â€Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¯Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡: Ãƒ Ã‚ÂªÃ¢â‚¬Â¦Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¸ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡
-              ad.dispose();
-              onAdDismissed();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              isFullScreenAdShowing = false;
-              ad.dispose();
-              onAdDismissed();
-            },
-          );
-          ad.show();
+          _cachedInterstitialAd = ad;
+          _isInterstitialLoading = false;
+          debugPrint('Interstitial ad preloaded successfully.');
         },
         onAdFailedToLoad: (error) {
-          isFullScreenAdShowing = false;
-          onAdDismissed();
+          _isInterstitialLoading = false;
+          _cachedInterstitialAd = null;
+          debugPrint('Failed to preload Interstitial ad: $error');
         },
       ),
     );
+  }
+
+  // --- 6. Interstitial Ad ---
+  static void showInterstitialAd(
+    BuildContext context,
+    VoidCallback onAdDismissed, {
+    String? pageName,
+  }) {
+    if (!showAdsEnabled) {
+      onAdDismissed();
+      return;
+    }
+
+    if (pageName != null) {
+      bool isPageEnabled = true;
+      switch (pageName) {
+        case 'home':
+          isPageEnabled = showInterstitialOnHome;
+          break;
+        case 'player':
+          isPageEnabled = showInterstitialOnPlayer;
+          break;
+        case 'language':
+          isPageEnabled = showInterstitialOnLanguage;
+          break;
+        case 'playlist':
+          isPageEnabled = showInterstitialOnPlaylist;
+          break;
+        case 'favourite':
+          isPageEnabled = showInterstitialOnFavourite;
+          break;
+        case 'folder':
+          isPageEnabled = showInterstitialOnFolder;
+          break;
+        case 'audio':
+          isPageEnabled = showInterstitialOnAudio;
+          break;
+        case 'video':
+          isPageEnabled = showInterstitialOnVideo;
+          break;
+        case 'settings':
+          isPageEnabled = showInterstitialOnSettings;
+          break;
+      }
+      if (!isPageEnabled) {
+        debugPrint('Interstitial ad is disabled for page: ' + pageName);
+        onAdDismissed();
+        return;
+      }
+    }
+
+    // Special rewarded ad check for player screen
+    if (pageName == 'player') {
+      _playerPlayCount++;
+      final rewardedCount = showRewardedOnPlayerCount;
+      if (rewardedCount > 0 && _playerPlayCount % rewardedCount == 0) {
+        debugPrint('Player play count (' + str(_playerPlayCount) + ') hit rewarded count (' + str(rewardedCount) + '). Showing rewarded ad.');
+        showRewardedAd(context, onAdDismissed, errorFunction: onAdDismissed);
+        return;
+      }
+    }
+
+    // Cooldown check (minimum 40s)
+    final now = DateTime.now();
+    if (_lastInterstitialShowTime != null) {
+      final diff = now.difference(_lastInterstitialShowTime!);
+      if (diff.inSeconds < 40) {
+        debugPrint('Interstitial ad skipped due to cooldown: ' + str(diff.inSeconds) + 's < 40s');
+        onAdDismissed();
+        return;
+      }
+    }
+
+    // Interval action count check
+    _interstitialClickCount++;
+    if (_interstitialClickCount % interstitialInterval != 0) {
+      debugPrint('Interstitial ad skipped: click count ' + str(_interstitialClickCount) + ' is not a multiple of ' + str(interstitialInterval));
+      onAdDismissed();
+      return;
+    }
+
+    // Show cached ad if available
+    final ad = _cachedInterstitialAd;
+    _cachedInterstitialAd = null;
+    if (ad == null) {
+      debugPrint('Preloaded interstitial ad not available. Preloading for next time.');
+      preloadInterstitial();
+      onAdDismissed();
+      return;
+    }
+
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (ad) {
+        isFullScreenAdShowing = true;
+        _lastInterstitialShowTime = DateTime.now();
+      },
+      onAdDismissedFullScreenContent: (shownAd) {
+        isFullScreenAdShowing = false;
+        shownAd.dispose();
+        preloadInterstitial();
+        onAdDismissed();
+      },
+      onAdFailedToShowFullScreenContent: (shownAd, error) {
+        isFullScreenAdShowing = false;
+        shownAd.dispose();
+        preloadInterstitial();
+        onAdDismissed();
+      },
+    );
+
+    ad.show();
   }
 
   // --- 7. Rewarded Ad ---

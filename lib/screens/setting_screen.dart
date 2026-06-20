@@ -41,8 +41,10 @@ class _SettingScreenState extends State<SettingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AdHelper.adaptiveBannerWidget(context),
-          const SizedBox(height: 15),
+          if (AdHelper.showAdsEnabled) ...[
+            AdHelper.adaptiveBannerWidget(context),
+            const SizedBox(height: 15),
+          ],
 
           AppText(
             "settings",
@@ -75,13 +77,15 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
           ),
           const SizedBox(height: 25),
-          Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+          if (AdHelper.showAdsEnabled) ...[
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+              ),
             ),
-          ),
-          const SizedBox(height: 25),
+            const SizedBox(height: 25),
+          ],
 
           AppText(
             "otherSettings",
@@ -413,23 +417,24 @@ class _ThemeScreenState extends State<ThemeScreen> {
 
                   const Spacer(),
 
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      children: [
-                        AppText(
-                          "Advertisement",
-                          fontSize: 10,
-                          color: colors.subTextColor.withOpacity(0.4),
-                        ),
-                        const SizedBox(height: 5),
-                        KeyedSubtree(
-                          key: ValueKey(_tempSelectedTheme),
-                          child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-                        ),
-                      ],
+                  if (AdHelper.showAdsEnabled)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        children: [
+                          AppText(
+                            "Advertisement",
+                            fontSize: 10,
+                            color: colors.subTextColor.withOpacity(0.4),
+                          ),
+                          const SizedBox(height: 5),
+                          KeyedSubtree(
+                            key: ValueKey(_tempSelectedTheme),
+                            child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -498,7 +503,7 @@ class _ThemeScreenState extends State<ThemeScreen> {
                 ? null
                 : () async {
               setState(() => _isAdLoading = true);
-              AdHelper.showInterstitialAd(() {
+              AdHelper.showInterstitialAd(context, () {
                 context.read<ThemeBloc>().add(UpdateThemeMode(_tempSelectedTheme));
 
                 AppToast.show(

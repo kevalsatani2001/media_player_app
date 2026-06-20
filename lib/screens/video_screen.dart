@@ -562,7 +562,7 @@ class _VideoScreenState extends State<VideoScreen> {
         ),
       );
 
-      if (i + chunkSize < entitiesToShow.length) {
+      if (AdHelper.showAdsEnabled && (i + chunkSize < entitiesToShow.length)) {
         slivers.add(
           SliverToBoxAdapter(
             child: Container(
@@ -596,8 +596,9 @@ class _VideoScreenState extends State<VideoScreen> {
   _buildListView(List<dynamic> entitiesToShow, bool hasMore, {Key? key}) {
     final List<dynamic> displayItems = [];
     const int adInterval = 15;
+    final bool adsActive = AdHelper.showAdsEnabled;
     for (int i = 0; i < entitiesToShow.length; i++) {
-      if (i > 0 && i % adInterval == 0) {
+      if (adsActive && i > 0 && i % adInterval == 0) {
         displayItems.add(const AdPlaceholder());
       }
       displayItems.add(entitiesToShow[i]);
@@ -849,7 +850,7 @@ class _VideoScreenState extends State<VideoScreen> {
       }
     }
 
-    AdHelper.showInterstitialAd(() => moveNext());
+    AdHelper.showInterstitialAd(context, () => moveNext(), pageName: 'video');
   }
 }
 

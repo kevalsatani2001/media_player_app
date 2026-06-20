@@ -56,8 +56,6 @@ class MaterialControlsState extends State<MaterialControls>
   bool _subtitleOn = false;
   Timer? _showAfterExpandCollapseTimer;
   bool _dragging = false;
-  bool _displayTapped = false;
-  Timer? _bufferingDisplayTimer;
   bool _displayBufferingIndicator = false;
 
   final barHeight = 48.0 * 1.5;
@@ -314,12 +312,6 @@ class MaterialControlsState extends State<MaterialControls>
     super.dispose();
   }
 
-  void _dispose() {
-    controller.removeListener(_updateState);
-    _hideTimer?.cancel();
-    _initTimer?.cancel();
-    _showAfterExpandCollapseTimer?.cancel();
-  }
 
   @override
   void didChangeDependencies() {
@@ -549,36 +541,6 @@ class MaterialControlsState extends State<MaterialControls>
     );
   }
 
-  GestureDetector _buildMuteButton(VideoPlayerController controller) {
-    return GestureDetector(
-      onTap: () {
-        cancelAndRestartTimer();
-
-        if (videoPlayerLatestValue.volume == 0) {
-          controller.setVolume(_latestVolume ?? 0.5);
-        } else {
-          _latestVolume = controller.value.volume;
-          controller.setVolume(0.0);
-        }
-      },
-      child: AnimatedOpacity(
-        opacity: notifier.hideStuff ? 0.0 : 1.0,
-        duration: const Duration(milliseconds: 300),
-        child: ClipRect(
-          child: Container(
-            height: barHeight,
-            padding: const EdgeInsets.only(left: 6.0),
-            child: Icon(
-              videoPlayerLatestValue.volume > 0
-                  ? Icons.volume_up
-                  : Icons.volume_off,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildExpandButton() {
     return AbsorbPointer(
@@ -770,31 +732,6 @@ class MaterialControlsState extends State<MaterialControls>
     }
   }
 
-  Widget _buildPosition(Color? iconColor) {
-    final position = videoPlayerLatestValue.position;
-    final duration = videoPlayerLatestValue.duration;
-
-    return RichText(
-      text: TextSpan(
-        text: '${formatDuration(position)} ',
-        children: <InlineSpan>[
-          TextSpan(
-            text: '/ ${formatDuration(duration)}',
-            style: TextStyle(
-              fontSize: 14.0,
-              color: Colors.white.withValues(alpha: .75),
-              fontWeight: FontWeight.normal,
-            ),
-          ),
-        ],
-        style: const TextStyle(
-          fontSize: 14.0,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
 
   Widget _buildSubtitleToggle() {
     // if don't have subtitle hiden button
@@ -838,7 +775,6 @@ class MaterialControlsState extends State<MaterialControls>
       } catch (e) {
         debugPrint("Error updating notifier: $e");
       }
-      _displayTapped = true;
     });
   }
 

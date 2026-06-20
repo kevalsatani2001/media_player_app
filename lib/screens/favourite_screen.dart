@@ -177,9 +177,9 @@ class _FavouriteGrid extends StatelessWidget {
       });
     }
 
-    AdHelper.showInterstitialAd(() {
+    AdHelper.showInterstitialAd(context, () {
       moveNext();
-    });
+    }, pageName: 'favourite');
   }
 }
 

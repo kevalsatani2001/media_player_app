@@ -186,23 +186,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
         return CustomScrollView(
           controller: _scrollController,
           slivers: [
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  AdHelper.adaptiveBannerWidget(context),
-                  SizedBox(height: 8),
-                  // Adaptive Banner
-                  // Padding(
-                  //   padding: const EdgeInsets.only(left: 9,right: 9,bottom: 15),
-                  //   child: Center(
-                  //     child: Container(
-                  //      child: AdHelper.adaptiveBannerWidget(context),
-                  //     ),
-                  //   ),
-                  // ),
-                ],
+            if (AdHelper.showAdsEnabled)
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    AdHelper.adaptiveBannerWidget(context),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-            ),
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 15),
               sliver: SliverToBoxAdapter(
@@ -210,17 +202,20 @@ class _HomePageState extends State<HomePage> with RouteAware {
                   children: [
                     _buildGridCards(state),
                     const SizedBox(height: 20),
-                    // Native Ad with Placeholder
-                    Container(
-                      height: 250,
-                      decoration: BoxDecoration(
-                        color: colors.textFieldFill,
-                        borderRadius: BorderRadius.circular(12),
+                    if (AdHelper.showAdsEnabled) ...[
+                      const SizedBox(height: 20),
+                      // Native Ad with Placeholder
+                      Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                          color: colors.textFieldFill,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AdHelper.bannerAdWidget(
+                          size: AdSize.mediumRectangle,
+                        ),
                       ),
-                      child: AdHelper.bannerAdWidget(
-                        size: AdSize.mediumRectangle,
-                      ),
-                    ),
+                    ],
                     _buildTabRow(context, state),
                   ],
                 ),
@@ -598,9 +593,9 @@ class _HomePageState extends State<HomePage> with RouteAware {
       });
     }
 
-    AdHelper.showInterstitialAd(() {
+    AdHelper.showInterstitialAd(context, () {
       openPlayer();
-    });
+    }, pageName: 'home');
   }
 
   Widget _buildSliverFolderGrid() {
@@ -615,7 +610,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
     final displayCount = folderList.length > 4 ? 4 : folderList.length;
     const int adInterval = 2;
-    int totalCount = displayCount + (displayCount ~/ adInterval);
+    final bool adsActive = AdHelper.showAdsEnabled;
+    int totalCount = adsActive ? (displayCount + (displayCount ~/ adInterval)) : displayCount;
 
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -627,7 +623,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
           childAspectRatio: 1.0,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
-          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+          if (adsActive && index != 0 && (index + 1) % (adInterval + 1) == 0) {
             return Container(
               decoration: BoxDecoration(
                 color: colors.cardBackground,
@@ -647,12 +643,10 @@ class _HomePageState extends State<HomePage> with RouteAware {
             );
           }
 
-          final int actualIndex = index - (index ~/ (adInterval + 1));
+          final int actualIndex = adsActive ? (index - (index ~/ (adInterval + 1))) : index;
           if (actualIndex >= folderList.length) return const SizedBox.shrink();
 
           final item = folderList[actualIndex];
-
-          // final item = folderList[index];
           return AppTransition(
             index: index + 5,
             columnCount: 2,
@@ -683,6 +677,75 @@ class _HomePageState extends State<HomePage> with RouteAware {
           }
 
           final displayCount = entities.length > 6 ? 6 : entities.length;
+          final bool adsActive = AdHelper.showAdsEnabled;
+
+          if (!adsActive) {
+            return SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                if (index >= entities.length) return const SizedBox.shrink();
+                final entity = entities[index];
+                return AppTransition(
+                  index: index + 5,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: ImageItemWidget(
+                      onMenuSelected: (action) async {
+                        switch (action) {
+                          case MediaMenuAction.detail:
+                            routeToDetailPage(entity);
+                            break;
+                          case MediaMenuAction.info:
+                            showInfoDialog(context, entity);
+                            break;
+                          case MediaMenuAction.thumb:
+                            showThumb(entity, 500);
+                            break;
+                          case MediaMenuAction.share:
+                            shareItem(context, entity);
+                            break;
+                          case MediaMenuAction.delete:
+                            deleteCurrentItem(context, entity);
+                            break;
+                          case MediaMenuAction.addToFavourite:
+                            await _toggleFavourite(context, entity, index);
+                            break;
+                          case MediaMenuAction.addToPlaylist:
+                            final file = await entity.file;
+                            addToPlaylist(
+                              MediaItem(
+                                path: file!.path,
+                                isNetwork: false,
+                                type: entity.type == AssetType.audio
+                                    ? "audio"
+                                    : "video",
+                                id: entity.id,
+                                isFavourite: entity.isFavorite,
+                              ),
+                              context,
+                            );
+                            break;
+                        }
+                      },
+                      onTap: () async {
+                        _navigateToPlayer(
+                          context,
+                          entities.cast<AssetEntity>(),
+                          index,
+                        );
+                      },
+                      isGrid: false,
+                      entity: entity,
+                      option: const ThumbnailOption(
+                        size: ThumbnailSize.square(
+                          150,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }, childCount: displayCount),
+            );
+          }
 
           return SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {

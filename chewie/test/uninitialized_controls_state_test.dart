@@ -22,6 +22,9 @@ void main() {
       autoPlay: false,
       looping: false,
       customControls: MaterialControls(key: materialControlsKey),
+      onNextVideo: () {},
+      onPreviousVideo: () {},
+      onSufflePressed: () {},
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -53,6 +56,9 @@ void main() {
         backgroundColor: Colors.black,
         iconColor: Colors.white,
       ),
+      onNextVideo: () {},
+      onPreviousVideo: () {},
+      onSufflePressed: () {},
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -82,6 +88,9 @@ void main() {
       autoPlay: false,
       looping: false,
       customControls: MaterialDesktopControls(key: materialControlsKey),
+      onNextVideo: () {},
+      onPreviousVideo: () {},
+      onSufflePressed: () {},
     );
     await tester.pumpWidget(
       MaterialApp(

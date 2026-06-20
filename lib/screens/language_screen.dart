@@ -52,11 +52,12 @@ class _LanguageScreenState extends State<LanguageScreen> {
               _buildHeader(context, colors),
               const SizedBox(height: 8),
               _buildLanguageList(settingsBox, colors),
-              Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: AdHelper.bannerAdWidget(size: AdSize.banner),
-              ),
+              if (AdHelper.showAdsEnabled)
+                Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: AdHelper.bannerAdWidget(size: AdSize.banner),
+                ),
             ],
           ),
         ),
@@ -143,9 +144,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
               // Show loader while ad is loading
               setState(() => _isAdLoading = true);
 
-              AdHelper.showInterstitialAd(() {
+              AdHelper.showInterstitialAd(context, () {
                 _onTapDone();
-              });
+              }, pageName: 'language');
 
               // if (mounted) setState(() => _isAdLoading = false);
             },

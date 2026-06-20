@@ -8,6 +8,8 @@
 
 #include <battery_plus/battery_plus_windows_plugin.h>
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
+#include <firebase_core/firebase_core_plugin_c_api.h>
+#include <firebase_remote_config/firebase_remote_config_plugin_c_api.h>
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <gal/gal_plugin_c_api.h>
 #include <screen_brightness_windows/screen_brightness_windows_plugin.h>
@@ -19,6 +21,10 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("BatteryPlusWindowsPlugin"));
   ConnectivityPlusWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
+  FirebaseCorePluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
+  FirebaseRemoteConfigPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FirebaseRemoteConfigPluginCApi"));
   FlutterSecureStorageWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterSecureStorageWindowsPlugin"));
   GalPluginCApiRegisterWithRegistrar(

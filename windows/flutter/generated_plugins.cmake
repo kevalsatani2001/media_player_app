@@ -5,6 +5,8 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   battery_plus
   connectivity_plus
+  firebase_core
+  firebase_remote_config
   flutter_secure_storage_windows
   gal
   screen_brightness_windows

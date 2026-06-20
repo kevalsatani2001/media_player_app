@@ -7,7 +7,7 @@ import 'local_state.dart';
 class LocaleBloc extends Bloc<LocaleEvent, LocaleState> {
   LocaleBloc()
       : super(LocaleState(
-    Locale(HiveService.languageCode ?? 'en'),
+    Locale(HiveService.languageCode),
   )) {
     on<ChangeLocale>((event, emit) async {
       await HiveService.saveLanguage(event.locale.languageCode);

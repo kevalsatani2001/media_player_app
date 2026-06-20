@@ -232,7 +232,10 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
   }
 
   Widget _buildAudioList(List<AssetEntity> entities, int adInterval) {
-    int totalCount = entities.length + (entities.length ~/ adInterval) + 1;
+    final bool adsActive = AdHelper.showAdsEnabled;
+    int totalCount = adsActive 
+        ? (entities.length + (entities.length ~/ adInterval) + 1)
+        : (entities.length + 1);
 
     return AnimationLimiter(
       child: ListView.builder(
@@ -242,14 +245,14 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
           final colors = Theme.of(context).extension<AppThemeColors>()!;
           if (index == totalCount - 1) return const SizedBox(height: 100);
 
-          if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+          if (adsActive && index != 0 && (index + 1) % (adInterval + 1) == 0) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: AdHelper.bannerAdWidget(size: AdSize.banner),
             );
           }
 
-          final int actualIndex = index - (index ~/ (adInterval + 1));
+          final int actualIndex = adsActive ? (index - (index ~/ (adInterval + 1))) : index;
           if (actualIndex >= entities.length) return const SizedBox.shrink();
           final audio = entities[actualIndex];
 
@@ -443,12 +446,7 @@ class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
       );
     }
 
-    _albumAudioClickCount++;
-    if (_albumAudioClickCount % 4 == 0) {
-      AdHelper.showInterstitialAd(() => openPlayer());
-    } else {
-      openPlayer();
-    }
+    AdHelper.showInterstitialAd(context, () => openPlayer(), pageName: 'audio');
   }
 
   String formatDuration(int seconds) {

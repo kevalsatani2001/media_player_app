@@ -100,11 +100,11 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           : Stack(
         children: [
           Column(
-            children: [
-              Expanded(child: _buildItemList()),
-              AdHelper.bannerAdWidget(),
-            ],
-          ),
+              children: [
+                Expanded(child: _buildItemList()),
+                if (AdHelper.showAdsEnabled) AdHelper.bannerAdWidget(),
+              ],
+            ),
           const SmartMiniPlayer(forceMiniMode: true),
         ],
       ),
@@ -113,13 +113,16 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
 
   Widget _buildItemList() {
     const int adInterval = 4;
-    int totalCount = currentItems.length + (currentItems.length ~/ adInterval);
+    final bool adsActive = AdHelper.showAdsEnabled;
+    int totalCount = adsActive 
+        ? (currentItems.length + (currentItems.length ~/ adInterval))
+        : currentItems.length;
 
     return ListView.builder(
       itemCount: totalCount,
       padding: const EdgeInsets.only(top: 10),
       itemBuilder: (_, i) {
-        if (i != 0 && (i + 1) % (adInterval + 1) == 0) {
+        if (adsActive && i != 0 && (i + 1) % (adInterval + 1) == 0) {
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 7.5, horizontal: 0),
             alignment: Alignment.center,
@@ -127,7 +130,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
           );
         }
 
-        final int actualIndex = i - (i ~/ (adInterval + 1));
+        final int actualIndex = adsActive ? (i - (i ~/ (adInterval + 1))) : i;
         if (actualIndex >= currentItems.length) return const SizedBox.shrink();
 
         final item = currentItems[actualIndex];
@@ -450,7 +453,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       }
     }
 
-    AdHelper.showInterstitialAd(() => startNavigation());
+    AdHelper.showInterstitialAd(context, () => startNavigation(), pageName: 'playlist');
   }
 
   Future<void> routeToDetailPage(

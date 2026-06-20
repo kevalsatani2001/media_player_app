@@ -35,25 +35,13 @@ class GalleryItemWidget extends StatelessWidget {
         }
 
         // âœ¨ àª•à«àª²àª¿àª• àª•àª¾àª‰àª¨à«àªŸàª° àª²à«‹àªœàª¿àª•
-        _clickCount++;
-
-        if (_clickCount % 3 == 0) {
-          // àª¦àª° à«© àªœà«€ àª•à«àª²àª¿àª• àªªàª° àªàª¡ àª¬àª¤àª¾àªµà«‹
-          AdHelper.showInterstitialAd(() {
-            navigator.push<void>(
-              MaterialPageRoute<void>(
-                builder: (_) => GalleryContentListPage(path: item),
-              ),
-            );
-          });
-        } else {
-          // àª¬àª¾àª•à«€àª¨à«€ àª•à«àª²àª¿àª• àªªàª° àª¸à«€àª§à«àª‚ àª¨à«‡àªµàª¿àª—à«‡àª¶àª¨
+        AdHelper.showInterstitialAd(context, () {
           navigator.push<void>(
             MaterialPageRoute<void>(
               builder: (_) => GalleryContentListPage(path: item),
             ),
           );
-        }
+        }, pageName: 'folder');
       },
       onLongPress: () => (Platform.isIOS || Platform.isMacOS)
           ? showDialog<void>(

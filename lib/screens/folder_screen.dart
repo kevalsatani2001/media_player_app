@@ -79,7 +79,7 @@ class _FolderScreenState extends State<FolderScreen> {
         ),
       );
 
-      if (i + chunkSize < folderList.length) {
+      if (AdHelper.showAdsEnabled && (i + chunkSize < folderList.length)) {
         slivers.add(
           SliverToBoxAdapter(
             child: Container(
@@ -118,7 +118,8 @@ class _FolderScreenState extends State<FolderScreen> {
               ),
             ),
             // ✨ હંમેશા નીચે દેખાતી એડ
-            AdHelper.bannerAdWidget(size: AdSize.banner),
+            if (AdHelper.showAdsEnabled)
+              AdHelper.bannerAdWidget(size: AdSize.banner),
           ],
         ),
       ),

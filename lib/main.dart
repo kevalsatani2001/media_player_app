@@ -7,11 +7,18 @@ import 'package:media_player/services/connectivity_service.dart';
 import 'package:media_player/services/custom_video_thumbnail_store.dart';
 import 'package:media_player/services/notification_service.dart';
 import 'package:media_player/utils/app_imports.dart';
+
+import 'firebase_options.dart';
 Offset position = Offset(245.4, 673.4);
 bool isPositionInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Firebase initialize karvu
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await AdHelper.initRemoteConfig();
   await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
   await MobileAds.instance.initialize();

@@ -368,7 +368,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                       children: [Positioned.fill(child: _buildAudioPlayer())],
                     ),
                   ),
-                  if (isAudio)
+                  if (isAudio && AdHelper.showAdsEnabled)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: AdHelper.adaptiveBannerWidget(context),

@@ -80,20 +80,20 @@ class PlaylistScreen extends StatelessWidget {
         }
 
         const int adInterval = 4;
-        int totalCount = playlists.length + (playlists.length ~/ adInterval);
+        final bool adsActive = AdHelper.showAdsEnabled;
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           itemCount: playlists.length,
           itemBuilder: (context, index) {
-            if (index != 0 && (index + 1) % (adInterval + 1) == 0) {
+            if (adsActive && index != 0 && (index + 1) % (adInterval + 1) == 0) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: AdHelper.bannerAdWidget(size: AdSize.banner),
               );
             }
 
-            final int actualIndex = index - (index ~/ (adInterval + 1));
+            final int actualIndex = adsActive ? (index - (index ~/ (adInterval + 1))) : index;
             if (actualIndex >= playlists.length) return const SizedBox.shrink();
 
             final playlist = playlists[actualIndex];
@@ -131,9 +131,9 @@ class PlaylistScreen extends StatelessWidget {
             );
           }
 
-          AdHelper.showInterstitialAd(() {
+          AdHelper.showInterstitialAd(context, () {
             goToPlaylist();
-          });
+          }, pageName: 'playlist');
         },
         child: Container(
           decoration: BoxDecoration(

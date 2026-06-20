@@ -22,6 +22,7 @@ export 'package:flutter/cupertino.dart'
     hide RefreshCallback, Gradient, TextStyle;
 export 'package:flutter/services.dart';
 export 'package:flutter_localizations/flutter_localizations.dart';
+export 'package:firebase_core/firebase_core.dart';
 
 // ===========================================================================
 // 2. EXTERNAL PLUGINS & PACKAGES (Third Party)

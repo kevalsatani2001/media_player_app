@@ -137,8 +137,7 @@ class _AudioScreenState extends State<AudioScreen> {
               // àª¤àª®àª¾àª°à«àª‚ àªœà«‚àª¨à«àª‚ Search Button
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
+                  Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SearchScreen()),
                   );
                 },
@@ -537,8 +536,9 @@ class _AudioBodyState extends State<_AudioBody>
 
         const int adInterval = 15;
         final List<dynamic> displayItems = [];
+        final bool adsActive = AdHelper.showAdsEnabled;
         for (int i = 0; i < entities.length; i++) {
-          if (i > 0 && i % adInterval == 0) {
+          if (adsActive && i > 0 && i % adInterval == 0) {
             displayItems.add(const AdPlaceholder());
           }
           displayItems.add(entities[i]);
@@ -735,17 +735,9 @@ class _AudioBodyState extends State<_AudioBody>
       );
     }
 
-    _audioClickCount++;
-
-    if (_audioClickCount % 4 == 0) {
-      debugPrint("Showing Interstitial Ad before audio player...");
-
-      AdHelper.showInterstitialAd(() {
-        openAudioPlayer();
-      });
-    } else {
+    AdHelper.showInterstitialAd(context, () {
       openAudioPlayer();
-    }
+    }, pageName: 'audio');
   }
 
   // Widget _buildLeadingIcon(
