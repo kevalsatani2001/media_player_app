@@ -91,11 +91,6 @@ class _FavouriteButtonState extends State<FavouriteButton> {
           ),
         );
 
-        IconButton(
-          icon: Icon(favState ? Icons.favorite : Icons.favorite_border),
-          onPressed: _toggleFavourite,
-          color: favState ? Colors.red : null,
-        );
       },
     );
   }

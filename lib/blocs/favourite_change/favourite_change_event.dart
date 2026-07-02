@@ -1,5 +1,4 @@
 import 'package:photo_manager/photo_manager.dart';
-import 'package:bloc/bloc.dart';
 
 abstract class FavouriteChangeState {}
 

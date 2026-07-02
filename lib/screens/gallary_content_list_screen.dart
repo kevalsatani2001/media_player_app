@@ -218,35 +218,6 @@ class _GalleryContentListPageState extends State<GalleryContentListPage> {
     );
   }
 
-  Widget _buildItemWithAd(BuildContext context, int index, int adInterval, int listLength) {
-    bool isAdPosition = (index != 0 && (index + 1) % (adInterval + 1) == 0);
-    bool isLastAdForSmallList = (listLength < adInterval && index == listLength);
-
-    if (isAdPosition || isLastAdForSmallList) {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
-            ),
-          ),
-        ),
-      );
-    }
-
-    final int actualIndex = index - (index ~/ (adInterval + 1));
-
-    if (actualIndex >= listLength) return const SizedBox.shrink();
-
-    return _buildItem(context, actualIndex);
-  }
 
   int findChildIndexBuilder({
     required String id,

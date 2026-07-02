@@ -166,7 +166,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
                   clipBehavior: Clip.antiAlias,
                   child: assetAntityImage(
                     AssetEntity(
-                      id: item.id ?? "",
+                      id: item.id,
                       typeInt: item.type == 'audio' ? 3 : 2,
                       width: 80,
                       height: 80,
@@ -386,7 +386,7 @@ class _PlaylistItemsScreenState extends State<PlaylistItemsScreen> {
       ) {
     return FutureBuilder<File?>(
       future: AssetEntity(
-        id: item.id ?? "",
+        id: item.id,
         typeInt: item.type == 'audio' ? 3 : 2,
         width: 80,
         height: 80,

@@ -10,31 +10,9 @@ import '../utils/app_colors.dart';
 import '../widgets/app_button.dart';
 import 'app_toast.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import '../models/media_item.dart';
-import '../models/playlist_model.dart';
-import '../utils/app_colors.dart';
-import '../widgets/app_button.dart';
-import 'app_toast.dart';
 
 
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:media_player/screens/setting_screen.dart';
-import 'package:media_player/widgets/text_widget.dart';
-import '../models/media_item.dart';
-import '../models/playlist_model.dart';
-import '../utils/app_colors.dart';
-import '../widgets/app_button.dart';
-import 'app_toast.dart';
 
 void addToPlaylist(MediaItem currentItem, BuildContext context) {
   final colors = Theme.of(context).extension<AppThemeColors>()!;

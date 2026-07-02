@@ -958,33 +958,53 @@ class AdHelper {
   /// AdMob **native** test unit — replace with your production native ad unit IDs.
   /// See https://developers.google.com/admob/android/test-ads
   static String get nativeVideoPauseOverlayId {
-    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/2247696110';
-    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/3986624511';
-    return '';
+    final val = Platform.isAndroid
+        ? _remoteConfig?.getString('android_native_video_pause_overlay_id')
+        : _remoteConfig?.getString('ios_native_video_pause_overlay_id');
+    if (val != null && val.isNotEmpty) return val;
+    return Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/2247696110'
+        : 'ca-app-pub-3940256099942544/3986624511';
   }
 
   static String get bannerId {
-    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/6300978111';
-    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/2934735716';
-    return '';
+    final val = Platform.isAndroid
+        ? _remoteConfig?.getString('android_banner_ad_unit_id')
+        : _remoteConfig?.getString('ios_banner_ad_unit_id');
+    if (val != null && val.isNotEmpty) return val;
+    return Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/6300978111'
+        : 'ca-app-pub-3940256099942544/2934735716';
   }
 
   static String get interstitialId {
-    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/1033173712';
-    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/4411468910';
-    return '';
+    final val = Platform.isAndroid
+        ? _remoteConfig?.getString('android_interstitial_ad_unit_id')
+        : _remoteConfig?.getString('ios_interstitial_ad_unit_id');
+    if (val != null && val.isNotEmpty) return val;
+    return Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/1033173712'
+        : 'ca-app-pub-3940256099942544/4411468910';
   }
 
   static String get rewardedId {
-    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/5224354917';
-    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/1712485313';
-    return '';
+    final val = Platform.isAndroid
+        ? _remoteConfig?.getString('android_rewarded_ad_unit_id')
+        : _remoteConfig?.getString('ios_rewarded_ad_unit_id');
+    if (val != null && val.isNotEmpty) return val;
+    return Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/5224354917'
+        : 'ca-app-pub-3940256099942544/1712485313';
   }
 
   static String get appOpenId {
-    if (Platform.isAndroid) return 'ca-app-pub-3940256099942544/9257395921';
-    if (Platform.isIOS) return 'ca-app-pub-3940256099942544/5662855259';
-    return '';
+    final val = Platform.isAndroid
+        ? _remoteConfig?.getString('android_app_open_ad_unit_id')
+        : _remoteConfig?.getString('ios_app_open_ad_unit_id');
+    if (val != null && val.isNotEmpty) return val;
+    return Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/9257395921'
+        : 'ca-app-pub-3940256099942544/5662855259';
   }
 
   static FirebaseRemoteConfig? _remoteConfig;
@@ -1006,6 +1026,16 @@ class AdHelper {
       );
       await _remoteConfig!.setDefaults(const {
         'show_ads_enabled': true,
+        'android_native_video_pause_overlay_id': 'ca-app-pub-3940256099942544/2247696110',
+        'ios_native_video_pause_overlay_id': 'ca-app-pub-3940256099942544/3986624511',
+        'android_banner_ad_unit_id': 'ca-app-pub-3940256099942544/6300978111',
+        'ios_banner_ad_unit_id': 'ca-app-pub-3940256099942544/2934735716',
+        'android_interstitial_ad_unit_id': 'ca-app-pub-3940256099942544/1033173712',
+        'ios_interstitial_ad_unit_id': 'ca-app-pub-3940256099942544/4411468910',
+        'android_rewarded_ad_unit_id': 'ca-app-pub-3940256099942544/5224354917',
+        'ios_rewarded_ad_unit_id': 'ca-app-pub-3940256099942544/1712485313',
+        'android_app_open_ad_unit_id': 'ca-app-pub-3940256099942544/9257395921',
+        'ios_app_open_ad_unit_id': 'ca-app-pub-3940256099942544/5662855259',
         'show_interstitial_on_home': true,
         'show_interstitial_on_player': true,
         'show_interstitial_on_language': true,
@@ -1015,8 +1045,9 @@ class AdHelper {
         'show_interstitial_on_audio': true,
         'show_interstitial_on_video': true,
         'show_interstitial_on_settings': true,
-        'interstitial_interval': 1,
-        'show_rewarded_on_player_count': 0,
+        'interstitial_interval': 3,
+        'offline_wait_timer_seconds': 30,
+        'show_rewarded_on_player_count': 5,
       });
       await _remoteConfig!.fetchAndActivate();
       preloadInterstitial();
@@ -1064,6 +1095,9 @@ class AdHelper {
 
   static int get showRewardedOnPlayerCount =>
       _remoteConfig?.getInt('show_rewarded_on_player_count') ?? 0;
+
+  static int get offlineWaitTimerSeconds =>
+      _remoteConfig?.getInt('offline_wait_timer_seconds') ?? 30;
 
   static String str(Object? value) => value?.toString() ?? '';
 
@@ -1200,7 +1234,6 @@ class AdHelper {
     );
   }
 
-  static DateTime? _lastAdShowTime;
   static bool isFullScreenAdShowing = false;
   static bool _hasShownAppOpenAdThisSession = false;
 
@@ -1329,11 +1362,12 @@ class AdHelper {
     }
 
     // Special rewarded ad check for player screen
-    if (pageName == 'player') {
+    if (pageName == 'player' || pageName == 'video' || pageName == 'home' || pageName == 'favourite' || pageName == 'playlist') {
       _playerPlayCount++;
       final rewardedCount = showRewardedOnPlayerCount;
+      debugPrint('showInterstitialAd (pageName: $pageName): playCount incremented to $_playerPlayCount. Target rewardedCount = $rewardedCount');
       if (rewardedCount > 0 && _playerPlayCount % rewardedCount == 0) {
-        debugPrint('Player play count (' + str(_playerPlayCount) + ') hit rewarded count (' + str(rewardedCount) + '). Showing rewarded ad.');
+        debugPrint('Hit rewarded count! Showing rewarded ad instead of interstitial.');
         showRewardedAd(context, onAdDismissed, errorFunction: onAdDismissed);
         return;
       }
@@ -1388,6 +1422,28 @@ class AdHelper {
     );
 
     ad.show();
+  }
+
+  static void showRewardedAdWithCount(
+    BuildContext context,
+    VoidCallback onAdDismissed, {
+    VoidCallback? errorFunction,
+  }) {
+    debugPrint('showRewardedAdWithCount: showAdsEnabled = $showAdsEnabled, playCount = $_playerPlayCount');
+    if (!showAdsEnabled) {
+      onAdDismissed();
+      return;
+    }
+    _playerPlayCount++;
+    final rewardedCount = showRewardedOnPlayerCount;
+    debugPrint('showRewardedAdWithCount: playCount incremented to $_playerPlayCount. Target rewardedCount = $rewardedCount');
+    if (rewardedCount > 0 && _playerPlayCount % rewardedCount == 0) {
+      debugPrint('Hit rewarded count! Loading rewarded ad.');
+      showRewardedAd(context, onAdDismissed, errorFunction: errorFunction ?? onAdDismissed);
+    } else {
+      debugPrint('No rewarded ad this time. Skipping.');
+      onAdDismissed();
+    }
   }
 
   // --- 7. Rewarded Ad ---
@@ -1899,12 +1955,13 @@ class _OfflineTimerDialog extends StatefulWidget {
 }
 
 class _OfflineTimerDialogState extends State<_OfflineTimerDialog> {
-  int _timeLeft = 30;
+  late int _timeLeft;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _timeLeft = AdHelper.offlineWaitTimerSeconds;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timeLeft > 0) {
         if (mounted) {

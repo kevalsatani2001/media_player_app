@@ -1,7 +1,6 @@
 import 'package:media_player/screens/playlist_item_screen.dart';
 import 'package:media_player/screens/audio_player_screen.dart';
 
-import '../services/ads_service.dart';
 import '../utils/app_imports.dart';
 
 class SearchScreen extends StatefulWidget {

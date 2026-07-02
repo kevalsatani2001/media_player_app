@@ -109,7 +109,7 @@ class _FavouriteGrid extends StatelessWidget {
                         .whereType<AssetEntity>()
                         .toList();
 
-                    final int actualIndex = validEntities.indexOf(entity as AssetEntity);
+                    final int actualIndex = validEntities.indexOf(entity);
                     if (actualIndex != -1) {
                       _navigateToPlayer(context, validEntities, actualIndex);
                     }

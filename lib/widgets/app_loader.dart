@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../utils/app_colors.dart';
 import 'custom_loader.dart';
 
 class AppLoader extends StatelessWidget {
@@ -10,7 +9,6 @@ class AppLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return  Center(
       child: CustomLoader(),
     );

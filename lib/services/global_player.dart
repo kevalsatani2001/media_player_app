@@ -1248,14 +1248,11 @@ class GlobalPlayer extends ChangeNotifier {
     }
   }
 
-  my.MediaItem? _currentMediaItem;
 
   set currentMediaItem(my.MediaItem? value) {
-    _currentMediaItem = value;
     notifyListeners();
   }
 
-  AssetEntity? _currentEntity;
 
   void stopAndClose() {
     if (videoController != null) {

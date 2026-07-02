@@ -15,7 +15,6 @@ class GalleryItemWidget extends StatelessWidget {
   final ValueSetter<VoidCallback> setState;
 
   // âœ¨ àª¸à«àªŸà«‡àªŸàª¿àª• àª•àª¾àª‰àª¨à«àªŸàª°: àªœà«‡ àª®à«‡àª®àª°à«€àª®àª¾àª‚ àª¸à«àªŸà«‹àª° àª°àª¹à«‡àª¶à«‡ àª…àª¨à«‡ àª¦àª°à«‡àª• àª•à«àª²àª¿àª• àª—àª£àª¶à«‡
-  static int _clickCount = 0;
 
   Widget buildGalleryItemWidget(AssetPathEntity item, BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;

@@ -657,9 +657,14 @@ class _PlayerScreenState extends State<PlayerScreen>
 
     controller.removeListener(_videoListener);
 
-    playerService.playNext(() {
-      if (mounted) setState(() {});
-    });
+    AdHelper.showRewardedAdWithCount(
+      context,
+      () {
+        playerService.playNext(() {
+          if (mounted) setState(() {});
+        });
+      },
+    );
   }
 
   void _toggleRotation() {
@@ -5046,7 +5051,12 @@ class _PlayerScreenState extends State<PlayerScreen>
         const SizedBox(width: 40),
         _buildCircularButton(
           icon: AppSvg.skipNext,
-          onPressed: () => playerService.playNext(() => setState(() {})),
+          onPressed: () {
+            AdHelper.showRewardedAdWithCount(
+              context,
+              () => playerService.playNext(() => setState(() {})),
+            );
+          },
         ),
       ],
     );
@@ -5193,8 +5203,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                         if (settings.previousNextButton)
                           _buildCircularButton(
                             icon: AppSvg.skipNext,
-                            onPressed: () =>
-                                playerService.playNext(() => setState(() {})),
+                            onPressed: () {
+                              AdHelper.showRewardedAdWithCount(
+                                context,
+                                () => playerService.playNext(() => setState(() {})),
+                              );
+                            },
                           ),
                         if (settings.forwardBackwardButton)
                           IconButton(
@@ -5368,84 +5382,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     setState(() {});
   }
 
-  void _showSettingsMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(30),
-              ),
-              border: Border.all(color: Colors.white10),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                const AppText(
-                  "videoSettings",
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                ),
-                const SizedBox(height: 10),
-                const Divider(color: Colors.white12, thickness: 1),
-                const SizedBox(height: 10),
-
-                // 1. Playback Speed Item
-                _buildSettingsTile(
-                  icon: Icons.speed_rounded,
-                  title: "playbackSpeed",
-                  value: _formatPlaybackSpeed(
-                    playerService.playbackSpeed,
-                    context,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showSpeedSelection();
-                  },
-                ),
-
-                // _buildSettingsTile(
-                //   icon: Icons.aspect_ratio_rounded,
-                //   title: "Aspect Ratio",
-                //   value: _getFitText(_videoFit),
-                //   onTap: () {
-                //     Navigator.pop(context);
-                //     // ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â®ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ Aspect Ratio ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â²ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂµÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¶ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â«ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹
-                //   },
-                // ),
-                //
-                // _buildSettingsTile(
-                //   icon: Icons.subtitles_rounded,
-                //   title: "Subtitles",
-                //   value: "Off",
-                //   onTap: () {},
-                // ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   String _formatPlaybackSpeed(double speed, BuildContext context) {
     // 1. Convert the speed double value to a string (e.g., 1.25)
@@ -5472,52 +5408,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     return "${localizedSpeed}x";
   }
 
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: ListTile(
-        onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        title: AppText(
-          title,
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppText(
-              value,
-              color: Color(0XFF3D57F9),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            const SizedBox(width: 5),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.white24,
-              size: 14,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showSpeedSelection() {
     showModalBottomSheet(
@@ -5681,202 +5571,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     _refreshUiThrottled();
   }
 
-  void _playTrimmedVideo(String path) async {
-    try {
-      final currentPos = playerService.currentPosition.inMilliseconds;
-      await playerService.loadExternalFilePath(path, () {
-        if (!mounted) return;
-        setState(() {});
-        _checkVideoEnd();
-      }, seekToMs: currentPos);
-    } catch (e) {
-      debugPrint("Error loading trimmed video: $e");
-    }
-  }
 
-  void _showDisplaySettings(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      // Ã Âªâ€¢Ã ÂªÂ¾Ã ÂªÅ¡ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂµÃ Â«â‚¬ Ã Âªâ€¦Ã ÂªÂ¸Ã ÂªÂ° Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÅ¸Ã Â«â€¡
-      builder: (context) {
-        return BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: DefaultTabController(
-            length: 6,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.80,
-              decoration: BoxDecoration(
-                color: const Color(0XFF0A0A0A).withOpacity(0.85),
-                // Deep Dark Glass
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(35),
-                ),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  // --- Handle Bar ---
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 50,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: Colors.white12,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-
-                  // --- Header ---
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(25, 10, 15, 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const AppText(
-                          "settings",
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            color: Colors.white70,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.05),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // --- Floating Modern Tab Bar ---
-                  Container(
-                    height: 38,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TabBar(
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      dividerColor: Colors.transparent,
-                      indicatorSize: TabBarIndicatorSize.tab,
-
-                      indicator: BoxDecoration(
-                        color: const Color(0XFF3D57F9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white38,
-
-                      // Ã ÂªÂ«Ã Â«â€¹Ã ÂªÂ¨Ã Â«ÂÃ ÂªÅ¸ Ã ÂªÂ¸Ã ÂªÂ¾Ã ÂªË†Ã ÂªÂ Ã Â«Â§Ã Â«Â¨-Ã Â«Â§Ã Â«Â© Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÅ“Ã Â«â€¡Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ®Ã Â«â€¹Ã ÂªÅ¸Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¨Ã ÂªÂ¾ Ã ÂªÂ²Ã ÂªÂ¾Ã Âªâ€”Ã Â«â€¡
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                        letterSpacing: 0.3,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12.5,
-                      ),
-
-                      tabs: [
-                        Tab(text: context.tr("style")),
-                        Tab(text: context.tr("screen")),
-                        Tab(text: context.tr("controls")),
-                        Tab(text: context.tr("navigation")),
-                        Tab(text: context.tr("text")),
-                        Tab(text: context.tr("layout")),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // --- Content Area ---
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(30),
-                      ),
-                      child: Container(
-                        color: Colors.black26,
-                        child: TabBarView(
-                          physics: const BouncingScrollPhysics(),
-                          children: [
-                            Consumer<SettingsProvider>(
-                              builder: (_, s, __) => _styleTab(s),
-                            ),
-
-                            BlocProvider(
-                              create: (ctx) => ScreenSettingsBloc(
-                                Provider.of<SettingsProvider>(
-                                  context,
-                                  listen: false,
-                                ),
-                              ),
-                              child:
-                                  BlocConsumer<
-                                    ScreenSettingsBloc,
-                                    ScreenSettingsState
-                                  >(
-                                    //////////////////////////////////////////////////////////////////////// part 6 new player scareen//////////////////////////////////////////////////////////
-                                    listener: (_, state) =>
-                                        _applyScreenState(state),
-                                    builder: (blocContext, state) =>
-                                        _screenTabBloc(
-                                          state,
-                                          blocContext
-                                              .read<ScreenSettingsBloc>(),
-                                        ),
-                                  ),
-                            ),
-
-                            Consumer<SettingsProvider>(
-                              builder: (_, s, __) => _controlsTab(s),
-                            ),
-                            Consumer<SettingsProvider>(
-                              builder: (_, s, __) => _navigationTab(s),
-                            ),
-                            Consumer<SettingsProvider>(
-                              builder: (_, s, __) => _textTab(s),
-                            ),
-                            Consumer<SettingsProvider>(
-                              builder: (_, s, __) => _layoutTab(s),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   Future<bool> _showPipConfirmationDialog(BuildContext context) async {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
@@ -7816,52 +7511,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildCompactSlider(
-    String label,
-    int value,
-    Color color,
-    ValueChanged<double> onChange,
-  ) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 50,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12),
-          ),
-        ),
-        Expanded(
-          child: SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              activeTrackColor: color,
-              inactiveTrackColor: Colors.white10,
-              thumbColor: Colors.white,
-            ),
-            child: Slider(
-              value: value.toDouble(),
-              min: 0,
-              max: 255,
-              onChanged: onChange,
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 30,
-          child: Text(
-            value.toString(),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _presetColor(
     Color color,
@@ -7883,110 +7532,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _applyButton(
-    Color selectedColor,
-    TextEditingController hexController,
-    Function applyHex,
-    ValueChanged<Color> onPick,
-  ) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0XFF3D57F9),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 25),
-      ),
-      onPressed: () {
-        applyHex(hexController.text);
-        onPick(selectedColor);
-        Navigator.pop(context);
-      },
-      child: const AppText(
-        "apply",
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
 
-  Widget _verticalManualSlider(
-    String label,
-    int value,
-    List<Color> gradientColors,
-    ValueChanged<double> onChanged,
-    bool isLandscape,
-  ) {
-    // Landscape Ã ÂªÂ®Ã ÂªÂ¾Ã Âªâ€š Ã ÂªÂ¹Ã ÂªÂ¾Ã ÂªË†Ã ÂªÅ¸ Ã Âªâ€œÃ Âªâ€ºÃ Â«â‚¬ Ã ÂªÂ°Ã ÂªÂ¾Ã Âªâ€“Ã ÂªÂµÃ Â«â‚¬ Ã ÂªÂªÃ ÂªÂ¡Ã Â«â€¡
-    double sliderHeight = isLandscape ? 120 : 180;
-
-    return Column(
-      children: [
-        Text(
-          value.toString(),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: sliderHeight,
-          width: 30,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Vertical Gradient Track
-              Container(
-                width: 8,
-                height: sliderHeight,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: gradientColors,
-                  ),
-                ),
-              ),
-              // Rotated Slider
-              RotatedBox(
-                quarterTurns: 3,
-                // Ã Âªâ€ Ã ÂªÂ¨Ã ÂªÂ¾Ã ÂªÂ¥Ã Â«â‚¬ Ã ÂªÂ¸Ã Â«ÂÃ ÂªÂ²Ã ÂªÂ¾Ã Âªâ€¡Ã ÂªÂ¡Ã ÂªÂ° Ã Âªâ€°Ã ÂªÂ­Ã Â«ÂÃ Âªâ€š Ã ÂªÂ¥Ã ÂªË† Ã ÂªÅ“Ã ÂªÂ¶Ã Â«â€¡
-                child: SliderTheme(
-                  data: SliderThemeData(
-                    trackHeight: 0,
-                    thumbColor: Colors.white,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 9,
-                      elevation: 3,
-                    ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 15,
-                    ),
-                  ),
-                  child: Slider(
-                    value: value.toDouble(),
-                    min: 0,
-                    max: 255,
-                    onChanged: onChanged,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
 
   String getTranslationKey(String shortcutName) {
     switch (shortcutName) {

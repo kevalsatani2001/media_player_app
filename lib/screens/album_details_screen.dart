@@ -23,10 +23,8 @@ class AlbumDetailsScreen extends StatefulWidget {
 class _AlbumDetailsScreenState extends State<AlbumDetailsScreen> {
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final ScrollController _scrollController = ScrollController();
-  int _albumAudioClickCount = 0;
   String _selectedLetter = '';
   final Map<String, int> _letterIndices = {};
-  final double _itemHeight = 80.0;
 
   final Map<String, Future<File?>> _fileFutureCache = {};
   final Map<String, Future<Uint8List?>> _artworkFutureCache = {};

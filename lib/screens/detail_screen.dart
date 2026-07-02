@@ -135,7 +135,6 @@ Future<void> showInfoDialog(BuildContext context, AssetEntity entity) async {
   final colors = Theme.of(context).extension<AppThemeColors>()!;
   final LatLng? latlng = await entity.latlngAsync();
   final double? lat = latlng?.latitude ?? entity.latitude;
-  final double? lng = latlng?.longitude ?? entity.longitude;
 
   final Widget w = Center(
     child: Padding(
