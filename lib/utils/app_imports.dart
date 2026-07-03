@@ -41,7 +41,7 @@ export 'package:video_player/video_player.dart';
 export 'package:gal/gal.dart';
 export 'package:path_provider/path_provider.dart';
 export 'package:video_trimmer/video_trimmer.dart';
-export 'package:video_thumbnail/video_thumbnail.dart';
+export 'package:get_thumbnail_video/video_thumbnail.dart';
 export 'package:media_player/screens/video_trim_screen.dart';
 export 'package:flutter/rendering.dart';
 export 'package:screen_brightness/screen_brightness.dart';
