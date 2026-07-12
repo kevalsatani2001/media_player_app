@@ -219,7 +219,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                       backgroundColor: Color(0xFF2A2A2A),
                       child: Icon(
                         Icons.music_note_rounded,
-                        color: Colors.blueAccent,
+                        color: Colors.pinkAccent,
                         size: 24,
                       ),
                     ),
@@ -321,7 +321,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                       value: (pos / dur).clamp(0.0, 1.0),
                       backgroundColor: Colors.white10,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.blueAccent,
+                        Colors.pinkAccent,
                       ),
                       minHeight: 1.5,
                     ),
@@ -341,7 +341,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: const BoxDecoration(
-          color: Colors.blueAccent,
+          color: Colors.pinkAccent,
           shape: BoxShape.circle,
         ),
         child: Icon(

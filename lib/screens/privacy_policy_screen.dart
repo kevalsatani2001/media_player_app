@@ -126,7 +126,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   AppText(
-                    "Ã‚Â© ${DateTime.now().year} ${context.tr("allRightsReserved")}",
+                    "© ${DateTime.now().year} ${context.tr("allRightsReserved")}",
                     fontSize: 12,
                     color: colors.secondaryText.withOpacity(0.5),
                   ),

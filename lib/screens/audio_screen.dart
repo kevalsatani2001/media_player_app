@@ -717,10 +717,9 @@ class _AudioBodyState extends State<_AudioBody>
             ),
           ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // àª† àª•à«‹àª¡ àªªà«‡àªœàª¨à«‡ àª¨à«€àªšà«‡àª¥à«€ àª‰àªªàª° àª…àª¨à«‡ àª‰àªªàª°àª¥à«€ àª¨à«€àªšà«‡ àª²àªˆ àªœàª¶à«‡
-            const begin = Offset(0.0, 1.0); // à«§.à«¦ àªàªŸàª²à«‡ àª•à«‡ àª›à«‡àª• àª¨à«€àªšà«‡àª¥à«€ àª¶àª°à«‚ àª¥àª¶à«‡
-            const end = Offset.zero; // à«¦.à«¦ àªàªŸàª²à«‡ àª•à«‡ àª¨à«‹àª°à«àª®àª² àªœàª—à«àª¯àª¾àª àª†àªµà«€ àªœàª¶à«‡
-            const curve = Curves.easeInOut;
+             const begin = Offset(0.0, 1.0);
+             const end = Offset.zero;
+             const curve = Curves.easeInOut;
 
             var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
             var offsetAnimation = animation.drive(tween);
@@ -730,7 +729,7 @@ class _AudioBodyState extends State<_AudioBody>
               child: child,
             );
           },
-          transitionDuration: const Duration(milliseconds: 400), // àªàª¨àª¿àª®à«‡àª¶àª¨àª¨à«€ àª¸à«àªªà«€àª¡
+          transitionDuration: const Duration(milliseconds: 400),
         ),
       );
     }

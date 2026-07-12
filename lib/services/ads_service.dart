@@ -712,7 +712,7 @@
 //         cornerRadius: 12,
 //         callToActionTextStyle: NativeTemplateTextStyle(
 //           textColor: Colors.white,
-//           backgroundColor: const Color(0xFF3D57F9),
+//           backgroundColor: const Color(0xFFFF6AA6),
 //           style: NativeTemplateFontStyle.bold,
 //           size: 13.5,
 //         ),
@@ -823,7 +823,7 @@
 //                                     height: adH.clamp(200.0, 380.0),
 //                                     child: const Center(
 //                                       child: CircularProgressIndicator(
-//                                         color: Color(0xFF3D57F9),
+//                                         color: Color(0xFFFF6AA6),
 //                                       ),
 //                                     ),
 //                                   )
@@ -1711,7 +1711,7 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
         cornerRadius: 12,
         callToActionTextStyle: NativeTemplateTextStyle(
           textColor: Colors.white,
-          backgroundColor: const Color(0xFF3D57F9),
+          backgroundColor: const Color(0xFFFF6AA6),
           style: NativeTemplateFontStyle.bold,
           size: 13.5,
         ),
@@ -1822,7 +1822,7 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
                                     height: adH.clamp(200.0, 380.0),
                                     child: const Center(
                                       child: CircularProgressIndicator(
-                                        color: Color(0xFF3D57F9),
+                                        color: Color(0xFFFF6AA6),
                                       ),
                                     ),
                                   )

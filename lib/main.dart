@@ -263,7 +263,7 @@ class NavigatorKey {
 ## zoomin icon
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9" />
+    <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6" />
 
     <!-- Centered group -->
     <g transform="translate(-5 -5)">
@@ -282,7 +282,7 @@ class NavigatorKey {
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Background -->
-    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9" />
+    <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6" />
 
     <!-- Centered icon -->
     <g transform="translate(-5 -5)">
@@ -302,7 +302,7 @@ class NavigatorKey {
 ##ic_swap_vert
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
+  <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6"/>
   <g stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M14 10v12m0 0l-3-3m3 3l3-3"/>
     <path d="M21 25V13m0 0l-3 3m3-3l3 3"/>
@@ -313,7 +313,7 @@ class NavigatorKey {
 ## ic_a_b_repeat
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
+    <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6"/>
     <g stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10 14h10l-2-2m2 2l-2 2"/>
         <path d="M25 21H15l2 2m-2-2l2-2"/>
@@ -327,7 +327,7 @@ class NavigatorKey {
 ## ic_swap_hor
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
+    <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6"/>
     <g stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M11 14H24M24 14L20 10M24 14L20 18" />
         <path d="M24 21H11M11 21L15 17M11 21L15 25" />
@@ -338,7 +338,7 @@ class NavigatorKey {
 ## ic_camera
 
 <svg width="35" height="35" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="17.5" cy="17.5" r="17.5" fill="#3D57F9"/>
+    <circle cx="17.5" cy="17.5" r="17.5" fill="#FF6AA6"/>
     <g stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M10 13C10 11.8954 10.8954 11 12 11H15L17 9H20L22 11H25C26.1046 11 27 11.8954 27 13V23C27 24.1046 26.1046 25 25 25H12C10.8954 25 10 24.1046 10 23V13Z" />
         <circle cx="18.5" cy="18" r="3" />

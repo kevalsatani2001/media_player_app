@@ -786,7 +786,7 @@ class GlobalPlayer extends ChangeNotifier {
       // ignore palette failures; notification will fall back to default colors
     }
 
-    final defaultColorValue = const Color(0xFF3D57F9).value;
+    final defaultColorValue = const Color(0xFFFF6AA6).value;
     final currentColorValue = (extractedColor?.value ?? defaultColorValue);
 
     final audioSources = queue
@@ -900,7 +900,7 @@ class GlobalPlayer extends ChangeNotifier {
   //     ],
   //     deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
   //     materialProgressColors: ChewieProgressColors(
-  //       playedColor: const Color(0XFF3D57F9),
+  //       playedColor: const Color(0XFFFF6AA6),
   //       backgroundColor: const Color(0XFFF6F6F6),
   //     ),
   //     onSufflePressed: () => toggleShuffle(),
@@ -1516,7 +1516,7 @@ class GlobalPlayer extends ChangeNotifier {
 //       // ignore palette failures; notification will fall back to default colors
 //     }
 //
-//     final defaultColorValue = const Color(0xFF3D57F9).value;
+//     final defaultColorValue = const Color(0xFFFF6AA6).value;
 //     final currentColorValue = (extractedColor?.value ?? defaultColorValue);
 //
 //     final audioSources = queue.asMap().map((i, item) {
@@ -1622,7 +1622,7 @@ class GlobalPlayer extends ChangeNotifier {
 //   //     ],
 //   //     deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
 //   //     materialProgressColors: ChewieProgressColors(
-//   //       playedColor: const Color(0XFF3D57F9),
+//   //       playedColor: const Color(0XFFFF6AA6),
 //   //       backgroundColor: const Color(0XFFF6F6F6),
 //   //     ),
 //   //     onSufflePressed: () => toggleShuffle(),

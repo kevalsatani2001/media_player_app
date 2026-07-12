@@ -74,7 +74,7 @@ class PlaylistScreen extends StatelessWidget {
         if (playlists.isEmpty) {
           return Center(
             child: AppText(
-              "no${type == 'audio' ? 'Audio' : 'Video'}PlaylistsFound",
+              "noPlaylistsFound",
             ),
           );
         }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "150463577498",
+    "project_id": "nova-player-app",
+    "storage_bucket": "nova-player-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150463577498:android:6b92d2c902e502ed468e23",
+        "android_client_info": {
+          "package_name": "com.nova.media.vision"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUGjNAtHPciq5FE_qckwDOMoK1gGwZMM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

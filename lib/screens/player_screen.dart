@@ -27,7 +27,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   static const List<Color> _presetColors = [
     Colors.white,
     Colors.black,
-    Color(0XFF3D57F9),
+    Color(0XFFFF6AA6),
     Colors.blueAccent,
     Colors.greenAccent,
     Colors.yellowAccent,
@@ -249,7 +249,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                     min: 1,
                     max: 120,
                     divisions: 119,
-                    activeColor: Color(0XFF3D57F9),
+                    activeColor: Color(0XFFFF6AA6),
                     onChanged: (v) => setS(() => minutes = v.round()),
                   ),
                   Row(
@@ -265,7 +265,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       const Spacer(),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0XFF3D57F9),
+                          backgroundColor: Color(0XFFFF6AA6),
                         ),
                         onPressed: () {
                           Navigator.pop(ctx);
@@ -1226,7 +1226,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           const Icon(
             Icons.music_note_rounded,
             size: 100,
-            color: Color(0XFF3D57F9), // તમારો બ્રાન્ડ કલર
+            color: Color(0XFFFF6AA6), // તમારો બ્રાન્ડ કલર
           ),
           const SizedBox(height: 10),
           AppText(
@@ -1756,14 +1756,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                         decoration: BoxDecoration(
                           color: _isBrightnessGesture
                               ? Colors.orangeAccent
-                              : Color(0XFF3D57F9),
+                              : Color(0XFFFF6AA6),
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
                               color:
                               (_isBrightnessGesture
                                   ? Colors.orangeAccent
-                                  : Color(0XFF3D57F9))
+                                  : Color(0XFFFF6AA6))
                                   .withOpacity(0.5),
                               blurRadius: 10,
                             ),
@@ -2977,7 +2977,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               indicatorSize: TabBarIndicatorSize.tab,
 
               indicator: BoxDecoration(
-                color: const Color(0XFF3D57F9),
+                color: const Color(0XFFFF6AA6),
                 borderRadius: BorderRadius.circular(8),
               ),
 
@@ -3104,7 +3104,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           title: AppText(
             video.title ?? "unknown",
             maxLines: 1,
-            color: isCurrent ? Color(0XFF3D57F9) : Colors.white,
+            color: isCurrent ? Color(0XFFFF6AA6) : Colors.white,
             fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
             fontSize: 13,
           ),
@@ -3140,7 +3140,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
                           color: isSelected
-                              ? const Color(0XFF3D57F9).withOpacity(0.45)
+                              ? const Color(0XFFFF6AA6).withOpacity(0.45)
                               : Colors.white.withOpacity(0.08),
                         ),
                       ),
@@ -3150,14 +3150,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                             ? Icons.radio_button_checked
                             : Icons.radio_button_off,
                         color: isSelected
-                            ? const Color(0XFF3D57F9)
+                            ? const Color(0XFFFF6AA6)
                             : Colors.white.withOpacity(0.55),
                         size: 20,
                       ),
                       title: AppText(
                         key,
                         color: isSelected
-                            ? const Color(0XFF3D57F9)
+                            ? const Color(0XFFFF6AA6)
                             : Colors.white.withOpacity(0.95),
                         fontSize: 15,
                         fontWeight: isSelected
@@ -3191,7 +3191,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             fontSize: 14,
           ),
           value: _applyRatioToAll,
-          activeColor: Color(0XFF3D57F9),
+          activeColor: Color(0XFFFF6AA6),
           controlAffinity: ListTileControlAffinity.leading,
           onChanged: (bool? value) {
             setState(() {
@@ -3283,7 +3283,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                           decoration: const InputDecoration(
                             enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Color(0XFF3D57F9)),
+                              borderSide: BorderSide(color: Color(0XFFFF6AA6)),
                             ),
                             suffixText: "x",
                           ),
@@ -3313,7 +3313,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                           value: currentSpeed,
                           min: 0.25,
                           max: 4.0,
-                          activeColor: Color(0XFF3D57F9),
+                          activeColor: Color(0XFFFF6AA6),
                           onChanged: (value) => updateSpeed(value),
                         ),
                       ),
@@ -3406,7 +3406,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   suffixIcon: IconButton(
                     icon: const Icon(
                       Icons.content_paste,
-                      color: Color(0XFF3D57F9),
+                      color: Color(0XFFFF6AA6),
                     ),
                     onPressed: () async {
                       // final data = await Clipboard.getData('text/plain');
@@ -3424,7 +3424,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0XFF3D57F9),
+                backgroundColor: Color(0XFFFF6AA6),
               ),
               onPressed: () {
                 _startNetworkStream(urlController.text, closeCount: 1);
@@ -3548,7 +3548,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final Color heartColor = !enabled
         ? Colors.white38
         : (entity.isFavorite
-            ? const Color(0XFF3D57F9)
+            ? const Color(0XFFFF6AA6)
             : Colors.white);
     final Color labelColor =
         enabled ? Colors.white.withOpacity(0.92) : Colors.white38;
@@ -3881,7 +3881,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   fontSize: compact ? 14 : 16,
                 ),
                 value: _showVideoDisplay,
-                activeColor: Color(0XFF3D57F9),
+                activeColor: Color(0XFFFF6AA6),
                 onChanged: (bool value) {
                   setState(() => _showVideoDisplay = value);
                 },
@@ -3904,7 +3904,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   fontSize: compact ? 14 : 16,
                 ),
                 value: _showShortcutsInMenu,
-                activeColor: Color(0XFF3D57F9),
+                activeColor: Color(0XFFFF6AA6),
                 onChanged: (bool value) {
                   setState(() => _showShortcutsInMenu = value);
                 },
@@ -3938,7 +3938,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       context,
                     )
                         .quickShortcuts[key],
-                    activeColor: Color(0XFF3D57F9),
+                    activeColor: Color(0XFFFF6AA6),
                     checkColor: Colors.white,
                     onChanged: (bool? value) {
                       Provider.of<SettingsProvider>(
@@ -4397,7 +4397,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                   suffixIcon: IconButton(
                     icon: const Icon(
                       Icons.content_paste,
-                      color: Color(0XFF3D57F9), // તમારો બ્રાન્ડ બ્લુ કલર
+                      color: Color(0XFFFF6AA6), // તમારો બ્રાન્ડ બ્લુ કલર
                     ),
                     onPressed: () async {
                       // final data = await Clipboard.getData('text/plain');
@@ -4435,7 +4435,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       child: AppButton(
                         title: "playStream",
                         textColor: Colors.white,
-                        backgroundColor: colors.primary, // #3D57F9
+                        backgroundColor: colors.primary, // #FF6AA6
                         onTap: () {
                           _startNetworkStream(urlController.text, closeCount: 1);
                         },
@@ -4655,7 +4655,7 @@ class _PlayerScreenState extends State<PlayerScreen>
         children: [
           const AppText(
             "tools",
-            color: Color(0XFF3D57F9),
+            color: Color(0XFFFF6AA6),
             fontWeight: FontWeight.bold,
             fontSize: 14,
             letterSpacing: 1.2,
@@ -4813,7 +4813,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
           const AppText(
             "help_upper",
-            color: Color(0XFF3D57F9),
+            color: Color(0XFFFF6AA6),
             fontWeight: FontWeight.bold,
             fontSize: 14,
             letterSpacing: 1.2,
@@ -4943,7 +4943,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               // Category 1: Tools
               const AppText(
                 "tools",
-                color: Color(0XFF3D57F9),
+                color: Color(0XFFFF6AA6),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -4978,7 +4978,7 @@ class _PlayerScreenState extends State<PlayerScreen>
               // Category 2: Help
               const AppText(
                 "help",
-                color: Color(0XFF3D57F9),
+                color: Color(0XFFFF6AA6),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -5467,14 +5467,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                             leading: Icon(
                               Icons.check_circle_rounded,
                               color: isSelected
-                                  ? Color(0XFF3D57F9)
+                                  ? Color(0XFFFF6AA6)
                                   : Colors.transparent,
                               size: 20,
                             ),
                             title: AppText(
                               "${context.tr('_${speed}x')}",
                               color: isSelected
-                                  ? Color(0XFF3D57F9)
+                                  ? Color(0XFFFF6AA6)
                                   : Colors.white,
                               fontSize: 16,
                               fontWeight: isSelected
@@ -5745,7 +5745,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                         );
                         setSheetState(() {});
                       },
-                      activeColor: Color(0XFF3D57F9),
+                      activeColor: Color(0XFFFF6AA6),
                     ),
                     _buildDropdown(
                       "reverb",
@@ -6018,10 +6018,10 @@ class _PlayerScreenState extends State<PlayerScreen>
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: value ? const Color(0XFF3D57F9) : Colors.transparent,
+                  color: value ? const Color(0XFFFF6AA6) : Colors.transparent,
                   borderRadius: BorderRadius.circular(5),
                   border: Border.all(
-                    color: value ? const Color(0XFF3D57F9) : Colors.white30,
+                    color: value ? const Color(0XFFFF6AA6) : Colors.white30,
                     width: 1.5,
                   ),
                 ),
@@ -6430,7 +6430,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     return Material(
       color: Colors.transparent,
       child: _DisplaySettingsScrollBody(
-        thumbColor: const Color(0XFF3D57F9).withOpacity(0.6),
+        thumbColor: const Color(0XFFFF6AA6).withOpacity(0.6),
         // Ã ÂªÂ¤Ã ÂªÂ®Ã ÂªÂ¾Ã ÂªÂ°Ã Â«â€¹ Ã ÂªÂ¥Ã Â«â‚¬Ã ÂªÂ® Ã Âªâ€¢Ã ÂªÂ²Ã ÂªÂ°
         thickness: 4,
         radius: const Radius.circular(10),
@@ -6534,7 +6534,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       padding: const EdgeInsets.only(left: 4, bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0XFF3D57F9)),
+          Icon(icon, size: 18, color: const Color(0XFFFF6AA6)),
           const SizedBox(width: 10),
           AppText(
             context.tr(title).toUpperCase(),
@@ -6996,7 +6996,7 @@ class _PlayerScreenState extends State<PlayerScreen>
             min: min,
             max: max,
             divisions: divisions,
-            activeColor: Color(0XFF3D57F9),
+            activeColor: Color(0XFFFF6AA6),
             onChanged: onChange,
           ),
         ],
@@ -7010,7 +7010,7 @@ class _PlayerScreenState extends State<PlayerScreen>
       title: AppText(title, color: Colors.white, fontSize: 14),
       value: value,
       onChanged: onChange,
-      activeColor: Color(0XFF3D57F9),
+      activeColor: Color(0XFFFF6AA6),
     );
   }
 
@@ -7330,7 +7330,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                           },
                                         ),
                                         _presetCircle(
-                                          const Color(0XFF3D57F9),
+                                          const Color(0XFFFF6AA6),
                                           setModalState,
                                           (c) {
                                             updateHexFromPicker(c);
@@ -7384,7 +7384,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                     decoration: BoxDecoration(
                                       gradient: const LinearGradient(
                                         colors: [
-                                          Color(0XFF3D57F9),
+                                          Color(0XFFFF6AA6),
                                           Color(0XFF2A40C7),
                                         ],
                                       ),
@@ -7392,7 +7392,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                       boxShadow: [
                                         BoxShadow(
                                           color: const Color(
-                                            0XFF3D57F9,
+                                            0XFFFF6AA6,
                                           ).withOpacity(0.3),
                                           blurRadius: 15,
                                           offset: const Offset(0, 5),
@@ -7434,12 +7434,12 @@ class _PlayerScreenState extends State<PlayerScreen>
         color: Colors.white.withOpacity(0.03),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: const Color(0XFF3D57F9).withOpacity(0.3),
+          color: const Color(0XFFFF6AA6).withOpacity(0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0XFF3D57F9).withOpacity(0.05),
+            color: const Color(0XFFFF6AA6).withOpacity(0.05),
             blurRadius: 10,
             spreadRadius: 1,
           ),
@@ -7449,9 +7449,9 @@ class _PlayerScreenState extends State<PlayerScreen>
         controller: controller,
         onChanged: onChanged,
         textAlign: TextAlign.center,
-        cursorColor: const Color(0XFF3D57F9),
+        cursorColor: const Color(0XFFFF6AA6),
         style: const TextStyle(
-          color: Color(0XFF3D57F9),
+          color: Color(0XFFFF6AA6),
           fontWeight: FontWeight.w800,
           fontSize: 14,
           letterSpacing: 1.5,
@@ -7855,7 +7855,7 @@ class SettingsProvider extends ChangeNotifier {
   bool isBgPlayEnabled = false;
   Color controlsColor = Colors.white;
   Color controlsBgColor = Colors.white.withOpacity(0.40);
-  Color progressBarColor = Color(0XFF3D57F9);
+  Color progressBarColor = Color(0XFFFF6AA6);
   String progressBarCategory = "material";
   bool isProgressBarBelow = false;
 
@@ -8190,7 +8190,7 @@ class SettingsProvider extends ChangeNotifier {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text("$title: ${(value*100).toInt()}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          Slider(value: value, min: min, max: max, activeColor: Color(0XFF3D57F9), onChanged: onChange),
+          Slider(value: value, min: min, max: max, activeColor: Color(0XFFFF6AA6), onChanged: onChange),
         ],
       ),
     );

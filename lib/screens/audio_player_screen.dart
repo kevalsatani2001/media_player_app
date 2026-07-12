@@ -1310,7 +1310,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen>
                         );
                         setSheetState(() {});
                       },
-                      activeColor: const Color(0XFF3D57F9),
+                      activeColor: const Color(0XFFFF6AA6),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
