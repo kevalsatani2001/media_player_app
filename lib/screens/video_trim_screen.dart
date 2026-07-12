@@ -1,6 +1,8 @@
 import 'dart:math' as Math;
 import 'dart:typed_data';
 
+import 'package:get_thumbnail_video/index.dart';
+
 import '../services/ads_service.dart';
 import '../services/custom_video_thumbnail_store.dart';
 import '../utils/app_imports.dart';

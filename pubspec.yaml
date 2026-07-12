@@ -71,14 +71,14 @@ dependencies:
   battery_plus: ^6.2.1
   gal:
   video_trimmer:
-  video_thumbnail:
+  get_thumbnail_video:
   youtube_explode_dart:
   flutter_colorpicker:
   on_audio_query_forked:
   palette_generator:
   marquee:
-  firebase_core: ^4.10.0
-  firebase_remote_config: ^6.5.2
+  firebase_core: ^3.15.2
+  firebase_remote_config: ^5.5.0
 #  ffmpeg_kit_flutter_new: ^4.1.0
 #  google_fonts:
 
