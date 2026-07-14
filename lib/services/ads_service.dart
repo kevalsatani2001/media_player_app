@@ -947,20 +947,69 @@
 // }
 
 
+import 'dart:convert';
 import 'dart:math' show max, min;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
+import 'hive_service.dart';
 
 class AdHelper {
+  static final Map<String, dynamic> _parsedRemoteConfig = {};
+
+  static String? _getString(String key) {
+    if (_parsedRemoteConfig.containsKey(key)) {
+      return _parsedRemoteConfig[key]?.toString();
+    }
+    return _remoteConfig?.getString(key);
+  }
+
+  static bool? _getBool(String key) {
+    if (_parsedRemoteConfig.containsKey(key)) {
+      final val = _parsedRemoteConfig[key]?.toString().toLowerCase().trim();
+      return val == 'true' || val == '1';
+    }
+    return _remoteConfig?.getBool(key);
+  }
+
+  static int? _getInt(String key) {
+    if (_parsedRemoteConfig.containsKey(key)) {
+      return int.tryParse(_parsedRemoteConfig[key]?.toString() ?? '');
+    }
+    return _remoteConfig?.getInt(key);
+  }
+
+  static void _parseJsonRemoteConfig() {
+    if (_remoteConfig == null) return;
+    final jsonStr = _remoteConfig!.getString('remote_config');
+    if (jsonStr.isEmpty) return;
+    try {
+      final Map<String, dynamic> parsed = jsonDecode(jsonStr);
+      if (parsed.containsKey('parameters')) {
+        final params = parsed['parameters'] as Map<String, dynamic>;
+        params.forEach((key, val) {
+          if (val is Map && val.containsKey('defaultValue')) {
+            final defVal = val['defaultValue'];
+            if (defVal is Map && defVal.containsKey('value')) {
+              _parsedRemoteConfig[key] = defVal['value'];
+            }
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error parsing nested remote_config JSON: $e');
+    }
+  }
+
   /// AdMob **native** test unit — replace with your production native ad unit IDs.
   /// See https://developers.google.com/admob/android/test-ads
   static String get nativeVideoPauseOverlayId {
     final val = Platform.isAndroid
-        ? _remoteConfig?.getString('android_native_video_pause_overlay_id')
-        : _remoteConfig?.getString('ios_native_video_pause_overlay_id');
+        ? _getString('android_native_video_pause_overlay_id')
+        : _getString('ios_native_video_pause_overlay_id');
     if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
         ? 'ca-app-pub-3940256099942544/2247696110'
@@ -969,8 +1018,8 @@ class AdHelper {
 
   static String get bannerId {
     final val = Platform.isAndroid
-        ? _remoteConfig?.getString('android_banner_ad_unit_id')
-        : _remoteConfig?.getString('ios_banner_ad_unit_id');
+        ? _getString('android_banner_ad_unit_id')
+        : _getString('ios_banner_ad_unit_id');
     if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
         ? 'ca-app-pub-3940256099942544/6300978111'
@@ -979,8 +1028,8 @@ class AdHelper {
 
   static String get interstitialId {
     final val = Platform.isAndroid
-        ? _remoteConfig?.getString('android_interstitial_ad_unit_id')
-        : _remoteConfig?.getString('ios_interstitial_ad_unit_id');
+        ? _getString('android_interstitial_ad_unit_id')
+        : _getString('ios_interstitial_ad_unit_id');
     if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
         ? 'ca-app-pub-3940256099942544/1033173712'
@@ -989,8 +1038,8 @@ class AdHelper {
 
   static String get rewardedId {
     final val = Platform.isAndroid
-        ? _remoteConfig?.getString('android_rewarded_ad_unit_id')
-        : _remoteConfig?.getString('ios_rewarded_ad_unit_id');
+        ? _getString('android_rewarded_ad_unit_id')
+        : _getString('ios_rewarded_ad_unit_id');
     if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
         ? 'ca-app-pub-3940256099942544/5224354917'
@@ -999,8 +1048,8 @@ class AdHelper {
 
   static String get appOpenId {
     final val = Platform.isAndroid
-        ? _remoteConfig?.getString('android_app_open_ad_unit_id')
-        : _remoteConfig?.getString('ios_app_open_ad_unit_id');
+        ? _getString('android_app_open_ad_unit_id')
+        : _getString('ios_app_open_ad_unit_id');
     if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
         ? 'ca-app-pub-3940256099942544/9257395921'
@@ -1021,7 +1070,7 @@ class AdHelper {
       await _remoteConfig!.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(seconds: 10),
-          minimumFetchInterval: const Duration(hours: 1),
+          minimumFetchInterval: kDebugMode ? Duration.zero : const Duration(seconds: 10),
         ),
       );
       await _remoteConfig!.setDefaults(const {
@@ -1049,10 +1098,28 @@ class AdHelper {
         'offline_wait_timer_seconds': 30,
         'show_rewarded_on_player_count': 5,
       });
-      await _remoteConfig!.fetchAndActivate();
+      
+      final bool activated = await _remoteConfig!.fetchAndActivate();
+      _parseJsonRemoteConfig();
+      
+      try {
+        if (HiveService.settingsBox.isOpen) {
+          HiveService.settingsBox.put('last_fetched_show_ads_enabled', showAdsEnabled);
+        }
+      } catch (_) {}
+
+      debugPrint('======================================');
+      debugPrint('Firebase Remote Config fetchAndActivate: $activated');
+      debugPrint('Remote Config lastFetchStatus: ${_remoteConfig!.lastFetchStatus}');
+      debugPrint('Remote Config show_ads_enabled = ${showAdsEnabled}');
+      debugPrint('======================================');
+      
       preloadInterstitial();
     } catch (e) {
+      debugPrint('🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨');
       debugPrint('Remote Config init failed: $e');
+      debugPrint('Please check your Firebase configuration and internet connection.');
+      debugPrint('🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨');
     }
   }
 
@@ -1060,44 +1127,85 @@ class AdHelper {
     preloadInterstitial();
   }
 
-  static bool get showAdsEnabled =>
-      _remoteConfig?.getBool('show_ads_enabled') ?? true;
+  static bool get showAdsEnabled {
+    bool cachedVal = true;
+    try {
+      if (HiveService.settingsBox.isOpen) {
+        cachedVal = HiveService.settingsBox.get('last_fetched_show_ads_enabled', defaultValue: true);
+      }
+    } catch (_) {}
+
+    final parsed = _getBool('show_ads_enabled');
+    if (parsed != null) {
+      try {
+        if (HiveService.settingsBox.isOpen) {
+          HiveService.settingsBox.put('last_fetched_show_ads_enabled', parsed);
+        }
+      } catch (_) {}
+      return parsed;
+    }
+
+    if (_remoteConfig == null) return cachedVal;
+    try {
+      final val = _remoteConfig!.getValue('show_ads_enabled');
+      final strVal = val.asString().toLowerCase().trim();
+      bool resolvedVal = true;
+      if (strVal == 'false' || strVal == '0') {
+        resolvedVal = false;
+      } else if (strVal == 'true' || strVal == '1') {
+        resolvedVal = true;
+      } else {
+        resolvedVal = val.asBool();
+      }
+      
+      try {
+        if (HiveService.settingsBox.isOpen) {
+          HiveService.settingsBox.put('last_fetched_show_ads_enabled', resolvedVal);
+        }
+      } catch (_) {}
+      
+      return resolvedVal;
+    } catch (e) {
+      debugPrint('Error getting show_ads_enabled: $e');
+      return cachedVal;
+    }
+  }
 
   static bool get showInterstitialOnHome =>
-      _remoteConfig?.getBool('show_interstitial_on_home') ?? true;
+      _getBool('show_interstitial_on_home') ?? true;
 
   static bool get showInterstitialOnPlayer =>
-      _remoteConfig?.getBool('show_interstitial_on_player') ?? true;
+      _getBool('show_interstitial_on_player') ?? true;
 
   static bool get showInterstitialOnLanguage =>
-      _remoteConfig?.getBool('show_interstitial_on_language') ?? true;
+      _getBool('show_interstitial_on_language') ?? true;
 
   static bool get showInterstitialOnPlaylist =>
-      _remoteConfig?.getBool('show_interstitial_on_playlist') ?? true;
+      _getBool('show_interstitial_on_playlist') ?? true;
 
   static bool get showInterstitialOnFavourite =>
-      _remoteConfig?.getBool('show_interstitial_on_favourite') ?? true;
+      _getBool('show_interstitial_on_favourite') ?? true;
 
   static bool get showInterstitialOnFolder =>
-      _remoteConfig?.getBool('show_interstitial_on_folder') ?? true;
+      _getBool('show_interstitial_on_folder') ?? true;
 
   static bool get showInterstitialOnAudio =>
-      _remoteConfig?.getBool('show_interstitial_on_audio') ?? true;
+      _getBool('show_interstitial_on_audio') ?? true;
 
   static bool get showInterstitialOnVideo =>
-      _remoteConfig?.getBool('show_interstitial_on_video') ?? true;
+      _getBool('show_interstitial_on_video') ?? true;
 
   static bool get showInterstitialOnSettings =>
-      _remoteConfig?.getBool('show_interstitial_on_settings') ?? true;
+      _getBool('show_interstitial_on_settings') ?? true;
 
   static int get interstitialInterval =>
-      _remoteConfig?.getInt('interstitial_interval') ?? 1;
+      _getInt('interstitial_interval') ?? 1;
 
   static int get showRewardedOnPlayerCount =>
-      _remoteConfig?.getInt('show_rewarded_on_player_count') ?? 0;
+      _getInt('show_rewarded_on_player_count') ?? 0;
 
   static int get offlineWaitTimerSeconds =>
-      _remoteConfig?.getInt('offline_wait_timer_seconds') ?? 30;
+      _getInt('offline_wait_timer_seconds') ?? 30;
 
   static String str(Object? value) => value?.toString() ?? '';
 
@@ -1121,7 +1229,7 @@ class AdHelper {
         startVideo();
       }
     } else {
-      // --- Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬Å“Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹: Ãƒ Ã‚Â«Ã‚Â©Ãƒ Ã‚Â«Ã‚Â¦ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬â€ Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â° ---
+      // --- Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ¢â‚¬Å“Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â¨ Ãƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹: Ãƒ Ã‚Â«Ã‚Â©Ãƒ Ã‚Â«Ã‚Â¦ Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ‚Â¡Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬Å¡ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ¢â‚¬Å¡Ãƒ Ã‚ÂªÃ¢â‚¬â€  Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‹â€ Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚ÂªÃ‚Â° ---
       _showOfflineTimerDialog(context, startVideo);
     }
   }
@@ -1216,6 +1324,7 @@ class AdHelper {
 
   // --- 5. App Open Ad ---
   static void loadAppOpenAd() async {
+    if (!showAdsEnabled) return;
     // Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚ÂªÃ‚Â¹Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ¢â‚¬Â¢ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
     final List<ConnectivityResult> results = await Connectivity()
         .checkConnectivity();
@@ -1243,6 +1352,7 @@ class AdHelper {
   }
 
   static void showAppOpenAdIfAvailable() {
+    if (!showAdsEnabled) return;
     // Only show once per app session
     if (_hasShownAppOpenAdThisSession) {
       debugPrint("App Open Ad already shown this session. Skipping.");
@@ -1251,7 +1361,7 @@ class AdHelper {
 
     if (isFullScreenAdShowing) {
       debugPrint(
-        "Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚ÂÃƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, App Open Ad Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚ÂÃƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Âª Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬.",
+        "Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ…Â¡Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã‚Â  Ãƒ Ã‚ÂªÃ¢â‚¬ÂºÃƒ Ã‚Â«Ã¢â‚¬Â¡, App Open Ad Ãƒ Ã‚ÂªÃ‚Â¸Ãƒ Ã‚Â«Ã‚Â Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ‚Âª Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬.",
       );
       return;
     }
@@ -1453,6 +1563,10 @@ class AdHelper {
     VoidCallback onRewardEarned, {
     VoidCallback? errorFunction,
   }) {
+    if (!showAdsEnabled) {
+      onRewardEarned();
+      return;
+    }
     // à«§. àª²à«‹àª¡àª¿àª‚àª— àª¡àª¾àª¯àª²à«‹àª— àª¬àª¤àª¾àªµà«‹
     DialogHelper.showAdLoadingDialog(context);
 
@@ -1526,7 +1640,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     });
   }
 
-  // Ãƒ Ã‚Â«Ã‚Â¨. Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚ÂµÃƒ Ã‚ÂªÃ‚Â¿Ãƒ Ã‚ÂªÃ…â€œÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â¨Ãƒ Ã‚ÂªÃ‚Â¾ Ãƒ Ã‚ÂªÃ‚ÂªÃƒ Ã‚Â«Ã¢â‚¬Â¡Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â®Ãƒ Ã‚Â«Ã¢â€šÂ¬Ãƒ Ã‚ÂªÃ…Â¸Ãƒ Ã‚ÂªÃ‚Â° Ãƒ Ã‚ÂªÃ‚Â¬Ãƒ Ã‚ÂªÃ‚Â¦Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚ÂªÃ‚Â¾Ãƒ Ã‚ÂªÃ‚Â¯ Ãƒ Ã‚ÂªÃ‚Â¤Ãƒ Ã‚Â«Ã¢â‚¬Â¹ Ãƒ Ã‚ÂªÃ‚Â«Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â€šÂ¬ Ãƒ Ã‚ÂªÃ‚Â²Ãƒ Ã‚Â«Ã¢â‚¬Â¹Ãƒ Ã‚ÂªÃ‚Â¡ Ãƒ Ã‚ÂªÃ¢â‚¬Â¢Ãƒ Ã‚ÂªÃ‚Â°Ãƒ Ã‚Â«Ã¢â‚¬Â¹
   @override
   void didUpdateWidget(covariant BannerAdWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -1536,6 +1649,14 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   void _loadAd() async {
+    if (!AdHelper.showAdsEnabled) {
+      _isLoaded = false;
+      _isError = false;
+      final oldAd = _bannerAd;
+      _bannerAd = null;
+      oldAd?.dispose();
+      return;
+    }
     // Reset loaded state synchronously to prevent build race conditions
     _isLoaded = false;
     _isError = false;
@@ -1594,6 +1715,8 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AdHelper.showAdsEnabled) return const SizedBox.shrink();
+
     // If there's an error, show the promo
     if (_isError) return AdHelper._buildPromoBanner(context, widget.size);
 
@@ -1640,6 +1763,7 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
 
   Future<void> _loadAd() async {
     if (!mounted) return;
+    if (!AdHelper.showAdsEnabled) return;
 
     // Reset loaded state synchronously to prevent build race conditions during await
     _loaded = false;
@@ -1748,6 +1872,7 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AdHelper.showAdsEnabled) return const SizedBox.shrink();
     return Positioned.fill(
       child: Material(
         type: MaterialType.transparency,

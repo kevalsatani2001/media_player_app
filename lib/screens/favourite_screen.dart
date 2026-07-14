@@ -33,11 +33,12 @@ class _FavouriteScreenState extends State<FavouriteScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        // àª…àª¹àª¿àª¯àª¾àª‚ àª¨à«€àªšà«‡ àª¬à«‡àª¨àª° àªàª¡ àª‰àª®à«‡àª°à«‹
-        bottomNavigationBar: SizedBox(
-          height: 60, // àªàª¡àª¨à«€ àª¹àª¾àªˆàªŸ àª®à«àªœàª¬
-          child: AdHelper.bannerAdWidget(),
-        ),
+        bottomNavigationBar: AdHelper.showAdsEnabled
+            ? SizedBox(
+                height: 60,
+                child: AdHelper.bannerAdWidget(),
+              )
+            : null,
         body: BlocBuilder<FavouriteBloc, FavouriteState>(
           builder: (context, state) {
 

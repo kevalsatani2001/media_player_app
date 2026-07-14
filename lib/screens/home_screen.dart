@@ -21,8 +21,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
   List<AssetPathEntity> folderList = <AssetPathEntity>[];
 
   final ScrollController _scrollController = ScrollController();
-  bool _isFABVisible = true; // FAB àª¦à«‡àª–àª¾àª¶à«‡ àª•à«‡ àª¨àª¹à«€àª‚ àª¤à«‡ àª®àª¾àªŸà«‡àª¨à«àª‚ àª¸à«àªŸà«‡àªŸ
-
+  bool _isFABVisible = true;
   bool isShowViewAllButton = false;
   int activeIndex = 0;
 
@@ -50,8 +49,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      // ScrollDirection àª®à«àªœàª¬ àª¨àª•à«àª•à«€ àª•àª°à«‹
-      bool isScrollingDown = _scrollController.position.userScrollDirection == ScrollDirection.reverse;
+     bool isScrollingDown = _scrollController.position.userScrollDirection == ScrollDirection.reverse;
 
       if (isScrollingDown && _isFABVisible) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,7 +128,6 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
-  // HomeScreen.dart (àª…àª¥àªµàª¾ àªœà«àª¯àª¾àª‚ FAB àª¬àª¤àª¾àªµàªµà«àª‚ àª¹à«‹àª¯ àª¤à«àª¯àª¾àª‚)
 
 
 
@@ -186,15 +183,15 @@ class _HomePageState extends State<HomePage> with RouteAware {
         return CustomScrollView(
           controller: _scrollController,
           slivers: [
-            if (AdHelper.showAdsEnabled)
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    AdHelper.adaptiveBannerWidget(context),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
+            // if (AdHelper.showAdsEnabled)
+            //   SliverToBoxAdapter(
+            //     child: Column(
+            //       children: [
+            //         AdHelper.adaptiveBannerWidget(context),
+            //         const SizedBox(height: 8),
+            //       ],
+            //     ),
+            //   ),
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 15),
               sliver: SliverToBoxAdapter(

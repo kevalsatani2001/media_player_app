@@ -41,10 +41,10 @@ class _SettingScreenState extends State<SettingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (AdHelper.showAdsEnabled) ...[
-            AdHelper.adaptiveBannerWidget(context),
-            const SizedBox(height: 15),
-          ],
+          // if (AdHelper.showAdsEnabled) ...[
+          //   AdHelper.adaptiveBannerWidget(context),
+          //   const SizedBox(height: 15),
+          // ],
 
           AppText(
             "settings",
@@ -124,7 +124,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Widget _buildCustomRatingDialog(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    double currentRating = 1.0;
+    double currentRating = 5.0;
 
     return StatefulBuilder(
       builder: (context, setState) {
@@ -162,22 +162,8 @@ class _SettingScreenState extends State<SettingScreen> {
                   int starIndex = index + 1;
                   return GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTapDown: (details) {
-                      double starWidth = 40;
-                      double tapPos = details.localPosition.dx;
-                      double percent = tapPos / starWidth;
-
-                      double fineRating;
-                      if (percent <= 0.25)
-                        fineRating = 0.25;
-                      else if (percent <= 0.50)
-                        fineRating = 0.50;
-                      else if (percent <= 0.75)
-                        fineRating = 0.75;
-                      else
-                        fineRating = 1.0;
-
-                      setState(() => currentRating = index + fineRating);
+                    onTap: () {
+                      setState(() => currentRating = starIndex.toDouble());
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -215,10 +201,10 @@ class _SettingScreenState extends State<SettingScreen> {
                       onTap: () async {
                         Navigator.pop(context);
 
-                        if (currentRating < 3.0) {
+                        if (currentRating < 4.0) {
                           _launchEmailFeedback(currentRating);
                         } else {
-                          _rateAndReviewApp();
+                          _rateAndReviewApp(context);
                         }
                       },
                       child: Container(
@@ -250,7 +236,7 @@ class _SettingScreenState extends State<SettingScreen> {
   void _launchEmailFeedback(double rating) async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'your-email@example.com',
+      path: 'kevalsatani1234@gmail.com',
       queryParameters: {
         'subject':
         '${context.tr('appFeedback')} - $rating ${context.tr('stars')}',
@@ -267,7 +253,7 @@ class _SettingScreenState extends State<SettingScreen> {
     String appMessage =
         "${context.tr("checkOutThisAmazing")}\n\n"
         "${context.tr("downloadItNowFrom")}\n"
-        "https://play.google.com/store/apps/details?id=your.package.name";
+        "https://play.google.com/store/apps/details?id=com.nova.media.vision";
 
     Share.share(appMessage, subject: "${context.tr('downloadMediaPlayer')}");
   }
@@ -339,17 +325,27 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 }
 
-void _rateAndReviewApp() async {
+void _rateAndReviewApp(BuildContext context) async {
   final _inAppReview = InAppReview.instance;
 
-  if (await _inAppReview.isAvailable()) {
-    _inAppReview.requestReview();
-  } else {
-    // TODO: use your own store ids
-    _inAppReview.openStoreListing(
-      appStoreId: '<your app store id>',
-      microsoftStoreId: '<your microsoft store id>',
-    );
+  try {
+    if (await _inAppReview.isAvailable()) {
+      await _inAppReview.requestReview();
+    } else {
+      final String packageName = "com.nova.media.vision";
+      final Uri playStoreUri = Uri.parse("https://play.google.com/store/apps/details?id=$packageName");
+      if (await canLaunchUrl(playStoreUri)) {
+        await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+      } else {
+        AppToast.show(context, "Could not open play store link.", type: ToastType.error);
+      }
+    }
+  } catch (e) {
+    final String packageName = "com.nova.media.vision";
+    final Uri playStoreUri = Uri.parse("https://play.google.com/store/apps/details?id=$packageName");
+    if (await canLaunchUrl(playStoreUri)) {
+      await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+    }
   }
 }
 

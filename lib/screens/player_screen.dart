@@ -608,6 +608,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   bool get _shouldShowPauseNativeAdOverlay {
+    if (!AdHelper.showAdsEnabled) return false;
     final c = playerService.controller;
     if (c == null || !c.value.isInitialized) return false;
     if (!_pauseNativeAdEligibleFromUserPause) return false;

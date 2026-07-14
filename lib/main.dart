@@ -18,6 +18,18 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  await Hive.initFlutter();
+
+  // Register adapters only once
+  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MediaItemAdapter());
+  if (!Hive.isAdapterRegistered(2))
+    Hive.registerAdapter(PlaylistModelAdapter());
+  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(PlayerStateAdapter());
+  await HiveService.init();
+  await Hive.openBox('player_state');
+  await Hive.openBox(CustomVideoThumbnailStore.boxName);
+
   await AdHelper.initRemoteConfig();
   await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
@@ -30,17 +42,6 @@ void main() async {
     androidNotificationOngoing: true,
     androidShowNotificationBadge: true,
   );
-
-  await Hive.initFlutter();
-
-  // Register adapters only once
-  if (!Hive.isAdapterRegistered(1)) Hive.registerAdapter(MediaItemAdapter());
-  if (!Hive.isAdapterRegistered(2))
-    Hive.registerAdapter(PlaylistModelAdapter());
-  if (!Hive.isAdapterRegistered(3)) Hive.registerAdapter(PlayerStateAdapter());
-  await HiveService.init();
-  await Hive.openBox('player_state');
-  await Hive.openBox(CustomVideoThumbnailStore.boxName);
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
