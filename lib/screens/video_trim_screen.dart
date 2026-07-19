@@ -796,7 +796,7 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
 
           // --- Main Content Area ---
           Expanded(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
@@ -898,27 +898,17 @@ class _VideoTrimScreenState extends State<VideoTrimScreen> {
                       ],
                     ),
                   ),
-                  Spacer(),
+                  const SizedBox(height: 20),
                   // --- 5 Social Direct Buttons ---
                   AppButton(
                     title: "share",
                     onTap: () => Share.shareXFiles([XFile(_savedVideoPath)]),
                   ),
-                  Spacer(),
+                  const SizedBox(height: 20),
+                  // --- Ad Section ---
+                  AdHelper.nativeAdWidget(),
+                  const SizedBox(height: 20),
                 ],
-              ),
-            ),
-          ),
-
-          // --- Ad Section ---
-          Container(
-            width: double.infinity,
-            // height: 250,
-            margin: const EdgeInsets.only(bottom: 10),
-            child: Center(
-              child: SizedBox(
-                width: double.infinity,
-                child: AdHelper.bannerAdWidget(size: AdSize.mediumRectangle),
               ),
             ),
           ),

@@ -984,7 +984,8 @@ class AdHelper {
 
   static void _parseJsonRemoteConfig() {
     if (_remoteConfig == null) return;
-    final jsonStr = _remoteConfig!.getString('remote_config');
+    // final jsonStr = _remoteConfig!.getString('remote_config_production');
+    final jsonStr = _remoteConfig!.getString('remote_config_testing');
     if (jsonStr.isEmpty) return;
     try {
       final Map<String, dynamic> parsed = jsonDecode(jsonStr);
@@ -1248,6 +1249,11 @@ class AdHelper {
   // --- 1. Standard Banner Ad Widget ---
   static Widget bannerAdWidget({AdSize size = AdSize.banner}) {
     return BannerAdWidget(size: size);
+  }
+
+  // --- 1.5 Native Ad Widget ---
+  static Widget nativeAdWidget({double height = 320}) {
+    return InlineNativeAd(height: height);
   }
 
   // --- 2. Adaptive Banner Ad Widget ---
@@ -2065,6 +2071,194 @@ class _PauseVideoNativeAdLayerState extends State<PauseVideoNativeAdLayer> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class InlineNativeAd extends StatefulWidget {
+  final double height;
+  const InlineNativeAd({super.key, this.height = 320.0});
+
+  @override
+  State<InlineNativeAd> createState() => _InlineNativeAdState();
+}
+
+class _InlineNativeAdState extends State<InlineNativeAd> {
+  NativeAd? _nativeAd;
+  bool _loaded = false;
+  bool _failed = false;
+  int _retryCount = 0;
+  static const int _maxRetryCount = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadAd());
+  }
+
+  Future<void> _loadAd() async {
+    if (!mounted) return;
+    if (!AdHelper.showAdsEnabled) return;
+
+    _loaded = false;
+    _failed = false;
+    final oldAd = _nativeAd;
+    _nativeAd = null;
+
+    final id = AdHelper.nativeVideoPauseOverlayId;
+    if (id.isEmpty) {
+      if (mounted) setState(() => _failed = true);
+      oldAd?.dispose();
+      return;
+    }
+
+    final results = await Connectivity().checkConnectivity();
+    if (results.contains(ConnectivityResult.none)) {
+      if (_retryCount < _maxRetryCount) {
+        _retryCount++;
+        Future.delayed(const Duration(milliseconds: 700), _loadAd);
+        oldAd?.dispose();
+        return;
+      }
+      if (mounted) setState(() => _failed = true);
+      oldAd?.dispose();
+      return;
+    }
+
+    oldAd?.dispose();
+    if (!mounted) return;
+
+    final ad = NativeAd(
+      adUnitId: id,
+      listener: NativeAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _loaded = true;
+              _failed = false;
+              _retryCount = 0;
+            });
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('Inline native ad failed: $error');
+          ad.dispose();
+          if (_retryCount < _maxRetryCount) {
+            _retryCount++;
+            Future.delayed(const Duration(milliseconds: 700), _loadAd);
+            return;
+          }
+          if (mounted) {
+            setState(() {
+              _failed = true;
+              _nativeAd = null;
+              _loaded = false;
+            });
+          }
+        },
+      ),
+      request: const AdRequest(),
+      nativeAdOptions: NativeAdOptions(
+        adChoicesPlacement: AdChoicesPlacement.topRightCorner,
+        mediaAspectRatio: MediaAspectRatio.landscape,
+        videoOptions: VideoOptions(startMuted: true),
+      ),
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.medium,
+        mainBackgroundColor: Colors.white.withOpacity(0.08),
+        cornerRadius: 12,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: const Color(0xFFFF6AA6),
+          style: NativeTemplateFontStyle.bold,
+          size: 13.5,
+        ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          size: 15,
+          style: NativeTemplateFontStyle.bold,
+        ),
+        secondaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white70,
+          size: 12,
+        ),
+        tertiaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white54,
+          size: 11,
+        ),
+      ),
+    );
+
+    setState(() {
+      _nativeAd = ad;
+      _loaded = false;
+      _failed = false;
+    });
+
+    ad.load();
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AdHelper.showAdsEnabled) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      height: widget.height,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: _failed
+            ? const Center(
+                child: Text(
+                  'Ad unavailable',
+                  style: TextStyle(color: Colors.white54, fontSize: 14),
+                ),
+              )
+            : (!_loaded || _nativeAd == null)
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFFFF6AA6),
+                    ),
+                  )
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        child: AdWidget(ad: _nativeAd!),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade700,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'Ad',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
       ),
     );
   }
