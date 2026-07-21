@@ -45,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.didChangeDependencies();
 
     if (!_isInitialized) {
-      _fullText = context.tr("mediaPlayerApp");
+      _fullText = context.tr("novaPlayerApp");
       _startTyping();
       _isInitialized = true;
     }

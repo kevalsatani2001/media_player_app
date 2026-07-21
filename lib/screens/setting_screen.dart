@@ -27,7 +27,7 @@ class _SettingScreenState extends State<SettingScreen> {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return  Column(
       children: [
-        CommonAppBar(title: "videMusicPlayer", subTitle: "mediaPlayer"),
+        CommonAppBar(title: "videMusicPlayer", subTitle: "novaPlayer"),
         Divider(color: colors.dividerColor),
         Expanded(child: _buildSettingsTab()),
       ],

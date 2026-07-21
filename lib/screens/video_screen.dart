@@ -175,7 +175,7 @@ class _VideoScreenState extends State<VideoScreen> {
         children: [
           CommonAppBar(
             title: "videMusicPlayer",
-            subTitle: "mediaPlayer",
+            subTitle: "novaPlayer",
             actionWidget: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),

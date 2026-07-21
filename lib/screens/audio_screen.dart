@@ -186,7 +186,7 @@ class _AudioScreenState extends State<AudioScreen> {
                       children: [
                         CommonAppBar(
                           title: "videMusicPlayer",
-                          subTitle: "mediaPlayer",
+                          subTitle: "novaPlayer",
                           actionWidget: GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -228,7 +228,7 @@ class _AudioScreenState extends State<AudioScreen> {
                   children: [
                     CommonAppBar(
                       title: "videMusicPlayer",
-                      subTitle: "mediaPlayer",
+                      subTitle: "novaPlayer",
                       actionWidget: GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -268,7 +268,7 @@ class _AudioScreenState extends State<AudioScreen> {
                   children: [
                     CommonAppBar(
                       title: "videMusicPlayer",
-                      subTitle: "mediaPlayer",
+                      subTitle: "novaPlayer",
                       actionWidget: GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -311,7 +311,7 @@ class _AudioScreenState extends State<AudioScreen> {
                   children: [
                     CommonAppBar(
                       title: "videMusicPlayer",
-                      subTitle: "mediaPlayer",
+                      subTitle: "novaPlayer",
                       actionWidget: GestureDetector(
                         onTap: () {
                           Navigator.push(

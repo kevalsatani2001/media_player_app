@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
             children: [
               CommonAppBar(
                 title: "videMusicPlayer",
-                subTitle: "mediaPlayer",
+                subTitle: "novaPlayer",
                 actionWidget: GestureDetector(
                   onTap: () {
                     Navigator.push(
