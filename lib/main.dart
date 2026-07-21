@@ -169,9 +169,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      debugPrint("App Resumed - Showing Ad");
+      debugPrint("App Resumed - Checking Developer Options & Showing Ad");
+      
+      // Compulsory Developer Options check if Remote Config key is active
+      if (AdHelper.offDevMode) {
+        final bool isDevMode = await SecurityService.isDevModeEnabled();
+        if (isDevMode) {
+          if (!DevModeBlockScreen.isVisible) {
+            NavigatorKey.root.currentState?.pushNamedAndRemoveUntil(
+              '/dev_mode_block',
+              (route) => false,
+            );
+          }
+          return; // Skip showing app open ads or proceeding further
+        }
+      }
+
       AdHelper.showAppOpenAdIfAvailable();
     }
 
@@ -248,6 +263,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
                 '/language': (_) => LanguageScreen(),
                 '/onboarding': (_) => const OnboardingScreen(),
                 '/folder': (_) => const FolderScreen(),
+                '/dev_mode_block': (_) => const DevModeBlockScreen(),
               },
             );
           },

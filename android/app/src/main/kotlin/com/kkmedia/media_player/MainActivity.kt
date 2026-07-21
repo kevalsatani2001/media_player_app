@@ -28,6 +28,7 @@ class MainActivity : AudioServiceActivity() {
     private val eqChannel = "media_player/equalizer"
     private val ringtoneChannel = "media_player/ringtone"
     private val editChannel = "media_player/editor"
+    private val securityChannel = "media_player/security"
     private var equalizer: Equalizer? = null
     private var bassBoost: BassBoost? = null
     private var virtualizer: Virtualizer? = null
@@ -277,7 +278,50 @@ class MainActivity : AudioServiceActivity() {
                     result.error("EQ_ERROR", e.message, null)
                 }
             }
+
+        // --- SECURITY CHANNEL ---
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, securityChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "isDevModeEnabled" -> {
+                        val enabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                            Settings.Global.getInt(
+                                contentResolver,
+                                Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
+                            ) != 0
+                        } else {
+                            @Suppress("DEPRECATION")
+                            Settings.Secure.getInt(
+                                contentResolver,
+                                Settings.Secure.DEVELOPMENT_SETTINGS_ENABLED, 0
+                            ) != 0
+                        }
+                        result.success(enabled)
+                    }
+                    "openDevSettings" -> {
+                        try {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            try {
+                                val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (ex: Exception) {
+                                result.error("SETTING_ERROR", ex.message, null)
+                            }
+                        }
+                    }
+                    else -> result.notImplemented()
+                }
+            }
     }
+
 
 
     // Rename Logic Function

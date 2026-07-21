@@ -110,6 +110,7 @@ export 'package:media_player/services/global_player.dart';
 export 'package:media_player/services/hive_service.dart';
 export 'package:media_player/services/playlist_service.dart';
 export 'package:media_player/services/responsive_helper.dart';
+export 'package:media_player/services/security_service.dart';
 export 'package:media_player/core/constants.dart';
 export 'package:media_player/utils/app_colors.dart';
 export 'package:media_player/utils/app_string.dart';
@@ -119,6 +120,7 @@ export 'package:media_player/utils/app_string.dart';
 // ===========================================================================
 export 'package:media_player/main.dart';
 export 'package:media_player/screens/splash_screen.dart';
+export 'package:media_player/screens/dev_mode_block_screen.dart';
 export 'package:media_player/screens/onboarding_screen.dart';
 export 'package:media_player/screens/home_screen.dart';
 export 'package:media_player/screens/bottom_bar_screen.dart';

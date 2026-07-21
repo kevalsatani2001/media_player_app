@@ -1,5 +1,6 @@
 
 import '../utils/app_imports.dart';
+import '../services/ads_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -71,6 +72,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> navigateNext() async {
+    final bool offDevMode = AdHelper.offDevMode;
+    if (offDevMode) {
+      final bool isDevMode = await SecurityService.isDevModeEnabled();
+      if (isDevMode) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/dev_mode_block');
+        }
+        return;
+      }
+    }
+
     final selectedLang = settingsBox.get('languageCode');
     final isNewApp = settingsBox.get('isNewApp', defaultValue: true);
     String route;

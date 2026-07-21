@@ -1098,6 +1098,7 @@ class AdHelper {
         'interstitial_interval': 3,
         'offline_wait_timer_seconds': 30,
         'show_rewarded_on_player_count': 5,
+        'off_dev_mode': false,
       });
       
       final bool activated = await _remoteConfig!.fetchAndActivate();
@@ -1171,6 +1172,8 @@ class AdHelper {
       return cachedVal;
     }
   }
+
+  static bool get offDevMode => _getBool('off_dev_mode') ?? false;
 
   static bool get showInterstitialOnHome =>
       _getBool('show_interstitial_on_home') ?? true;
