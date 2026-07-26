@@ -250,10 +250,14 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   void shareApp() {
+    String shareUrl = AdHelper.shareAppUrl;
+    if (shareUrl.isEmpty) {
+      shareUrl = "https://play.google.com/store/apps/details?id=com.nova.media.vision";
+    }
     String appMessage =
         "${context.tr("checkOutThisAmazing")}\n\n"
         "${context.tr("downloadItNowFrom")}\n"
-        "https://play.google.com/store/apps/details?id=com.nova.media.vision";
+        "$shareUrl";
 
     Share.share(appMessage, subject: "${context.tr('downloadMediaPlayer')}");
   }
@@ -346,15 +350,6 @@ void _rateAndReviewApp(BuildContext context) async {
     if (await canLaunchUrl(playStoreUri)) {
       await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
     }
-  }
-}
-
-extension LocalizationExtension on BuildContext {
-  String tr(String key) {
-    final locale = Localizations.localeOf(this).languageCode;
-    return AppStrings.translations[locale]?[key] ??
-        AppStrings.translations['en']![key] ??
-        key;
   }
 }
 

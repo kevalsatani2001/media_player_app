@@ -3,7 +3,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
-import '../screens/setting_screen.dart';
+import '../utils/app_string.dart';
 import '../utils/app_colors.dart';
 import '../widgets/text_widget.dart';
 import 'global_player.dart';

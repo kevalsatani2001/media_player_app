@@ -319,9 +319,9 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
                     borderRadius: BorderRadius.circular(2),
                     child: LinearProgressIndicator(
                       value: (pos / dur).clamp(0.0, 1.0),
-                      backgroundColor: Colors.white10,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.pinkAccent,
+                      backgroundColor: colors.primary.withOpacity(0.2),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        colors.primary,
                       ),
                       minHeight: 1.5,
                     ),
@@ -336,12 +336,13 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
 
   Widget _playPauseFloating() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return GestureDetector(
       onTap: () => player.isPlaying ? player.pause() : player.resume(),
       child: Container(
         padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
-          color: Colors.pinkAccent,
+        decoration: BoxDecoration(
+          color: colors.primary,
           shape: BoxShape.circle,
         ),
         child: Icon(
@@ -514,6 +515,7 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
   }
 
   Widget _audioProgressBar() {
+    final colors = Theme.of(context).extension<AppThemeColors>()!;
     return StreamBuilder<Duration>(
       stream: player.audioPlayer.positionStream,
       builder: (context, snapshot) {
@@ -538,7 +540,13 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
             width: double.infinity,
             height: 30,
             color: Colors.transparent,
-            child: CustomPaint(painter: CurveProgressPainter(progress)),
+            child: CustomPaint(
+              painter: CurveProgressPainter(
+                progress,
+                activeColor: colors.primary,
+                inactiveColor: colors.primary.withOpacity(0.2),
+              ),
+            ),
           ),
         );
       },
@@ -776,19 +784,25 @@ class _SmartMiniPlayerState extends State<SmartMiniPlayer> {
 
 class CurveProgressPainter extends CustomPainter {
   final double progress;
+  final Color activeColor;
+  final Color inactiveColor;
 
-  CurveProgressPainter(this.progress);
+  CurveProgressPainter(
+    this.progress, {
+    required this.activeColor,
+    required this.inactiveColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     Paint backgroundPaint = Paint()
-      ..color = Colors.blue.withOpacity(0.1)
+      ..color = inactiveColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
 
     Paint progressPaint = Paint()
-      ..color = Colors.blueAccent
+      ..color = activeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
@@ -814,7 +828,11 @@ class CurveProgressPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CurveProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.activeColor != activeColor ||
+        oldDelegate.inactiveColor != inactiveColor;
+  }
 }
 
 class NativeClipper extends CustomClipper<Path> {

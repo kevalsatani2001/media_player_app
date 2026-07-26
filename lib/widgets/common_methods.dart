@@ -7,7 +7,7 @@ import 'package:photo_manager/photo_manager.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:media_player/screens/setting_screen.dart';
+import 'package:media_player/utils/app_string.dart';
 import 'package:media_player/widgets/app_button.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import 'package:share_plus/share_plus.dart';

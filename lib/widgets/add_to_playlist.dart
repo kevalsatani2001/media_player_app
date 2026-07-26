@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:media_player/screens/setting_screen.dart';
+import 'package:media_player/utils/app_string.dart';
 import 'package:media_player/widgets/text_widget.dart';
 import '../models/media_item.dart';
 import '../models/playlist_model.dart';

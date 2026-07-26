@@ -1,5 +1,4 @@
 import '../utils/app_imports.dart';
-import '../services/security_service.dart';
 
 class DevModeBlockScreen extends StatefulWidget {
   const DevModeBlockScreen({super.key});
@@ -71,7 +70,23 @@ class _DevModeBlockScreenState extends State<DevModeBlockScreen> with WidgetsBin
     final colors = Theme.of(context).extension<AppThemeColors>()!;
     return WillPopScope(
       onWillPop: () async => false, // Prevent backing out of the blocker screen
-      child: Scaffold(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+                systemNavigationBarColor: const Color(0xFF121212),
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+                systemNavigationBarColor: const Color(0xFFF5F5F5),
+                systemNavigationBarIconBrightness: Brightness.dark,
+              ),
+        child: Scaffold(
         backgroundColor: colors.background,
         body: SafeArea(
           child: Padding(
@@ -153,6 +168,7 @@ class _DevModeBlockScreenState extends State<DevModeBlockScreen> with WidgetsBin
               ],
             ),
           ),
+        ),
         ),
       ),
     );

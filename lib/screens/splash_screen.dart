@@ -112,7 +112,23 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).extension<AppThemeColors>()!;
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: Theme.of(context).brightness == Brightness.dark
+          ? SystemUiOverlayStyle.light.copyWith(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.light,
+              statusBarBrightness: Brightness.dark,
+              systemNavigationBarColor: const Color(0xFF121212),
+              systemNavigationBarIconBrightness: Brightness.light,
+            )
+          : SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: Brightness.dark,
+              statusBarBrightness: Brightness.light,
+              systemNavigationBarColor: const Color(0xFFF5F5F5),
+              systemNavigationBarIconBrightness: Brightness.dark,
+            ),
+      child: Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
         child: Column(
@@ -134,6 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
             _buildSlider(colors),
           ],
         ),
+      ),
       ),
     );
   }

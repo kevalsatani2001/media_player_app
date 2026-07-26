@@ -944,9 +944,6 @@
 //       ),
 //     );
 //   }
-// }
-
-
 import 'dart:convert';
 import 'dart:math' show max, min;
 
@@ -955,32 +952,10 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/app_imports.dart';
 import 'connectivity_service.dart';
-import 'hive_service.dart';
+import '../models/remote_config_model.dart';
 
 class AdHelper {
-  static final Map<String, dynamic> _parsedRemoteConfig = {};
-
-  static String? _getString(String key) {
-    if (_parsedRemoteConfig.containsKey(key)) {
-      return _parsedRemoteConfig[key]?.toString();
-    }
-    return _remoteConfig?.getString(key);
-  }
-
-  static bool? _getBool(String key) {
-    if (_parsedRemoteConfig.containsKey(key)) {
-      final val = _parsedRemoteConfig[key]?.toString().toLowerCase().trim();
-      return val == 'true' || val == '1';
-    }
-    return _remoteConfig?.getBool(key);
-  }
-
-  static int? _getInt(String key) {
-    if (_parsedRemoteConfig.containsKey(key)) {
-      return int.tryParse(_parsedRemoteConfig[key]?.toString() ?? '');
-    }
-    return _remoteConfig?.getInt(key);
-  }
+  static RemoteConfigModel config = RemoteConfigModel.fromDefaults();
 
   static void _parseJsonRemoteConfig() {
     if (_remoteConfig == null) return;
@@ -989,17 +964,7 @@ class AdHelper {
     if (jsonStr.isEmpty) return;
     try {
       final Map<String, dynamic> parsed = jsonDecode(jsonStr);
-      if (parsed.containsKey('parameters')) {
-        final params = parsed['parameters'] as Map<String, dynamic>;
-        params.forEach((key, val) {
-          if (val is Map && val.containsKey('defaultValue')) {
-            final defVal = val['defaultValue'];
-            if (defVal is Map && defVal.containsKey('value')) {
-              _parsedRemoteConfig[key] = defVal['value'];
-            }
-          }
-        });
-      }
+      config = RemoteConfigModel.fromJson(parsed);
     } catch (e) {
       debugPrint('Error parsing nested remote_config JSON: $e');
     }
@@ -1008,53 +973,53 @@ class AdHelper {
   /// AdMob **native** test unit — replace with your production native ad unit IDs.
   /// See https://developers.google.com/admob/android/test-ads
   static String get nativeVideoPauseOverlayId {
-    final val = Platform.isAndroid
-        ? _getString('android_native_video_pause_overlay_id')
-        : _getString('ios_native_video_pause_overlay_id');
-    if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/2247696110'
-        : 'ca-app-pub-3940256099942544/3986624511';
+        ? config.androidNativeVideoPauseOverlayId
+        : config.iosNativeVideoPauseOverlayId;
   }
 
   static String get bannerId {
-    final val = Platform.isAndroid
-        ? _getString('android_banner_ad_unit_id')
-        : _getString('ios_banner_ad_unit_id');
-    if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/6300978111'
-        : 'ca-app-pub-3940256099942544/2934735716';
+        ? config.androidBannerAdUnitId
+        : config.iosBannerAdUnitId;
   }
 
   static String get interstitialId {
-    final val = Platform.isAndroid
-        ? _getString('android_interstitial_ad_unit_id')
-        : _getString('ios_interstitial_ad_unit_id');
-    if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/1033173712'
-        : 'ca-app-pub-3940256099942544/4411468910';
+        ? config.androidInterstitialAdUnitId
+        : config.iosInterstitialAdUnitId;
   }
 
   static String get rewardedId {
-    final val = Platform.isAndroid
-        ? _getString('android_rewarded_ad_unit_id')
-        : _getString('ios_rewarded_ad_unit_id');
-    if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/5224354917'
-        : 'ca-app-pub-3940256099942544/1712485313';
+        ? config.androidRewardedAdUnitId
+        : config.iosRewardedAdUnitId;
   }
 
   static String get appOpenId {
-    final val = Platform.isAndroid
-        ? _getString('android_app_open_ad_unit_id')
-        : _getString('ios_app_open_ad_unit_id');
-    if (val != null && val.isNotEmpty) return val;
     return Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/9257395921'
-        : 'ca-app-pub-3940256099942544/5662855259';
+        ? config.androidAppOpenAdUnitId
+        : config.iosAppOpenAdUnitId;
+  }
+
+  static String get latestAppVersion {
+    return config.latestAppVersion;
+  }
+
+  static String get minRequiredAppVersion {
+    return config.minRequiredAppVersion;
+  }
+
+  static bool get forceUpdateEnabled {
+    return config.forceUpdateEnabled;
+  }
+
+  static String get appUpdateUrl {
+    return config.appUpdateUrl;
+  }
+
+  static String get shareAppUrl {
+    return config.shareAppUrl;
   }
 
   static FirebaseRemoteConfig? _remoteConfig;
@@ -1099,6 +1064,11 @@ class AdHelper {
         'offline_wait_timer_seconds': 30,
         'show_rewarded_on_player_count': 5,
         'off_dev_mode': false,
+        'latest_app_version': '1.0.0',
+        'min_required_app_version': '1.0.0',
+        'force_update_enabled': false,
+        'app_update_url': 'https://play.google.com/store/apps/details?id=com.nova.media.vision',
+        'share_app_url': 'https://play.google.com/store/apps/details?id=com.nova.media.vision',
       });
       
       final bool activated = await _remoteConfig!.fetchAndActivate();
@@ -1113,7 +1083,7 @@ class AdHelper {
       debugPrint('======================================');
       debugPrint('Firebase Remote Config fetchAndActivate: $activated');
       debugPrint('Remote Config lastFetchStatus: ${_remoteConfig!.lastFetchStatus}');
-      debugPrint('Remote Config show_ads_enabled = ${showAdsEnabled}');
+      debugPrint('Remote Config show_ads_enabled = $showAdsEnabled');
       debugPrint('======================================');
       
       preloadInterstitial();
@@ -1137,79 +1107,42 @@ class AdHelper {
       }
     } catch (_) {}
 
-    final parsed = _getBool('show_ads_enabled');
-    if (parsed != null) {
-      try {
-        if (HiveService.settingsBox.isOpen) {
-          HiveService.settingsBox.put('last_fetched_show_ads_enabled', parsed);
-        }
-      } catch (_) {}
-      return parsed;
-    }
-
-    if (_remoteConfig == null) return cachedVal;
+    final parsed = config.showAdsEnabled;
     try {
-      final val = _remoteConfig!.getValue('show_ads_enabled');
-      final strVal = val.asString().toLowerCase().trim();
-      bool resolvedVal = true;
-      if (strVal == 'false' || strVal == '0') {
-        resolvedVal = false;
-      } else if (strVal == 'true' || strVal == '1') {
-        resolvedVal = true;
-      } else {
-        resolvedVal = val.asBool();
+      if (HiveService.settingsBox.isOpen) {
+        HiveService.settingsBox.put('last_fetched_show_ads_enabled', parsed);
       }
-      
-      try {
-        if (HiveService.settingsBox.isOpen) {
-          HiveService.settingsBox.put('last_fetched_show_ads_enabled', resolvedVal);
-        }
-      } catch (_) {}
-      
-      return resolvedVal;
-    } catch (e) {
-      debugPrint('Error getting show_ads_enabled: $e');
+      return parsed;
+    } catch (_) {
       return cachedVal;
     }
   }
 
-  static bool get offDevMode => _getBool('off_dev_mode') ?? false;
+  static bool get offDevMode => config.offDevMode;
 
-  static bool get showInterstitialOnHome =>
-      _getBool('show_interstitial_on_home') ?? true;
+  static bool get showInterstitialOnHome => config.showInterstitialOnHome;
 
-  static bool get showInterstitialOnPlayer =>
-      _getBool('show_interstitial_on_player') ?? true;
+  static bool get showInterstitialOnPlayer => config.showInterstitialOnPlayer;
 
-  static bool get showInterstitialOnLanguage =>
-      _getBool('show_interstitial_on_language') ?? true;
+  static bool get showInterstitialOnLanguage => config.showInterstitialOnLanguage;
 
-  static bool get showInterstitialOnPlaylist =>
-      _getBool('show_interstitial_on_playlist') ?? true;
+  static bool get showInterstitialOnPlaylist => config.showInterstitialOnPlaylist;
 
-  static bool get showInterstitialOnFavourite =>
-      _getBool('show_interstitial_on_favourite') ?? true;
+  static bool get showInterstitialOnFavourite => config.showInterstitialOnFavourite;
 
-  static bool get showInterstitialOnFolder =>
-      _getBool('show_interstitial_on_folder') ?? true;
+  static bool get showInterstitialOnFolder => config.showInterstitialOnFolder;
 
-  static bool get showInterstitialOnAudio =>
-      _getBool('show_interstitial_on_audio') ?? true;
+  static bool get showInterstitialOnAudio => config.showInterstitialOnAudio;
 
-  static bool get showInterstitialOnVideo =>
-      _getBool('show_interstitial_on_video') ?? true;
+  static bool get showInterstitialOnVideo => config.showInterstitialOnVideo;
 
-  static bool get showInterstitialOnSettings =>
-      _getBool('show_interstitial_on_settings') ?? true;
+  static bool get showInterstitialOnSettings => config.showInterstitialOnSettings;
 
-  static int get interstitialInterval =>
-      _getInt('interstitial_interval') ?? 1;
+  static int get interstitialInterval => config.interstitialInterval;
 
-  static int get showRewardedOnPlayerCount =>
-      _getInt('show_rewarded_on_player_count') ?? 0;
+  static int get showRewardedOnPlayerCount => config.showRewardedOnPlayerCount;
 
-  static int get offlineWaitTimerSeconds =>
-      _getInt('offline_wait_timer_seconds') ?? 30;
+  static int get offlineWaitTimerSeconds => config.offlineWaitTimerSeconds;
 
   static String str(Object? value) => value?.toString() ?? '';
 

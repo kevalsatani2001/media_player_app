@@ -1,7 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../blocs/local/local_bloc.dart';
 
 class AppStrings {
   final Locale locale;
@@ -509,7 +506,12 @@ class AppStrings {
       "albums": "Albums",
       "pipPermissionTitle": "Picture-in-Picture Permission",
       "pipPermissionMessage": "To use Picture-in-Picture mode, we need your confirmation. This will allow the video to keep playing in a floating window over other apps.",
-    },
+    
+      "newUpdateAvailable": "New Update Available!",
+      "forceUpdateMessage": "A new version of the app is required to continue. Please update now.",
+      "flexibleUpdateMessage": "A new version of the app is available. Update now to get the latest features and performance improvements.",
+      "updateNow": "Update Now",
+},
     'ar': {
       "fitToScreen": "ملء الشاشة",
       "crop": "قص",
@@ -975,7 +977,12 @@ class AppStrings {
 
       "albums": "الألبومات",
 
-    },
+    
+      "newUpdateAvailable": "يتوفر تحديث جديد!",
+      "forceUpdateMessage": "يلزم تثبيت إصدار جديد من التطبيق للمتابعة. يرجى التحديث الآن.",
+      "flexibleUpdateMessage": "يتوفر إصدار جديد من التطبيق. يرجى التحديث الآن للحصول على أحدث الميزات وتحسينات الأداء.",
+      "updateNow": "التحديث الآن",
+},
     'my': {
       "fitToScreen": "ဖန်သားပြင်အပြည့်",
       "crop": "ဖြတ်ညှပ်ရန်",
@@ -1942,7 +1949,12 @@ class AppStrings {
 
       "albums": "Mga Album",
 
-    },
+    
+      "newUpdateAvailable": "အပ်ဒိတ်အသစ် ရနိုင်ပါပြီ။",
+      "forceUpdateMessage": "ဆက်လက်လုပ်ဆောင်ရန် အက်ပ်ဗားရှင်းအသစ် လိုအပ်ပါသည်။ ကျေးဇူးပြု၍ ယခု အပ်ဒိတ်လုပ်ပါ။",
+      "flexibleUpdateMessage": "အက်ပ်ဗားရှင်းအသစ် ရနိုင်ပါပြီ။ နောက်ဆုံးရ အင်္ဂါရပ်များနှင့် စွမ်းဆောင်ရည်မြှင့်တင်မှုများ ရရှိရန် ယခု အပ်ဒိတ်လုပ်ပါ။",
+      "updateNow": "ယခု အပ်ဒိတ်လုပ်ရန်",
+},
     'fr': {
       "fitToScreen": "AJUSTER À L'ÉCRAN",
       "crop": "ROGNER",
@@ -2422,7 +2434,12 @@ class AppStrings {
 
       "albums": "Albums",
 
-    },
+    
+      "newUpdateAvailable": "Nouvelle mise à jour disponible !",
+      "forceUpdateMessage": "Une nouvelle version de l'application est requise pour continuer. Veuillez mettre à jour maintenant.",
+      "flexibleUpdateMessage": "Une nouvelle version de l'application est disponible. Mettez à jour maintenant pour bénéficier des dernières fonctionnalités et améliorations de performances.",
+      "updateNow": "Mettre à jour maintenant",
+},
     'de': {
       "fitToScreen": "AN BILDSCHIRM ANPASSEN",
       "crop": "BESCHNEIDEN",
@@ -2903,7 +2920,12 @@ class AppStrings {
 
       "albums": "Alben",
 
-    },
+    
+      "newUpdateAvailable": "Neues Update verfügbar!",
+      "forceUpdateMessage": "Eine neue Version der App ist erforderlich, um fortzufahren. Bitte jetzt aktualisieren.",
+      "flexibleUpdateMessage": "Eine neue Version der App is verfügbar. Aktualisieren Sie jetzt, um die neuesten Funktionen und Leistungsverbesserungen zu erhalten.",
+      "updateNow": "Jetzt aktualisieren",
+},
     'gu': {
       "fitToScreen": "ફિટ ટુ સ્ક્રીન",
       "crop": "ક્રોપ",
@@ -3385,7 +3407,12 @@ class AppStrings {
       "albums": "આલ્બમ્સ",
       "pipPermissionTitle": "પિક્ચર-ઇન-પિક્ચર પરવાનગી",
       "pipPermissionMessage": "પિક્ચર-ઇન-પિક્ચર મોડનો ઉપયોગ કરવા માટે, અમારે તમારી મંજૂરીની જરૂર છે. આ વિડિયોને અન્ય એપ્સ પર નાની વિન્ડોમાં ચાલુ રાખવા દેશે.",
-    },
+    
+      "newUpdateAvailable": "નવું અપડેટ ઉપલબ્ધ છે!",
+      "forceUpdateMessage": "ચાલુ રાખવા માટે એપ્લિકેશનનું નવું સંસ્કરણ આવશ્યક છે. કૃપા કરીને હમણાં અપડેટ કરો.",
+      "flexibleUpdateMessage": "એપ્લિકેશનનું નવું સંસ્કરણ ઉપલબ્ધ છે. નવીનતમ સુવિધાઓ અને પ્રદર્શન સુધારાઓ મેળવવા માટે હમણાં અપડેટ કરો.",
+      "updateNow": "હમણાં અપડેટ કરો",
+},
     'hi': {
       "fitToScreen": "स्क्रीन पर फिट करें",
       "crop": "क्रॉप",
@@ -3862,7 +3889,12 @@ class AppStrings {
       "albums": "एल्बम",
       "pipPermissionTitle": "पिक्चर-इन-पिक्चर अनुमति",
       "pipPermissionMessage": "पिक्चर-इन-पिक्चर मोड का उपयोग करने के लिए, हमें आपकी सहमति की आवश्यकता है। यह वीडियो को अन्य ऐप्स के ऊपर एक छोटी विंडो में चालू रहने देगा।",
-    },
+    
+      "newUpdateAvailable": "नया अपडेट उपलब्ध है!",
+      "forceUpdateMessage": "आगे बढ़ने के लिए ऐप का नया संस्करण आवश्यक है। कृपया अभी अपडेट करें।",
+      "flexibleUpdateMessage": "ऐप का नया संस्करण उपलब्ध है। नवीनतम सुविधाओं और प्रदर्शन सुधारों को प्राप्त करने के लिए अभी अपडेट करें।",
+      "updateNow": "अभी अपडेट करें",
+},
     'id': {
       "fitToScreen": "PAS KAN KE LAYAR",
       "crop": "PANGKAS",
@@ -4337,7 +4369,12 @@ class AppStrings {
 
       "albums": "Album",
 
-    },
+    
+      "newUpdateAvailable": "Pembaruan Baru Tersedia!",
+      "forceUpdateMessage": "Versi baru aplikasi diperlukan untuk melanjutkan. Silakan perbarui sekarang.",
+      "flexibleUpdateMessage": "Versi baru aplikasi telah tersedia. Perbarui sekarang untuk mendapatkan fitur terbaru dan peningkatan performa.",
+      "updateNow": "Perbarui Sekarang",
+},
     'it': {
       "fitToScreen": "ADATTA ALLO SCHERMO",
       "crop": "RITAGLIA",
@@ -4816,7 +4853,12 @@ class AppStrings {
 
       "albums": "Album",
 
-    },
+    
+      "newUpdateAvailable": "Nuovo aggiornamento disponibile!",
+      "forceUpdateMessage": "Per continuare è necessaria una nuova versione dell'app. Aggiorna ora.",
+      "flexibleUpdateMessage": "È disponibile una nuova versione dell'app. Aggiorna ora per ottenere le funzionalità più recenti e miglioramenti delle prestazioni.",
+      "updateNow": "Aggiorna ora",
+},
     'ja': {
       "fitToScreen": "画面に合わせる",
       "crop": "クロップ",
@@ -5277,7 +5319,12 @@ class AppStrings {
 
       "albums": "アルバム",
 
-    },
+    
+      "newUpdateAvailable": "新しいアップデートが利用可能です！",
+      "forceUpdateMessage": "続行するにはアプリの新しいバージョンが必要です。今すぐアップデートしてください。",
+      "flexibleUpdateMessage": "アプリの新しいバージョンが利用可能です。最新の機能とパフォーマンスの向上を得るために、今すぐアップデートしてください。",
+      "updateNow": "今すぐアップデート",
+},
     'ko': {
       "fitToScreen": "화면에 맞춤",
       "crop": "자르기",
@@ -5737,7 +5784,12 @@ class AppStrings {
 
       "albums": "앨범",
 
-    },
+    
+      "newUpdateAvailable": "새로운 업데이트가 가능합니다!",
+      "forceUpdateMessage": "계속하려면 앱의 새 버전이 필요합니다. 지금 업데이트하십시오.",
+      "flexibleUpdateMessage": "앱의 새 버전을 사용할 수 있습니다. 최신 기능และ 성능 향상을 위해 지금 업데이트하십시오.",
+      "updateNow": "지금 업데이트",
+},
     'ms': {
       "fitToScreen": "MUATKAN KE SKRIN",
       "crop": "POTONG",
@@ -6214,7 +6266,12 @@ class AppStrings {
 
       "albums": "Album",
 
-    },
+    
+      "newUpdateAvailable": "Kemas Kini Baru Tersedia!",
+      "forceUpdateMessage": "Versi baru aplikasi diperlukan untuk meneruskan. Sila kemas kini sekarang.",
+      "flexibleUpdateMessage": "Versi baru aplikasi telah tersedia. Kemas kini sekarang untuk mendapat ciri-ciri terbaru dan peningkatan prestasi.",
+      "updateNow": "Kemas Kini Sekarang",
+},
     'mr': {
       "fitToScreen": "स्क्रीनवर फिट करा",
       "crop": "क्रॉप",
@@ -6688,7 +6745,12 @@ class AppStrings {
 
       "albums": "अल्बम",
 
-    },
+    
+      "newUpdateAvailable": "नवीन अपडेट उपलब्ध आहे!",
+      "forceUpdateMessage": "सुरू ठेवण्यासाठी ॲपची नवीन आवृत्ती आवश्यक आहे. कृपया आता अपडेट करा.",
+      "flexibleUpdateMessage": "ॲपची नवीन आवृत्ती उपलब्ध आहे. नवीनतम वैशिष्ट्ये आणि कार्यप्रदर्शन सुधारणा मिळवण्यासाठी आता अपडेट करा.",
+      "updateNow": "आता अपडेट करा",
+},
     'fa': {
       "fitToScreen": "تناسب با صفحه",
       "crop": "برش",
@@ -7163,7 +7225,12 @@ class AppStrings {
 
       "albums": "آلبوم‌ها",
 
-    },
+    
+      "newUpdateAvailable": "به‌روزرسانی جدید در دسترس است!",
+      "forceUpdateMessage": "برای ادامه، نسخه جدید برنامه مورد نیاز است. لطفاً اکنون به‌روزرسانی کنید.",
+      "flexibleUpdateMessage": "نسخه جدید برنامه در دسترس است. برای دریافت آخرین ویژگی‌ها و بهبودهای عملکرد، اکنون به‌روزرسانی کنید.",
+      "updateNow": "به‌روزرسانی اکنون",
+},
     'pl': {
       "fitToScreen": "DOPASUJ DO EKRANU",
       "crop": "PRZYTNIJ",
@@ -7635,7 +7702,12 @@ class AppStrings {
       "fileInformation": "Informacje o pliku",
       "created": "Utworzono",
       "albums": "Albumy",
-    },
+    
+      "newUpdateAvailable": "Nowa aktualizacja dostępna!",
+      "forceUpdateMessage": "Do kontynuowania wymagana jest nowa wersja aplikacji. Zaktualizuj teraz.",
+      "flexibleUpdateMessage": "Dostępna jest nowa wersja aplikacji. Zaktualizuj teraz, aby uzyskać najnowsze funkcje i ulepszenia wydajności.",
+      "updateNow": "Zaktualizuj teraz",
+},
     'pt': {
       "fitToScreen": "AJUSTAR AO ECRÃ",
       "crop": "RECORTAR",
@@ -8114,7 +8186,12 @@ class AppStrings {
 
       "albums": "Álbuns",
 
-    },
+    
+      "newUpdateAvailable": "Nova atualização disponível!",
+      "forceUpdateMessage": "Uma nova versão do aplicativo é necessária para continuar. Atualize agora.",
+      "flexibleUpdateMessage": "Uma nova versão do aplicativo está disponível. Atualize agora para obter os recursos mais recentes e melhorias de desempenho.",
+      "updateNow": "Atualizar agora",
+},
     'es': {
       "fitToScreen": "AJUSTAR A LA PANTALLA",
       "crop": "RECORTAR",
@@ -8591,7 +8668,12 @@ class AppStrings {
       "fileInformation": "Información del archivo",
       "created": "Creado",
       "albums": "Álbumes",
-    },
+    
+      "newUpdateAvailable": "¡Nueva actualización disponible!",
+      "forceUpdateMessage": "Se requiere una nueva versión de la aplicación para continuar. Por favor, actualice ahora.",
+      "flexibleUpdateMessage": "Una nueva versión de la aplicación está disponible. Actualice ahora para obtener las últimas funciones y mejoras de rendimiento.",
+      "updateNow": "Actualizar ahora",
+},
     'sv': {
       "fitToScreen": "ANPASSA TILL SKÄRM",
       "crop": "BESKÄR",
@@ -9061,7 +9143,12 @@ class AppStrings {
       "fileInformation": "Filinformation",
       "created": "Skapad",
       "albums": "Album",
-    },
+    
+      "newUpdateAvailable": "Ny uppdatering tillgänglig!",
+      "forceUpdateMessage": "En ny version av appen krävs för att fortsätta. Uppdatera nu.",
+      "flexibleUpdateMessage": "En ny version av appen är tillgänglig. Uppdatera nu för att få de senaste funktionerna och prestandaförbättringarna.",
+      "updateNow": "Uppdatera nu",
+},
     'ta': {
       "fitToScreen": "திரைக்குப் பொருத்து",
       "crop": "கிராப்",
@@ -9541,7 +9628,12 @@ class AppStrings {
       "fileInformation": "கோப்பு தகவல்",
       "created": "உருவாக்கப்பட்டது",
       "albums": "ஆல்பங்கள்",
-    },
+    
+      "newUpdateAvailable": "புதிய புதுப்பிப்பு கிடைக்கிறது!",
+      "forceUpdateMessage": "தொடர ஆப்ஸின் புதிய பதிப்பு தேவை. தயவுசெய்து இப்போது புதுப்பிக்கவும்.",
+      "flexibleUpdateMessage": "ஆப்ஸின் புதிய பதிப்பு கிடைக்கிறது. சமீபத்திய அம்சங்கள் மற்றும் செயல்திறன் மேம்பாடுகளைப் பெற இப்போது புதுப்பிக்கவும்.",
+      "updateNow": "இப்போது புதுப்பி",
+},
     'ur': {
       "fitToScreen": "اسکرین پر فٹ کریں",
       "crop": "کراپ",
@@ -10017,7 +10109,12 @@ class AppStrings {
 
       "albums": "البمز",
 
-    },
+    
+      "newUpdateAvailable": "نیا اپ ڈیٹ دستیاب ہے!",
+      "forceUpdateMessage": "جاری رکھنے کے لیے ایپ کا نیا ورژن درکار ہے۔ براہ کرم ابھی اپ ڈیٹ کریں۔",
+      "flexibleUpdateMessage": "ایپ کا نیا ورژن دستیاب ہے۔ تازہ ترین خصوصیات اور کارکردگی میں بہتری حاصل کرنے کے لیے ابھی اپ ڈیٹ کریں۔",
+      "updateNow": "अभी अपडेट करें",
+},
   };
 
   String tr(String key) =>
@@ -10047,4 +10144,13 @@ class _AppLocDelegate extends LocalizationsDelegate<AppStrings> {
 
   @override
   bool shouldReload(_AppLocDelegate old) => false;
+}
+
+extension LocalizationExtension on BuildContext {
+  String tr(String key) {
+    final locale = Localizations.localeOf(this).languageCode;
+    return AppStrings.translations[locale]?[key] ??
+        AppStrings.translations['en']![key] ??
+        key;
+  }
 }

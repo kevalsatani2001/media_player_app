@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:media_player/screens/setting_screen.dart';
+import 'package:media_player/utils/app_string.dart';
 
 import '../services/responsive_helper.dart';
 import '../utils/app_colors.dart';

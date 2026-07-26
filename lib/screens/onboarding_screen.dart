@@ -62,7 +62,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Navigator.pop(context);
         return false;
       },
-      child: Scaffold(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+                systemNavigationBarColor: const Color(0xFF121212),
+                systemNavigationBarIconBrightness: Brightness.light,
+              )
+            : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                statusBarIconBrightness: Brightness.dark,
+                statusBarBrightness: Brightness.light,
+                systemNavigationBarColor: const Color(0xFFF5F5F5),
+                systemNavigationBarIconBrightness: Brightness.dark,
+              ),
+        child: Scaffold(
         body: SafeArea(
           child: Stack(
             children: [
@@ -202,7 +218,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
 /*
 return WillPopScope(
       onWillPop: () async {

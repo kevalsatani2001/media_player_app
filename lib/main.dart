@@ -229,11 +229,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver{
       builder: (context, themeState) {
         return BlocBuilder<LocaleBloc, LocaleState>(
           builder: (context, localeState) {
-            final savedLang = HiveService.languageCode;
             return MaterialApp(
               navigatorKey: NavigatorKey.root,
               builder: (context, child) {
-                return ConnectivityWrapper(child: child!);
+                final isDark = themeState.isDark;
+                final overlayStyle = isDark
+                    ? SystemUiOverlayStyle.light.copyWith(
+                        statusBarColor: Colors.transparent,
+                        statusBarIconBrightness: Brightness.light,
+                        statusBarBrightness: Brightness.dark,
+                        systemNavigationBarColor: const Color(0xFF121212),
+                        systemNavigationBarIconBrightness: Brightness.light,
+                      )
+                    : SystemUiOverlayStyle.dark.copyWith(
+                        statusBarColor: Colors.transparent,
+                        statusBarIconBrightness: Brightness.dark,
+                        statusBarBrightness: Brightness.light,
+                        systemNavigationBarColor: const Color(0xFFF5F5F5),
+                        systemNavigationBarIconBrightness: Brightness.dark,
+                      );
+                return AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: overlayStyle,
+                  child: ConnectivityWrapper(child: child!),
+                );
               },
               navigatorObservers: [routeObserver],
               debugShowCheckedModeBanner: false,
