@@ -14,7 +14,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
       {
         "title": context.tr("yourMediaYourPrivacy"),
         "content": context.tr("yourMediaYourPrivacyContent"),
-        "icon": Icons.privacy_tip_rounded,
+        "icon": Icons.folder_special_rounded,
       },
       {
         "title": context.tr("offlineExperience"),
@@ -22,14 +22,19 @@ class PrivacyPolicyScreen extends StatelessWidget {
         "icon": Icons.cloud_off_rounded,
       },
       {
-        "title": context.tr("noPersonalTracking"),
-        "content": context.tr("noPersonalTrackingContent"),
-        "icon": Icons.track_changes_rounded,
+        "title": context.tr("ringtoneSettingsPermission"),
+        "content": context.tr("ringtoneSettingsPermissionContent"),
+        "icon": Icons.ring_volume_rounded,
       },
       {
-        "title": context.tr("whyPermissions"),
-        "content": context.tr("whyPermissionsContent"),
-        "icon": Icons.vpn_key_rounded,
+        "title": context.tr("notificationsBackgroundPlayback"),
+        "content": context.tr("notificationsBackgroundPlaybackContent"),
+        "icon": Icons.notifications_active_rounded,
+      },
+      {
+        "title": context.tr("thirdPartyAdsAnalytics"),
+        "content": context.tr("thirdPartyAdsAnalyticsContent"),
+        "icon": Icons.ads_click_rounded,
       },
       {
         "title": context.tr("securePrivate"),
@@ -172,7 +177,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon Circle
+            // Clean Icon Circle
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(

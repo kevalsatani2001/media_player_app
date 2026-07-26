@@ -7,6 +7,12 @@ class AppStrings {
 
   static const Map<String, Map<String, String>> translations = {
     'en': {
+      "ringtoneSettingsPermission": "3. System Settings & Ringtones",
+      "ringtoneSettingsPermissionContent": "Permission to modify system settings is requested only when you choose to set an audio track as your device ringtone or notification sound.",
+      "notificationsBackgroundPlayback": "4. Background Playback & Notifications",
+      "notificationsBackgroundPlaybackContent": "Foreground service and notification permissions allow audio to play smoothly in the background with controls on your lock screen.",
+      "thirdPartyAdsAnalytics": "5. Advertising & Remote Config",
+      "thirdPartyAdsAnalyticsContent": "We use Google Mobile Ads and Firebase Remote Config to deliver free app features and live updates. Ad networks may collect non-personal device identifiers.",
       "fitToScreen": "FIT TO SCREEN",
       "crop": "CROP",
       "stretch": "STRETCH",
@@ -83,7 +89,7 @@ class AppStrings {
       "whyPermissions": "4. Why we need Permissions?",
       "whyPermissionsContent":
           "We ask for 'Storage Permission' only so the app can find your music and videos to play them. Without this, the app won't be able to show your files.",
-      "securePrivate": "5. Secure & Private",
+      "securePrivate": "6. Secure & Private",
       "securePrivateContent":
           "Since everything is stored on your phone, your data is completely private. If you delete the app, your created playlists within the app will also be removed.",
       "appVersion": "Version",
@@ -513,6 +519,12 @@ class AppStrings {
       "updateNow": "Update Now",
 },
     'ar': {
+      "ringtoneSettingsPermission": "٣. إعدادات النظام والنغمات",
+      "ringtoneSettingsPermissionContent": "يتم طلب الإذن بتعديل إعدادات النظام فقط عندما تختار تعيين مسار صوتي كنغمة رنين لجهازك أو صوت إشعار.",
+      "notificationsBackgroundPlayback": "٤. التشغيل في الخلفية والإشعارات",
+      "notificationsBackgroundPlaybackContent": "تتيح أذونات الخدمة والإشعارات تشغيل الصوت بسلاسة في الخلفية مع عناصر تحكم على شاشة القفل.",
+      "thirdPartyAdsAnalytics": "٥. الإعلانات والتكوين عن بُعد",
+      "thirdPartyAdsAnalyticsContent": "نستخدم إعلانات Google وتكوين Firebase لتقديم ميزات مجانية وتحديثات مباشرة. قد تجمع شبكات الإعلانات معرفات جهاز غير شخصية.",
       "fitToScreen": "ملء الشاشة",
       "crop": "قص",
       "stretch": "تمديد",
@@ -587,7 +599,7 @@ class AppStrings {
       "whyPermissions": "٤. لماذا نحتاج إلى أذونات؟",
       "whyPermissionsContent":
           "نطلب 'إذن التخزين' فقط حتى يتمكن التطبيق من العثور على الموسيقى والفيديوهات وتشغيلها. بدون ذلك، لن يتمكن التطبيق من عرض ملفاتك.",
-      "securePrivate": "٥. آمن وخصوصي",
+      "securePrivate": "٦. آمن وخصوصي",
       "securePrivateContent":
           "بما أن كل شيء مخزن على هاتفك، فإن بياناتك خاصة تمامًا. إذا قمت بحذف التطبيق، فسيتم أيضًا حذف قوائم التشغيل التي أنشأتها داخل التطبيق.",
       "appVersion": "الإصدار",
@@ -984,6 +996,12 @@ class AppStrings {
       "updateNow": "التحديث الآن",
 },
     'my': {
+      "ringtoneSettingsPermission": "၃. စနစ်ဆက်တင်များနှင့် ဖုန်းခေါ်သံ",
+      "ringtoneSettingsPermissionContent": "သီချင်းကို ဖုန်းခေါ်သံ သို့မဟုတ် အသိပေးသံအဖြစ် သတ်မှတ်ချိန်၌သာ စနစ်ဆက်တင်ပြင်ဆင်ခွင့် တောင်းဆိုပါသည်။",
+      "notificationsBackgroundPlayback": "၄. နောက်ကွယ်မှ ဖွင့်လှစ်ခြင်းနှင့် အသိပေးချက်များ",
+      "notificationsBackgroundPlaybackContent": "နောက်ကွယ်မှ သီချင်းဖွင့်လှစ်နိုင်ရန်နှင့် မျက်နှာပြင်ပိတ်ချိန်တွင် ထိန်းချုပ်နိုင်ရန် အသိပေးချက်ခွင့်ပြုချက် အသုံးပြုပါသည်။",
+      "thirdPartyAdsAnalytics": "၅. ကြော်ငြာများနှင့် စနစ်နောက်ဆုံးပြင်ဆင်မှု",
+      "thirdPartyAdsAnalyticsContent": "အခမဲ့ဝန်ဆောင်မှုပေးနိုင်ရန် Google ကြော်ငြာများနှင့် Firebase ကို အသုံးပြုပါသည်။ ကြော်ငြာကွန်ရက်များသည် ပုဂ္ဂိုလ်ရေးမဟုတ်သော အချက်အလက်များ ရယူနိုင်ပါသည်။",
       "fitToScreen": "ဖန်သားပြင်အပြည့်",
       "crop": "ဖြတ်ညှပ်ရန်",
       "stretch": "ဆွဲဆန့်ရန်",
@@ -1047,10 +1065,10 @@ class AppStrings {
       "checkConnection": "ချိတ်ဆက်မှုကို စစ်ဆေးပါ",
       "restoringConnection": "ချိတ်ဆက်နေသည်...",
       "renamePlaylist": "ပလေးလစ်အမည်ပြောင်းရန်",
-      "yourMediaYourPrivacy": "၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
+      "yourMediaYourPrivacy": "၁. ၁။ သင်၏မီဒီယာ၊ သင်၏ကိုယ်ရေးကိုယ်တာ",
       "yourMediaYourPrivacyContent":
           "ဤအက်ပ်သည် သင့်ဖုန်းထဲတွင် ရှိပြီးသားဖိုင်များ (ဗီဒီယိုနှင့် သီချင်း) ကိုသာ ဖွင့်ပေးပါသည်။ သင်၏ ကိုယ်ပိုင်ဓာတ်ပုံများနှင့် အခြားကိုယ်ရေးကိုယ်တာ စာရွက်စာတမ်းများကို ကျွန်ုပ်တို့ မကြည့်ရှုပါ။",
-      "offlineExperience": "၂။ အော့ဖ်လိုင်းအသုံးပြုမှု",
+      "offlineExperience": "၂. ၂။ အော့ဖ်လိုင်းအသုံးပြုမှု",
       "offlineExperienceContent":
           "သင်ဖန်တီးထားသော ပလေးလစ်များနှင့် အကြိုက်ဆုံးများကို သင့်စက်ထဲတွင် တိုက်ရိုက်သိမ်းဆည်းထားပါသည်။ သင်၏ဖိုင်များ သို့မဟုတ် ဒေတာများကို မည်သည့်ဝဘ်ဆိုက် သို့မဟုတ် ဆာဗာသို့မှ တင်မည်မဟုတ်ပါ။",
       "noPersonalTracking": "၃။ ကိုယ်ရေးကိုယ်တာ ခြေရာခံခြင်းမရှိပါ",
@@ -1059,7 +1077,7 @@ class AppStrings {
       "whyPermissions": "၄။ ကျွန်ုပ်တို့ အဘယ်ကြောင့် ခွင့်ပြုချက်လိုအပ်သနည်း။",
       "whyPermissionsContent":
           "အက်ပ်က သင့်သီချင်းနှင့် ဗီဒီယိုများကို ရှာဖွေဖွင့်နိုင်ရန် 'Storage Permission' ကိုသာ တောင်းဆိုခြင်းဖြစ်သည်။ ဤခွင့်ပြုချက်မရှိလျှင် အက်ပ်က သင့်ဖိုင်များကို ပြသနိုင်မည်မဟုတ်ပါ။",
-      "securePrivate": "၅။ လုံခြုံစိတ်ချရပြီး သီးသန့်ဖြစ်ခြင်း",
+      "securePrivate": "၆. ၅။ လုံခြုံစိတ်ချရပြီး သီးသန့်ဖြစ်ခြင်း",
       "securePrivateContent":
           "အရာအားလုံးကို သင့်ဖုန်းပေါ်တွင်သာ သိမ်းဆည်းထားသောကြောင့် သင့်ဒေတာသည် လုံးဝသီးသန့်ဖြစ်သည်။ အကယ်၍ သင်သည် အက်ပ်ကို ဖျက်လိုက်ပါက၊ အက်ပ်အတွင်း သင်ဖန်တီးထားသော ပလေးလစ်များလည်း ပျက်သွားမည်ဖြစ်သည်။",
       "appVersion": "ဗားရှင်း",
@@ -1956,6 +1974,12 @@ class AppStrings {
       "updateNow": "ယခု အပ်ဒိတ်လုပ်ရန်",
 },
     'fr': {
+      "ringtoneSettingsPermission": "3. Paramètres Système et Sonneries",
+      "ringtoneSettingsPermissionContent": "L'autorisation de modifier les paramètres système n'est demandée que si vous définissez une piste audio comme sonnerie ou notification.",
+      "notificationsBackgroundPlayback": "4. Lecture en Arrière-plan et Notifications",
+      "notificationsBackgroundPlaybackContent": "Les autorisations de service au premier plan et de notifications permettent une lecture fluide en arrière-plan avec des commandes sur l'écran de verrouillage.",
+      "thirdPartyAdsAnalytics": "5. Publicité et Configuration à Distance",
+      "thirdPartyAdsAnalyticsContent": "Nous utilisons Google Mobile Ads et Firebase Remote Config pour proposer des fonctionnalités gratuites. Les réseaux publicitaires peuvent collecter des identifiants non personnels.",
       "fitToScreen": "AJUSTER À L'ÉCRAN",
       "crop": "ROGNER",
       "stretch": "ÉTIREMENT",
@@ -2033,7 +2057,7 @@ class AppStrings {
       "whyPermissions": "4. Pourquoi avons-nous besoin de permissions ?",
       "whyPermissionsContent":
           "Nous demandons la 'Permission de Stockage' uniquement pour que l'application puisse trouver votre musique et vos vidéos afin de les lire. Sans cela, l'application ne pourra pas afficher vos fichiers.",
-      "securePrivate": "5. Sécurisé et Privé",
+      "securePrivate": "6. Sécurisé et Privé",
       "securePrivateContent":
           "Comme tout est stocké sur votre téléphone, vos données sont totalement privées. Si vous supprimez l'application, vos listes de lecture créées dans l'application seront également supprimées.",
       "appVersion": "Version",
@@ -2441,6 +2465,12 @@ class AppStrings {
       "updateNow": "Mettre à jour maintenant",
 },
     'de': {
+      "ringtoneSettingsPermission": "3. Systemeinstellungen & Klingeltöne",
+      "ringtoneSettingsPermissionContent": "Die Berechtigung zum Ändern der Systemeinstellungen wird nur angefordert, wenn Sie eine Audiodatei als Klingelton oder Benachrichtigungston festlegen.",
+      "notificationsBackgroundPlayback": "4. Hintergrundwiedergabe & Benachrichtigungen",
+      "notificationsBackgroundPlaybackContent": "Berechtigungen für Vordergrunddienste und Benachrichtigungen ermöglichen eine reibungslose Hintergrundwiedergabe mit Steuerung auf dem Sperrbildschirm.",
+      "thirdPartyAdsAnalytics": "5. Werbung & Remote-Konfiguration",
+      "thirdPartyAdsAnalyticsContent": "Wir nutzen Google Mobile Ads und Firebase Remote Config für kostenlose Funktionen und Updates. Werbenetzwerke können nicht-personenbezogene Kennungen erfassen.",
       "fitToScreen": "AN BILDSCHIRM ANPASSEN",
       "crop": "BESCHNEIDEN",
       "stretch": "STRECKEN",
@@ -2519,7 +2549,7 @@ class AppStrings {
       "whyPermissions": "4. Warum benötigen wir Berechtigungen?",
       "whyPermissionsContent":
           "Wir bitten nur um die 'Speicherberechtigung', damit die App Ihre Musik und Videos finden und abspielen kann. Ohne diese Berechtigung kann die App Ihre Dateien nicht anzeigen.",
-      "securePrivate": "5. Sicher und privat",
+      "securePrivate": "6. Sicher und privat",
       "securePrivateContent":
           "Da alles auf Ihrem Telefon gespeichert ist, sind Ihre Daten absolut privat. Wenn Sie die App löschen, werden auch die in der App erstellten Playlists entfernt.",
       "appVersion": "Version",
@@ -2927,6 +2957,12 @@ class AppStrings {
       "updateNow": "Jetzt aktualisieren",
 },
     'gu': {
+      "ringtoneSettingsPermission": "૩. સિસ્ટમ સેટિંગ્સ અને રિંગટોન",
+      "ringtoneSettingsPermissionContent": "સિસ્ટમ સેટિંગ્સ બદલવાની પરવાનગી ફક્ત ત્યારે જ માગવામાં આવે છે જ્યારે તમે કોઈ ઓડિયો ટ્રેકને રિંગટોન કે નોટિફિકેશન ટોન તરીકે સેટ કરો છો.",
+      "notificationsBackgroundPlayback": "૪. બેકગ્રાઉન્ડ પ્લેબેક અને નોટિફિકેશન",
+      "notificationsBackgroundPlaybackContent": "બેકગ્રાઉન્ડમાં ઓડિયો સરળતાથી પ્લે થાય અને લોક સ્ક્રીન પર કંટ્રોલ મળે તે માટે નોટિફિકેશન પરમિશન ઉપયોગ થાય છે.",
+      "thirdPartyAdsAnalytics": "૫. જાહેરાતો અને રિમોટ કન્ફિગરેશન",
+      "thirdPartyAdsAnalyticsContent": "અમે ફ્રી ફીચર્સ અને લાઈવ અપડેટ્સ આપવા માટે Google Ads અને Firebase નો ઉપયોગ કરીએ છીએ. એડ નેટવર્ક બિન-અંગત આઇડેન્ટિફાયર ભેગા કરી શકે છે.",
       "fitToScreen": "ફિટ ટુ સ્ક્રીન",
       "crop": "ક્રોપ",
       "stretch": "સ્ટ્રેચ",
@@ -3006,7 +3042,7 @@ class AppStrings {
       "whyPermissions": "૪. અમને પરવાનગીની જરૂર કેમ છે?",
       "whyPermissionsContent":
           "અમે ફક્ત 'સ્ટોરેજ પરમિશન' માંગીએ છીએ જેથી એપ તમારા મ્યુઝિક અને વીડિયો શોધી શકે અને વગાડી શકે. આના વગર, એપ તમારી ફાઇલો બતાવી શકશે નહીં.",
-      "securePrivate": "૫. સુરક્ષિત અને ખાનગી",
+      "securePrivate": "૬. સુરક્ષિત અને ખાનગી",
       "securePrivateContent":
           "બધું તમારા ફોન પર સ્ટોર હોવાથી, તમારો ડેટા સંપૂર્ણપણે ખાનગી છે. જો તમે એપ ડિલીટ કરો છો, તો એપમાં બનાવેલી તમારી પ્લેલિસ્ટ્સ પણ નીકળી જશે.",
       "appVersion": "સંસ્કરણ",
@@ -3414,6 +3450,12 @@ class AppStrings {
       "updateNow": "હમણાં અપડેટ કરો",
 },
     'hi': {
+      "ringtoneSettingsPermission": "३. सिस्टम सेटिंग्स और रिंगटोन",
+      "ringtoneSettingsPermissionContent": "सिस्टम सेटिंग्स को बदलने की अनुमति केवल तब मांगी जाती है जब आप किसी ऑडियो ट्रैक को रिंगटोन या नोटिफिकेशन टोन के रूप में सेट करते हैं।",
+      "notificationsBackgroundPlayback": "४. बैकग्राउंड प्लेबैक और नोटिफिकेशन",
+      "notificationsBackgroundPlaybackContent": "बैकग्राउंड में ऑडियो आसानी से चलाने और लॉक स्क्रीन पर नियंत्रण प्रदान करने के लिए नोटिफिकेशन अनुमति का उपयोग किया जाता है।",
+      "thirdPartyAdsAnalytics": "५. विज्ञापन और रिमोट कॉन्फ़िगरेशन",
+      "thirdPartyAdsAnalyticsContent": "हम मुफ्त सुविधाओं और लाइव अपडेट प्रदान करने के लिए Google Ads और Firebase का उपयोग करते हैं। विज्ञापन नेटवर्क गैर-व्यक्तिगत पहचानकर्ता एकत्र कर सकते हैं।",
       "fitToScreen": "स्क्रीन पर फिट करें",
       "crop": "क्रॉप",
       "stretch": "स्ट्रेच",
@@ -3492,7 +3534,7 @@ class AppStrings {
       "whyPermissions": "४. हमें अनुमति की आवश्यकता क्यों है?",
       "whyPermissionsContent":
           "हम केवल 'स्टोरेज अनुमति' मांगते हैं ताकि ऐप आपके संगीत और वीडियो को ढूंढ सके और उन्हें चला सके। इसके बिना, ऐप आपकी फ़ाइलें नहीं दिखा पाएगा।",
-      "securePrivate": "५. सुरक्षित और निजी",
+      "securePrivate": "६. सुरक्षित और निजी",
       "securePrivateContent":
           "चूंकि सब कुछ आपके फोन पर संग्रहीत है, इसलिए आपका डेटा पूरी तरह से निजी है। यदि आप ऐप को हटा देते हैं, तो ऐप के भीतर आपकी बनाई गई प्लेलिस्ट भी हटा दी जाएगी।",
       "appVersion": "संस्करण",
@@ -3896,6 +3938,12 @@ class AppStrings {
       "updateNow": "अभी अपडेट करें",
 },
     'id': {
+      "ringtoneSettingsPermission": "3. Pengaturan Sistem & Nada Dering",
+      "ringtoneSettingsPermissionContent": "Izin untuk mengubah pengaturan sistem hanya diminta saat Anda menetapkan trek audio sebagai nada dering atau nada notifikasi perangkat.",
+      "notificationsBackgroundPlayback": "4. Pemutaran Latar Belakang & Notifikasi",
+      "notificationsBackgroundPlaybackContent": "Izin layanan latar depan dan notifikasi memungkinkan audio diputar dengan lancar di latar belakang dengan kontrol di layar kunci.",
+      "thirdPartyAdsAnalytics": "5. Iklan & Konfigurasi Jarak Jauh",
+      "thirdPartyAdsAnalyticsContent": "Kami menggunakan Google Mobile Ads dan Firebase Remote Config untuk fitur gratis dan pembaruan langsung. Jaringan iklan dapat mengumpulkan pengenal non-pribadi.",
       "fitToScreen": "PAS KAN KE LAYAR",
       "crop": "PANGKAS",
       "stretch": "REGANGKAN",
@@ -3970,7 +4018,7 @@ class AppStrings {
       "whyPermissions": "4. Mengapa kami membutuhkan Izin?",
       "whyPermissionsContent":
           "Kami meminta 'Izin Penyimpanan' hanya agar aplikasi dapat menemukan musik dan video Anda untuk diputar. Tanpa izin ini, aplikasi tidak akan dapat menampilkan file Anda.",
-      "securePrivate": "5. Aman & Pribadi",
+      "securePrivate": "6. Aman & Pribadi",
       "securePrivateContent":
           "Karena semuanya disimpan di ponsel Anda, data Anda sepenuhnya pribadi. Jika Anda menghapus aplikasi, daftar putar yang Anda buat di dalam aplikasi juga akan dihapus.",
       "appVersion": "Versi",
@@ -4376,6 +4424,12 @@ class AppStrings {
       "updateNow": "Perbarui Sekarang",
 },
     'it': {
+      "ringtoneSettingsPermission": "3. Impostazioni di Sistema e Suonerie",
+      "ringtoneSettingsPermissionContent": "L'autorizzazione a modificare le impostazioni di sistema è richiesta solo quando imposti un brano audio come suoneria o suono di notifica.",
+      "notificationsBackgroundPlayback": "4. Riproduzione in Background e Notifiche",
+      "notificationsBackgroundPlaybackContent": "Le autorizzazioni per i servizi in primo piano e le notifiche consentono una riproduzione fluida in background con controlli nella schermata di blocco.",
+      "thirdPartyAdsAnalytics": "5. Pubblicità e Configurazione Remota",
+      "thirdPartyAdsAnalyticsContent": "Utilizziamo Google Mobile Ads e Firebase Remote Config per offrire funzionalità gratuite e aggiornamenti. Le reti pubblicitarie possono raccogliere identificatori non personali.",
       "fitToScreen": "ADATTA ALLO SCHERMO",
       "crop": "RITAGLIA",
       "stretch": "ESTENDI",
@@ -4451,7 +4505,7 @@ class AppStrings {
       "whyPermissions": "4. Perché abbiamo bisogno dei permessi?",
       "whyPermissionsContent":
           "Chiediamo il 'Permesso di Archiviazione' solo affinché l'app possa trovare la tua musica e i tuoi video per riprodurli. Senza questo, l'app non potrà mostrare i tuoi file.",
-      "securePrivate": "5. Sicuro e Privato",
+      "securePrivate": "6. Sicuro e Privato",
       "securePrivateContent":
           "Poiché tutto è memorizzato sul tuo telefono, i tuoi dati sono completamente privati. Se elimini l'app, verranno rimosse anche le playlist create all'interno dell'app.",
       "appVersion": "Versione",
@@ -4860,6 +4914,12 @@ class AppStrings {
       "updateNow": "Aggiorna ora",
 },
     'ja': {
+      "ringtoneSettingsPermission": "3. システム設定と着信音",
+      "ringtoneSettingsPermissionContent": "システム設定変更の権限は、音声トラックを着信音や通知音に設定する場合にのみ要求されます。",
+      "notificationsBackgroundPlayback": "4. バックグラウンド再生と通知",
+      "notificationsBackgroundPlaybackContent": "フォアグラウンドサービスと通知の権限により、ロック画面で操作しながらバックグラウンドでスムーズに音声を再生できます。",
+      "thirdPartyAdsAnalytics": "5. 広告とリモート設定",
+      "thirdPartyAdsAnalyticsContent": "無料機能とライブ更新の提供にGoogle Mobile AdsおよびFirebase Remote Configを使用しています。広告ネットワークは非個人識別子を収集する場合があります。",
       "fitToScreen": "画面に合わせる",
       "crop": "クロップ",
       "stretch": "引き伸ばす",
@@ -4931,7 +4991,7 @@ class AppStrings {
       "whyPermissions": "4. 権限が必要な理由",
       "whyPermissionsContent":
           "アプリが音楽やビデオを見つけて再生できるように、「ストレージ権限」のみをリクエストします。これがなければ、アプリはファイルを表示できません。",
-      "securePrivate": "5. 安全でプライベート",
+      "securePrivate": "6. 安全でプライベート",
       "securePrivateContent":
           "すべてが携帯電話に保存されるため、データは完全にプライベートです。アプリを削除すると、アプリ内で作成したプレイリストも削除されます。",
       "appVersion": "バージョン",
@@ -5326,6 +5386,12 @@ class AppStrings {
       "updateNow": "今すぐアップデート",
 },
     'ko': {
+      "ringtoneSettingsPermission": "3. 시스템 설정 및 벨소리",
+      "ringtoneSettingsPermissionContent": "시스템 설정 변경 권한은 오디오 트랙을 벨소리나 알림음으로 설정할 때만 요청됩니다.",
+      "notificationsBackgroundPlayback": "4. 백그라운드 재생 및 알림",
+      "notificationsBackgroundPlaybackContent": "포그라운드 서비스 및 알림 권한을 통해 잠금 화면 제어와 함께 백그라운드에서 오디오를 매끄럽게 재생할 수 있습니다.",
+      "thirdPartyAdsAnalytics": "5. 광고 및 원격 구성",
+      "thirdPartyAdsAnalyticsContent": "무료 기능 및 실시간 업데이트를 위해 Google Mobile Ads 및 Firebase Remote Config를 사용합니다. 광고 네트워크는 비개인 식별자를 수집할 수 있습니다.",
       "fitToScreen": "화면에 맞춤",
       "crop": "자르기",
       "stretch": "늘리기",
@@ -5396,7 +5462,7 @@ class AppStrings {
       "whyPermissions": "4. 권한이 필요한 이유는 무엇인가요?",
       "whyPermissionsContent":
           "앱이 음악과 동영상을 찾아 재생할 수 있도록 '저장소 권한'만 요청합니다. 이 권한이 없으면 앱에서 파일을 표시할 수 없습니다.",
-      "securePrivate": "5. 안전 및 보안",
+      "securePrivate": "6. 안전 및 보안",
       "securePrivateContent":
           "모든 것이 휴대폰에 저장되므로 데이터는 완전히 비공개입니다. 앱을 삭제하면 앱 내에서 만든 재생 목록도 삭제됩니다.",
       "appVersion": "버전",
@@ -5791,6 +5857,12 @@ class AppStrings {
       "updateNow": "지금 업데이트",
 },
     'ms': {
+      "ringtoneSettingsPermission": "3. Tetapan Sistem & Nada Dering",
+      "ringtoneSettingsPermissionContent": "Kebenaran mengubah tetapan sistem hanya diminta apabila anda menetapkan trek audio sebagai nada dering atau bunyi pemberitahuan.",
+      "notificationsBackgroundPlayback": "4. Main Balik Latar Belakang & Pemberitahuan",
+      "notificationsBackgroundPlaybackContent": "Kebenaran perkhidmatan latar hadapan dan pemberitahuan membolehkan audio dimainkan dengan lancar di latar belakang dengan kawalan skrin kunci.",
+      "thirdPartyAdsAnalytics": "5. Pengiklanan & Konfigurasi Jarak Jauh",
+      "thirdPartyAdsAnalyticsContent": "Kami menggunakan Google Mobile Ads dan Firebase Remote Config untuk menyediakan ciri percuma dan kemas kini. Rangkaian iklan mungkin mengumpul pengenal pasti bukan peribadi.",
       "fitToScreen": "MUATKAN KE SKRIN",
       "crop": "POTONG",
       "stretch": "REGANG",
@@ -5866,7 +5938,7 @@ class AppStrings {
       "whyPermissions": "4. Mengapa kami memerlukan Kebenaran?",
       "whyPermissionsContent":
           "Kami meminta 'Kebenaran Storan' hanya supaya aplikasi dapat mencari muzik dan video anda untuk dimainkan. Tanpa ini, aplikasi tidak akan dapat menunjukkan fail anda.",
-      "securePrivate": "5. Selamat & Peribadi",
+      "securePrivate": "6. Selamat & Peribadi",
       "securePrivateContent":
           "Oleh kerana semuanya disimpan dalam telefon anda, data anda adalah sulit sepenuhnya. Jika anda memadamkan aplikasi, senarai main yang anda buat dalam aplikasi juga akan dikeluarkan.",
       "appVersion": "Versi",
@@ -6273,6 +6345,12 @@ class AppStrings {
       "updateNow": "Kemas Kini Sekarang",
 },
     'mr': {
+      "ringtoneSettingsPermission": "३. सिस्टम सेटिंग्ज आणि रिंगटोन",
+      "ringtoneSettingsPermissionContent": "जेव्हा तुम्ही ऑडिओ ट्रॅक रिंगटोन किंवा नोटिफिकेशन टोन म्हणून सेट करता तेव्हाच सिस्टम सेटिंग्ज बदलण्याची परवानगी मागितली जाते.",
+      "notificationsBackgroundPlayback": "४. बॅकग्राउंड प्लेबॅक आणि नोटिफिकेशन्स",
+      "notificationsBackgroundPlaybackContent": "बॅकग्राउंडमध्ये ऑडिओ सहजपणे चालवण्यासाठी आणि लॉक स्क्रीनवर नियंत्रणासाठी नोटिफिकेशन परवानगी वापरली जाते.",
+      "thirdPartyAdsAnalytics": "५. जाहिराती आणि रिमोट कॉन्फिगरेशन",
+      "thirdPartyAdsAnalyticsContent": "आम्ही मोफत वैशिष्ट्ये आणि थेट अपडेट्स देण्यासाठी Google Ads आणि Firebase वापरतो. जाहिरात नेटवर्क गैर-वैयक्तिक ओळखकर्ते गोळा करू शकतात.",
       "fitToScreen": "स्क्रीनवर फिट करा",
       "crop": "क्रॉप",
       "stretch": "स्ट्रेચ",
@@ -6349,7 +6427,7 @@ class AppStrings {
       "whyPermissions": "४. आम्हाला परवानगीची गरज का आहे?",
       "whyPermissionsContent":
           "आम्ही फक्त 'स्टोरेज परवानगी' मागतो जेणेकरून ॲप तुमचे संगीत आणि व्हिडिओ शोधू शकेल आणि ते प्ले करू शकेल. याशिवाय, ॲप तुमच्या फायली दाखवू शकणार नाही.",
-      "securePrivate": "५. सुरक्षित आणि खाजगी",
+      "securePrivate": "६. सुरक्षित आणि खाजगी",
       "securePrivateContent":
           "सर्व काही तुमच्या फोनवर स्टोअर असल्यामुळे, तुमचा डेटा पूर्णपणे खाजगी आहे. तुम्ही ॲप हटवल्यास, ॲपमध्ये तयार केलेल्या तुमच्या प्लेलिस्ट देखील काढून टाकल्या जातील.",
       "appVersion": "आवृत्ती",
@@ -6752,6 +6830,12 @@ class AppStrings {
       "updateNow": "आता अपडेट करा",
 },
     'fa': {
+      "ringtoneSettingsPermission": "۳. تنظیمات سیستم و زنگ‌ها",
+      "ringtoneSettingsPermissionContent": "مجوز تغییر تنظیمات سیستم تنها زمانی درخواست می‌شود که یک آهنگ صوتی را به عنوان زنگ تلفن یا صدای اعلان تنظیم کنید.",
+      "notificationsBackgroundPlayback": "۴. پخش در پس‌زمینه و اعلان‌ها",
+      "notificationsBackgroundPlaybackContent": "مجوزهای خدمات پس‌زمینه و اعلان‌ها امکان پخش روان صوت در پس‌زمینه با کنترل‌های صفحه قفل را فراهم می‌کنند.",
+      "thirdPartyAdsAnalytics": "۵. تبلیغات و پیکربندی از راه دور",
+      "thirdPartyAdsAnalyticsContent": "ما از تبلیغات گوگل و پیکربندی فایربیس برای ارائه ویژگی‌های رایگان استفاده می‌کنیم. شبکه‌های تبلیغاتی ممکن است شناسه غیرشخصی جمع‌آوری کنند.",
       "fitToScreen": "تناسب با صفحه",
       "crop": "برش",
       "stretch": "کشیدن",
@@ -6827,7 +6911,7 @@ class AppStrings {
       "whyPermissions": "۴. چرا به مجوز نیاز داریم؟",
       "whyPermissionsContent":
           "ما فقط «مجوز دسترسی به حافظه» را می‌خواهیم تا برنامه بتواند موسیقی و ویدیوهای شما را پیدا و پخش کند. بدون این مجوز، برنامه نمی‌تواند فایل‌های شما را نشان دهد.",
-      "securePrivate": "۵. امن و خصوصی",
+      "securePrivate": "۶. امن و خصوصی",
       "securePrivateContent":
           "از آنجایی که همه چیز در گوشی شما ذخیره می‌شود، داده‌های شما کاملاً خصوصی است. اگر برنامه را حذف کنید، لیست‌های پخش ایجاد شده شما در برنامه نیز حذف خواهند شد.",
       "appVersion": "نسخه",
@@ -7232,6 +7316,12 @@ class AppStrings {
       "updateNow": "به‌روزرسانی اکنون",
 },
     'pl': {
+      "ringtoneSettingsPermission": "3. Ustawienia Systemowe i Dzwonki",
+      "ringtoneSettingsPermissionContent": "Zezwolenie na modyfikację ustawień systemowych jest wymagane tylko wtedy, gdy ustawisz ścieżkę dźwiękową jako dzwonek lub dźwięk powiadomienia.",
+      "notificationsBackgroundPlayback": "4. Odtwarzanie w Tle i Powiadomienia",
+      "notificationsBackgroundPlaybackContent": "Zezwolenia na usługi na pierwszym planie i powiadomienia umożliwiają płynne odtwarzanie dźwięku w tle z kontrolą na ekranie blokady.",
+      "thirdPartyAdsAnalytics": "5. Reklamy i Zdalna Konfiguracja",
+      "thirdPartyAdsAnalyticsContent": "Używamy Google Mobile Ads i Firebase Remote Config, aby oferować darmowe funkcje i aktualizacje. Sieci reklamowe mogą zbierać nieosobowe identyfikatory.",
       "fitToScreen": "DOPASUJ DO EKRANU",
       "crop": "PRZYTNIJ",
       "stretch": "ROZCIĄGNIJ",
@@ -7306,7 +7396,7 @@ class AppStrings {
       "whyPermissions": "4. Dlaczego potrzebujemy uprawnień?",
       "whyPermissionsContent":
           "Prosimy o „Uprawnienie do pamięci” tylko po to, aby aplikacja mogła znaleźć Twoją muzykę i filmy, aby je odtworzyć. Bez tego aplikacja nie będzie mogła wyświetlić Twoich plików.",
-      "securePrivate": "5. Bezpieczeństwo i prywatność",
+      "securePrivate": "6. Bezpieczeństwo i prywatność",
       "securePrivateContent":
           "Ponieważ wszystko jest przechowywane w telefonie, Twoje dane są całkowicie prywatne. Jeśli usuniesz aplikację, Twoje playlisty utworzone w aplikacji również zostaną usunięte.",
       "appVersion": "Wersja",
@@ -7709,6 +7799,12 @@ class AppStrings {
       "updateNow": "Zaktualizuj teraz",
 },
     'pt': {
+      "ringtoneSettingsPermission": "3. Configurações do Sistema e Toques",
+      "ringtoneSettingsPermissionContent": "A permissão para alterar as configurações do sistema só é solicitada ao definir uma faixa de áudio como toque ou som de notificação.",
+      "notificationsBackgroundPlayback": "4. Reprodução em Segundo Plano e Notificações",
+      "notificationsBackgroundPlaybackContent": "Permissões de serviço e notificações permitem a reprodução contínua em segundo plano com controles na tela de bloqueio.",
+      "thirdPartyAdsAnalytics": "5. Publicidade e Configuração Remota",
+      "thirdPartyAdsAnalyticsContent": "Usamos o Google Mobile Ads e Firebase Remote Config para oferecer recursos gratuitos e atualizações. Redes de anúncios podem coletar identificadores não pessoais.",
       "fitToScreen": "AJUSTAR AO ECRÃ",
       "crop": "RECORTAR",
       "stretch": "ESTICAR",
@@ -7786,7 +7882,7 @@ class AppStrings {
       "whyPermissions": "4. Por que precisamos de permissões?",
       "whyPermissionsContent":
           "Pedimos 'Permissão de Armazenamento' apenas para que o aplicativo possa encontrar suas músicas e vídeos para reproduzi-los. Sem isso, o aplicativo não conseguirá mostrar seus arquivos.",
-      "securePrivate": "5. Seguro e Privado",
+      "securePrivate": "6. Seguro e Privado",
       "securePrivateContent":
           "Como tudo está armazenado no seu telefone, seus dados são completamente privados. Se você excluir o aplicativo, suas listas de reprodução criadas dentro do aplicativo também serão removidas.",
       "appVersion": "Versão",
@@ -8193,6 +8289,12 @@ class AppStrings {
       "updateNow": "Atualizar agora",
 },
     'es': {
+      "ringtoneSettingsPermission": "3. Ajustes del Sistema y Tonos",
+      "ringtoneSettingsPermissionContent": "El permiso para modificar los ajustes del sistema solo se solicita cuando establece una pista de audio como tono de llamada o notificación.",
+      "notificationsBackgroundPlayback": "4. Reproducción en Segundo Plano y Notificaciones",
+      "notificationsBackgroundPlaybackContent": "Los permisos de servicios en primer plano y notificaciones permiten reproducir audio en segundo plano con controles en la pantalla de bloqueo.",
+      "thirdPartyAdsAnalytics": "5. Publicidad y Configuración Remota",
+      "thirdPartyAdsAnalyticsContent": "Utilizamos Google Mobile Ads y Firebase Remote Config para ofrecer funciones gratuitas y actualizaciones. Las redes de anuncios pueden recopilar identificadores no personales.",
       "fitToScreen": "AJUSTAR A LA PANTALLA",
       "crop": "RECORTAR",
       "stretch": "ESTIRAR",
@@ -8270,7 +8372,7 @@ class AppStrings {
       "whyPermissions": "4. ¿Por qué necesitamos permisos?",
       "whyPermissionsContent":
           "Pedimos 'Permiso de almacenamiento' solo para que la aplicación pueda encontrar tu música y videos para reproducirlos. Sin esto, la aplicación no podrá mostrar tus archivos.",
-      "securePrivate": "5. Seguro y privado",
+      "securePrivate": "6. Seguro y privado",
       "securePrivateContent":
           "Como todo está guardado en tu teléfono, tus datos son completamente privados. Si eliminas la aplicación, tus listas de reproducción creadas dentro de la aplicación también se eliminarán.",
       "appVersion": "Versión",
@@ -8675,6 +8777,12 @@ class AppStrings {
       "updateNow": "Actualizar ahora",
 },
     'sv': {
+      "ringtoneSettingsPermission": "3. Systeminställningar & Ringsignaler",
+      "ringtoneSettingsPermissionContent": "Tillstånd att ändra systeminställningar begärs endast när du ställer in en ljudfil som ringsignal eller aviseringston.",
+      "notificationsBackgroundPlayback": "4. Bakgrundsuppspelning & Aviseringar",
+      "notificationsBackgroundPlaybackContent": "Tillstånd för förgrundstjänster och aviseringar gör att ljud kan spelas smidigt i bakgrunden med kontroller på låsskärmen.",
+      "thirdPartyAdsAnalytics": "5. Annonser & Fjärrkonfiguration",
+      "thirdPartyAdsAnalyticsContent": "Vi använder Google Mobile Ads och Firebase Remote Config för gratis funktioner och uppdateringar. Annonsnätverk kan samla in icke-personliga identifierare.",
       "fitToScreen": "ANPASSA TILL SKÄRM",
       "crop": "BESKÄR",
       "stretch": "STRÄCK UT",
@@ -8750,7 +8858,7 @@ class AppStrings {
       "whyPermissions": "4. Varför behöver vi behörigheter?",
       "whyPermissionsContent":
           "Vi ber om 'Lagringsbehörighet' endast för att appen ska kunna hitta din musik och dina videor för att spela upp dem. Utan detta kommer appen inte att kunna visa dina filer.",
-      "securePrivate": "5. Säkert och privat",
+      "securePrivate": "6. Säkert och privat",
       "securePrivateContent":
           "Eftersom allt lagras på din telefon är din data helt privat. Om du tar bort appen kommer dina skapade spellistor i appen också att tas bort.",
       "appVersion": "Version",
@@ -9150,6 +9258,12 @@ class AppStrings {
       "updateNow": "Uppdatera nu",
 },
     'ta': {
+      "ringtoneSettingsPermission": "3. அமைப்புகள் & ரிங்டோன்கள்",
+      "ringtoneSettingsPermissionContent": "ஒரு பாடலை ரிங்டோன் அல்லது அறிவிப்பு ஒலியாக அமைக்கும் போது மட்டுமே கணினி அமைப்புகள் அனுமதி கேட்கப்படும்.",
+      "notificationsBackgroundPlayback": "4. பின்னணி இயக்கம் & அறிவிப்புகள்",
+      "notificationsBackgroundPlaybackContent": "திரை பூட்டப்பட்ட நிலையிலும் பின்னணியில் பாடல் இயங்கவும் கட்டுப்பாடுகளைக் காட்டவும் அறிவிப்பு அனுமதி பயன்படுகிறது.",
+      "thirdPartyAdsAnalytics": "5. விளம்பரங்கள் & புதுப்பிப்புகள்",
+      "thirdPartyAdsAnalyticsContent": "இலவச அம்சங்கள் வழங்கிட Google Ads மற்றும் Firebase பயன்படுகின்றன. விளம்பர நெட்வொர்க்குகள் தனிப்பட்டதல்லாத அடையாள சேகரிக்கலாம்.",
       "fitToScreen": "திரைக்குப் பொருத்து",
       "crop": "கிராப்",
       "stretch": "ஸ்ட்ரெચ",
@@ -9229,7 +9343,7 @@ class AppStrings {
       "whyPermissions": "4. அனுமதி ஏன் தேவை?",
       "whyPermissionsContent":
           "உங்கள் இசை மற்றும் வீடியோக்களை ஆப் கண்டறிந்து இயக்குவதற்காக மட்டுமே நாங்கள் 'ஸ்டோரேજ அனுமதி' கேட்கிறோம். இது இல்லாமல், ஆப்-ஆல் உங்கள் கோப்புகளைக் காட்ட முடியாது.",
-      "securePrivate": "5. பாதுகாப்பானது & தனிப்பட்டது",
+      "securePrivate": "6. பாதுகாப்பானது & தனிப்பட்டது",
       "securePrivateContent":
           "அனைத்தும் உங்கள் போனில் சேமிக்கப்படுவதால், உங்கள் தரவு முற்றிலும் தனிப்பட்டது. நீங்கள் ஆப்பை நீக்கினால், ஆப்பிற்குள் நீங்கள் உருவாக்கிய பிளேலிஸ்ட்டுகளும் நீக்கப்படும்.",
       "appVersion": "பதிப்பு",
@@ -9635,6 +9749,12 @@ class AppStrings {
       "updateNow": "இப்போது புதுப்பி",
 },
     'ur': {
+      "ringtoneSettingsPermission": "۳. سسٹم سیٹنگز اور رنگ ٹونز",
+      "ringtoneSettingsPermissionContent": "سسٹم سیٹنگز تبدیل کرنے کی اجازت صرف تب مانگی جاتی ہے جب آپ کسی آڈیو کو رنگ ٹون یا نوٹیفکیشن ٹون کے طور پر سیٹ کرتے ہیں۔",
+      "notificationsBackgroundPlayback": "۴. بیک گراؤنڈ پلے بیک اور نوٹیفیکیشنز",
+      "notificationsBackgroundPlaybackContent": "بیک گراؤنڈ میں آڈیو آسانی سے چلانے اور لاک اسکرین پر کنٹرول کے لیے نوٹیفکیشن کی اجازت استعمال ہوتی ہے۔",
+      "thirdPartyAdsAnalytics": "۵. اشتہارات اور ریموٹ کنفیگریشن",
+      "thirdPartyAdsAnalyticsContent": "ہم مفت فیچرز اور لائیو اپ ڈیٹس فراہم کرنے کے لیے Google Ads اور Firebase کا استعمال کرتے ہیں۔ اشتہاری نیٹ ورکس غیر ذاتی شناخت کنندگان جمع کر سکتے ہیں۔",
       "fitToScreen": "اسکرین پر فٹ کریں",
       "crop": "کراپ",
       "stretch": "کھینچیں",
@@ -9699,10 +9819,10 @@ class AppStrings {
       "checkConnection": "کنکشن چیک کریں",
       "restoringConnection": "کنیکٹ ہو رہا ہے...",
       "renamePlaylist": "پلے لسٹ کا نام تبدیل کریں",
-      "yourMediaYourPrivacy": "١. آپ کا میڈیا، آپ کی رازداری",
+      "yourMediaYourPrivacy": "۱. آپ کا میڈیا، آپ کی رازداری",
       "yourMediaYourPrivacyContent":
           "یہ ایپ صرف ان فائلوں (ویڈیوز اور موسیقی) کو چلاتی ہے جو پہلے سے آپ کے فون پر موجود ہیں۔ ہم آپ کی نجی تصاویر یا دیگر ذاتی دستاویزات کو نہیں دیکھتے۔",
-      "offlineExperience": "٢. آف لائن تجربہ",
+      "offlineExperience": "۲. آف لائن تجربہ",
       "offlineExperienceContent":
           "آپ کی تمام تخلیق کردہ پلے لسٹس اور پسندیدہ براہ راست آپ کے آلے پر محفوظ ہوتے ہیں۔ ہم آپ کی فائلیں یا ڈیٹا کسی ویب سائٹ یا سرور پر اپ لوڈ نہیں کرتے۔",
       "noPersonalTracking": "٣. کوئی ذاتی ٹریکنگ نہیں",
@@ -9711,7 +9831,7 @@ class AppStrings {
       "whyPermissions": "٤. ہمیں اجازت کی ضرورت کیوں ہے؟",
       "whyPermissionsContent":
           "ہم صرف 'اسٹوریج کی اجازت' مانگتے ہیں تاکہ ایپ آپ کی موسیقی اور ویڈیوز تلاش کر کے انہیں چلا سکے۔ اس کے بغیر، ایپ آپ کی فائلیں نہیں دکھ سکے گی۔",
-      "securePrivate": "٥. محفوظ اور نجی",
+      "securePrivate": "۶. محفوظ اور نجی",
       "securePrivateContent":
           "چونکہ سب کچھ آپ کے فون پر محفوظ ہے، اس لیے آپ کا ڈیٹا مکمل طور پر نجی ہے۔ اگر آپ ایپ کو ڈیلیٹ کر دیتے ہیں، تو ایپ کے اندر بنائی گئی پلے لسٹس بھی ختم ہو جائیں گی۔",
       "appVersion": "ورژن",
