@@ -56,7 +56,6 @@ dependencies:
   rating_dialog:
   flutter_staggered_animations:
   google_mobile_ads:
-  user_messaging_platform:
   shimmer:
   lottie:
   flutter_secure_storage:
