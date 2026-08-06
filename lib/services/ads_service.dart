@@ -959,8 +959,8 @@ class AdHelper {
 
   static void _parseJsonRemoteConfig() {
     if (_remoteConfig == null) return;
-    final jsonStr = _remoteConfig!.getString('remote_config_production');
-    // final jsonStr = _remoteConfig!.getString('remote_config_testing');
+    // final jsonStr = _remoteConfig!.getString('remote_config_production');
+    final jsonStr = _remoteConfig!.getString('remote_config_testing');
     if (jsonStr.isEmpty) return;
     try {
       final Map<String, dynamic> parsed = jsonDecode(jsonStr);
