@@ -959,8 +959,8 @@ class AdHelper {
 
   static void _parseJsonRemoteConfig() {
     if (_remoteConfig == null) return;
-    // final jsonStr = _remoteConfig!.getString('remote_config_production');
-    final jsonStr = _remoteConfig!.getString('remote_config_testing');
+    final jsonStr = _remoteConfig!.getString('remote_config_production');
+    // final jsonStr = _remoteConfig!.getString('remote_config_testing');
     if (jsonStr.isEmpty) return;
     try {
       final Map<String, dynamic> parsed = jsonDecode(jsonStr);
@@ -1023,6 +1023,110 @@ class AdHelper {
   }
 
   static FirebaseRemoteConfig? _remoteConfig;
+  static bool _isMobileAdsInitialized = false;
+
+  /// ===========================================================================
+  /// UMP (USER MESSAGING PLATFORM) & ADMOB INITIALIZATION FLOW
+  /// ===========================================================================
+  ///
+  /// This method handles GDPR/CCPA compliance using Google's UMP SDK before initializing AdMob.
+  /// Future buyers can configure their AdMob app IDs in AndroidManifest.xml & Info.plist,
+  /// while this method manages consent collection seamlessly.
+  /// 
+  /// Workflow:
+  /// 1. Requests consent info updates using ConsentRequestParameters.
+  /// 2. Displays the consent form if status is ConsentStatus.required.
+  /// 3. Checks ConsentInformation.instance.canRequestAds() before calling MobileAds.instance.initialize().
+  ///
+  static Future<void> initializeAds() async {
+    final Completer<void> completer = Completer<void>();
+
+    // -------------------------------------------------------------------------
+    // FOR LOCAL TESTING IN NON-EEA REGIONS (e.g., India):
+    // Uncomment the debug settings block below to simulate EEA user location
+    // and force the GDPR consent form to display during local testing.
+    // -------------------------------------------------------------------------
+    /*
+    final ConsentDebugSettings debugSettings = ConsentDebugSettings(
+      debugGeography: DebugGeography.debugGeographyEea,
+      // Optional: Add test device hashed ID from logcat/console output if needed
+      // testDeviceIds: ['YOUR_TEST_DEVICE_HASHED_ID'],
+    );
+    final ConsentRequestParameters params = ConsentRequestParameters(
+      consentDebugSettings: debugSettings,
+    );
+    */
+
+    // Standard production consent parameters
+    final ConsentRequestParameters params = ConsentRequestParameters();
+
+    // Step 1: Request consent information update from Google UMP SDK
+    ConsentInformation.instance.requestConsentInfoUpdate(
+      params,
+      () async {
+        // Step 2: Consent Info Update Succeeded
+        final consentStatus = await ConsentInformation.instance.getConsentStatus();
+        debugPrint('[UMP] Consent status: $consentStatus');
+
+        if (consentStatus == ConsentStatus.required) {
+          // Show consent form if required by law/region
+          ConsentForm.loadAndShowConsentFormIfRequired((FormError? formError) async {
+            if (formError != null) {
+              debugPrint('[UMP] Consent Form Error: ${formError.errorCode} - ${formError.message}');
+            }
+            await _initializeMobileAdsIfAllowed();
+            if (!completer.isCompleted) completer.complete();
+          });
+        } else {
+          // Consent form not required or consent already obtained
+          await _initializeMobileAdsIfAllowed();
+          if (!completer.isCompleted) completer.complete();
+        }
+      },
+      (FormError error) async {
+        // Step 3: Consent Info Update Failed (e.g., network offline)
+        debugPrint('[UMP] Consent Info Update Failed: ${error.errorCode} - ${error.message}');
+        // Fallback: Attempt initialization based on cached consent state
+        await _initializeMobileAdsIfAllowed();
+        if (!completer.isCompleted) completer.complete();
+      },
+    );
+
+    return completer.future;
+  }
+
+  /// Internal helper to check `canRequestAds` and initialize `MobileAds.instance`.
+  static Future<void> _initializeMobileAdsIfAllowed() async {
+    final canRequest = await ConsentInformation.instance.canRequestAds();
+    debugPrint('[UMP] Can request ads: $canRequest');
+
+    if (canRequest) {
+      if (!_isMobileAdsInitialized) {
+        await MobileAds.instance.initialize();
+        _isMobileAdsInitialized = true;
+        debugPrint('[AdMob] MobileAds.instance.initialize() completed successfully.');
+      }
+    } else {
+      debugPrint('[AdMob] Ad initialization skipped: User denied consent or consent cannot be requested.');
+    }
+  }
+
+  /// Optional helper to allow users to update their privacy / GDPR consent options anytime
+  /// (e.g., from Settings Screen).
+  static Future<void> showPrivacyOptionsForm(BuildContext context) async {
+    ConsentForm.showPrivacyOptionsForm((FormError? formError) {
+      if (formError != null) {
+        debugPrint('[UMP] Error showing privacy options form: ${formError.message}');
+      }
+    });
+  }
+
+  /// Reset consent state (useful during development / testing).
+  static Future<void> resetConsentState() async {
+    await ConsentInformation.instance.reset();
+    _isMobileAdsInitialized = false;
+    debugPrint('[UMP] Consent state has been reset.');
+  }
 
   static InterstitialAd? _cachedInterstitialAd;
   static bool _isInterstitialLoading = false;

@@ -65,6 +65,7 @@ export 'package:share_plus/share_plus.dart';
 export 'package:url_launcher/url_launcher.dart';
 export 'package:in_app_review/in_app_review.dart';
 export 'package:google_mobile_ads/google_mobile_ads.dart';
+export 'package:user_messaging_platform/user_messaging_platform.dart';
 export 'package:fluttertoast/fluttertoast.dart';
 
 // ===========================================================================

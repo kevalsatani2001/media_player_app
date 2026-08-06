@@ -14,11 +14,15 @@ bool isPositionInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Google Mobile Ads & UMP Consent Flow for GDPR/CCPA compliance
+  await AdHelper.initializeAds();
+
   // Firebase initialize karvu
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
   await Hive.initFlutter();
 
   // Register adapters only once
@@ -33,7 +37,6 @@ void main() async {
   await AdHelper.initRemoteConfig();
   await AppNotificationService.init();
   await AppNotificationService.requestPermissions();
-  await MobileAds.instance.initialize();
   // AdHelper.initAdFlow();
   AdHelper.loadAppOpenAd();
   await JustAudioBackground.init(
